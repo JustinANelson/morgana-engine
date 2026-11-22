@@ -3,6 +3,8 @@ dist/
 build/
 **/build/
 .gradle/
+.toolchain/
+.jre/
 local.properties
 server-data/
 server-data-*/

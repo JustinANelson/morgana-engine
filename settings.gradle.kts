@@ -6,6 +6,11 @@ pluginManagement {
     }
 }
 
+plugins {
+    // Automatically downloads Eclipse Temurin JDK 17 when a developer runs Gradle on another JDK (e.g. Java 21+).
+    id("org.gradle.toolchains.foojay-resolver-convention") version "0.9.0"
+}
+
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
     repositories {

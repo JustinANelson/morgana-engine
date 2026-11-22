@@ -22,9 +22,9 @@ How to read this guide: **bold** is a button, panel or field you can see on the 
 
 ## Step 1: Create your realm and walk into it (2 min)
 
-1. **Start the desktop client**:
-   - **From this Git repository**: open a terminal in the **repository root** (the folder containing `gradlew.bat` and `README.md`) and run `.\gradlew.bat :client-desktop:run` (macOS and Linux: `./gradlew :client-desktop:run`).
-   - **From a standalone SDK zip**: unzip `morgana-sdk-<version>.zip` (if you built it yourself with `.\gradlew.bat distributables`, the zip is in `build/distributables/`), open the extracted folder, and run `bin\morgana-client.bat` (macOS and Linux: `bin/morgana-client`).
+1. **Start the desktop client** *(Java 17 is downloaded automatically on first run if not installed)*:
+   - **From this Git repository**: open a terminal in the **repository root** (the folder containing `morgana.bat` and `README.md`) and run `.\morgana.bat` (macOS and Linux: `./morgana.sh`).
+   - **From a standalone SDK zip**: unzip `morgana-sdk-<version>.zip` (if you built it yourself with `.\morgana.bat distributables`, the zip is in `build/distributables/`), open the extracted folder, and run `bin\morgana-client.bat` (macOS and Linux: `bin/morgana-client`).
 2. Open the **Local Worlds** tab.
 3. Press **New Realm Wizard...**.
 4. Type a name, *Greenhollow*, and pick *Blank Game* as the starting point. Press **Next**.

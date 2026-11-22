@@ -8,17 +8,20 @@
 - **Deterministic 20 TPS Core (`:core-domain`)**: Pure Kotlin simulation covering grid & sub-tile movement, seamless neighbor stitching, realtime & action combat (combos, hitboxes, dodge i-frames, piercing projectiles, ground-targeted AoEs), procedural dungeon floors (`ROOMS_AND_CORRIDORS`, `CELLULAR_CAVES`, `BSP_DUNGEON`, `OPEN_ARENA`), instanced co-op runs (persistent/extraction/ephemeral, configurable permadeath), Diablo-style random loot affixes, boons, skill trees, parties, guilds, trading, and page-based quests/events.
 - **Data First, Git-Friendly (`:server-persistence`)**: Every content definition is a schema-validated JSON file on disk (optional SQLite for player data), editable equally via `F1`, a text editor, Tiled, or scripts through one validation & hot-reload pipeline.
 
-## Quickstart (Java 17+)
+## Quickstart (Zero Setup — Java 17 Auto-Installed)
 
-> On macOS/Linux replace `.\gradlew.bat` with `./gradlew`.
+> No manual Java install required: `morgana.bat` (Windows) and `./morgana.sh` (macOS/Linux) automatically download a local Eclipse Temurin JDK 17 into `.toolchain/` if Java 17+ isn't present, and Gradle's Foojay resolver also auto-provisions JDK 17 when you already have a newer JDK (like Java 21+).
 
 ### Option A: Start with the GUI (No Code)
-Run this from the **repository root** (the folder containing `gradlew.bat` and `README.md`):
+Run this from the **repository root** (the folder containing `morgana.bat` and `README.md`):
 ```powershell
-# Launch the Desktop Client, open Local Worlds -> New Realm Wizard -> Play, then press F1
-.\gradlew.bat :client-desktop:run
+# Windows (macOS/Linux: ./morgana.sh)
+# Auto-installs JDK 17 if needed, launches the Desktop Client -> Local Worlds -> New Realm Wizard -> Play, then press F1
+.\morgana.bat
 ```
-If you downloaded or built the standalone **Morgana SDK zip** (built with `.\gradlew.bat distributables` into `build/distributables/morgana-sdk-<version>.zip`), unzip it and run `bin\morgana-client.bat` (macOS/Linux: `bin/morgana-client`) inside the extracted SDK folder instead.
+*(Or call `.\gradlew.bat :client-desktop:run` directly if you already have Java 17+.)*
+
+If you downloaded or built the standalone **Morgana SDK zip** (built with `.\morgana.bat distributables` into `build/distributables/morgana-sdk-<version>.zip`), unzip it and run `bin\morgana-client.bat` (macOS/Linux: `bin/morgana-client`) inside the extracted SDK folder—it also auto-downloads a local JRE 17 if Java 17+ isn't installed.
 
 The first account created on the machine running the server automatically becomes **Owner (rank 4)** so you can press `F1` and build immediately.
 
