@@ -42,6 +42,8 @@ import com.morgana.tilegen.structure.BuildingGenerator
 import com.morgana.tilegen.structure.BuildingKind
 import com.morgana.tilegen.structure.BuildingRoof
 import com.morgana.tilegen.structure.BuildingTheme
+import com.morgana.tilegen.structure.DungeonTheme
+import com.morgana.tilegen.structure.DungeonTilesetGenerator
 import com.morgana.tilegen.structure.GroundDetail
 import com.morgana.tilegen.structure.GroundDetailGenerator
 import com.morgana.tilegen.structure.PavingGenerator
@@ -83,6 +85,7 @@ object TilesetCli {
             when (cmd) {
                 "list" -> {
                     out.println("Themes: ${TilesetTheme.entries.joinToString { it.name.lowercase() }}")
+                    out.println("Dungeon themes: ${DungeonTheme.entries.joinToString { it.name.lowercase() }}")
                     out.println("Terrain pairs: ${TerrainPair.entries.joinToString { it.name.lowercase() }}")
                     out.println("Autotile modes: blob47, cardinal16")
                     out.println("Material patterns: ${MaterialPattern.entries.joinToString { it.name.lowercase() }}")
@@ -542,6 +545,36 @@ object TilesetCli {
                     }
                     0
                 }
+                "dungeon" -> {
+                    // dungeon [crypt|ember_forge|mossy_ruins] [--seed 1337] [--out build/tilesets/dungeon_<theme>] [--split]
+                    val target = (args.getOrNull(1)?.takeIf { !it.startsWith("--") } ?: "crypt").lowercase()
+                    val theme = DungeonTheme.valueOf(target.uppercase())
+                    val seed = flags["seed"]?.toLong() ?: 1337L
+                    val outDir = Paths.get(flags["out"] ?: "build/tilesets/dungeon_${theme.name.lowercase()}")
+                    val split = "split" in flags
+                    val bundle = DungeonTilesetGenerator(seed = seed, theme = theme).generateBundle()
+                    val res = TilesetExporter.exportNamedSheet(
+                        name = "dungeon_${theme.name.lowercase()}",
+                        sheet = bundle.sheet,
+                        tiles = bundle.tiles,
+                        tileSize = bundle.tileSize,
+                        columns = bundle.columns,
+                        outDir = outDir,
+                        splitTiles = split
+                    )
+                    reportResult(out, res)
+                    val propsDir = outDir.resolve("props")
+                    Files.createDirectories(propsDir)
+                    for ((propName, propImg) in bundle.props) {
+                        val p = propsDir.resolve("$propName.png")
+                        PngEncoder.writeToFile(propImg, p)
+                    }
+                    val showcasePng = outDir.resolve("dungeon_${theme.name.lowercase()}_showcase.png")
+                    PngEncoder.writeToFile(bundle.showcase, showcasePng)
+                    out.println("Wrote ${bundle.props.size} multi-tile props in $propsDir")
+                    out.println("Wrote showcase scene: $showcasePng")
+                    0
+                }
                 "plaza" -> {
                     // plaza [--seed 1337] [--out build/tilesets/plaza]: fountain, well, lamp post, bench, planter on one 7 x 4 sheet
                     val (sheet, at) = PlazaGenerator(flags["seed"]?.toLong() ?: 1337L).sheet()
@@ -772,6 +805,7 @@ object TilesetCli {
               grounddetail [--seed 1337] [--out <dir>]   (pebbles, weeds, worn dirt, puddles, ruts, hay, dirt spill)
               paving [--variants 4] [--seed 1337] [--out <dir>]   (town cobble and flagstone tiles, a row per kind)
               building <kind|all> [--theme default|desert|ember|port] [--roof red|brown|slate|green|thatch] [--name <file>] [--seed 1337] [--out <dir>]   (large town buildings: cottage_large inn smithy shop chapel guardhouse great_hall)
+              dungeon [crypt|ember_forge|mossy_ruins] [--seed 1337] [--out <dir>] [--split]   (high-craft 2.5D dungeon tileset, sculpted props & showcase room)
               paperdoll <jobs|monsters|all|pack|spec|jobName> [--size 32] [--frames 2] [--directions] [--layers] [--theme <name>] [--ancestry <name>] [--actions <list|all|lpc>] [--attachments <list>] [--style ragnarok_25d|suikoden_32bit] [--seed 1337] [--out <dir>] [--split]
               spec <file.json> [--out <dir>] [--split]
               schema

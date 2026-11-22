@@ -67,7 +67,15 @@ object SpecPalettes {
         "rc_hazard_amber" to PalettePresets.RC_HAZARD_AMBER,
         "rc_nuke_crimson" to PalettePresets.RC_NUKE_CRIMSON,
         "rc_neon_violet" to PalettePresets.RC_NEON_VIOLET,
-        "rc_toxic_sludge" to PalettePresets.RC_TOXIC_SLUDGE
+        "rc_toxic_sludge" to PalettePresets.RC_TOXIC_SLUDGE,
+        "dungeon_flagstone" to PalettePresets.DUNGEON_FLAGSTONE,
+        "dungeon_cobble_wall" to PalettePresets.DUNGEON_COBBLE_WALL,
+        "dungeon_teal_water" to PalettePresets.DUNGEON_TEAL_WATER,
+        "dungeon_sculpted_slate" to PalettePresets.DUNGEON_SCULPTED_SLATE,
+        "dungeon_treasure_gold" to PalettePresets.DUNGEON_TREASURE_GOLD,
+        "dungeon_bone" to PalettePresets.DUNGEON_BONE,
+        "dungeon_spectral_flame" to PalettePresets.DUNGEON_SPECTRAL_FLAME,
+        "dungeon_chest_wood" to PalettePresets.DUNGEON_CHEST_WOOD
     )
 
     /**

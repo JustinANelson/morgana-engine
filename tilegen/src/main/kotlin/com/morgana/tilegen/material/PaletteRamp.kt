@@ -235,4 +235,14 @@ object PalettePresets {
     val RC_NUKE_CRIMSON = PaletteRamp(intArrayOf(c(36, 14, 22), c(102, 20, 34), c(178, 34, 48), c(236, 72, 76), c(255, 164, 152)))
     val RC_NEON_VIOLET = PaletteRamp(intArrayOf(c(28, 16, 46), c(68, 30, 112), c(122, 54, 188), c(186, 102, 244), c(236, 188, 255)))
     val RC_TOXIC_SLUDGE = PaletteRamp(intArrayOf(c(20, 34, 16), c(44, 88, 24), c(82, 154, 34), c(146, 218, 54), c(218, 252, 128)))
+
+    // High-Craft 2.5D Top-Down Dungeon palettes (hue-shifted warm stone, dark plum cobble, teal water, spectral cyan)
+    val DUNGEON_FLAGSTONE = PaletteRamp(intArrayOf(c(38, 30, 34), c(62, 53, 52), c(88, 76, 71), c(116, 102, 93), c(141, 126, 115), c(166, 150, 136)))
+    val DUNGEON_COBBLE_WALL = PaletteRamp(intArrayOf(c(22, 16, 23), c(39, 29, 36), c(59, 45, 52), c(82, 64, 70), c(107, 85, 90), c(133, 109, 112)))
+    val DUNGEON_TEAL_WATER = PaletteRamp(intArrayOf(c(19, 42, 51), c(29, 67, 78), c(43, 100, 112), c(63, 136, 146), c(104, 181, 184), c(166, 224, 220)))
+    val DUNGEON_SCULPTED_SLATE = PaletteRamp(intArrayOf(c(27, 27, 38), c(50, 56, 70), c(79, 90, 107), c(114, 128, 148), c(154, 168, 186), c(196, 208, 220)))
+    val DUNGEON_TREASURE_GOLD = PaletteRamp(intArrayOf(c(51, 28, 20), c(110, 60, 27), c(168, 101, 38), c(217, 149, 59), c(240, 196, 98), c(250, 228, 158)))
+    val DUNGEON_BONE = PaletteRamp(intArrayOf(c(36, 28, 32), c(84, 73, 70), c(133, 120, 108), c(181, 168, 150), c(218, 208, 190), c(242, 236, 224)))
+    val DUNGEON_SPECTRAL_FLAME = PaletteRamp(intArrayOf(c(22, 58, 66), c(31, 110, 120), c(46, 184, 184), c(94, 242, 224), c(181, 255, 245), c(235, 255, 254)))
+    val DUNGEON_CHEST_WOOD = PaletteRamp(intArrayOf(c(31, 20, 20), c(66, 40, 32), c(105, 65, 49), c(143, 91, 66), c(181, 121, 88), c(210, 154, 118)))
 }
