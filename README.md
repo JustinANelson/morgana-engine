@@ -58,8 +58,11 @@ For remote/shared servers, grant Owner explicitly:
 # Build Android Debug APK
 .\gradlew.bat :client-android:assembleDebug
 
-# Build all distributables (Morgana SDK zip + Android APK -> build/distributables/)
-.\gradlew.bat distributables
+# Build all distributables locally (Morgana SDK zip + Android APK + web zip -> build/distributables/)
+.\morgana.bat distributables
+
+# Build locally and publish a GitHub Release via gh CLI
+.\release.ps1 -Tag v0.1.0
 ```
 
 ## Documentation
