@@ -145,24 +145,24 @@ class HalcyonReachGameTest {
         assertTrue(meteorDrop.chanceBasisPoints in 1..100, "Starshard drop should be tiny")
         assertTrue(dbDrop.chanceBasisPoints in 1 until meteorDrop.chanceBasisPoints, "Wyrm Pearl drop should be even smaller than Starshard")
 
-        // Ranger Volley auto-targets up to 10 enemies in an expanded radius with 40% (+5%/lv) base damage
+        // Ranger Volley auto-targets up to 5 enemies within 3 tiles with 40% (+5%/lv) base damage (rebalanced 2026-11-22: was 10 enemies in 8 tiles)
         val scatter = loaded.catalog.spells.getValue(7)
         assertEquals("Volley", scatter.name)
         assertEquals(15, scatter.levelReq)
-        assertEquals(8, scatter.aoeRadiusTiles)
-        assertEquals(10, scatter.maxTargets)
+        assertEquals(3, scatter.aoeRadiusTiles)
+        assertEquals(5, scatter.maxTargets)
         assertEquals(40, scatter.baseDamagePercent)
         assertEquals(5, scatter.baseDamagePercentPerLevel)
         assertTrue(scatter.costs.isEmpty(), "Volley should not cost mana")
         assertEquals(60, scatter.cooldownTicks)
 
-        // Hail of Arrows deals 150% base damage per hit, scaling from 2 hits at Lv 1 to 4 hits at max level
+        // Hail of Arrows deals 105% base damage per hit, scaling from 2 hits at Lv 1 to 4 hits at max level
         val rapidFire = loaded.catalog.spells.getValue(8)
         assertEquals("Hail of Arrows", rapidFire.name)
         assertEquals(30, rapidFire.levelReq)
         assertEquals(2, rapidFire.hitCount)
         assertEquals(4, rapidFire.maxHitCount)
-        assertEquals(150, rapidFire.baseDamagePercent)
+        assertEquals(105, rapidFire.baseDamagePercent)
         assertEquals(0, rapidFire.baseDamagePercentPerLevel)
         assertEquals(60, rapidFire.cooldownTicks)
         assertEquals(2, rapidFire.effectiveHitCount(1))
@@ -278,7 +278,7 @@ class HalcyonReachGameTest {
         // Cast Volley with no explicit target (hotbar cast)
         sim.playerCastSpell(charId, 7, null, 0, 0)
         val damagedCount = sim.mapNpcs.getValue(5).count { (it.vitals["hp"]?.cur ?: 50000) < 50000 }
-        assertEquals(10, damagedCount, "Volley should auto-target and hit at most 10 enemies")
+        assertEquals(5, damagedCount, "Volley should auto-target and hit at most 5 enemies")
 
         // Cast enough times to level up Volley from Lv 1 -> Lv 2 (castsPerLevel = 80)
         repeat(79) {
@@ -1027,10 +1027,10 @@ class HalcyonReachGameTest {
         assertEquals(1, broadcasts.size, "Wyrm Pearl drop should emit one server-wide BROADCAST")
         assertTrue("Wyrm Pearl" in broadcasts[0].message && "Ashgate Causeway" in broadcasts[0].message)
 
-        // Base Stubblehen (Lv 1) XP = 24, Exalted (+4 levels -> Lv 5, 250% XP) -> 60 base XP, RED tier (+4 levels -> 150%) -> 90 XP, plus the 25% catch-up bonus under Lv 80 -> 112 XP (Lv 1->2 needs 30, leaving 82 XP)
+        // Base Stubblehen (Lv 1) XP = 24, Exalted (+4 levels -> Lv 5, 250% XP) -> 60 base XP, RED tier (+4 levels -> 150%) -> 90 XP, plus the 25% catch-up bonus under Lv 80 -> 112 XP. Lv 1->2 needs 24,600 since the 2026-11-22 XP table (it was 30), so the hunter stays at Lv 1 with the 112 XP
         val killerAfter = sim.players.getValue(killerId)
-        assertEquals(2, killerAfter.level, "112 XP should level hunter from Lv 1 to Lv 2")
-        assertEquals(82L, killerAfter.xp, "Remaining XP after Lv 2 (30) should be 82")
+        assertEquals(1, killerAfter.level, "112 XP is far short of the XP for Lv 2")
+        assertEquals(112L, killerAfter.xp, "the whole 112 XP is banked towards Lv 2")
 
         val xpFloating = killEvents.filterIsInstance<com.morgana.domain.sim.WorldSimulationEvent.FloatingTextEmitted>()
             .filter { it.category == "XP_GAIN" }

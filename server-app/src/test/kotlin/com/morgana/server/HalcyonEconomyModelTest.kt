@@ -34,6 +34,12 @@ class HalcyonEconomyModelTest {
     private object Play {
         /** Kills per hour of steady hunting, including walking and recovering (about one every ten seconds). */
         const val KILLS_PER_HOUR = 360.0
+        /**
+         * Kills per hour for the pace (hours to a level) only. The headless sim (`HalcyonKillRateSimTest`, 2026-11-22) measured
+         * about 1,800 for a hunter with human reaction times; income and upkeep below still use the older, lower
+         * [KILLS_PER_HOUR] until the economy is re-tuned for the new pace (MODERNIZATION.md, order of work step 5).
+         */
+        const val PACE_KILLS_PER_HOUR = 1800.0
         const val HITS_DEALT_PER_KILL = 5.0
         const val HITS_TAKEN_PER_KILL = 3.0
         const val POTIONS_PER_HOUR = 10.0
@@ -126,7 +132,7 @@ class HalcyonEconomyModelTest {
             var hours = 0.0
             for (level in 1 until def.progression.maxLevel) {
                 val r = rows.lastOrNull { it.npc.level <= level + 4 } ?: rows.first()
-                hours += xpToNext(level).toDouble() / (r.npc.xpReward * Play.KILLS_PER_HOUR)
+                hours += xpToNext(level).toDouble() / (r.npc.xpReward * Play.PACE_KILLS_PER_HOUR)
             }
             return hours
         }
@@ -148,7 +154,7 @@ class HalcyonEconomyModelTest {
         }
         sb.appendLine()
         sb.appendLine("Common to Mythic costs about ${"%.1f".format(m.qualityPathPearls())} Wyrm Pearls on average (with pity), plus ${Play.BIND_COST_MARKS} Marks to bind each pearl made from fragments.")
-        sb.appendLine("Hours to the top level (${m.def.progression.maxLevel}) at ${Play.KILLS_PER_HOUR.toInt()} kills an hour: about ${m.hoursToMaxLevel(rows).toInt()}.")
+        sb.appendLine("Hours to the top level (${m.def.progression.maxLevel}) at ${Play.PACE_KILLS_PER_HOUR.toInt()} kills an hour (plain XP, no level-offset or catch-up bonus): about ${m.hoursToMaxLevel(rows).toInt()}.")
         return sb.toString()
     }
 
@@ -208,7 +214,8 @@ class HalcyonEconomyModelTest {
     fun `reaching the top level takes a long but sane time`() {
         val (m, rows) = model()
         val hours = m.hoursToMaxLevel(rows)
-        // The owner chose about 10 to 15 hours to the top on 2026-11-19 (the curve is 30 * level^2); under 8 hours would be too fast.
+        // 2026-11-22: the XP table (game.json) targets about 40 hours to level 60 (10 hours each for 1-30, 30-45, 45-55, 55-60, checked
+        // by HalcyonKillRateSimTest); levels 60 and up are a placeholder. Under 8 hours would be too fast.
         assertTrue(hours in 8.0..400.0, "hours to the top level: $hours")
     }
 }

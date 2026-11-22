@@ -11,6 +11,7 @@ import com.morgana.domain.item.EquipmentLoadout
 import com.morgana.domain.item.EquipmentSlot
 import com.morgana.domain.item.Inventory
 import com.morgana.domain.item.ItemDefinition
+import com.morgana.domain.item.ItemRoller
 import com.morgana.domain.item.ItemStack
 import com.morgana.domain.item.ItemType
 import com.morgana.domain.item.WeaponStyle
@@ -66,7 +67,7 @@ class HalcyonKillRateSimTest {
 
     private class Run(
         val classId: Int, val className: String, val level: Int, val mapId: Int, val profile: String, val hours: Double,
-        val kills: Int, val actions: Int, val deaths: Int, val potions: Int, val endLevel: Int, val xpGained: Long, val xpToNext: Long,
+        val kills: Int, val actions: Int, val deaths: Int, val potions: Int, val endLevel: Int, val xpGained: Long, val xpToNext: Long, val endXp: Long,
         val swingTicks: Long, val walkTicks: Long, val idleTicks: Long
     ) {
         val killsPerHour get() = kills / hours
@@ -143,11 +144,25 @@ class HalcyonKillRateSimTest {
             val best = pool.maxByOrNull { it.attackDamage + it.armorDefense } ?: continue
             equipped[slot] = ItemStack(itemId = best.id, amount = 1)
         }
+        // Quality: a first-playthrough hero rarely has Pearls, so gear is mostly Common and Fine early and Fine and Enchanted later,
+        // with an occasional Exalted drop (every fifth piece from level 30). `+n` composition is modelled as one step per 15 levels.
+        val rules = sim.game.definition.loot
+        val rng = SeededRandomSource(777L + level * 31L + classDef.id)
+        val plus = (level / 15).coerceIn(0, ItemStack.MAX_PLUS)
+        for ((index, entry) in equipped.entries.toList().withIndex()) {
+            val def = sim.items[entry.value.itemId] ?: continue
+            if (!ItemRoller.canRoll(def) || rules == null || rules.rarities.isEmpty()) continue
+            var q = if (level < 10) index % 2 else 1 + index % 2
+            if (level >= 30 && index % 5 == 4) q += 1
+            val rarity = rules.rarities[q.coerceIn(0, rules.rarities.size - 1)]
+            val rolls = ItemRoller.rollAtRarity(def, def.levelReq.coerceAtLeast(1), rules, rarity, rng)
+            equipped[entry.key] = entry.value.copy(rolls = rolls, plus = plus)
+        }
         if (classDef.id == 3) {
             val ammoId = sim.items.values.filter { it.type == ItemType.AMMO && usable(it) }.maxByOrNull { it.attackDamage }?.id ?: 0
             if (ammoId > 0) equipped[EquipmentSlot.AMMO] = ItemStack(itemId = ammoId, amount = 999)
         }
-        val points = 3 * (level - 1)
+        val points = 3 * (level - 1) + (if (tier >= 1) 5 else 0) + (if (tier >= 2) 8 else 0) + (if (tier >= 3) 12 else 0)
         val attrs = sim.game.definition.attributes.associate { a ->
             val base = classDef.baseAttributes[a.id] ?: a.base
             a.id to base + ((allocation(classDef.id)[a.id] ?: 0.0) * points).toInt()
@@ -158,7 +173,13 @@ class HalcyonKillRateSimTest {
             attributes = attrs, position = WorldPosition.fromTile(1, x, y, Direction.DOWN),
             equipment = EquipmentLoadout(equipped), inventory = Inventory().grownTo(sim.game.definition.inventorySlots),
             knownSpellIds = spells, hotbar = List(10) { HotbarSlot(it) },
-            variables = mapOf("promotion" to tier)
+            variables = mapOf("promotion" to tier),
+            // Skills level with use (10 x level casts per level, about 360 casts to the cap): assume one skill level per three hero levels
+            // since the spell was learnt.
+            spellLevels = spells.mapNotNull { id -> sim.spells[id]?.let { sp -> id to (1 + (level - sp.levelReq) / 3).coerceIn(1, sp.maxSpellLevel) } }.toMap(),
+            // Proficiency takes about 4,750 hits to cap (25 x L hits a level), roughly the first twenty levels of hunting, so a hero
+            // is assumed to have min(level, cap) in the weapon it uses.
+            weaponProficiencyLevels = sim.game.definition.weaponProficiency?.let { wp -> wp.weaponTypes.associate { it.id to level.coerceIn(1, wp.maxLevel) } }.orEmpty()
         ).recalculateVitals(sim.game, sim.items, refill = true)
     }
 
@@ -175,7 +196,10 @@ class HalcyonKillRateSimTest {
         return perHit * targets / spell.cooldownTicks.coerceAtLeast(10)
     }
 
-    private fun hunt(classId: Int, level: Int, mapId: Int, profile: Profile, hours: Double): Run {
+    private fun hunt(
+        classId: Int, level: Int, mapId: Int, profile: Profile, hours: Double,
+        startXp: Long = 0L, untilLevel: Int = Int.MAX_VALUE, pinned: Boolean = pin
+    ): Run {
         val sim = sim(mapId)
         val classDef = sim.classes.getValue(classId)
         val monsters0 = sim.mapNpcs[mapId].orEmpty().filter { (sim.npcs[it.npcId]?.xpReward ?: 0) > 0 }
@@ -184,7 +208,7 @@ class HalcyonKillRateSimTest {
         val cy = monsters0.sumOf { it.tileY } / monsters0.size
         val start = monsters0.minBy { abs(it.tileX - cx) + abs(it.tileY - cy) }
         val h0 = hero(sim, classDef, level, start.tileX, start.tileY)
-        sim.spawnOrUpdatePlayer(h0.copy(position = WorldPosition.fromTile(mapId, start.tileX, start.tileY, Direction.DOWN)))
+        sim.spawnOrUpdatePlayer(h0.copy(xp = startXp, position = WorldPosition.fromTile(mapId, start.tileX, start.tileY, Direction.DOWN)))
 
         val known = h0.knownSpellIds.mapNotNull { sim.spells[it] }
         val rotation = known.filter { isDamage(it) }
@@ -200,6 +224,7 @@ class HalcyonKillRateSimTest {
         var chasing: String? = null; var chaseTicks = 0
         var pause = 0
         var lastPotion = -100L
+        var pinnedXp = 0L; var lastXp = 0L
         val totalTicks = (hours * TICKS_PER_HOUR).toLong()
         val life = sim.game.lifeVitalId
 
@@ -216,6 +241,7 @@ class HalcyonKillRateSimTest {
 
         for (i in 0 until totalTicks) {
             val me = sim.players["bot"] ?: break
+            if (me.level >= untilLevel) break
             val now = sim.currentTick
             if (!me.isAlive(life) || me.isGhost) {
                 deaths++
@@ -320,6 +346,10 @@ class HalcyonKillRateSimTest {
                 }
             }
             events += sim.stepTick()
+            if (pinned) sim.players["bot"]?.let { p ->
+                if (p.level > level) { pinnedXp += (sim.game.xpToNext(level) ?: 0L) - lastXp + p.xp; sim.players["bot"] = p.copy(level = level, xp = 0L, unspentStatPoints = 0); lastXp = 0L }
+                else { pinnedXp += p.xp - lastXp; lastXp = p.xp }
+            }
             val k = events.count { it is WorldSimulationEvent.NpcKilled && it.killerCharacterId == "bot" }
             if (k > 0) { kills += k; pause = profile.killPauseTicks; chasing = null }
         }
@@ -328,33 +358,48 @@ class HalcyonKillRateSimTest {
         val endLevel = end?.level ?: level
         var xpGained = end?.xp ?: 0L
         for (l in level until endLevel) xpGained += sim.game.xpToNext(l) ?: 0L
+        if (pinned) xpGained = pinnedXp
+        val usedHours = if (untilLevel < Int.MAX_VALUE) sim.currentTick / TICKS_PER_HOUR else hours
         return Run(
-            classId, classDef.name, level, mapId, profile.name, hours, kills, actions, deaths, potions, endLevel, xpGained,
-            sim.game.xpToNext(level) ?: 1L, swing, walk, idle
+            classId, classDef.name, level, mapId, profile.name, usedHours, kills, actions, deaths, potions, endLevel, xpGained,
+            sim.game.xpToNext(level) ?: 1L, end?.xp ?: 0L, swing, walk, idle
         )
     }
 
-    private val samples = listOf(1 to 4, 10 to 4, 20 to 7, 30 to 10, 40 to 10, 50 to 15)
+    private val defaultSamples = listOf(1 to 4, 10 to 4, 20 to 7, 30 to 10, 40 to 10, 50 to 15)
+
+    /** `KILL_RATE_SAMPLES="1:4,10:4"` (level:map pairs), `KILL_RATE_CLASSES="1,2"`, `KILL_RATE_PROFILES=human|ideal|both`, `KILL_RATE_HOURS=0.25`. */
+    private val samples: List<Pair<Int, Int>> = System.getenv("KILL_RATE_SAMPLES")?.split(",")?.map { it.trim().split(":").let { p -> p[0].toInt() to p[1].toInt() } } ?: defaultSamples
+    private val classIds: List<Int> = System.getenv("KILL_RATE_CLASSES")?.split(",")?.map { it.trim().toInt() } ?: (1..5).toList()
+    private val profiles: List<Profile> = when (System.getenv("KILL_RATE_PROFILES")) { "human" -> listOf(human); "ideal" -> listOf(ideal); else -> listOf(ideal, human) }
+    private val runHours: Double = System.getenv("KILL_RATE_HOURS")?.toDouble() ?: 0.25
+
+    /**
+     * `KILL_RATE_PIN=1` holds the hero at its starting level for the whole run (level and XP are reset after every tick, the XP
+     * earned is still counted). XP from a kill depends on the hero's level against the monster's, so a hero that levels up during
+     * the run drifts off the zone and reads low; pinning measures XP an hour at exactly that level, which is what a curve is built from.
+     */
+    private val pin: Boolean = System.getenv("KILL_RATE_PIN") == "1"
 
     private fun table(runs: List<Run>) = buildString {
-        appendLine("| Class | Lv | Map | Profile | Kills / h | Actions / kill | XP min / level | Kills / level | Deaths / h | Potions / h | Swing | Walk |")
-        appendLine("|-------|----|-----|---------|-----------|----------------|----------------|---------------|------------|-------------|-------|------|")
+        appendLine("| Class | Lv | Map | Profile | Kills / h | Actions / kill | XP / h | XP min / level | Kills / level | Deaths / h | Potions / h | Swing | Walk |")
+        appendLine("|-------|----|-----|---------|-----------|----------------|--------|----------------|---------------|------------|-------------|-------|------|")
         for (r in runs) appendLine(
-            "| ${r.className} | ${r.level} | ${r.mapId} | ${r.profile} | ${"%.0f".format(r.killsPerHour)} | ${"%.1f".format(r.actionsPerKill)} | " +
+            "| ${r.className} | ${r.level} | ${r.mapId} | ${r.profile} | ${"%.0f".format(r.killsPerHour)} | ${"%.1f".format(r.actionsPerKill)} | ${"%.0f".format(r.xpPerHour)} | " +
                 "${"%.1f".format(r.minutesPerLevel)} | ${"%.0f".format(r.killsPerLevel)} | ${"%.1f".format(r.deathsPerHour)} | ${"%.0f".format(r.potionsPerHour)} | " +
                 "${"%.0f".format(r.swingPct)}% | ${"%.0f".format(r.walkPct)}% |"
         )
     }
 
-    /** Hours to climb from the first sample level to [toLevel], interpolating minutes per level between samples. */
-    private fun hoursTo(runs: List<Run>, toLevel: Int): Double {
+    /** Hours to climb from [fromLevel] to [toLevel], interpolating minutes per level between the samples. */
+    private fun hoursBetween(runs: List<Run>, fromLevel: Int, toLevel: Int): Double {
         val pts = runs.sortedBy { it.level }.filter { !it.minutesPerLevel.isNaN() }
         if (pts.size < 2) return Double.NaN
         var minutes = 0.0
-        for (l in pts.first().level until toLevel) {
+        for (l in fromLevel until toLevel) {
             val lo = pts.lastOrNull { it.level <= l } ?: pts.first()
             val hi = pts.firstOrNull { it.level > l } ?: pts.last()
-            val f = if (hi.level == lo.level) 0.0 else (l - lo.level).toDouble() / (hi.level - lo.level)
+            val f = if (hi.level == lo.level) 0.0 else ((l - lo.level).toDouble() / (hi.level - lo.level)).coerceIn(0.0, 1.0)
             minutes += lo.minutesPerLevel + (hi.minutesPerLevel - lo.minutesPerLevel) * f
         }
         return minutes / 60.0
@@ -363,6 +408,51 @@ class HalcyonKillRateSimTest {
     private fun write(text: String) {
         val out = Path.of("build/kill-rate").also { Files.createDirectories(it) }.resolve("halcyon_kill_rate.md")
         Files.writeString(out, text)
+        println(text)
+    }
+
+    /** Zones a hero may hunt in, as level windows (the zones' designed ranges, a few levels early to a few late). */
+    private val zoneWindows = mapOf(4 to (1..20), 7 to (8..31), 10 to (20..47), 15 to (36..55), 16 to (46..65), 17 to (46..69))
+
+    /** Every (level, map) pair a hero could sensibly hunt: used to sample XP an hour at each level. */
+    private fun allZoneSamples(maxLevel: Int) = (1..maxLevel).flatMap { l -> zoneWindows.filter { l in it.value }.keys.map { l to it } }
+
+    @Test
+    fun `progression - each class plays from level 1 to 60, picking the best zone as it goes, and the four time buckets are measured`() {
+        assumeTrue(gameDir != null, "Developer game games/halcyon-reach is not present in this checkout")
+        assumeTrue(System.getenv("KILL_RATE_PROGRESSION") == "1", "set KILL_RATE_PROGRESSION=1 (and optionally KILL_RATE_CLASSES) to play through; it takes minutes per class")
+        val boundaries = listOf(30, 45, 55, 60)
+        val text = StringBuilder()
+        text.appendLine("# Halcyon Reach progression to level 60 (Human profile)")
+        text.appendLine()
+        text.appendLine("| Class | 1 to 30 | 30 to 45 | 45 to 55 | 55 to 60 | Total |")
+        text.appendLine("|-------|---------|----------|----------|----------|-------|")
+        val detail = StringBuilder()
+        for (classId in classIds) {
+            var level = 1; var xp = 0L; var hours = 0.0
+            val atBoundary = HashMap<Int, Double>()
+            var name = ""
+            while (level < 60) {
+                // Like a player, hunt where the XP an hour is best right now: probe each allowed zone for a few minutes, pinned.
+                val maps = zoneWindows.filter { level in it.value }.keys
+                val best = maps.maxBy { m -> hunt(classId, level, m, human, 0.05, pinned = true).xpPerHour }
+                val target = level + 1
+                val r = hunt(classId, level, best, human, 8.0, startXp = xp, untilLevel = target, pinned = false)
+                name = r.className
+                hours += r.hours; level = r.endLevel; xp = r.endXp
+                detail.appendLine("$name level ${target - 1} -> $level on map $best: ${"%.2f".format(r.hours)} h (total ${"%.1f".format(hours)} h)")
+                boundaries.filter { it <= level && it !in atBoundary }.forEach { atBoundary[it] = hours }
+                if (r.endLevel < target) { text.appendLine("| $name | stalled at level $level after ${"%.1f".format(hours)} h |"); break }
+            }
+            val h = boundaries.map { atBoundary[it] }
+            if (h.all { it != null }) text.appendLine("| $name | ${"%.1f".format(h[0])} | ${"%.1f".format(h[1]!! - h[0]!!)} | ${"%.1f".format(h[2]!! - h[1]!!)} | ${"%.1f".format(h[3]!! - h[2]!!)} | ${"%.1f".format(h[3])} |")
+        }
+        Files.createDirectories(Path.of("build/kill-rate"))
+        text.appendLine()
+        text.appendLine("## Level by level")
+        text.appendLine()
+        text.append(detail)
+        Files.writeString(Path.of("build/kill-rate/halcyon_progression.md"), text.toString())
         println(text)
     }
 
@@ -380,7 +470,7 @@ class HalcyonKillRateSimTest {
         assumeTrue(gameDir != null, "Developer game games/halcyon-reach is not present in this checkout")
         assumeTrue(System.getenv("KILL_RATE_MATRIX") == "1", "set KILL_RATE_MATRIX=1 to run the full matrix")
         val runs = ArrayList<Run>()
-        for (classId in 1..5) for ((level, map) in samples) for (p in listOf(ideal, human)) runs += hunt(classId, level, map, p, 0.25)
+        for (classId in classIds) for ((level, map) in samples) for (p in profiles) runs += hunt(classId, level, map, p, runHours)
         val text = buildString {
             appendLine("# Halcyon Reach kill-rate simulation (matrix)")
             appendLine()
@@ -388,14 +478,26 @@ class HalcyonKillRateSimTest {
             appendLine()
             append(table(runs))
             appendLine()
-            appendLine("## Estimated hours from level 1 to level 50 (interpolated between samples)")
+            val maxSample = samples.maxOf { it.first }
+            appendLine("## Class spread (Human profile where present): kills an hour and XP an hour, mean across classes = 100%")
             appendLine()
-            appendLine("| Class | Ideal | Human |")
-            appendLine("|-------|-------|-------|")
-            for (classId in 1..5) {
-                val cls = runs.first { it.classId == classId }.className
-                fun h(profile: String) = "%.1f".format(hoursTo(runs.filter { it.classId == classId && it.profile == profile }, 50))
-                appendLine("| $cls | ${h("Ideal")} | ${h("Human")} |")
+            appendLine("| Lv | " + classIds.joinToString(" | ") { id -> runs.first { it.classId == id }.className } + " |")
+            appendLine("|----|" + classIds.joinToString("|") { "------" } + "|")
+            for ((level, _) in samples) {
+                val row = classIds.map { id -> runs.firstOrNull { it.classId == id && it.level == level && it.profile == profiles.last().name } }
+                val mean = row.filterNotNull().map { it.xpPerHour }.average()
+                appendLine("| $level | " + row.joinToString(" | ") { r -> if (r == null) "-" else "${"%.0f".format(100.0 * r.xpPerHour / mean)}% (${"%.0f".format(r.killsPerHour)}/h)" } + " |")
+            }
+            appendLine()
+            appendLine("## Estimated hours (interpolated between samples, up to level $maxSample)")
+            appendLine()
+            appendLine("| Class | Profile | " + listOf(1 to 30, 30 to 45, 45 to 55, 55 to 60).filter { it.second <= maxSample }.joinToString(" | ") { "${it.first} to ${it.second}" } + " | 1 to $maxSample |")
+            appendLine("|-------|---------|" + "------|".repeat(listOf(1 to 30, 30 to 45, 45 to 55, 55 to 60).count { it.second <= maxSample } + 1))
+            for (classId in classIds) for (p in profiles) {
+                val rs = runs.filter { it.classId == classId && it.profile == p.name }
+                val cls = rs.first().className
+                val cols = listOf(1 to 30, 30 to 45, 45 to 55, 55 to 60).filter { it.second <= maxSample }.joinToString(" | ") { "%.1f".format(hoursBetween(rs, it.first, it.second)) }
+                appendLine("| $cls | ${p.name} | $cols | ${"%.1f".format(hoursBetween(rs, 1, maxSample))} |")
             }
         }
         write(text)
