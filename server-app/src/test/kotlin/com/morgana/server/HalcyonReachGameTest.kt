@@ -1622,7 +1622,7 @@ class HalcyonReachGameTest {
     }
 
     @Test
-    fun `ascension envoy ascends a level 120 hero without a reset and the paragon track then fills`(@TempDir tmp: Path) {
+    fun `ascension envoy ascends a level 60 hero without a reset and the paragon track then fills`(@TempDir tmp: Path) {
         val c = coordinator(tmp)
         val sim = c.simulation
         assertNull(sim.game.definition.rebirth, "Halcyon Reach has no rebirth any more")
@@ -1631,7 +1631,7 @@ class HalcyonReachGameTest {
         val hero = sim.players.getValue(cid)
         sim.spawnOrUpdatePlayer(
             hero.copy(
-                level = 120,
+                level = 60,
                 position = com.morgana.domain.spatial.WorldPosition.fromTile(mapId, envoy.tileX, envoy.tileY + 1, com.morgana.domain.spatial.Direction.UP)
             )
         )
@@ -1642,14 +1642,14 @@ class HalcyonReachGameTest {
         assertTrue(ascendIdx >= 0, "the Envoy offers Ascension: ${dlg.choiceLabels}")
         sim.selectDialogueChoice(cid, dlg.eventId, ascendIdx)
         val ascended = sim.players.getValue(cid)
-        assertEquals(120, ascended.level, "Ascension keeps the level")
+        assertEquals(60, ascended.level, "Ascension keeps the level")
         assertEquals(2, ascended.classId, "and the class")
         assertEquals(1, ascended.variables["ascended"])
         assertTrue(19 in ascended.knownSpellIds, "Ascendant Aura is taught")
         assertTrue(20 in ascended.knownSpellIds, "a Bulwark is taught Reflect")
 
-        // XP at the cap now earns Paragon levels: 2,000,000 for the first.
-        val (after, levels) = ascended.gainExperience(sim.game, 2_500_000L)
+        // XP at the cap now earns Paragon levels: 13,000,000 for the first (the cap moved from 120 to 60 on 2026-11-22).
+        val (after, levels) = ascended.gainExperience(sim.game, 13_500_000L)
         assertEquals(0, levels)
         assertEquals(1, after.variables["paragon"])
         assertEquals(ascended.unspentStatPoints + 1, after.unspentStatPoints)
@@ -2150,7 +2150,7 @@ class HalcyonReachGameTest {
         assertTrue("Training Master" in tips.getValue("skills").text)
         assertTrue("/release" in tips.getValue("death").text && "Rekindle" in tips.getValue("death").text)
         assertEquals(30, tips.getValue("promotion").level)
-        assertEquals(120, tips.getValue("ascension").level)
+        assertEquals(60, tips.getValue("ascension").level)
         // The people the tips send players to exist in the game's own data.
         val npcs = ContentLoader.load(game.resolve("data")).catalog.npcs.values.map { it.name }
         assertTrue("Repair Smith" in npcs && "Training Master" in npcs && "Calling Master" in npcs)

@@ -110,7 +110,8 @@ class HalcyonKillRateSimTest {
         return sim
     }
 
-    private fun promotionTier(level: Int) = when { level >= 90 -> 3; level >= 60 -> 2; level >= 30 -> 1; else -> 0 }
+    /** Promotion tiers (game.json `promotion`): Journeyman 30, Expert 45, Paragon 60 since the cap moved to 60 on 2026-11-22. */
+    private fun promotionTier(level: Int) = when { level >= 60 -> 3; level >= 45 -> 2; level >= 30 -> 1; else -> 0 }
 
     /** How a class spends its stat points (3 per level): fractions of the points for each attribute. */
     private fun allocation(classId: Int): Map<String, Double> = when (classId) {
