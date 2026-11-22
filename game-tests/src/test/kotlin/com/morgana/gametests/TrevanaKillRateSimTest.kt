@@ -28,6 +28,7 @@ import com.morgana.persistence.GameDefinitionLoader
 import com.morgana.persistence.ServerConfig
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assumptions.assumeTrue
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.nio.file.Files
 import java.nio.file.Path
@@ -460,6 +461,7 @@ class TrevanaKillRateSimTest {
     }
 
     @Test
+    @Disabled(MAP_REBUILD)
     fun `smoke - a level 1 Duelist and a level 1 Emberweaver both kill in Wrenfall Wood`() {
         assumeTrue(gameDir != null, "Developer game games/trevana-realms is not present in this checkout")
         assumeTrue(System.getenv("KILL_RATE_MATRIX") != "1", "the full matrix runs instead")
@@ -507,3 +509,6 @@ class TrevanaKillRateSimTest {
         assertTrue(runs.all { it.kills > 0 }, "some hunter killed nothing: ${runs.filter { it.kills == 0 }.map { "${it.className} L${it.level} ${it.profile}" }}")
     }
 }
+
+/** These tests need the rebuilt world (maps, NPC placement, quests); re-enable them as the map rebuild lands. */
+private const val MAP_REBUILD = "Trevana Realms map rebuild: needs the new maps, NPC placement and quests (see games/trevana-realms/MAP_REBUILD.md)"

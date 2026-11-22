@@ -13,6 +13,9 @@ stale_after: 2027-05-14T00:00:00Z
 > **Source of truth:** The generator scripts that once wrote this game (`tools/build.py`, `art.py`, `world.py`, the former `paperdoll.py`, `music.py`) were deleted on 2026-11-19. The JSON in `data/` and the files in `assets/` are now the only source of truth: edit them directly (or through the F1 editors) and run `validateContent`.
 # Trevana Realms (`games/trevana-realms`)
 
+> **Map rebuild in progress (2026-11-22):** the 30 maps described below, the 26 quests and 17 quest or travel events were deleted (backup: `C:/Users/jnels/Projects/trevana-realms-backup-2026-11-22.zip`). `data/maps/map_001.json` is a 40 x 40 placeholder "Trevena (under construction)"; classes start there, the town gate lists only Trevena, and the Holdfast guild war and the arena are switched off until their maps return. NPC and enemy definitions, items, spells, recipes and shops are kept; quest-giver NPCs have `eventId` 0 until their quests are rewritten. 37 tests in `TrevanaRealmsGameTest` and `TrevanaKillRateSimTest` are `@Disabled(MAP_REBUILD)` and come back as the new world lands. Plan: `games/trevana-realms/MAP_REBUILD.md`. Everything below about maps, quests and places describes the old world.
+
+
 Added 2026-11-15: an original online RPG built on Morgana's ORPG module (`combat.module = "realtime"` plus `parties`, `guilds`, `trading`, `crafting`, `projectiles`, `subTileMovement`, `softSeams`, `exploration`, `friends`, `ignore`, `market`, `mail`, and `rolePlayChat` in `server.json`, with `instancing: false` for open-world zones). All game rules, content, Lua scripts, and art live inside `games/trevana-realms/`, keeping the base engine and ORPG module decoupled.
 
 ## World and Content

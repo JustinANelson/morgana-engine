@@ -2,6 +2,8 @@
 
 ## 2026-11-22
 
+* **Remove** - **Trevana Realms old world deleted for the map rebuild** ([Trevana Realms](/content/trevana_realms_game.md)): 30 maps, 26 quests and 17 quest or travel events removed, a placeholder Trevena map added, map-bound settings (town gate, jail, stalls, jump and gate disable lists) pointed at it, and the Holdfast guild war and arena switched off. 37 map-dependent tests in `:game-tests` are disabled until the new maps land; the content test tolerates quest-giver NPCs without events. Game data is gitignored, so a zip backup was made outside the repository.
+
 * **Add** - **Overworld props, a game tileset exporter and the Trevana Realms biome tilesets** ([tilegen](/architecture/tilegen.md), [game-art](/architecture/game_art.md), [Trevana Realms](/content/trevana_realms_game.md)): eleven generic `PropKind`s (signpost, obelisk, reeds, wheat, rope bridge, pier, sailing ship, watchtower, gatehouse, mine cart, dead tree), `GameTilesetExporter` with the `gametilesets` command and `tilesets.index.json`, seven biome specs under `game-art/specs/trevana-world`, and tilesets 100-133 in the game. First steps of the map rebuild.
 
 * **Refactor** - **Game-specific tests moved from `:server-app` to the new test-only `:game-tests` module** ([Module graph](/architecture/module_graph.md)): `TrevanaRealmsGameTest`, `TrevanaKillRateSimTest`, `TrevanaEconomyModelTest`, `WhiteRiverGameTest`, `WhiteRiverActionCombatTest`, `TutorialVillageGameTest` and `RoguelikeReferenceGameTest` now live in `game-tests/src/test/kotlin/com/morgana/gametests` so engine modules hold no test of one particular game. Run them with `.\gradlew.bat :game-tests:test`.
