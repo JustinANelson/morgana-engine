@@ -110,7 +110,7 @@ class TrevanaRealmsGameTest {
         val pvpMaps = setOf(17, 19, 25)
         val arenaMaps = setOf(27, 30)
         for ((id, map) in loaded.catalog.maps) {
-            val want = when (id) { in pvpMaps -> MapMoral.OPEN_PVP; in arenaMaps -> MapMoral.ARENA; else -> MapMoral.SAFE_ZONE }
+            val want = when (id) { in pvpMaps -> MapMoral.OPEN_PVP; in arenaMaps -> MapMoral.ARENA; in 9..16 -> MapMoral.INSTANCED_DUNGEON; else -> MapMoral.SAFE_ZONE }
             assertEquals(want, map.moral, "map $id (${map.name})")
         }
 

@@ -2,6 +2,8 @@
 
 ## 2026-11-22
 
+* **Add** - **Trevana Realms dungeons and raids** ([Trevana Realms](/content/trevana_realms_game.md)): maps 9-16 built from `map-builder` recipes (rooms and corridors, boss room, Lv 60 camps), doors from each zone, new Lv 60+ monsters, bosses and core materials, boss-hunt and weekly raid quests; `TrevanaSubzonesTest` checks doors, ways back, reachability, levels and drops.
+
 * **Add** - **Trevana Realms zone quests and NPC retheme** ([Trevana Realms](/content/trevana_realms_game.md)): old town names reworded to Trevena places, a quest giver and Pharmacist at each zone entrance, the Waymaster in Trevena, 19 quests (intro plus three kill quests per zone) with chained events; `TrevanaWorldMapsTest` checks givers, quests and pharmacists. Subzones, raids, bounty/guild quests and the disabled tests remain.
 
 * **Add** - **Trevana Realms zones 2-8 and the `reserve` and `anchor` recipe features** ([map-builder](/architecture/map_builder.md), [Trevana Realms](/content/trevana_realms_game.md)): the North Fork, Gelli Gwyon, Forest of Celidon, Crags of Dinas Bran, Waste of Camlan, Mere of Avallon and Highlands of an Badon built from recipes with raised enemy density; `TrevanaWorldMapsTest` covers seams, connectivity, the hub-crossroads rule, the one-way drop and level bands.
