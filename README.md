@@ -3,7 +3,7 @@
 **Morgana ORPG** is a cross-platform 2D game engine built on Kotlin and LibGDX (desktop, Android, and browser from one client core). Geared toward online RPGs and co-op dungeon crawlers in the spirit of Mirage Source and Player Worlds, the engine is genre-neutral and deterministic: a game is plain JSON data (`game.json` + `data/`), game-owned art/audio (`assets/`), and sandboxed Lua scripts (`scripts/`).
 
 ## Highlights
-- **Engine and game are separate**: the engine knows no particular game. Attributes, vitals, formulas, combat rules, loot tables, run rules, boons, skill trees, and content live in a game folder under `games/` (`games/blank`, `games/tutorial-village`, `games/roguelike`, `games/halcyon-reach`, `games/white-river`), customized with sandboxed Lua scripts. `EngineBoundaryTest` enforces the split.
+- **Engine and game are separate**: the engine knows no particular game. Attributes, vitals, formulas, combat rules, loot tables, run rules, boons, skill trees, and content live in a game folder under `games/` (`games/blank`, `games/tutorial-village`, `games/roguelike`, `games/white-river`), customized with sandboxed Lua scripts. `EngineBoundaryTest` enforces the split.
 - **No-Code `F1` Live Editors (`:client-core`)**: Press `F1` as Mapper/Developer/Owner to edit Maps, Dungeon floor recipes, Items, NPCs & Bosses, Spells, Shops, Resources, Recipes, Quests, Events, Animations, Classes, Action Skills, Weapon Sets, Systems, Art, and Game Rules live in-game.
 - **Deterministic 20 TPS Core (`:core-domain`)**: Pure Kotlin simulation covering grid & sub-tile movement, seamless neighbor stitching, realtime & action combat (combos, hitboxes, dodge i-frames, piercing projectiles, ground-targeted AoEs), procedural dungeon floors (`ROOMS_AND_CORRIDORS`, `CELLULAR_CAVES`, `BSP_DUNGEON`, `OPEN_ARENA`), instanced co-op runs (persistent/extraction/ephemeral, configurable permadeath), Diablo-style random loot affixes, boons, skill trees, parties, guilds, trading, and page-based quests/events.
 - **Data First, Git-Friendly (`:server-persistence`)**: Every content definition is a schema-validated JSON file on disk (optional SQLite for player data), editable equally via `F1`, a text editor, Tiled, or scripts through one validation & hot-reload pipeline.
@@ -13,10 +13,13 @@
 > On macOS/Linux replace `.\gradlew.bat` with `./gradlew`.
 
 ### Option A: Start with the GUI (No Code)
+Run this from the **repository root** (the folder containing `gradlew.bat` and `README.md`):
 ```powershell
 # Launch the Desktop Client, open Local Worlds -> New Realm Wizard -> Play, then press F1
 .\gradlew.bat :client-desktop:run
 ```
+If you downloaded or built the standalone **Morgana SDK zip** (built with `.\gradlew.bat distributables` into `build/distributables/morgana-sdk-<version>.zip`), unzip it and run `bin\morgana-client.bat` (macOS/Linux: `bin/morgana-client`) inside the extracted SDK folder instead.
+
 The first account created on the machine running the server automatically becomes **Owner (rank 4)** so you can press `F1` and build immediately.
 
 ### Option B: Dedicated Server & Game Folder (CLI / Git Workflow)

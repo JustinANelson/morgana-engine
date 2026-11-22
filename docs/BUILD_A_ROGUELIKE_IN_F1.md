@@ -2,7 +2,7 @@
 
 This guide takes you from an empty realm to a hub-and-dungeon roguelike (classes, loot, generated floors, bosses, difficulty
 tiers, revives) using only the in-game `F1` editors. No Kotlin, no Lua, no hand-edited JSON. The finished example is
-**Lanternfall** (`games/roguelike`): pick it in the New Realm Wizard to look at and take apart everything described here.
+**Ashen Keep** (`games/roguelike`): pick it in the New Realm Wizard to look at and take apart everything described here.
 
 **What you need**: the Morgana SDK (or this repository) and Java 17 or newer. New to the editors? Do
 [Make your first game in 15 minutes](GETTING_STARTED.md) first; this guide assumes you know how to paint a map and save an
@@ -12,8 +12,7 @@ How to read this guide: **bold** is a panel, button or field; *italic* is someth
 
 ## 0. Start the realm and open the editors
 
-1. Start the desktop client (`bin\morgana-client.bat`, or `.\gradlew.bat :client-desktop:run`), open **Local Worlds**, press
-   **New Realm Wizard...**, name it, pick *Blank Game* (or *Lanternfall* to start from the finished game) and create it.
+1. **Start the desktop client**—from the **repository root** run `.\gradlew.bat :client-desktop:run` (macOS/Linux: `./gradlew :client-desktop:run`), or from an **extracted SDK zip** (built into `build/distributables/` via `.\gradlew.bat distributables`) run `bin\morgana-client.bat` (`bin/morgana-client` on macOS/Linux). Open **Local Worlds**, press **New Realm Wizard...**, name it, pick *Blank Game* (or *Ashen Keep* to start from the finished game) and create it.
 2. Select the realm and press **Play**. The first account made on this computer is the realm's **Owner**. Only the Owner may
    change the game's rules (step 1); mappers may edit everything else.
 3. Press `F1`. Panels are in the **Editors** menu in three groups: **Map** (Tileset, Layers, Attributes, Maps, Map
