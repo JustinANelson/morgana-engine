@@ -54,10 +54,10 @@ class PaperDollAndJrpgTilesetTest {
     }
 
     @Test
-    fun `suikoden and ragnarok palettes and cluster material patterns render deterministically`() {
+    fun `jrpg and painted palettes and cluster material patterns render deterministically`() {
         val expectedPalettes = listOf(
-            "sk_highland_grass", "sk_kyaro_timber", "sk_muse_limestone", "sk_scarlet_roof", "sk_true_rune_gold",
-            "ro_prontera_marble", "ro_payon_jade", "ro_geffen_arcane", "ro_morroc_sandstone", "ro_poring_pastel"
+            "highland_grass", "warm_timber", "pale_limestone", "scarlet_roof", "rune_gold",
+            "cream_marble", "forest_jade", "arcane_violet", "dune_sandstone", "pastel_pink"
         )
         for (name in expectedPalettes) {
             val ramp = SpecPalettes.presets[name]
@@ -67,13 +67,13 @@ class PaperDollAndJrpgTilesetTest {
         val gen1 = MaterialTileGenerator(seed = 42L, tileSize = 32)
         val gen2 = MaterialTileGenerator(seed = 42L, tileSize = 32)
         val patterns = listOf(
-            MaterialPattern.LEAF_CANOPY_CLUSTER to PalettePresets.SK_HIGHLAND_GRASS,
-            MaterialPattern.HALF_TIMBER_PLASTER to PalettePresets.SK_MUSE_LIMESTONE,
-            MaterialPattern.SHINGLE_THATCH_ROOF to PalettePresets.SK_SCARLET_ROOF,
-            MaterialPattern.PRONTERA_COURTYARD to PalettePresets.RO_PRONTERA_MARBLE
+            MaterialPattern.LEAF_CANOPY_CLUSTER to PalettePresets.HIGHLAND_GRASS,
+            MaterialPattern.HALF_TIMBER_PLASTER to PalettePresets.PALE_LIMESTONE,
+            MaterialPattern.SHINGLE_THATCH_ROOF to PalettePresets.SCARLET_ROOF,
+            MaterialPattern.SANCTUARY_COURTYARD to PalettePresets.CREAM_MARBLE
         )
         for ((pattern, palette) in patterns) {
-            val spec = MaterialSpec(pattern.name.lowercase(), pattern, palette, style = PixelStyle.SUIKODEN_32BIT)
+            val spec = MaterialSpec(pattern.name.lowercase(), pattern, palette, style = PixelStyle.JRPG_32BIT)
             val t1 = gen1.generateTile(spec)
             val t2 = gen2.generateTile(spec)
             assertArrayEquals(t1.pixels, t2.pixels)
@@ -84,18 +84,18 @@ class PaperDollAndJrpgTilesetTest {
     @Test
     fun `town facade structure and jrpg props render and round-trip via TilesetSpec`() {
         val matGen = MaterialTileGenerator(seed = 1337L, tileSize = 32)
-        val roofMat = matGen.generateTile(MaterialSpec("roof", MaterialPattern.SHINGLE_THATCH_ROOF, PalettePresets.SK_SCARLET_ROOF))
-        val wallMat = matGen.generateTile(MaterialSpec("wall", MaterialPattern.HALF_TIMBER_PLASTER, PalettePresets.SK_MUSE_LIMESTONE))
+        val roofMat = matGen.generateTile(MaterialSpec("roof", MaterialPattern.SHINGLE_THATCH_ROOF, PalettePresets.SCARLET_ROOF))
+        val wallMat = matGen.generateTile(MaterialSpec("wall", MaterialPattern.HALF_TIMBER_PLASTER, PalettePresets.PALE_LIMESTONE))
 
         val facadeTiles = StructureGenerator(tileSize = 32).generateTownFacadeSet(
-            name = "kyaro_inn",
+            name = "harbor_inn",
             roofMaterial = roofMat,
             wallMaterial = wallMat,
-            style = PixelStyle.SUIKODEN_32BIT
+            style = PixelStyle.JRPG_32BIT
         )
         assertEquals(9, facadeTiles.size)
-        assertEquals("kyaro_inn_roof_left", facadeTiles.first().name)
-        assertEquals("kyaro_inn_base_right", facadeTiles.last().name)
+        assertEquals("harbor_inn_roof_left", facadeTiles.first().name)
+        assertEquals("harbor_inn_base_right", facadeTiles.last().name)
 
         val propGen = PropGenerator(seed = 1337L, tileSize = 32)
         val jrpgProps = listOf(
@@ -103,11 +103,11 @@ class PaperDollAndJrpgTilesetTest {
             PropKind.MARKET_STALL,
             PropKind.RUNE_CRYSTAL_FOUNTAIN,
             PropKind.CHERRY_BLOSSOM_TREE,
-            PropKind.KAFRA_WAYPOINT_PILLAR,
+            PropKind.WAYPOINT_PILLAR,
             PropKind.GUILD_EMBLEM_FLAG
         )
         for (kind in jrpgProps) {
-            val prop = propGen.generateProp(kind.name.lowercase(), kind, style = PixelStyle.RAGNAROK_25D)
+            val prop = propGen.generateProp(kind.name.lowercase(), kind, style = PixelStyle.PAINTED_25D)
             assertEquals(kind.widthTiles * 32, prop.fullImage.width)
             assertEquals(kind.heightTiles * 32, prop.fullImage.height)
             assertEquals(kind.widthTiles * kind.heightTiles, prop.slicedTiles.size)
@@ -115,18 +115,18 @@ class PaperDollAndJrpgTilesetTest {
         }
 
         val spec = TilesetSpec(
-            name = "prontera_kyaro_town",
+            name = "sample_town",
             tileSize = 32,
-            style = PixelStyle.SUIKODEN_32BIT,
+            style = PixelStyle.JRPG_32BIT,
             materials = listOf(
-                MaterialTileSpec("roof", MaterialPattern.SHINGLE_THATCH_ROOF, palette = "sk_scarlet_roof"),
-                MaterialTileSpec("wall", MaterialPattern.HALF_TIMBER_PLASTER, palette = "sk_muse_limestone")
+                MaterialTileSpec("roof", MaterialPattern.SHINGLE_THATCH_ROOF, palette = "scarlet_roof"),
+                MaterialTileSpec("wall", MaterialPattern.HALF_TIMBER_PLASTER, palette = "pale_limestone")
             ),
             cliffs = listOf(
                 CliffLayerSpec("inn_facade", topMaterial = "roof", faceMaterial = "wall", townFacade = true)
             ),
             props = listOf(
-                PropLayerSpec("town_fountain", PropKind.RUNE_CRYSTAL_FOUNTAIN, primaryPalette = "ro_prontera_marble")
+                PropLayerSpec("town_fountain", PropKind.RUNE_CRYSTAL_FOUNTAIN, primaryPalette = "cream_marble")
             )
         )
         val json = TilesetSpecJson.toJson(spec)
@@ -143,7 +143,7 @@ class PaperDollAndJrpgTilesetTest {
         assertEquals(PaperDollJob.entries.size * Direction8.entries.size * 2, allTiles.size)
         assertEquals(10 * 32, sheet.width)
 
-        val baseLoadout = PaperDollLoadout.forJob(PaperDollJob.RUNE_HERO)
+        val baseLoadout = PaperDollLoadout.forJob(PaperDollJob.HERO)
         val south = gen.generateCharacterFrame(baseLoadout, Direction8.S)
         val southWest = gen.generateCharacterFrame(baseLoadout, Direction8.SW)
         val west = gen.generateCharacterFrame(baseLoadout, Direction8.W)

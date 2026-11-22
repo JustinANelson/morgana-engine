@@ -28,12 +28,12 @@ class StructureAndPropTest {
     @Test
     fun `cliff generator creates 6 modular cap and face tiles deterministically`() {
         val matGen = MaterialTileGenerator(seed = 11L, tileSize = 16)
-        val top = matGen.generateTile(MaterialSpec("grass", MaterialPattern.ORGANIC_FBM, PalettePresets.TIME_FANTASY_GRASS))
-        val face = matGen.generateTile(MaterialSpec("cliff", MaterialPattern.COBBLESTONE, PalettePresets.TIME_FANTASY_STONE))
+        val top = matGen.generateTile(MaterialSpec("grass", MaterialPattern.ORGANIC_FBM, PalettePresets.CLASSIC_RPG_GRASS))
+        val face = matGen.generateTile(MaterialSpec("cliff", MaterialPattern.COBBLESTONE, PalettePresets.CLASSIC_RPG_STONE))
 
         val structGen = StructureGenerator(tileSize = 16)
-        val first = structGen.generateCliffSet("earth_cliff", top, face, style = PixelStyle.TIME_FANTASY)
-        val second = structGen.generateCliffSet("earth_cliff", top, face, style = PixelStyle.TIME_FANTASY)
+        val first = structGen.generateCliffSet("earth_cliff", top, face, style = PixelStyle.CLASSIC_RPG)
+        val second = structGen.generateCliffSet("earth_cliff", top, face, style = PixelStyle.CLASSIC_RPG)
 
         assertEquals(6, first.size)
         assertEquals(
@@ -56,7 +56,7 @@ class StructureAndPropTest {
             val propGen = PropGenerator(seed = 42L, tileSize = tileSize)
             for (kind in PropKind.entries) {
                 assertTrue(kind.widthTiles == 1 || kind.widthTiles == 3, "Prop $kind must be 1 or 3 tiles wide")
-                val prop = propGen.generateProp("test_${kind.name.lowercase()}", kind, style = PixelStyle.TIME_FANTASY)
+                val prop = propGen.generateProp("test_${kind.name.lowercase()}", kind, style = PixelStyle.CLASSIC_RPG)
                 assertEquals(kind.widthTiles * tileSize, prop.fullImage.width)
                 assertEquals(kind.heightTiles * tileSize, prop.fullImage.height)
                 assertEquals(kind.widthTiles * kind.heightTiles, prop.slicedTiles.size)
@@ -80,20 +80,20 @@ class StructureAndPropTest {
     fun `tileset spec parses, round-trips, and renders cliffs and props`(@TempDir tempDir: Path) {
         val json = """
             {
-              "name": "time_fantasy_village",
+              "name": "classic_village",
               "seed": 2026,
               "tileSize": 16,
               "columns": 6,
-              "style": "TIME_FANTASY",
+              "style": "CLASSIC_RPG",
               "materials": [
-                { "name": "tf_grass", "pattern": "ORGANIC_FBM", "palette": "time_fantasy_grass" },
-                { "name": "tf_cliff_wall", "pattern": "COBBLESTONE", "palette": "time_fantasy_stone" }
+                { "name": "classic_grass", "pattern": "ORGANIC_FBM", "palette": "classic_rpg_grass" },
+                { "name": "classic_cliff_wall", "pattern": "COBBLESTONE", "palette": "classic_rpg_stone" }
               ],
               "cliffs": [
-                { "name": "grass_cliff", "topMaterial": "tf_grass", "faceMaterial": "tf_cliff_wall" }
+                { "name": "grass_cliff", "topMaterial": "classic_grass", "faceMaterial": "classic_cliff_wall" }
               ],
               "props": [
-                { "name": "village_oak", "kind": "OAK_TREE", "primaryPalette": "time_fantasy_grass" },
+                { "name": "village_oak", "kind": "OAK_TREE", "primaryPalette": "classic_rpg_grass" },
                 { "name": "village_house", "kind": "COTTAGE" }
               ]
             }
@@ -116,7 +116,7 @@ class StructureAndPropTest {
         val out = PrintStream(ByteArrayOutputStream())
         val err = PrintStream(ByteArrayOutputStream())
         assertEquals(0, TilesetCli.run(arrayOf("spec", specPath.toString(), "--out", outDir.toString()), out, err))
-        assertTrue(Files.isRegularFile(outDir.resolve("time_fantasy_village.png")))
+        assertTrue(Files.isRegularFile(outDir.resolve("classic_village.png")))
         assertTrue(Files.isRegularFile(outDir.resolve("props/village_oak.png")))
         assertTrue(Files.isRegularFile(outDir.resolve("props/village_house.png")))
     }
@@ -145,7 +145,7 @@ class StructureAndPropTest {
         val errBuf = ByteArrayOutputStream()
         val outDir = tempDir.resolve("cottage_out")
         val code = TilesetCli.run(
-            arrayOf("prop", "cottage", "--size", "16", "--style", "time_fantasy", "--out", outDir.toString(), "--split"),
+            arrayOf("prop", "cottage", "--size", "16", "--style", "classic_rpg", "--out", outDir.toString(), "--split"),
             PrintStream(outBuf),
             PrintStream(errBuf)
         )
@@ -158,16 +158,16 @@ class StructureAndPropTest {
     @Test
     fun `a4 wall generator creates 9 void-cap and 2-tile-tall face tiles and round-trips in spec`() {
         val matGen = MaterialTileGenerator(seed = 7L, tileSize = 32)
-        val top = matGen.generateTile(MaterialSpec("top", MaterialPattern.DIAGONAL_PAVER, PalettePresets.TF_RUINS_MARBLE))
-        val face = matGen.generateTile(MaterialSpec("face", MaterialPattern.BRICK_MASONRY, PalettePresets.TF_RUINS_MARBLE, style = PixelStyle.TIME_FANTASY))
+        val top = matGen.generateTile(MaterialSpec("top", MaterialPattern.DIAGONAL_PAVER, PalettePresets.RUINS_MARBLE))
+        val face = matGen.generateTile(MaterialSpec("face", MaterialPattern.BRICK_MASONRY, PalettePresets.RUINS_MARBLE, style = PixelStyle.CLASSIC_RPG))
 
         val structGen = StructureGenerator(tileSize = 32)
         val tiles = structGen.generateA4WallSet(
             name = "marble_wall",
             topMaterial = top,
             faceMaterial = face,
-            style = PixelStyle.TIME_FANTASY,
-            trimColor = PalettePresets.TF_RUINS_BLUE.mid
+            style = PixelStyle.CLASSIC_RPG,
+            trimColor = PalettePresets.RUINS_BLUE.mid
         )
 
         assertEquals(9, tiles.size)
@@ -187,10 +187,10 @@ class StructureAndPropTest {
               "name": "a4_test",
               "seed": 1,
               "tileSize": 32,
-              "style": "TIME_FANTASY",
+              "style": "CLASSIC_RPG",
               "materials": [
-                { "name": "m_top", "pattern": "DIAGONAL_PAVER", "palette": "tf_ruins_marble" },
-                { "name": "m_face", "pattern": "BRICK_MASONRY", "palette": "tf_ruins_marble" }
+                { "name": "m_top", "pattern": "DIAGONAL_PAVER", "palette": "ruins_marble" },
+                { "name": "m_face", "pattern": "BRICK_MASONRY", "palette": "ruins_marble" }
               ],
               "cliffs": [
                 { "name": "w", "topMaterial": "m_top", "faceMaterial": "m_face", "trimColor": "#2d589f", "a4Layout": true }
@@ -206,9 +206,9 @@ class StructureAndPropTest {
     @Test
     fun `vines decal adds crisp green pixels deterministically`() {
         val matGen = MaterialTileGenerator(seed = 5L, tileSize = 16)
-        val base = matGen.generateTile(MaterialSpec("wall", MaterialPattern.BRICK_MASONRY, PalettePresets.TF_RUINS_MARBLE))
-        val a = TileDecals.applyDecal(base, DecalKind.VINES, seed = 99L, style = PixelStyle.TIME_FANTASY, palette = PalettePresets.TF_RUINS_MARBLE)
-        val b = TileDecals.applyDecal(base, DecalKind.VINES, seed = 99L, style = PixelStyle.TIME_FANTASY, palette = PalettePresets.TF_RUINS_MARBLE)
+        val base = matGen.generateTile(MaterialSpec("wall", MaterialPattern.BRICK_MASONRY, PalettePresets.RUINS_MARBLE))
+        val a = TileDecals.applyDecal(base, DecalKind.VINES, seed = 99L, style = PixelStyle.CLASSIC_RPG, palette = PalettePresets.RUINS_MARBLE)
+        val b = TileDecals.applyDecal(base, DecalKind.VINES, seed = 99L, style = PixelStyle.CLASSIC_RPG, palette = PalettePresets.RUINS_MARBLE)
         assertArrayEquals(a.pixels, b.pixels)
 
         val vineGreen = PaletteRamp.rgba(0x3E, 0xA8, 0x42)
@@ -216,7 +216,7 @@ class StructureAndPropTest {
     }
 
     @Test
-    fun `time fantasy ruins props use 16x16 pixel grid with 2x nearest-neighbor scaling`() {
+    fun `classic ruins props use 16x16 pixel grid with 2x nearest-neighbor scaling`() {
         val ruinsKinds = listOf(
             PropKind.PILLAR, PropKind.SHRINE, PropKind.URN,
             PropKind.STAIRS_DOWN, PropKind.STAIRS_UP,
@@ -227,8 +227,8 @@ class StructureAndPropTest {
         val voidOutline = PaletteRamp.rgba(0x2B, 0x26, 0x32)
 
         for (kind in ruinsKinds) {
-            val p16 = gen16.generateProp("tf_${kind.name}", kind, style = PixelStyle.TIME_FANTASY, primaryPalette = PalettePresets.TF_RUINS_MARBLE)
-            val p32 = gen32.generateProp("tf_${kind.name}", kind, style = PixelStyle.TIME_FANTASY, primaryPalette = PalettePresets.TF_RUINS_MARBLE)
+            val p16 = gen16.generateProp("classic_${kind.name}", kind, style = PixelStyle.CLASSIC_RPG, primaryPalette = PalettePresets.RUINS_MARBLE)
+            val p32 = gen32.generateProp("classic_${kind.name}", kind, style = PixelStyle.CLASSIC_RPG, primaryPalette = PalettePresets.RUINS_MARBLE)
 
             assertTrue(p16.fullImage.pixels.any { it == voidOutline }, "$kind should use #2b2632 selective shadow outline")
             for (y in 0 until p16.fullImage.height) {

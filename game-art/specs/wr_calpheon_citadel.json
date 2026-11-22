@@ -1,0 +1,34 @@
+{
+  "name": "wr_calpheon_citadel",
+  "seed": 2004,
+  "tileSize": 16,
+  "columns": 8,
+  "style": "CLASSIC_RPG",
+  "materials": [
+    { "name": "cc_marble", "pattern": "HERRINGBONE_COBBLE", "palette": "dark_iron", "scale": 1.0, "detail": 0.2 },
+    { "name": "cc_gold", "pattern": "HERRINGBONE_COBBLE", "palette": "relic_amber", "scale": 1.0, "detail": 0.2 },
+    { "name": "cc_cobble", "pattern": "OBSIDIAN_CRAG", "palette": "abyssal_obsidian", "scale": 1.0, "detail": 0.25 },
+    { "name": "cc_brick", "pattern": "BRICK_MASONRY", "palette": "rift_crimson", "scale": 1.0, "detail": 0.2 }
+  ],
+  "cliffs": [
+    { "name": "cc_citadel_wall", "topMaterial": "cc_gold", "faceMaterial": "cc_cobble", "trimColor": "#bc7e2c", "a4Layout": true }
+  ],
+  "props": [
+    { "name": "cc_tent", "kind": "MEDIEVAL_TENT", "primaryPalette": "rift_crimson", "secondaryPalette": "dark_iron" },
+    { "name": "cc_spire", "kind": "GARGOYLE_SPIRE", "primaryPalette": "dark_iron" },
+    { "name": "cc_ballista", "kind": "SIEGE_BALLISTA", "primaryPalette": "dark_iron", "secondaryPalette": "relic_amber" },
+    { "name": "cc_banner", "kind": "WALL_BANNER", "primaryPalette": "rift_crimson", "secondaryPalette": "relic_amber" },
+    { "name": "cc_rack", "kind": "WEAPON_RACK", "primaryPalette": "dark_iron", "secondaryPalette": "relic_amber" },
+    { "name": "cc_rift", "kind": "DARK_RIFT_ALTAR", "primaryPalette": "abyssal_obsidian", "secondaryPalette": "rift_crimson" }
+  ],
+  "autotiles": [
+    {
+      "name": "cc_marble_on_cobble",
+      "mode": "BLOB_47",
+      "columns": 8,
+      "foregroundMaterial": "cc_marble",
+      "backgroundMaterial": "cc_cobble",
+      "style": { "margin": 3.0, "rimWidth": 1.0, "wobbleAmplitude": 1.0, "rimColor": "#444a56" }
+    }
+  ]
+}

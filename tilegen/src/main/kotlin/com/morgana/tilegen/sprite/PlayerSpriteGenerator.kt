@@ -32,7 +32,7 @@ enum class FacingDirection {
 }
 
 /**
- * Deterministic generator for 16x16-native Time Fantasy / RMXP-style player sprites
+ * Deterministic generator for 16x16-native RMXP-style player sprites
  * with selective `#2b2632` outlines and 4-directional facing support.
  */
 class PlayerSpriteGenerator(
@@ -53,7 +53,7 @@ class PlayerSpriteGenerator(
         playerClass: PlayerClass,
         direction: FacingDirection = FacingDirection.DOWN,
         frameCount: Int = 1,
-        style: PixelStyle = PixelStyle.TIME_FANTASY
+        style: PixelStyle = PixelStyle.CLASSIC_RPG
     ): List<NamedTile> {
         require(name.isNotBlank()) { "Player sprite name must not be blank" }
         require(frameCount >= 1) { "frameCount must be >= 1, got $frameCount" }
@@ -71,7 +71,7 @@ class PlayerSpriteGenerator(
         playerClass: PlayerClass,
         direction: FacingDirection = FacingDirection.DOWN,
         frameIndex: Int = 0,
-        style: PixelStyle = PixelStyle.TIME_FANTASY
+        style: PixelStyle = PixelStyle.CLASSIC_RPG
     ): TileImage {
         val (primary, accent) = palettesFor(playerClass, style)
         val rawGrid = templateFor(playerClass, direction)
@@ -92,7 +92,7 @@ class PlayerSpriteGenerator(
     fun generateAllPlayersSheet(
         includeDirections: Boolean = true,
         frameCount: Int = 1,
-        style: PixelStyle = PixelStyle.TIME_FANTASY
+        style: PixelStyle = PixelStyle.CLASSIC_RPG
     ): Pair<TileImage, List<NamedTile>> {
         val dirs = if (includeDirections) FacingDirection.entries else listOf(FacingDirection.DOWN)
         val tiles = mutableListOf<NamedTile>()
@@ -119,13 +119,13 @@ class PlayerSpriteGenerator(
 
     private fun palettesFor(playerClass: PlayerClass, style: PixelStyle): Pair<PaletteRamp, PaletteRamp> {
         val pair = when (playerClass) {
-            PlayerClass.KNIGHT -> PalettePresets.TIME_FANTASY_STONE to PalettePresets.TF_RUINS_BLUE
-            PlayerClass.PALADIN -> PalettePresets.TF_RUINS_MARBLE to PalettePresets.TF_RUINS_GOLD
-            PlayerClass.MAGE -> PalettePresets.TF_RUINS_BLUE to PalettePresets.TF_RUINS_GOLD
-            PlayerClass.CLERIC -> PalettePresets.TF_RUINS_MARBLE to PalettePresets.TF_RUINS_BLUE
-            PlayerClass.RANGER -> PalettePresets.TIME_FANTASY_GRASS to PalettePresets.TIME_FANTASY_EARTH
-            PlayerClass.ROGUE -> PalettePresets.TF_RUINS_SLATE to PalettePresets.TF_RUINS_TERRA
-            PlayerClass.BERSERKER -> PalettePresets.TF_RUINS_TERRA to PalettePresets.TF_RUINS_GOLD
+            PlayerClass.KNIGHT -> PalettePresets.CLASSIC_RPG_STONE to PalettePresets.RUINS_BLUE
+            PlayerClass.PALADIN -> PalettePresets.RUINS_MARBLE to PalettePresets.RUINS_GOLD
+            PlayerClass.MAGE -> PalettePresets.RUINS_BLUE to PalettePresets.RUINS_GOLD
+            PlayerClass.CLERIC -> PalettePresets.RUINS_MARBLE to PalettePresets.RUINS_BLUE
+            PlayerClass.RANGER -> PalettePresets.CLASSIC_RPG_GRASS to PalettePresets.CLASSIC_RPG_EARTH
+            PlayerClass.ROGUE -> PalettePresets.RUINS_SLATE to PalettePresets.RUINS_TERRA
+            PlayerClass.BERSERKER -> PalettePresets.RUINS_TERRA to PalettePresets.RUINS_GOLD
             PlayerClass.NECROMANCER -> PaletteRamp(
                 intArrayOf(c(43, 38, 50), c(64, 42, 92), c(96, 62, 138), c(138, 96, 184), c(186, 148, 224))
             ) to PaletteRamp(

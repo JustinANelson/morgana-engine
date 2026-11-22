@@ -27,6 +27,7 @@ include(
     ":server-persistence",
     ":server-app",
     ":tilegen",
+    ":game-art",
     ":client-core",
     ":client-net-netty",
     ":script-luak",

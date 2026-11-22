@@ -11,7 +11,7 @@ import kotlin.math.abs
 import kotlin.math.hypot
 
 /**
- * 8-way character facing directions for Suikoden II / Ragnarok Online 2.5D movement.
+ * 8-way character facing directions for 32-bit JRPG and 2.5D movement.
  */
 enum class Direction8(val isBack: Boolean, val isDiagonal: Boolean, val mirrorFrom: Direction8? = null) {
     S(isBack = false, isDiagonal = false),
@@ -25,18 +25,18 @@ enum class Direction8(val isBack: Boolean, val isDiagonal: Boolean, val mirrorFr
 }
 
 /**
- * 10 iconic Suikoden II (32-bit JRPG) and Ragnarok Online (2.5D Midgard) character classes.
+ * 10 iconic JRPG and 2.5D character classes.
  */
 enum class PaperDollJob {
-    RUNE_HERO,
-    HIGHLAND_PRINCE,
-    LORD_KNIGHT,
-    HIGH_PRIEST,
-    HIGH_WIZARD,
-    ASSASSIN_CROSS,
-    SNIPER_HUNTER,
-    BLACKSMITH_MERCHANT,
-    PALADIN_CRUSADER,
+    HERO,
+    PRINCE,
+    KNIGHT,
+    PRIEST,
+    WIZARD,
+    ASSASSIN,
+    HUNTER,
+    SMITH,
+    PALADIN,
     SHRINE_MAIDEN
 }
 
@@ -61,7 +61,7 @@ enum class HeadgearKind {
     VALKYRIE_HELM,
     WIZARD_HAT,
     PRIEST_MITRE,
-    PORING_BERET,
+    SLIME_BERET,
     FEATHER_CAP,
     GOGGLES,
     SHRINE_RIBBON,
@@ -104,17 +104,17 @@ enum class ShieldKind {
 }
 
 /**
- * Iconic 32x32 cluster-shaded monsters inspired by Ragnarok Online and Suikoden II.
+ * Iconic 32x32 cluster-shaded monsters in the JRPG and 2.5D style.
  */
 enum class JrpgMonsterKind {
-    PORING,
-    LUNATIC,
-    FABRE,
+    SLIME_BLOB,
+    MOON_HARE,
+    LARVA,
     ORC_WARRIOR,
-    BAPHOMET,
+    HORNED_DEMON,
     HIGHLAND_BEAST,
     RUNE_GOLEM,
-    VALKYRIE_WRAITH
+    SHIELD_WRAITH
 }
 
 /**
@@ -157,122 +157,122 @@ data class PaperDollLoadout(
             PaperDollLoadout(job = job, theme = theme)
 
         fun defaultCapeFor(job: PaperDollJob): Boolean = job in setOf(
-            PaperDollJob.LORD_KNIGHT,
-            PaperDollJob.HIGH_WIZARD,
-            PaperDollJob.PALADIN_CRUSADER,
-            PaperDollJob.HIGHLAND_PRINCE,
-            PaperDollJob.SNIPER_HUNTER
+            PaperDollJob.KNIGHT,
+            PaperDollJob.WIZARD,
+            PaperDollJob.PALADIN,
+            PaperDollJob.PRINCE,
+            PaperDollJob.HUNTER
         )
 
         fun defaultLegsFor(job: PaperDollJob): LegsStyle = when (job) {
-            PaperDollJob.LORD_KNIGHT, PaperDollJob.PALADIN_CRUSADER -> LegsStyle.GREAVES
-            PaperDollJob.HIGH_PRIEST, PaperDollJob.HIGH_WIZARD, PaperDollJob.SHRINE_MAIDEN -> LegsStyle.ROBE_SKIRT
+            PaperDollJob.KNIGHT, PaperDollJob.PALADIN -> LegsStyle.GREAVES
+            PaperDollJob.PRIEST, PaperDollJob.WIZARD, PaperDollJob.SHRINE_MAIDEN -> LegsStyle.ROBE_SKIRT
             else -> LegsStyle.TROUSERS
         }
 
         fun defaultFeetFor(job: PaperDollJob): FeetStyle = when (job) {
-            PaperDollJob.LORD_KNIGHT, PaperDollJob.PALADIN_CRUSADER -> FeetStyle.SABATONS
+            PaperDollJob.KNIGHT, PaperDollJob.PALADIN -> FeetStyle.SABATONS
             PaperDollJob.SHRINE_MAIDEN -> FeetStyle.SANDALS
             else -> FeetStyle.BOOTS
         }
 
         fun defaultTorsoFor(job: PaperDollJob): TorsoStyle = when (job) {
-            PaperDollJob.LORD_KNIGHT, PaperDollJob.PALADIN_CRUSADER -> TorsoStyle.SKYRENDER
-            PaperDollJob.BLACKSMITH_MERCHANT, PaperDollJob.HIGHLAND_PRINCE -> TorsoStyle.BRIGANDINE
+            PaperDollJob.KNIGHT, PaperDollJob.PALADIN -> TorsoStyle.SKYRENDER
+            PaperDollJob.SMITH, PaperDollJob.PRINCE -> TorsoStyle.BRIGANDINE
             else -> TorsoStyle.TRAVELER
         }
 
         fun defaultAttachmentsFor(job: PaperDollJob): List<AttachmentKind> = when (job) {
-            PaperDollJob.LORD_KNIGHT, PaperDollJob.PALADIN_CRUSADER -> listOf(AttachmentKind.KNIGHT_PAULDRONS)
-            PaperDollJob.SNIPER_HUNTER -> listOf(AttachmentKind.QUIVER)
-            PaperDollJob.BLACKSMITH_MERCHANT -> listOf(AttachmentKind.UTILITY_BELT)
-            PaperDollJob.HIGH_PRIEST -> listOf(AttachmentKind.SILK_SASH)
+            PaperDollJob.KNIGHT, PaperDollJob.PALADIN -> listOf(AttachmentKind.KNIGHT_PAULDRONS)
+            PaperDollJob.HUNTER -> listOf(AttachmentKind.QUIVER)
+            PaperDollJob.SMITH -> listOf(AttachmentKind.UTILITY_BELT)
+            PaperDollJob.PRIEST -> listOf(AttachmentKind.SILK_SASH)
             else -> emptyList()
         }
 
         fun defaultHairFor(job: PaperDollJob): HairStyle = when (job) {
-            PaperDollJob.RUNE_HERO -> HairStyle.SPIKY_HERO
-            PaperDollJob.HIGHLAND_PRINCE -> HairStyle.NOBLE_PARTED
-            PaperDollJob.LORD_KNIGHT -> HairStyle.SPIKY_HERO
-            PaperDollJob.HIGH_PRIEST -> HairStyle.LONG_FLOWING
-            PaperDollJob.HIGH_WIZARD -> HairStyle.LONG_FLOWING
-            PaperDollJob.ASSASSIN_CROSS -> HairStyle.SPIKY_HERO
-            PaperDollJob.SNIPER_HUNTER -> HairStyle.SHORT_BOB
-            PaperDollJob.BLACKSMITH_MERCHANT -> HairStyle.SHORT_BOB
-            PaperDollJob.PALADIN_CRUSADER -> HairStyle.BRAIDED_CROWN
+            PaperDollJob.HERO -> HairStyle.SPIKY_HERO
+            PaperDollJob.PRINCE -> HairStyle.NOBLE_PARTED
+            PaperDollJob.KNIGHT -> HairStyle.SPIKY_HERO
+            PaperDollJob.PRIEST -> HairStyle.LONG_FLOWING
+            PaperDollJob.WIZARD -> HairStyle.LONG_FLOWING
+            PaperDollJob.ASSASSIN -> HairStyle.SPIKY_HERO
+            PaperDollJob.HUNTER -> HairStyle.SHORT_BOB
+            PaperDollJob.SMITH -> HairStyle.SHORT_BOB
+            PaperDollJob.PALADIN -> HairStyle.BRAIDED_CROWN
             PaperDollJob.SHRINE_MAIDEN -> HairStyle.TWIN_TAILS
         }
 
         fun defaultHeadgearFor(job: PaperDollJob): HeadgearKind = when (job) {
-            PaperDollJob.RUNE_HERO -> HeadgearKind.BANDANA
-            PaperDollJob.HIGHLAND_PRINCE -> HeadgearKind.NONE
-            PaperDollJob.LORD_KNIGHT -> HeadgearKind.VALKYRIE_HELM
-            PaperDollJob.HIGH_PRIEST -> HeadgearKind.PRIEST_MITRE
-            PaperDollJob.HIGH_WIZARD -> HeadgearKind.WIZARD_HAT
-            PaperDollJob.ASSASSIN_CROSS -> HeadgearKind.BANDANA
-            PaperDollJob.SNIPER_HUNTER -> HeadgearKind.FEATHER_CAP
-            PaperDollJob.BLACKSMITH_MERCHANT -> HeadgearKind.GOGGLES
-            PaperDollJob.PALADIN_CRUSADER -> HeadgearKind.VALKYRIE_HELM
+            PaperDollJob.HERO -> HeadgearKind.BANDANA
+            PaperDollJob.PRINCE -> HeadgearKind.NONE
+            PaperDollJob.KNIGHT -> HeadgearKind.VALKYRIE_HELM
+            PaperDollJob.PRIEST -> HeadgearKind.PRIEST_MITRE
+            PaperDollJob.WIZARD -> HeadgearKind.WIZARD_HAT
+            PaperDollJob.ASSASSIN -> HeadgearKind.BANDANA
+            PaperDollJob.HUNTER -> HeadgearKind.FEATHER_CAP
+            PaperDollJob.SMITH -> HeadgearKind.GOGGLES
+            PaperDollJob.PALADIN -> HeadgearKind.VALKYRIE_HELM
             PaperDollJob.SHRINE_MAIDEN -> HeadgearKind.SHRINE_RIBBON
         }
 
         fun defaultWeaponFor(job: PaperDollJob): WeaponKind = when (job) {
-            PaperDollJob.RUNE_HERO -> WeaponKind.DUAL_TONFA
-            PaperDollJob.HIGHLAND_PRINCE -> WeaponKind.KNIGHT_SWORD
-            PaperDollJob.LORD_KNIGHT -> WeaponKind.KNIGHT_SWORD
-            PaperDollJob.HIGH_PRIEST -> WeaponKind.HOLY_ROD
-            PaperDollJob.HIGH_WIZARD -> WeaponKind.ARCANE_STAFF
-            PaperDollJob.ASSASSIN_CROSS -> WeaponKind.DUAL_KATAR
-            PaperDollJob.SNIPER_HUNTER -> WeaponKind.COMPOSITE_BOW
-            PaperDollJob.BLACKSMITH_MERCHANT -> WeaponKind.HEAVY_AXE
-            PaperDollJob.PALADIN_CRUSADER -> WeaponKind.HOLY_SPEAR
+            PaperDollJob.HERO -> WeaponKind.DUAL_TONFA
+            PaperDollJob.PRINCE -> WeaponKind.KNIGHT_SWORD
+            PaperDollJob.KNIGHT -> WeaponKind.KNIGHT_SWORD
+            PaperDollJob.PRIEST -> WeaponKind.HOLY_ROD
+            PaperDollJob.WIZARD -> WeaponKind.ARCANE_STAFF
+            PaperDollJob.ASSASSIN -> WeaponKind.DUAL_KATAR
+            PaperDollJob.HUNTER -> WeaponKind.COMPOSITE_BOW
+            PaperDollJob.SMITH -> WeaponKind.HEAVY_AXE
+            PaperDollJob.PALADIN -> WeaponKind.HOLY_SPEAR
             PaperDollJob.SHRINE_MAIDEN -> WeaponKind.HOLY_ROD
         }
 
         fun defaultShieldFor(job: PaperDollJob): ShieldKind = when (job) {
-            PaperDollJob.LORD_KNIGHT -> ShieldKind.CRUSADER_CROSS_SHIELD
-            PaperDollJob.HIGH_PRIEST -> ShieldKind.SPELLBOOK
-            PaperDollJob.BLACKSMITH_MERCHANT -> ShieldKind.ROUND_BUCKLER
-            PaperDollJob.PALADIN_CRUSADER -> ShieldKind.CRUSADER_CROSS_SHIELD
+            PaperDollJob.KNIGHT -> ShieldKind.CRUSADER_CROSS_SHIELD
+            PaperDollJob.PRIEST -> ShieldKind.SPELLBOOK
+            PaperDollJob.SMITH -> ShieldKind.ROUND_BUCKLER
+            PaperDollJob.PALADIN -> ShieldKind.CRUSADER_CROSS_SHIELD
             else -> ShieldKind.NONE
         }
 
         fun defaultOutfitPalette(job: PaperDollJob): PaletteRamp = when (job) {
-            PaperDollJob.RUNE_HERO -> PalettePresets.SK_SCARLET_ROOF
-            PaperDollJob.HIGHLAND_PRINCE -> PalettePresets.RO_PRONTERA_MARBLE
-            PaperDollJob.LORD_KNIGHT -> PalettePresets.RO_PRONTERA_MARBLE
-            PaperDollJob.HIGH_PRIEST -> PalettePresets.RO_PRONTERA_MARBLE
-            PaperDollJob.HIGH_WIZARD -> PalettePresets.RO_GEFFEN_ARCANE
-            PaperDollJob.ASSASSIN_CROSS -> PalettePresets.WR_ABYSSAL_OBSIDIAN
-            PaperDollJob.SNIPER_HUNTER -> PalettePresets.SK_HIGHLAND_GRASS
-            PaperDollJob.BLACKSMITH_MERCHANT -> PalettePresets.SK_KYARO_TIMBER
-            PaperDollJob.PALADIN_CRUSADER -> PalettePresets.SK_TRUE_RUNE_GOLD
-            PaperDollJob.SHRINE_MAIDEN -> PalettePresets.SK_SCARLET_ROOF
+            PaperDollJob.HERO -> PalettePresets.SCARLET_ROOF
+            PaperDollJob.PRINCE -> PalettePresets.CREAM_MARBLE
+            PaperDollJob.KNIGHT -> PalettePresets.CREAM_MARBLE
+            PaperDollJob.PRIEST -> PalettePresets.CREAM_MARBLE
+            PaperDollJob.WIZARD -> PalettePresets.ARCANE_VIOLET
+            PaperDollJob.ASSASSIN -> PalettePresets.ABYSSAL_OBSIDIAN
+            PaperDollJob.HUNTER -> PalettePresets.HIGHLAND_GRASS
+            PaperDollJob.SMITH -> PalettePresets.WARM_TIMBER
+            PaperDollJob.PALADIN -> PalettePresets.RUNE_GOLD
+            PaperDollJob.SHRINE_MAIDEN -> PalettePresets.SCARLET_ROOF
         }
 
         fun defaultAccentPalette(job: PaperDollJob): PaletteRamp = when (job) {
-            PaperDollJob.RUNE_HERO -> PalettePresets.SK_MUSE_LIMESTONE
-            PaperDollJob.HIGHLAND_PRINCE -> PalettePresets.SK_TRUE_RUNE_GOLD
-            PaperDollJob.LORD_KNIGHT -> PalettePresets.SK_SCARLET_ROOF
-            PaperDollJob.HIGH_PRIEST -> PalettePresets.SK_TRUE_RUNE_GOLD
-            PaperDollJob.HIGH_WIZARD -> PalettePresets.SK_TRUE_RUNE_GOLD
-            PaperDollJob.ASSASSIN_CROSS -> PalettePresets.SK_SCARLET_ROOF
-            PaperDollJob.SNIPER_HUNTER -> PalettePresets.SK_KYARO_TIMBER
-            PaperDollJob.BLACKSMITH_MERCHANT -> PalettePresets.SK_TRUE_RUNE_GOLD
-            PaperDollJob.PALADIN_CRUSADER -> PalettePresets.RO_PRONTERA_MARBLE
-            PaperDollJob.SHRINE_MAIDEN -> PalettePresets.RO_PRONTERA_MARBLE
+            PaperDollJob.HERO -> PalettePresets.PALE_LIMESTONE
+            PaperDollJob.PRINCE -> PalettePresets.RUNE_GOLD
+            PaperDollJob.KNIGHT -> PalettePresets.SCARLET_ROOF
+            PaperDollJob.PRIEST -> PalettePresets.RUNE_GOLD
+            PaperDollJob.WIZARD -> PalettePresets.RUNE_GOLD
+            PaperDollJob.ASSASSIN -> PalettePresets.SCARLET_ROOF
+            PaperDollJob.HUNTER -> PalettePresets.WARM_TIMBER
+            PaperDollJob.SMITH -> PalettePresets.RUNE_GOLD
+            PaperDollJob.PALADIN -> PalettePresets.CREAM_MARBLE
+            PaperDollJob.SHRINE_MAIDEN -> PalettePresets.CREAM_MARBLE
         }
 
         fun defaultHairPalette(job: PaperDollJob): PaletteRamp = when (job) {
-            PaperDollJob.RUNE_HERO -> PaletteRamp.fromBaseColor(PaletteRamp.rgba(52, 44, 58), steps = 5)
-            PaperDollJob.HIGHLAND_PRINCE -> PalettePresets.SK_TRUE_RUNE_GOLD
-            PaperDollJob.LORD_KNIGHT -> PalettePresets.SK_SCARLET_ROOF
-            PaperDollJob.HIGH_PRIEST -> PalettePresets.RO_PORING_PASTEL
-            PaperDollJob.HIGH_WIZARD -> PalettePresets.RO_PRONTERA_MARBLE
-            PaperDollJob.ASSASSIN_CROSS -> PalettePresets.RO_GEFFEN_ARCANE
-            PaperDollJob.SNIPER_HUNTER -> PalettePresets.SK_KYARO_TIMBER
-            PaperDollJob.BLACKSMITH_MERCHANT -> PalettePresets.SK_SCARLET_ROOF
-            PaperDollJob.PALADIN_CRUSADER -> PalettePresets.SK_TRUE_RUNE_GOLD
+            PaperDollJob.HERO -> PaletteRamp.fromBaseColor(PaletteRamp.rgba(52, 44, 58), steps = 5)
+            PaperDollJob.PRINCE -> PalettePresets.RUNE_GOLD
+            PaperDollJob.KNIGHT -> PalettePresets.SCARLET_ROOF
+            PaperDollJob.PRIEST -> PalettePresets.PASTEL_PINK
+            PaperDollJob.WIZARD -> PalettePresets.CREAM_MARBLE
+            PaperDollJob.ASSASSIN -> PalettePresets.ARCANE_VIOLET
+            PaperDollJob.HUNTER -> PalettePresets.WARM_TIMBER
+            PaperDollJob.SMITH -> PalettePresets.SCARLET_ROOF
+            PaperDollJob.PALADIN -> PalettePresets.RUNE_GOLD
             PaperDollJob.SHRINE_MAIDEN -> PaletteRamp.fromBaseColor(PaletteRamp.rgba(44, 38, 64), steps = 5)
         }
     }
@@ -280,7 +280,7 @@ data class PaperDollLoadout(
 
 /**
  * Deterministic 32x32-native (and scalable 48x48 / 64x64) tall-chibi character & monster generator
- * modeled after Suikoden II (PS1 32-bit JRPG) and Ragnarok Online (2.5D ACT/SPR paper-doll).
+ * in the 32-bit JRPG and 2.5D paper-doll styles.
  *
  * Features:
  * - 3-head tall anatomical proportions (28px tall on a 32x32 canvas)
@@ -310,7 +310,7 @@ class PaperDollSpriteGenerator(
         loadout: PaperDollLoadout,
         direction: Direction8 = Direction8.S,
         frameIndex: Int = 0,
-        style: PixelStyle = PixelStyle.RAGNAROK_25D,
+        style: PixelStyle = PixelStyle.PAINTED_25D,
         clip: SpriteAnimationClip = SpriteAnimationClip.WALK
     ): TileImage = generateCharacterFrame(
         loadout = loadout,
@@ -509,7 +509,7 @@ class PaperDollSpriteGenerator(
     ): Map<String, Pair<TileImage, List<NamedTile>>> {
         val pack = linkedMapOf<String, Pair<TileImage, List<NamedTile>>>()
         val baseLoadout = PaperDollLoadout(
-            job = PaperDollJob.RUNE_HERO,
+            job = PaperDollJob.HERO,
             hairStyle = HairStyle.SPIKY_HERO,
             headgear = HeadgearKind.NONE,
             weapon = WeaponKind.NONE,
@@ -618,7 +618,7 @@ class PaperDollSpriteGenerator(
         loadout: PaperDollLoadout,
         direction: Direction8 = Direction8.S,
         frameCount: Int = 1,
-        style: PixelStyle = PixelStyle.RAGNAROK_25D,
+        style: PixelStyle = PixelStyle.PAINTED_25D,
         clip: SpriteAnimationClip = SpriteAnimationClip.WALK
     ): List<NamedTile> {
         require(name.isNotBlank()) { "Character sprite name must not be blank" }
@@ -636,7 +636,7 @@ class PaperDollSpriteGenerator(
     fun generateAllJobsSheet(
         include8Directions: Boolean = true,
         frameCount: Int = 2,
-        style: PixelStyle = PixelStyle.RAGNAROK_25D,
+        style: PixelStyle = PixelStyle.PAINTED_25D,
         clip: SpriteAnimationClip = SpriteAnimationClip.WALK
     ): Pair<TileImage, List<NamedTile>> {
         val dirs = if (include8Directions) Direction8.entries else listOf(Direction8.S, Direction8.W, Direction8.E, Direction8.N)
@@ -668,7 +668,7 @@ class PaperDollSpriteGenerator(
     fun generateMonsterFrame(
         kind: JrpgMonsterKind,
         frameIndex: Int = 0,
-        style: PixelStyle = PixelStyle.RAGNAROK_25D
+        style: PixelStyle = PixelStyle.PAINTED_25D
     ): TileImage {
         val pal = monsterPaletteFor(kind)
         val raw32 = renderMonster32(kind, frameIndex, pal)
@@ -685,7 +685,7 @@ class PaperDollSpriteGenerator(
      */
     fun generateAllMonstersSheet(
         frameCount: Int = 2,
-        style: PixelStyle = PixelStyle.RAGNAROK_25D
+        style: PixelStyle = PixelStyle.PAINTED_25D
     ): Pair<TileImage, List<NamedTile>> {
         val tiles = mutableListOf<NamedTile>()
         for (frame in 0 until frameCount) {
@@ -842,7 +842,7 @@ class PaperDollSpriteGenerator(
             }
         }
 
-        val shadowAnchor = if (style == PixelStyle.SUIKODEN_32BIT) {
+        val shadowAnchor = if (style == PixelStyle.JRPG_32BIT) {
             PaletteRamp.rgba(28, 22, 42)
         } else {
             PaletteRamp.rgba(34, 30, 54)
@@ -1232,7 +1232,7 @@ class PaperDollSpriteGenerator(
                 val isStud = loadout.torsoStyle == TorsoStyle.BRIGANDINE && (x + y) % 3 == 0 && y in (torsoTop + 2) until (legTop - 2)
                 val isChestTrim = loadout.torsoStyle == TorsoStyle.SKYRENDER && (y == torsoTop + 2 || abs(x - cx) == 2) && y < legTop - 1
                 val col = when {
-                    isBuckle -> PalettePresets.SK_TRUE_RUNE_GOLD.highlight
+                    isBuckle -> PalettePresets.RUNE_GOLD.highlight
                     isBelt -> boots.shadow
                     isCollar -> accent.highlight
                     isChestTrim -> accent.highlight
@@ -1382,14 +1382,14 @@ class PaperDollSpriteGenerator(
                 for (x in (cx - 4)..(cx + 4)) {
                     img.setPixel(x, by, accent.highlight)
                 }
-                // Iconic Ragnarok white-gold Valkyrie wings on sides of helm
+                // White-gold winged on sides of helm
                 for (i in 1..4) {
                     val wy = (by - i).coerceAtLeast(1)
-                    img.setPixel((cx - 4 - i).coerceIn(1, 30), wy, PalettePresets.RO_PRONTERA_MARBLE.highlight)
-                    img.setPixel((cx - 4 - i).coerceIn(1, 30), wy + 1, PalettePresets.RO_PRONTERA_MARBLE.mid)
+                    img.setPixel((cx - 4 - i).coerceIn(1, 30), wy, PalettePresets.CREAM_MARBLE.highlight)
+                    img.setPixel((cx - 4 - i).coerceIn(1, 30), wy + 1, PalettePresets.CREAM_MARBLE.mid)
                     if (dir != Direction8.W) {
-                        img.setPixel((cx + 4 + i).coerceIn(1, 30), wy, PalettePresets.RO_PRONTERA_MARBLE.highlight)
-                        img.setPixel((cx + 4 + i).coerceIn(1, 30), wy + 1, PalettePresets.RO_PRONTERA_MARBLE.mid)
+                        img.setPixel((cx + 4 + i).coerceIn(1, 30), wy, PalettePresets.CREAM_MARBLE.highlight)
+                        img.setPixel((cx + 4 + i).coerceIn(1, 30), wy + 1, PalettePresets.CREAM_MARBLE.mid)
                     }
                 }
             }
@@ -1417,12 +1417,12 @@ class PaperDollSpriteGenerator(
                     }
                 }
             }
-            HeadgearKind.PORING_BERET -> {
-                val poring = PalettePresets.RO_PORING_PASTEL
+            HeadgearKind.SLIME_BERET -> {
+                val slime_blob = PalettePresets.PASTEL_PINK
                 for (y in (headCy - 7).coerceAtLeast(1)..(headCy - 3)) {
                     val hw = if (y == headCy - 7) 2 else 4
                     for (x in (cx - hw)..(cx + hw)) {
-                        img.setPixel(x, y, poring.sample(0.78f))
+                        img.setPixel(x, y, slime_blob.sample(0.78f))
                     }
                 }
             }
@@ -1434,12 +1434,12 @@ class PaperDollSpriteGenerator(
                 }
                 // White-crimson plume feather
                 for (i in 1..4) {
-                    img.setPixel((cx + 2 + i / 2).coerceIn(2, 29), (by - i).coerceAtLeast(1), PalettePresets.RO_PRONTERA_MARBLE.highlight)
+                    img.setPixel((cx + 2 + i / 2).coerceIn(2, 29), (by - i).coerceAtLeast(1), PalettePresets.CREAM_MARBLE.highlight)
                 }
             }
             HeadgearKind.GOGGLES -> {
                 val gy = headCy - 3
-                for (x in (cx - 4)..(cx + 4)) img.setPixel(x, gy, PalettePresets.SK_KYARO_TIMBER.shadow)
+                for (x in (cx - 4)..(cx + 4)) img.setPixel(x, gy, PalettePresets.WARM_TIMBER.shadow)
                 img.setPixel(cx - 2, gy, PaletteRamp.rgba(120, 224, 255))
                 img.setPixel(cx + 2, gy, PaletteRamp.rgba(120, 224, 255))
             }
@@ -1453,8 +1453,8 @@ class PaperDollSpriteGenerator(
             HeadgearKind.IRON_HELMET, HeadgearKind.STEEL_HELMET, HeadgearKind.SKYRENDER_HELM -> {
                 val helmPal = when (kind) {
                     HeadgearKind.SKYRENDER_HELM -> accent
-                    HeadgearKind.STEEL_HELMET -> PalettePresets.RO_PRONTERA_MARBLE
-                    else -> PalettePresets.WR_SERENDIA_IRON
+                    HeadgearKind.STEEL_HELMET -> PalettePresets.CREAM_MARBLE
+                    else -> PalettePresets.DARK_IRON
                 }
                 for (y in (headCy - 5).coerceAtLeast(1)..(headCy - 2)) {
                     for (x in (cx - 5 - hwPad)..(cx + 5 + hwPad)) {
@@ -1488,9 +1488,9 @@ class PaperDollSpriteGenerator(
         accent: PaletteRamp,
         chunky: Boolean = false
     ) {
-        val steel = PalettePresets.RO_PRONTERA_MARBLE
-        val wood = PalettePresets.SK_KYARO_TIMBER
-        val gold = PalettePresets.SK_TRUE_RUNE_GOLD
+        val steel = PalettePresets.CREAM_MARBLE
+        val wood = PalettePresets.WARM_TIMBER
+        val gold = PalettePresets.RUNE_GOLD
 
         val dirSign = if (dir == Direction8.W || dir == Direction8.SW) -1 else 1
         val handX = cx + dirSign * (if (chunky) 8 else 5)
@@ -1598,7 +1598,7 @@ class PaperDollSpriteGenerator(
                 }
             }
             WeaponKind.KATANA -> {
-                // Slender curved Wuxia/Duelist katana
+                // Slender curved duelist katana
                 for (i in 0..9) {
                     val curve = if (i > 5) dirSign else 0
                     val bx = (handX + curve + (if (isSlash) dirSign * (i / 2) else 0)).coerceIn(1, 30)
@@ -1660,7 +1660,7 @@ class PaperDollSpriteGenerator(
             }
             ShieldKind.TOWER_SHIELD, ShieldKind.DAWNBRAND_SHIELD -> {
                 val x0 = sx.coerceIn(1, 24)
-                val pal = if (shield == ShieldKind.DAWNBRAND_SHIELD) PalettePresets.SK_TRUE_RUNE_GOLD else accent
+                val pal = if (shield == ShieldKind.DAWNBRAND_SHIELD) PalettePresets.RUNE_GOLD else accent
                 for (y in (sy - 1).coerceAtLeast(1) until (sy + 8).coerceAtMost(30)) {
                     for (x in x0 until (x0 + 5).coerceAtMost(30)) {
                         val isRim = x == x0 || x == x0 + 4 || y == sy - 1 || y == sy + 7
@@ -1669,8 +1669,8 @@ class PaperDollSpriteGenerator(
                 }
             }
             ShieldKind.OFFHAND_BLADE, ShieldKind.OFFHAND_SWORD, ShieldKind.OFFHAND_KATANA -> {
-                val steel = PalettePresets.RO_PRONTERA_MARBLE
-                val gold = PalettePresets.SK_TRUE_RUNE_GOLD
+                val steel = PalettePresets.CREAM_MARBLE
+                val gold = PalettePresets.RUNE_GOLD
                 val hx = sx.coerceIn(2, 29)
                 val hy = (torsoTop + 5).coerceIn(4, 28)
                 val len = if (shield == ShieldKind.OFFHAND_KATANA) 8 else 7
@@ -1701,12 +1701,12 @@ class PaperDollSpriteGenerator(
             AttachmentKind.QUIVER -> {
                 val qx = if (dir == Direction8.W) cx + 3 else cx + 3
                 fillRectShaded(img, qx.coerceIn(1, 28), (torsoTop + 1).coerceIn(1, 25), 3, 6, wood, 0.65f)
-                img.setPixel((qx + 1).coerceIn(1, 30), torsoTop.coerceAtLeast(1), PalettePresets.RO_PRONTERA_MARBLE.highlight)
+                img.setPixel((qx + 1).coerceIn(1, 30), torsoTop.coerceAtLeast(1), PalettePresets.CREAM_MARBLE.highlight)
             }
             AttachmentKind.ANGEL_WINGS, AttachmentKind.DEMON_WINGS, AttachmentKind.FAIRY_WINGS -> {
                 val wingPal = when (att) {
-                    AttachmentKind.ANGEL_WINGS -> PalettePresets.RO_PRONTERA_MARBLE
-                    AttachmentKind.DEMON_WINGS -> PalettePresets.WR_ABYSSAL_OBSIDIAN
+                    AttachmentKind.ANGEL_WINGS -> PalettePresets.CREAM_MARBLE
+                    AttachmentKind.DEMON_WINGS -> PalettePresets.ABYSSAL_OBSIDIAN
                     else -> theme.auraPalette
                 }
                 val flap = stride / 2
@@ -1828,7 +1828,7 @@ class PaperDollSpriteGenerator(
             }
             AttachmentKind.CAT_EARS -> {
                 val ear = theme.hairPalette.mid
-                val inner = PalettePresets.RO_PORING_PASTEL.highlight
+                val inner = PalettePresets.PASTEL_PINK.highlight
                 img.setPixel((cx - 3).coerceIn(1, 30), (headCy - 5).coerceAtLeast(1), ear)
                 img.setPixel((cx - 3).coerceIn(1, 30), (headCy - 6).coerceAtLeast(1), ear)
                 img.setPixel((cx - 2).coerceIn(1, 30), (headCy - 5).coerceAtLeast(1), inner)
@@ -1839,14 +1839,14 @@ class PaperDollSpriteGenerator(
                 }
             }
             AttachmentKind.HALO -> {
-                val gold = PalettePresets.SK_TRUE_RUNE_GOLD.highlight
+                val gold = PalettePresets.RUNE_GOLD.highlight
                 val hy = (headCy - 7).coerceAtLeast(1)
                 for (dx in -3..3) {
                     if (abs(dx) >= 1) img.setPixel((cx + dx).coerceIn(1, 30), hy, gold)
                 }
             }
             AttachmentKind.ROYAL_CROWN -> {
-                val gold = PalettePresets.SK_TRUE_RUNE_GOLD
+                val gold = PalettePresets.RUNE_GOLD
                 val cy = (headCy - 5).coerceAtLeast(1)
                 for (dx in -3..3) {
                     img.setPixel((cx + dx).coerceIn(1, 30), cy, gold.mid)
@@ -1872,7 +1872,7 @@ class PaperDollSpriteGenerator(
             return
         }
         val pal = when (att) {
-            AttachmentKind.FUR_MANTLE -> PalettePresets.RO_PRONTERA_MARBLE
+            AttachmentKind.FUR_MANTLE -> PalettePresets.CREAM_MARBLE
             else -> theme.accentPalette
         }
         val armSwing = stride / 2
@@ -1970,10 +1970,10 @@ class PaperDollSpriteGenerator(
             img.setPixel((cx + dx).coerceIn(1, 30), y, pal.mid)
         }
         if (att == AttachmentKind.POTION_POUCH && !dir.isBack) {
-            fillRectShaded(img, (cx + 3).coerceIn(1, 28), y, 2, 3, PalettePresets.CO_DYNASTY_LACQUER, 0.85f)
+            fillRectShaded(img, (cx + 3).coerceIn(1, 28), y, 2, 3, PalettePresets.LACQUER_RED, 0.85f)
         } else if (att == AttachmentKind.AMULET && !dir.isBack) {
-            img.setPixel(cx.coerceIn(1, 30), (legTop - 6).coerceIn(1, 29), PalettePresets.CO_CELESTIAL_GOLD.highlight)
-            img.setPixel(cx.coerceIn(1, 30), (legTop - 5).coerceIn(1, 29), PalettePresets.CO_IMPERIAL_JADE.highlight)
+            img.setPixel(cx.coerceIn(1, 30), (legTop - 6).coerceIn(1, 29), PalettePresets.CELESTIAL_GOLD.highlight)
+            img.setPixel(cx.coerceIn(1, 30), (legTop - 5).coerceIn(1, 29), PalettePresets.JADE_GREEN.highlight)
         }
     }
 
@@ -2007,14 +2007,14 @@ class PaperDollSpriteGenerator(
         val sy = torsoTop + 3
         when (att) {
             AttachmentKind.ROSE_FAN -> {
-                val rose = PalettePresets.RO_PORING_PASTEL
+                val rose = PalettePresets.PASTEL_PINK
                 for (dx in -1..2) {
                     img.setPixel((sx + dx).coerceIn(1, 30), sy.coerceIn(1, 30), rose.highlight)
                     img.setPixel((sx + dx).coerceIn(1, 30), (sy + 1).coerceIn(1, 30), rose.mid)
                 }
             }
             AttachmentKind.BASTION_TOWER -> {
-                fillRectShaded(img, sx.coerceIn(1, 25), (sy - 1).coerceAtLeast(1), 5, 7, PalettePresets.RO_PRONTERA_MARBLE, 0.78f)
+                fillRectShaded(img, sx.coerceIn(1, 25), (sy - 1).coerceAtLeast(1), 5, 7, PalettePresets.CREAM_MARBLE, 0.78f)
             }
             else -> Unit
         }
@@ -2038,7 +2038,7 @@ class PaperDollSpriteGenerator(
                 }
             }
             AttachmentKind.FLAME_AURA -> {
-                val fire = PalettePresets.SK_SCARLET_ROOF
+                val fire = PalettePresets.SCARLET_ROOF
                 for (i in -1..1 step 2) {
                     val fx = (cx + i * (7 - (phase % 2))).coerceIn(1, 30)
                     val fy = (torsoTop + 4 - phase * 2).coerceIn(2, 29)
@@ -2047,12 +2047,12 @@ class PaperDollSpriteGenerator(
                 }
             }
             AttachmentKind.HOLY_GLOW -> {
-                val gold = PalettePresets.SK_TRUE_RUNE_GOLD.highlight
+                val gold = PalettePresets.RUNE_GOLD.highlight
                 frontImg.setPixel((cx - 6).coerceIn(1, 30), (torsoTop - phase).coerceIn(2, 29), gold)
                 frontImg.setPixel((cx + 6).coerceIn(1, 30), (torsoTop + 2 - phase).coerceIn(2, 29), gold)
             }
             AttachmentKind.SHADOW_MIST -> {
-                val dark = PalettePresets.WR_ABYSSAL_OBSIDIAN.mid
+                val dark = PalettePresets.ABYSSAL_OBSIDIAN.mid
                 for (dx in -6..6 step 3) {
                     backImg.setPixel((cx + dx).coerceIn(1, 30), (26 - phase).coerceIn(1, 30), dark)
                 }
@@ -2164,22 +2164,22 @@ class PaperDollSpriteGenerator(
     }
 
     private fun monsterPaletteFor(kind: JrpgMonsterKind): PaletteRamp = when (kind) {
-        JrpgMonsterKind.PORING -> PalettePresets.RO_PORING_PASTEL
-        JrpgMonsterKind.LUNATIC -> PalettePresets.RO_PRONTERA_MARBLE
-        JrpgMonsterKind.FABRE -> PalettePresets.RO_PAYON_JADE
-        JrpgMonsterKind.ORC_WARRIOR -> PalettePresets.SK_HIGHLAND_GRASS
-        JrpgMonsterKind.BAPHOMET -> PalettePresets.RO_GEFFEN_ARCANE
-        JrpgMonsterKind.HIGHLAND_BEAST -> PalettePresets.SK_KYARO_TIMBER
-        JrpgMonsterKind.RUNE_GOLEM -> PalettePresets.SK_MUSE_LIMESTONE
-        JrpgMonsterKind.VALKYRIE_WRAITH -> PalettePresets.RO_PRONTERA_MARBLE
+        JrpgMonsterKind.SLIME_BLOB -> PalettePresets.PASTEL_PINK
+        JrpgMonsterKind.MOON_HARE -> PalettePresets.CREAM_MARBLE
+        JrpgMonsterKind.LARVA -> PalettePresets.FOREST_JADE
+        JrpgMonsterKind.ORC_WARRIOR -> PalettePresets.HIGHLAND_GRASS
+        JrpgMonsterKind.HORNED_DEMON -> PalettePresets.ARCANE_VIOLET
+        JrpgMonsterKind.HIGHLAND_BEAST -> PalettePresets.WARM_TIMBER
+        JrpgMonsterKind.RUNE_GOLEM -> PalettePresets.PALE_LIMESTONE
+        JrpgMonsterKind.SHIELD_WRAITH -> PalettePresets.CREAM_MARBLE
     }
 
     private fun renderMonster32(kind: JrpgMonsterKind, frameIndex: Int, pal: PaletteRamp): TileImage {
         val img = TileImage(32, 32)
         val bob = if (frameIndex % 2 == 1) -1 else 0
         when (kind) {
-            JrpgMonsterKind.PORING -> {
-                // Iconic Ragnarok Online translucent pink droplet slime with apple stem & glossy specular
+            JrpgMonsterKind.SLIME_BLOB -> {
+                // Translucent pink droplet slime with apple stem & glossy specular
                 val cy = 20f + bob
                 for (y in 10..27) {
                     for (x in 6..25) {
@@ -2199,10 +2199,10 @@ class PaperDollSpriteGenerator(
                 img.setPixel(12, 17 + bob, PaletteRamp.rgba(255, 255, 255))
                 img.setPixel(13, 21 + bob, pal.shadow)
                 img.setPixel(18, 21 + bob, pal.shadow)
-                img.setPixel(16, 11 + bob, PalettePresets.RO_PAYON_JADE.mid)
-                img.setPixel(17, 10 + bob, PalettePresets.RO_PAYON_JADE.highlight)
+                img.setPixel(16, 11 + bob, PalettePresets.FOREST_JADE.mid)
+                img.setPixel(17, 10 + bob, PalettePresets.FOREST_JADE.highlight)
             }
-            JrpgMonsterKind.LUNATIC -> {
+            JrpgMonsterKind.MOON_HARE -> {
                 // Fluffy clover-ear rabbit monster
                 for (earX in listOf(12, 19)) {
                     for (y in (7 + bob)..(15 + bob)) {
@@ -2214,15 +2214,15 @@ class PaperDollSpriteGenerator(
                 img.setPixel(13, 19 + bob, PaletteRamp.rgba(238, 52, 68))
                 img.setPixel(18, 19 + bob, PaletteRamp.rgba(238, 52, 68))
             }
-            JrpgMonsterKind.FABRE -> {
+            JrpgMonsterKind.LARVA -> {
                 // Segmented green larva
                 for (seg in 0..3) {
                     val sx = 11f + seg * 3.2f
                     val sy = 22f - (if (seg == 0) 3f else 0f) + bob
                     fillEllipseShaded(img, sx, sy, 3.6f, 3.4f, pal)
                 }
-                img.setPixel(9, 16 + bob, PalettePresets.SK_TRUE_RUNE_GOLD.highlight)
-                img.setPixel(11, 16 + bob, PalettePresets.SK_TRUE_RUNE_GOLD.highlight)
+                img.setPixel(9, 16 + bob, PalettePresets.RUNE_GOLD.highlight)
+                img.setPixel(11, 16 + bob, PalettePresets.RUNE_GOLD.highlight)
             }
             else -> {
                 // Tall humanoid/beast boss monster silhouette with horns/weapons
@@ -2232,14 +2232,14 @@ class PaperDollSpriteGenerator(
                 fillRectShaded(img, 18, 23, 3, 5, pal, 0.38f)
                 // Horns & glowing eyes
                 for (i in 1..4) {
-                    img.setPixel(11 - i / 2, 7 + bob - i, PalettePresets.SK_TRUE_RUNE_GOLD.highlight)
-                    img.setPixel(20 + i / 2, 7 + bob - i, PalettePresets.SK_TRUE_RUNE_GOLD.highlight)
+                    img.setPixel(11 - i / 2, 7 + bob - i, PalettePresets.RUNE_GOLD.highlight)
+                    img.setPixel(20 + i / 2, 7 + bob - i, PalettePresets.RUNE_GOLD.highlight)
                 }
                 img.setPixel(14, 9 + bob, PaletteRamp.rgba(255, 224, 92))
                 img.setPixel(17, 9 + bob, PaletteRamp.rgba(255, 224, 92))
                 // Crescent Scythe / Battle Weapon on right
                 for (y in (5 + bob)..(25 + bob)) {
-                    img.setPixel(25, y.coerceIn(1, 30), PalettePresets.RO_PRONTERA_MARBLE.highlight)
+                    img.setPixel(25, y.coerceIn(1, 30), PalettePresets.CREAM_MARBLE.highlight)
                 }
             }
         }

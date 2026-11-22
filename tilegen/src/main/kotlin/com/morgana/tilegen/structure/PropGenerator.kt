@@ -132,9 +132,9 @@ enum class PropKind(val widthTiles: Int, val heightTiles: Int) {
     /** 1x1 raised stone floor pressure plate. */
     PRESSURE_PLATE(1, 1),
 
-    // ---- Conquer Online (Wuxia Imperial Dynasty) Props ----
+    // ---- Imperial East Asian props ----
 
-    /** 3x2 upturned Wuxia pagoda pavilion with crimson lacquer columns, gold eaves, and glazed roof. */
+    /** 3x2 upturned pagoda pavilion with crimson lacquer columns, gold eaves, and glazed roof. */
     PAGODA_ROOF(3, 2),
 
     /** 3x2 ornate Oriental Paifang archway gate with upturned roof tiers and inscribed lintel. */
@@ -152,10 +152,10 @@ enum class PropKind(val widthTiles: Int, val heightTiles: Int) {
     /** 1x1 hanging crimson silk and gold tassel festival paper lantern. */
     PAPER_LANTERN(1, 1),
 
-    // ---- White River / Black Desert (Dark Medieval High-Fantasy) Props ----
+    // ---- Dark medieval high-fantasy props ----
 
-    /** 1x2 swirling obsidian and crimson Black Spirit dark-energy awakening altar. */
-    BLACK_SPIRIT_RIFT(1, 2),
+    /** 1x2 swirling obsidian and crimson dark-energy awakening altar. */
+    DARK_RIFT_ALTAR(1, 2),
 
     /** 3x2 medieval military command pavilion tent with heraldic crest and iron stakes. */
     MEDIEVAL_TENT(3, 2),
@@ -166,13 +166,13 @@ enum class PropKind(val widthTiles: Int, val heightTiles: Int) {
     /** 3x2 merchant canvas-covered wooden trade pack wagon with spoked iron-rimmed wheels. */
     TRADE_WAGON(3, 2),
 
-    /** 1x2 gothic dark-iron Calpheon/Hexe spire topped with a horned gargoyle. */
+    /** 1x2 gothic dark-iron spire topped with a horned gargoyle. */
     GARGOYLE_SPIRE(1, 2),
 
-    /** 1x2 Valencia/Kutum ancient stone relic mechanism with glowing amber core. */
+    /** 1x2 ancient stone relic mechanism with glowing amber core. */
     ANCIENT_EXCAVATION(1, 2),
 
-    // ---- Suikoden II & Ragnarok Online (JRPG & 2.5D Town) Props ----
+    // ---- JRPG and 2.5D town props ----
 
     /** 3x2 half-timbered JRPG town house with scalloped shingle roof, chimney, cross-braced plaster, and warm glowing paned windows. */
     HALF_TIMBER_HOUSE(3, 2),
@@ -180,23 +180,23 @@ enum class PropKind(val widthTiles: Int, val heightTiles: Int) {
     /** 3x2 festive striped market stall with wooden counter, display crates, and merchant wares. */
     MARKET_STALL(3, 2),
 
-    /** 3x2 octagonal town square stone fountain with cascading water basin and glowing Rune/Prontera crystal centerpiece. */
+    /** 3x2 octagonal town square stone fountain with cascading water basin and glowing crystal centerpiece. */
     RUNE_CRYSTAL_FOUNTAIN(3, 2),
 
     /** 3x2 cluster-shaded cherry blossom (sakura) tree with gnarled dark trunk, layered petal crowns, and fallen ground petals. */
     CHERRY_BLOSSOM_TREE(3, 2),
 
-    /** 1x2 Ragnarok/JRPG wing-crested Kafra/Rune save-point obelisk with floating mana ring and warm lantern. */
-    KAFRA_WAYPOINT_PILLAR(1, 2),
+    /** 1x2 JRPG wing-crested save-point obelisk with floating mana ring and warm lantern. */
+    WAYPOINT_PILLAR(1, 2),
 
     /** 1x2 gold-crossbar chivalric/guild emblem banner with embroidered crest and swallowtail hem. */
     GUILD_EMBLEM_FLAG(1, 2),
 
-    /** 3x2 Old Detroit Police / OCP tactical cruiser with red-blue roof lightbar and headlights. */
+    /** 3x2 Police tactical cruiser with red-blue roof lightbar and headlights. */
     POLICE_CRUISER(3, 2),
 
-    /** 1x2 glowing OCP mainframe CRT terminal and data-spike interface kiosk. */
-    OCP_TERMINAL(1, 2),
+    /** 1x2 glowing mainframe CRT terminal and data-spike interface kiosk. */
+    DATA_TERMINAL(1, 2),
 
     /** 1x2 industrial steel toxic-waste vat bubbling with radioactive green sludge. */
     TOXIC_VAT(1, 2),
@@ -207,7 +207,7 @@ enum class PropKind(val widthTiles: Int, val heightTiles: Int) {
     /** 3x1 yellow-and-black striped police sawhorse street barricade. */
     STREET_BARRICADE(3, 1),
 
-    /** 1x2 Old Detroit urban streetlamp and traffic signal post. */
+    /** 1x2 Urban streetlamp and traffic signal post. */
     TRAFFIC_LIGHT(1, 2)
 }
 
@@ -253,15 +253,15 @@ class PropGenerator(
         val canvas = TileImage(w, h)
         val s = seed + name.hashCode().toLong() * 43L
 
-        val foliage = primaryPalette ?: if (style == PixelStyle.TIME_FANTASY) PalettePresets.TIME_FANTASY_GRASS else PalettePresets.MEADOW_GRASS
+        val foliage = primaryPalette ?: if (style == PixelStyle.CLASSIC_RPG) PalettePresets.CLASSIC_RPG_GRASS else PalettePresets.MEADOW_GRASS
         val wood = secondaryPalette ?: PalettePresets.TIMBER_WOOD
-        val stone = primaryPalette ?: if (style == PixelStyle.TIME_FANTASY) PalettePresets.TIME_FANTASY_STONE else PalettePresets.SLATE_STONE
+        val stone = primaryPalette ?: if (style == PixelStyle.CLASSIC_RPG) PalettePresets.CLASSIC_RPG_STONE else PalettePresets.SLATE_STONE
         val roof = primaryPalette ?: PalettePresets.TERRACOTTA_BRICK
 
-        val handledByTf = style == PixelStyle.TIME_FANTASY && renderTimeFantasyRuinsProp(
+        val handledByClassic = style == PixelStyle.CLASSIC_RPG && renderClassicRuinsProp(
             canvas, w, h, kind, stone, secondaryPalette, roof
         )
-        if (!handledByTf) {
+        if (!handledByClassic) {
             when (kind) {
             PropKind.OAK_TREE -> drawOakTree(canvas, w, h, foliage, wood, style, s)
             PropKind.PINE_TREE -> drawPineTree(canvas, w, h, foliage, wood, style, s)
@@ -308,97 +308,97 @@ class PropGenerator(
             PropKind.JADE_LION_STATUE -> drawJadeLionStatue(canvas, w, h, stone, style)
             PropKind.BAMBOO_GROVE -> drawBambooGrove(canvas, w, h, foliage, style, s)
             PropKind.PAPER_LANTERN -> drawPaperLantern(canvas, w, h, roof)
-            PropKind.BLACK_SPIRIT_RIFT -> drawBlackSpiritRift(canvas, w, h, stone, secondaryPalette ?: PalettePresets.WR_BLACK_SPIRIT)
+            PropKind.DARK_RIFT_ALTAR -> drawBlackSpiritRift(canvas, w, h, stone, secondaryPalette ?: PalettePresets.RIFT_CRIMSON)
             PropKind.MEDIEVAL_TENT -> drawMedievalTent(canvas, w, h, roof, wood, stone, style)
             PropKind.SIEGE_BALLISTA -> drawSiegeBallista(canvas, w, h, wood, stone)
             PropKind.TRADE_WAGON -> drawTradeWagon(canvas, w, h, roof, wood, stone, style)
             PropKind.GARGOYLE_SPIRE -> drawGargoyleSpire(canvas, w, h, stone, style)
-            PropKind.ANCIENT_EXCAVATION -> drawAncientExcavation(canvas, w, h, stone, secondaryPalette ?: PalettePresets.WR_VALENCIA_AMBER)
+            PropKind.ANCIENT_EXCAVATION -> drawAncientExcavation(canvas, w, h, stone, secondaryPalette ?: PalettePresets.RELIC_AMBER)
             PropKind.HALF_TIMBER_HOUSE -> drawHalfTimberHouse(
                 canvas,
                 w,
                 h,
-                primaryPalette ?: PalettePresets.SK_SCARLET_ROOF,
-                secondaryPalette ?: PalettePresets.SK_KYARO_TIMBER,
-                PalettePresets.SK_MUSE_LIMESTONE
+                primaryPalette ?: PalettePresets.SCARLET_ROOF,
+                secondaryPalette ?: PalettePresets.WARM_TIMBER,
+                PalettePresets.PALE_LIMESTONE
             )
             PropKind.MARKET_STALL -> drawMarketStall(
                 canvas,
                 w,
                 h,
-                primaryPalette ?: PalettePresets.SK_SCARLET_ROOF,
-                secondaryPalette ?: PalettePresets.SK_KYARO_TIMBER
+                primaryPalette ?: PalettePresets.SCARLET_ROOF,
+                secondaryPalette ?: PalettePresets.WARM_TIMBER
             )
             PropKind.RUNE_CRYSTAL_FOUNTAIN -> drawRuneCrystalFountain(
                 canvas,
                 w,
                 h,
-                primaryPalette ?: PalettePresets.RO_PRONTERA_MARBLE,
+                primaryPalette ?: PalettePresets.CREAM_MARBLE,
                 secondaryPalette ?: PalettePresets.OCEAN_WATER
             )
             PropKind.CHERRY_BLOSSOM_TREE -> drawCherryBlossomTree(
                 canvas,
                 w,
                 h,
-                primaryPalette ?: PalettePresets.RO_PORING_PASTEL,
-                secondaryPalette ?: PalettePresets.SK_KYARO_TIMBER,
+                primaryPalette ?: PalettePresets.PASTEL_PINK,
+                secondaryPalette ?: PalettePresets.WARM_TIMBER,
                 s
             )
-            PropKind.KAFRA_WAYPOINT_PILLAR -> drawKafraWaypointPillar(
+            PropKind.WAYPOINT_PILLAR -> drawWaypointPillar(
                 canvas,
                 w,
                 h,
-                primaryPalette ?: PalettePresets.RO_PRONTERA_MARBLE,
-                secondaryPalette ?: PalettePresets.SK_TRUE_RUNE_GOLD
+                primaryPalette ?: PalettePresets.CREAM_MARBLE,
+                secondaryPalette ?: PalettePresets.RUNE_GOLD
             )
             PropKind.GUILD_EMBLEM_FLAG -> drawGuildEmblemFlag(
                 canvas,
                 w,
                 h,
-                primaryPalette ?: PalettePresets.SK_SCARLET_ROOF,
-                secondaryPalette ?: PalettePresets.SK_TRUE_RUNE_GOLD
+                primaryPalette ?: PalettePresets.SCARLET_ROOF,
+                secondaryPalette ?: PalettePresets.RUNE_GOLD
             )
             PropKind.POLICE_CRUISER -> drawPoliceCruiser(
                 canvas,
                 w,
                 h,
-                primaryPalette ?: PalettePresets.RC_OCP_STEEL,
-                secondaryPalette ?: PalettePresets.RC_SIREN_BLUE
+                primaryPalette ?: PalettePresets.GUNMETAL_STEEL,
+                secondaryPalette ?: PalettePresets.SIREN_BLUE
             )
-            PropKind.OCP_TERMINAL -> drawOcpTerminal(
+            PropKind.DATA_TERMINAL -> drawDataTerminal(
                 canvas,
                 w,
                 h,
-                primaryPalette ?: PalettePresets.RC_OCP_STEEL,
-                secondaryPalette ?: PalettePresets.RC_CRT_GREEN
+                primaryPalette ?: PalettePresets.GUNMETAL_STEEL,
+                secondaryPalette ?: PalettePresets.CRT_GREEN
             )
             PropKind.TOXIC_VAT -> drawToxicVat(
                 canvas,
                 w,
                 h,
-                primaryPalette ?: PalettePresets.RC_OLD_DETROIT,
-                secondaryPalette ?: PalettePresets.RC_TOXIC_SLUDGE
+                primaryPalette ?: PalettePresets.URBAN_ASPHALT,
+                secondaryPalette ?: PalettePresets.TOXIC_SLUDGE
             )
             PropKind.NEON_BILLBOARD -> drawNeonBillboard(
                 canvas,
                 w,
                 h,
-                primaryPalette ?: PalettePresets.RC_NEON_VIOLET,
-                secondaryPalette ?: PalettePresets.RC_SIREN_BLUE
+                primaryPalette ?: PalettePresets.NEON_VIOLET,
+                secondaryPalette ?: PalettePresets.SIREN_BLUE
             )
             PropKind.STREET_BARRICADE -> drawStreetBarricade(
                 canvas,
                 w,
                 h,
-                primaryPalette ?: PalettePresets.RC_HAZARD_AMBER,
-                secondaryPalette ?: PalettePresets.RC_OLD_DETROIT
+                primaryPalette ?: PalettePresets.HAZARD_AMBER,
+                secondaryPalette ?: PalettePresets.URBAN_ASPHALT
             )
             PropKind.TRAFFIC_LIGHT -> drawTrafficLight(
                 canvas,
                 w,
                 h,
-                primaryPalette ?: PalettePresets.RC_OLD_DETROIT,
-                secondaryPalette ?: PalettePresets.RC_HAZARD_AMBER
+                primaryPalette ?: PalettePresets.URBAN_ASPHALT,
+                secondaryPalette ?: PalettePresets.HAZARD_AMBER
             )
             }
         }
@@ -409,7 +409,7 @@ class PropGenerator(
                 PixelDither.applyStyle(canvas, style, capPalette)
             }
             PixelStyle.MORGANA -> SpriteFinish.finish(canvas)
-            PixelStyle.SUIKODEN_32BIT, PixelStyle.RAGNAROK_25D -> {
+            PixelStyle.JRPG_32BIT, PixelStyle.PAINTED_25D -> {
                 val selOut = PixelDither.applySelectiveOutline(canvas)
                 PixelDither.applyStyle(selOut, style, primaryPalette ?: foliage)
             }
@@ -512,7 +512,7 @@ class PropGenerator(
                     !inside[y - 1][x] || !inside[y + 1][x] || !inside[y][x - 1] || !inside[y][x + 1]
                 val color = if (isOutline) {
                     outline
-                } else if (style == PixelStyle.TIME_FANTASY) {
+                } else if (style == PixelStyle.CLASSIC_RPG) {
                     PixelDither.sampleDithered(foliage, shadeGrid[y][x], x, y, 4, 0.12f)
                 } else {
                     foliage.sample(shadeGrid[y][x])
@@ -561,7 +561,7 @@ class PropGenerator(
                         TileNoise.hash(x / 2, y / 2, s) * 0.10f
                     val col = when {
                         edge -> foliage.shadow
-                        style == PixelStyle.TIME_FANTASY -> PixelDither.sampleDithered(foliage, shade, x, y, 4, 0.12f)
+                        style == PixelStyle.CLASSIC_RPG -> PixelDither.sampleDithered(foliage, shade, x, y, 4, 0.12f)
                         else -> foliage.sample(shade.coerceIn(0.08f, 0.95f))
                     }
                     img.setPixel(x, y, col)
@@ -598,7 +598,7 @@ class PropGenerator(
                     val col = when {
                         y == py0 -> wood.highlight
                         y == py1 || x == px0 || x == px0 + postW - 1 -> wood.shadow
-                        style == PixelStyle.TIME_FANTASY -> PixelDither.sampleDithered(wood, 0.65f, x, y, 4, 0.12f)
+                        style == PixelStyle.CLASSIC_RPG -> PixelDither.sampleDithered(wood, 0.65f, x, y, 4, 0.12f)
                         else -> wood.sample(0.65f)
                     }
                     img.setPixel(x, y, col)
@@ -620,7 +620,7 @@ class PropGenerator(
                     isPlankSeam -> 0.15f
                     else -> 0.55f + 0.1f * ((x / plankStep) % 2)
                 }
-                val col = if (style == PixelStyle.TIME_FANTASY) {
+                val col = if (style == PixelStyle.CLASSIC_RPG) {
                     PixelDither.sampleDithered(wood, t, x, y, 4, 0.14f)
                 } else {
                     wood.sample(t)
@@ -650,7 +650,7 @@ class PropGenerator(
                         isOuterEdge || brickLine -> 0.15f
                         else -> 0.45f + TileNoise.hash(x / 2, y / 2, s) * 0.35f
                     }
-                    val col = if (style == PixelStyle.TIME_FANTASY) {
+                    val col = if (style == PixelStyle.CLASSIC_RPG) {
                         PixelDither.sampleDithered(stone, t, x, y, 4, 0.15f)
                     } else {
                         stone.sample(t)
@@ -685,7 +685,7 @@ class PropGenerator(
             for (x in (x0 + inset)..(x1 - inset)) {
                 val isSeam = y % shingleH == 0 || y == roofBot || x == x0 + inset || x == x1 - inset
                 val t = if (isSeam) 0.15f else 0.55f + 0.25f * (1f - (y - roofTop).toFloat() / (roofBot - roofTop))
-                val col = if (style == PixelStyle.TIME_FANTASY) {
+                val col = if (style == PixelStyle.CLASSIC_RPG) {
                     PixelDither.sampleDithered(roof, t, x, y, 4, 0.14f)
                 } else {
                     roof.sample(t)
@@ -754,7 +754,7 @@ class PropGenerator(
             val halfW = (frac * (1f - frac * 0.45f) * w * 0.24f).toInt().coerceAtLeast(1)
             for (x in (w / 2 - halfW)..(w / 2 + halfW)) {
                 val t = (1f - abs(x - w / 2).toFloat() / halfW.coerceAtLeast(1)) * 0.6f + frac * 0.4f
-                val col = if (style == PixelStyle.TIME_FANTASY) {
+                val col = if (style == PixelStyle.CLASSIC_RPG) {
                     PixelDither.sampleDithered(fire, t, x, y, 4, 0.15f)
                 } else {
                     fire.sample(t)
@@ -833,7 +833,7 @@ class PropGenerator(
                 !inside[y - 1][x] || !inside[y + 1][x] || !inside[y][x - 1] || !inside[y][x + 1]
             val col = when {
                 outline -> foliage.shadow
-                style == PixelStyle.TIME_FANTASY -> PixelDither.sampleDithered(foliage, shade[y][x], x, y, 4, 0.12f)
+                style == PixelStyle.CLASSIC_RPG -> PixelDither.sampleDithered(foliage, shade[y][x], x, y, 4, 0.12f)
                 else -> foliage.sample(shade[y][x])
             }
             img.setPixel(x, y, col)
@@ -999,7 +999,7 @@ class PropGenerator(
                 val outline = x == rowX0 || x == rowX1 || y == (h * 0.06f).toInt() || y == (h * 0.92f).toInt()
                 val col = if (outline) {
                     stone.shadow
-                } else if (style == PixelStyle.TIME_FANTASY) {
+                } else if (style == PixelStyle.CLASSIC_RPG) {
                     PixelDither.sampleDithered(stone, 0.85f - nx * 0.5f, x, y, 4, 0.14f)
                 } else {
                     stone.sample(0.85f - nx * 0.5f)
@@ -1372,9 +1372,9 @@ class PropGenerator(
         stone: PaletteRamp,
         style: PixelStyle
     ) {
-        val gold = PalettePresets.CO_CELESTIAL_GOLD
-        val lacquer = PalettePresets.CO_DYNASTY_LACQUER
-        val jade = PalettePresets.CO_IMPERIAL_JADE
+        val gold = PalettePresets.CELESTIAL_GOLD
+        val lacquer = PalettePresets.LACQUER_RED
+        val jade = PalettePresets.JADE_GREEN
         val roofPal = if (roof == PalettePresets.TERRACOTTA_BRICK) jade else roof
 
         // Golden spire finial at apex
@@ -1387,7 +1387,7 @@ class PropGenerator(
             }
         }
 
-        // Two-tiered curved Wuxia pagoda roof with upturned flying eaves
+        // Two-tiered curved pagoda roof with upturned flying eaves
         val tiers = listOf(
             Triple((h * 0.12f).toInt(), (h * 0.30f).toInt(), 0.34f),
             Triple((h * 0.31f).toInt(), (h * 0.54f).toInt(), 0.46f)
@@ -1409,7 +1409,7 @@ class PropGenerator(
                     val col = when {
                         isGoldEave -> if (y == y1) gold.shadow else gold.highlight
                         isFlute -> roofPal.shadow
-                        style == PixelStyle.TIME_FANTASY -> PixelDither.sampleDithered(roofPal, 0.80f - frac * 0.35f, x, ry, 4, 0.14f)
+                        style == PixelStyle.CLASSIC_RPG -> PixelDither.sampleDithered(roofPal, 0.80f - frac * 0.35f, x, ry, 4, 0.14f)
                         else -> roofPal.sample(0.80f - frac * 0.35f)
                     }
                     img.setPixel(x, ry, col)
@@ -1461,9 +1461,9 @@ class PropGenerator(
         stone: PaletteRamp,
         style: PixelStyle
     ) {
-        val gold = PalettePresets.CO_CELESTIAL_GOLD
-        val lacquer = PalettePresets.CO_DYNASTY_LACQUER
-        val jade = if (roof == PalettePresets.TERRACOTTA_BRICK) PalettePresets.CO_IMPERIAL_JADE else roof
+        val gold = PalettePresets.CELESTIAL_GOLD
+        val lacquer = PalettePresets.LACQUER_RED
+        val jade = if (roof == PalettePresets.TERRACOTTA_BRICK) PalettePresets.JADE_GREEN else roof
         val cx = w / 2
 
         // Central upper roof tier (spans middle 60% of 3x2)
@@ -1479,7 +1479,7 @@ class PropGenerator(
                 val col = when {
                     y == topY1 || dist > 0.90f -> gold.highlight
                     (x - cx) % 3 == 0 -> jade.shadow
-                    style == PixelStyle.TIME_FANTASY -> PixelDither.sampleDithered(jade, 0.78f - frac * 0.3f, x, ry, 4, 0.12f)
+                    style == PixelStyle.CLASSIC_RPG -> PixelDither.sampleDithered(jade, 0.78f - frac * 0.3f, x, ry, 4, 0.12f)
                     else -> jade.sample(0.78f - frac * 0.3f)
                 }
                 img.setPixel(x, ry, col)
@@ -1521,9 +1521,9 @@ class PropGenerator(
     }
 
     private fun drawDragonBrazier(img: TileImage, w: Int, h: Int, stone: PaletteRamp, foliage: PaletteRamp) {
-        val bronze = PalettePresets.CO_DRAGON_BRONZE
-        val gold = PalettePresets.CO_CELESTIAL_GOLD
-        val jade = if (foliage == PalettePresets.MEADOW_GRASS) PalettePresets.CO_IMPERIAL_JADE else foliage
+        val bronze = PalettePresets.DRAGON_BRONZE
+        val gold = PalettePresets.CELESTIAL_GOLD
+        val jade = if (foliage == PalettePresets.MEADOW_GRASS) PalettePresets.JADE_GREEN else foliage
         val cx = w / 2
 
         // Rising jade incense smoke & mystic flame in upper tile
@@ -1571,12 +1571,12 @@ class PropGenerator(
     }
 
     private fun drawJadeLionStatue(img: TileImage, w: Int, h: Int, stone: PaletteRamp, style: PixelStyle) {
-        val jade = if (stone == PalettePresets.SLATE_STONE || stone == PalettePresets.TIME_FANTASY_STONE) {
-            PalettePresets.CO_IMPERIAL_JADE
+        val jade = if (stone == PalettePresets.SLATE_STONE || stone == PalettePresets.CLASSIC_RPG_STONE) {
+            PalettePresets.JADE_GREEN
         } else {
             stone
         }
-        val gold = PalettePresets.CO_CELESTIAL_GOLD
+        val gold = PalettePresets.CELESTIAL_GOLD
         val cx = w / 2
 
         // Carved lotus pedestal (bottom 35% of 1x2)
@@ -1615,7 +1615,7 @@ class PropGenerator(
                     isEye || isPearl -> gold.highlight
                     isOutline -> jade.shadow
                     isManeCurl -> jade.highlight
-                    style == PixelStyle.TIME_FANTASY -> PixelDither.sampleDithered(jade, shade, x, y, 4, 0.14f)
+                    style == PixelStyle.CLASSIC_RPG -> PixelDither.sampleDithered(jade, shade, x, y, 4, 0.14f)
                     else -> jade.sample(shade)
                 }
                 img.setPixel(x, y, col)
@@ -1624,8 +1624,8 @@ class PropGenerator(
     }
 
     private fun drawBambooGrove(img: TileImage, w: Int, h: Int, foliage: PaletteRamp, style: PixelStyle, s: Long) {
-        val bamboo = if (foliage == PalettePresets.MEADOW_GRASS || foliage == PalettePresets.TIME_FANTASY_GRASS) {
-            PalettePresets.CO_IMPERIAL_JADE
+        val bamboo = if (foliage == PalettePresets.MEADOW_GRASS || foliage == PalettePresets.CLASSIC_RPG_GRASS) {
+            PalettePresets.JADE_GREEN
         } else {
             foliage
         }
@@ -1660,7 +1660,7 @@ class PropGenerator(
                 val n = TileNoise.hash(x / 2, y / 2, s + 31L)
                 val distCenter = hypot((x - w * 0.5f) / (w * 0.38f), (y - h * 0.28f) / (h * 0.26f))
                 if (distCenter <= 1f && n > 0.46f && (x + y * 2) % 3 != 0) {
-                    val col = if (style == PixelStyle.TIME_FANTASY) {
+                    val col = if (style == PixelStyle.CLASSIC_RPG) {
                         PixelDither.sampleDithered(bamboo, 0.85f - distCenter * 0.45f, x, y, 4, 0.14f)
                     } else {
                         bamboo.sample(0.85f - distCenter * 0.45f)
@@ -1672,8 +1672,8 @@ class PropGenerator(
     }
 
     private fun drawPaperLantern(img: TileImage, w: Int, h: Int, roof: PaletteRamp) {
-        val lacquer = if (roof == PalettePresets.TERRACOTTA_BRICK) PalettePresets.CO_DYNASTY_LACQUER else roof
-        val gold = PalettePresets.CO_CELESTIAL_GOLD
+        val lacquer = if (roof == PalettePresets.TERRACOTTA_BRICK) PalettePresets.LACQUER_RED else roof
+        val gold = PalettePresets.CELESTIAL_GOLD
         val cx = w / 2
 
         // Hanging cord & top gold cap
@@ -1713,7 +1713,7 @@ class PropGenerator(
     }
 
     private fun drawBlackSpiritRift(img: TileImage, w: Int, h: Int, stone: PaletteRamp, spirit: PaletteRamp) {
-        val obsidian = PalettePresets.WR_ABYSSAL_OBSIDIAN
+        val obsidian = PalettePresets.ABYSSAL_OBSIDIAN
         val cx = w * 0.5f
         val cy = h * 0.44f
 
@@ -1763,8 +1763,8 @@ class PropGenerator(
         stone: PaletteRamp,
         style: PixelStyle
     ) {
-        val iron = PalettePresets.WR_SERENDIA_IRON
-        val banner = if (roof == PalettePresets.TERRACOTTA_BRICK) PalettePresets.WR_BLACK_SPIRIT else roof
+        val iron = PalettePresets.DARK_IRON
+        val banner = if (roof == PalettePresets.TERRACOTTA_BRICK) PalettePresets.RIFT_CRIMSON else roof
         val cx = w / 2
 
         // Iron halberd/spear poles & guy ropes
@@ -1790,7 +1790,7 @@ class PropGenerator(
                 val shade = (0.82f - frac * 0.35f).coerceIn(0.15f, 0.90f)
                 val col = when {
                     isValance && (x / 3) % 2 == 0 -> iron.highlight
-                    style == PixelStyle.TIME_FANTASY -> PixelDither.sampleDithered(pal, shade, x, y, 4, 0.14f)
+                    style == PixelStyle.CLASSIC_RPG -> PixelDither.sampleDithered(pal, shade, x, y, 4, 0.14f)
                     else -> pal.sample(shade)
                 }
                 img.setPixel(x, y, col)
@@ -1816,7 +1816,7 @@ class PropGenerator(
     }
 
     private fun drawSiegeBallista(img: TileImage, w: Int, h: Int, wood: PaletteRamp, stone: PaletteRamp) {
-        val iron = if (stone == PalettePresets.SLATE_STONE) PalettePresets.WR_SERENDIA_IRON else stone
+        val iron = if (stone == PalettePresets.SLATE_STONE) PalettePresets.DARK_IRON else stone
         val cx = w / 2
         val cy = h / 2
 
@@ -1862,8 +1862,8 @@ class PropGenerator(
         stone: PaletteRamp,
         style: PixelStyle
     ) {
-        val iron = PalettePresets.WR_SERENDIA_IRON
-        val canvasPal = if (roof == PalettePresets.TERRACOTTA_BRICK) PalettePresets.WR_VALENCIA_AMBER else roof
+        val iron = PalettePresets.DARK_IRON
+        val canvasPal = if (roof == PalettePresets.TERRACOTTA_BRICK) PalettePresets.RELIC_AMBER else roof
 
         // Ground shadow under wagon
         drawEllipse(img, w * 0.50f, h * 0.88f, w * 0.38f, h * 0.06f, PaletteRamp.rgba(12, 14, 18, 128))
@@ -1881,7 +1881,7 @@ class PropGenerator(
                 val shade = (0.85f - ny * 0.38f).coerceIn(0.20f, 0.92f)
                 val col = when {
                     isRib -> wood.shadow
-                    style == PixelStyle.TIME_FANTASY -> PixelDither.sampleDithered(canvasPal, shade, x, y, 4, 0.12f)
+                    style == PixelStyle.CLASSIC_RPG -> PixelDither.sampleDithered(canvasPal, shade, x, y, 4, 0.12f)
                     else -> canvasPal.sample(shade)
                 }
                 img.setPixel(x, y, col)
@@ -1923,12 +1923,12 @@ class PropGenerator(
     }
 
     private fun drawGargoyleSpire(img: TileImage, w: Int, h: Int, stone: PaletteRamp, style: PixelStyle) {
-        val iron = if (stone == PalettePresets.SLATE_STONE || stone == PalettePresets.TIME_FANTASY_STONE) {
-            PalettePresets.WR_SERENDIA_IRON
+        val iron = if (stone == PalettePresets.SLATE_STONE || stone == PalettePresets.CLASSIC_RPG_STONE) {
+            PalettePresets.DARK_IRON
         } else {
             stone
         }
-        val spirit = PalettePresets.WR_BLACK_SPIRIT
+        val spirit = PalettePresets.RIFT_CRIMSON
         val cx = w / 2
 
         // Horned winged gargoyle perched on top of gothic spire (top 38% of 1x2)
@@ -1960,7 +1960,7 @@ class PropGenerator(
                 val shade = if (isFlute) 0.22f else 0.80f - nx * 0.50f
                 val col = if (x == cx - halfW || x == cx + halfW) {
                     iron.shadow
-                } else if (style == PixelStyle.TIME_FANTASY) {
+                } else if (style == PixelStyle.CLASSIC_RPG) {
                     PixelDither.sampleDithered(iron, shade, x, y, 4, 0.14f)
                 } else {
                     iron.sample(shade)
@@ -1971,7 +1971,7 @@ class PropGenerator(
     }
 
     private fun drawAncientExcavation(img: TileImage, w: Int, h: Int, stone: PaletteRamp, amber: PaletteRamp) {
-        val relicStone = if (stone == PalettePresets.SLATE_STONE) PalettePresets.WR_ABYSSAL_OBSIDIAN else stone
+        val relicStone = if (stone == PalettePresets.SLATE_STONE) PalettePresets.ABYSSAL_OBSIDIAN else stone
         val cx = w * 0.5f
         val cy = h * 0.36f
 
@@ -1987,7 +1987,7 @@ class PropGenerator(
             }
         }
 
-        // Levitating Kutum/Valencia gyroscopic stone rings & glowing amber power core
+        // Levitating gyroscopic stone rings & glowing amber power core
         val outerR = w * 0.36f
         for (y in (h * 0.08f).toInt()..(h * 0.64f).toInt()) {
             for (x in 0 until w) {
@@ -2005,10 +2005,10 @@ class PropGenerator(
     }
 
     /**
-     * Renders 16x16-native Time Fantasy pixel-grid templates with selective/hue-shifted outlines
+     * Renders 16x16-native classic pixel-grid templates with selective/hue-shifted outlines
      * and nearest-neighbor scaling to [w]x[h].
      */
-    private fun renderTimeFantasyRuinsProp(
+    private fun renderClassicRuinsProp(
         img: TileImage,
         w: Int,
         h: Int,
@@ -2196,7 +2196,7 @@ class PropGenerator(
             )
             else -> return false
         }
-        drawPixelGrid(img, w, h, grid, stone, secondary ?: PalettePresets.TF_RUINS_BLUE, roof)
+        drawPixelGrid(img, w, h, grid, stone, secondary ?: PalettePresets.RUINS_BLUE, roof)
         return true
     }
 
@@ -2381,7 +2381,7 @@ class PropGenerator(
         val awningBot = (h * 0.46f).toInt()
         val counterTop = (h * 0.58f).toInt()
         val counterBot = (h * 0.86f).toInt()
-        val cream = PalettePresets.RO_PRONTERA_MARBLE
+        val cream = PalettePresets.CREAM_MARBLE
 
         // Support poles
         val poleW = (tileSize / 10).coerceAtLeast(2)
@@ -2568,7 +2568,7 @@ class PropGenerator(
         }
     }
 
-    private fun drawKafraWaypointPillar(
+    private fun drawWaypointPillar(
         img: TileImage,
         w: Int,
         h: Int,
@@ -2582,7 +2582,7 @@ class PropGenerator(
         val y0 = (h * 0.16f).toInt()
         val y1 = (h * 0.90f).toInt()
 
-        // Winged top crest (Ragnarok Valkyrie/Kafra wings)
+        // Winged top crest (winged crest)
         val wingY = (h * 0.24f).toInt()
         for (dx in 1..(w * 0.42f).toInt()) {
             val wyTop = (wingY - dx / 2).coerceAtLeast(2)
@@ -2666,10 +2666,10 @@ class PropGenerator(
         siren: PaletteRamp
     ) {
         val shadow = PaletteRamp.rgba(12, 12, 18, 110)
-        val redSiren = PalettePresets.RC_NUKE_CRIMSON.highlight
+        val redSiren = PalettePresets.NEON_CRIMSON.highlight
         val darkBody = PaletteRamp.rgba(22, 24, 34)
-        val windshield = PalettePresets.RC_SIREN_BLUE.highlight
-        val headlight = PalettePresets.RC_HAZARD_AMBER.highlight
+        val windshield = PalettePresets.SIREN_BLUE.highlight
+        val headlight = PalettePresets.HAZARD_AMBER.highlight
 
         fillEllipseSolid(img, w * 0.5f, h * 0.84f, w * 0.44f, h * 0.13f, shadow)
 
@@ -2720,7 +2720,7 @@ class PropGenerator(
         img.setPixel(x1 - 1, yBody0 + 3, redSiren)
     }
 
-    private fun drawOcpTerminal(
+    private fun drawDataTerminal(
         img: TileImage,
         w: Int,
         h: Int,
@@ -2867,9 +2867,9 @@ class PropGenerator(
                 img.setPixel(x, y, metal.shadow)
             }
         }
-        img.setPixel(cx, boxY0 + 2, PalettePresets.RC_NUKE_CRIMSON.highlight)
+        img.setPixel(cx, boxY0 + 2, PalettePresets.NEON_CRIMSON.highlight)
         img.setPixel(cx, (boxY0 + boxY1) / 2, amber.highlight)
-        img.setPixel(cx, boxY1 - 2, PalettePresets.RC_CRT_GREEN.highlight)
+        img.setPixel(cx, boxY1 - 2, PalettePresets.CRT_GREEN.highlight)
     }
 
     private fun fillEllipseSolid(img: TileImage, cx: Float, cy: Float, rx: Float, ry: Float, rgba: Int) {

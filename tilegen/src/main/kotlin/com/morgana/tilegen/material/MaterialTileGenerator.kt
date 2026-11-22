@@ -29,40 +29,40 @@ enum class MaterialPattern {
     /** Brushed metal hull plating with seam grooves and corner rivets. */
     METAL_PLATING,
 
-    /** 45-degree diagonal staggered stone pavers with soft mortar and cel-shaded bevels (Time Fantasy style). */
+    /** 45-degree diagonal staggered stone pavers with soft mortar and cel-shaded bevels. */
     DIAGONAL_PAVER,
 
-    /** Curved Oriental Wuxia glazed clay roof tiles with bamboo/gold ridge caps (Conquer Online style). */
+    /** Curved Oriental glazed clay roof tiles with bamboo/gold ridge caps. */
     GLAZED_ROOF_TILE,
 
-    /** Imperial carved jade/marble courtyard flagstones with inlaid octagonal border filigree (Conquer Online style). */
+    /** Imperial carved jade/marble courtyard flagstones with inlaid octagonal border filigree. */
     JADE_COURTYARD,
 
-    /** Heavy medieval European herringbone masonry cobbles with deep bevels and moss crevices (White River / BDO style). */
+    /** Heavy medieval European herringbone masonry cobbles with deep bevels and moss crevices. */
     HERRINGBONE_COBBLE,
 
-    /** Dark jagged obsidian and Black Spirit rift stone with glowing abyssal fissure veins (White River / BDO style). */
+    /** Dark jagged obsidian and dark rift stone with glowing abyssal fissure veins. */
     OBSIDIAN_CRAG,
 
-    /** Overlapping scalloped leaf-clump clusters with sunlit top-left crowns and deep under-clump AO (Suikoden II / Ragnarok Online style). */
+    /** Overlapping scalloped leaf-clump clusters with sunlit top-left crowns and deep under-clump AO. */
     LEAF_CANOPY_CLUSTER,
 
-    /** Cream plaster wall panels framed by weathered horizontal, vertical, and diagonal cross-braced timber beams (Suikoden II / Ragnarok town style). */
+    /** Cream plaster wall panels framed by weathered horizontal, vertical, and diagonal cross-braced timber beams. */
     HALF_TIMBER_PLASTER,
 
-    /** Overlapping scalloped fish-scale/terracotta roof shingles with eave bevels and cast drop shadows (Suikoden II / Ragnarok roof style). */
+    /** Overlapping scalloped fish-scale/terracotta roof shingles with eave bevels and cast drop shadows. */
     SHINGLE_THATCH_ROOF,
 
-    /** Grand 2.5D beveled sanctuary flagstones with diamond inlays and corner rune medallions (Ragnarok Online Prontera / Suikoden castle style). */
-    PRONTERA_COURTYARD,
+    /** Grand 2.5D beveled sanctuary flagstones with diamond inlays and corner rune medallions. */
+    SANCTUARY_COURTYARD,
 
-    /** Cracked wet urban asphalt with fine aggregate speckle and optional lane markings (RoboCop Old Detroit style). */
+    /** Cracked wet urban asphalt with fine aggregate speckle and optional lane markings. */
     ASPHALT_ROAD,
 
-    /** Industrial steel floor grating with diamond-plate ribs and diagonal yellow-black hazard trim (RoboCop OCP style). */
+    /** Industrial steel floor grating with diamond-plate ribs and diagonal yellow-black hazard trim. */
     HAZARD_GRATE,
 
-    /** Illuminated cybernetic circuit-board mainframe floor with glowing trace lines and node vias (OCP Tower style). */
+    /** Illuminated cybernetic circuit-board mainframe floor with glowing trace lines and node vias. */
     CYBER_CIRCUIT
 }
 
@@ -126,7 +126,7 @@ class MaterialTileGenerator(
             MaterialPattern.LEAF_CANOPY_CLUSTER -> drawLeafCanopyCluster(out, effectiveSpec, s)
             MaterialPattern.HALF_TIMBER_PLASTER -> drawHalfTimberPlaster(out, effectiveSpec, s)
             MaterialPattern.SHINGLE_THATCH_ROOF -> drawShingleThatchRoof(out, effectiveSpec, s)
-            MaterialPattern.PRONTERA_COURTYARD -> drawPronteraCourtyard(out, effectiveSpec, s)
+            MaterialPattern.SANCTUARY_COURTYARD -> drawSanctuaryCourtyard(out, effectiveSpec, s)
             MaterialPattern.ASPHALT_ROAD -> drawAsphaltRoad(out, effectiveSpec, s)
             MaterialPattern.HAZARD_GRATE -> drawHazardGrate(out, effectiveSpec, s)
             MaterialPattern.CYBER_CIRCUIT -> drawCyberCircuit(out, effectiveSpec, s)
@@ -215,7 +215,7 @@ class MaterialTileGenerator(
     private fun drawBrickMasonry(pm: TileImage, spec: MaterialSpec, s: Long) {
         val brickH = (tileSize / (4f * spec.scale)).roundToInt().coerceIn(4, tileSize / 2)
         val brickW = (brickH * 2).coerceAtMost(tileSize)
-        val mortar = spec.accentColor ?: if (spec.style == PixelStyle.TIME_FANTASY) spec.palette.colors[1] else spec.palette.shadow
+        val mortar = spec.accentColor ?: if (spec.style == PixelStyle.CLASSIC_RPG) spec.palette.colors[1] else spec.palette.shadow
 
         for (py in 0 until tileSize) {
             val rowIdx = py / brickH
@@ -485,9 +485,9 @@ class MaterialTileGenerator(
     private fun drawHalfTimberPlaster(pm: TileImage, spec: MaterialSpec, s: Long) {
         val beamW = (tileSize / 8).coerceAtLeast(2)
         val half = tileSize / 2
-        val timberColor = spec.accentColor ?: PalettePresets.SK_KYARO_TIMBER.colors[2]
-        val timberShadow = PalettePresets.SK_KYARO_TIMBER.shadow
-        val timberHighlight = PalettePresets.SK_KYARO_TIMBER.colors[3]
+        val timberColor = spec.accentColor ?: PalettePresets.WARM_TIMBER.colors[2]
+        val timberShadow = PalettePresets.WARM_TIMBER.shadow
+        val timberHighlight = PalettePresets.WARM_TIMBER.colors[3]
 
         for (py in 0 until tileSize) {
             for (px in 0 until tileSize) {
@@ -569,9 +569,9 @@ class MaterialTileGenerator(
         }
     }
 
-    private fun drawPronteraCourtyard(pm: TileImage, spec: MaterialSpec, s: Long) {
+    private fun drawSanctuaryCourtyard(pm: TileImage, spec: MaterialSpec, s: Long) {
         val half = tileSize / 2
-        val goldInlay = spec.accentColor ?: PalettePresets.RO_PRONTERA_MARBLE.highlight
+        val goldInlay = spec.accentColor ?: PalettePresets.CREAM_MARBLE.highlight
         val groove = spec.palette.shadow
 
         for (py in 0 until tileSize) {
@@ -629,7 +629,7 @@ class MaterialTileGenerator(
     }
 
     private fun drawHazardGrate(pm: TileImage, spec: MaterialSpec, s: Long) {
-        val hazardYellow = spec.accentColor ?: PalettePresets.RC_HAZARD_AMBER.mid
+        val hazardYellow = spec.accentColor ?: PalettePresets.HAZARD_AMBER.mid
         val hazardBlack = spec.palette.shadow
         val borderBand = (tileSize / 8).coerceAtLeast(2)
 
@@ -655,7 +655,7 @@ class MaterialTileGenerator(
     }
 
     private fun drawCyberCircuit(pm: TileImage, spec: MaterialSpec, s: Long) {
-        val traceGlow = spec.accentColor ?: PalettePresets.RC_CRT_GREEN.highlight
+        val traceGlow = spec.accentColor ?: PalettePresets.CRT_GREEN.highlight
         val traceMid = lerpRgba(spec.palette.mid, traceGlow, 0.65f)
         val half = tileSize / 2
         val q = (tileSize / 4).coerceAtLeast(2)

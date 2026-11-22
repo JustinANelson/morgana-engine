@@ -91,11 +91,11 @@ class EngineExportAndPreviewTest {
     @Test
     fun `ground clutter decals flower tuft, pebbles, and grass blades modify tiles deterministically`() {
         val base = MaterialTileGenerator(seed = 99L, tileSize = 16).generateTile(
-            MaterialSpec("grass", MaterialPattern.ORGANIC_FBM, PalettePresets.TIME_FANTASY_GRASS, style = PixelStyle.TIME_FANTASY)
+            MaterialSpec("grass", MaterialPattern.ORGANIC_FBM, PalettePresets.CLASSIC_RPG_GRASS, style = PixelStyle.CLASSIC_RPG)
         )
         for (decal in listOf(DecalKind.FLOWER_TUFT, DecalKind.PEBBLES, DecalKind.GRASS_BLADES)) {
-            val d1 = TileDecals.applyDecal(base, decal, seed = 123L, style = PixelStyle.TIME_FANTASY)
-            val d2 = TileDecals.applyDecal(base, decal, seed = 123L, style = PixelStyle.TIME_FANTASY)
+            val d1 = TileDecals.applyDecal(base, decal, seed = 123L, style = PixelStyle.CLASSIC_RPG)
+            val d2 = TileDecals.applyDecal(base, decal, seed = 123L, style = PixelStyle.CLASSIC_RPG)
             assertTrue(d1.pixels.contentEquals(d2.pixels), "$decal should be deterministic")
             assertFalse(base.pixels.contentEquals(d1.pixels), "$decal should add visible clutter")
         }

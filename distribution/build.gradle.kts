@@ -57,10 +57,12 @@ val sdk by tasks.registering(Sync::class) {
     // The minified browser client: morgana-server --web serves it, so phones and other computers just open a page.
     dependsOn(":client-web:gdx_teavm_web_js_release_build", ":client-web:copyPwaFilesRelease")
     into("web") { from(project(":client-web").layout.buildDirectory.dir("dist/js/release/webapp")) }
-    // Ship only the public reference games (exclude developer games and any local tools/ folders).
+    // Ship only the public reference games listed in gradle.properties (`sdkGames`), never developer games or local tools/ folders.
     into("games") {
+        val sdkGames = (project.property("sdkGames") as String).split(',').map { it.trim() }.filter { it.isNotEmpty() }
         from(rootProject.file("games")) {
-            exclude("**/tools/**", "trevana-realms/**")
+            include(sdkGames.map { "$it/**" })
+            exclude("**/tools/**")
         }
     }
     into("docs") {

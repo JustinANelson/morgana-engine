@@ -45,7 +45,7 @@ class DemoLocalWorldHost(private val nowMs: () -> Long = System::currentTimeMill
     override val realmTemplates: List<RealmTemplateInfo>
         get() = listOf(
             RealmTemplateInfo("blank", "Blank", "An empty starting realm with one map and basic defaults, ready to build from scratch."),
-            RealmTemplateInfo("roguelike", "Ashen Keep", "Reference co-op dungeon crawler & roguelike: a multiplayer hub and procedural Sunken Crypt floor with action combat, paperdoll gear, and boss fight."),
+            RealmTemplateInfo("roguelike", "Dungeon Crawler", "Reference co-op dungeon crawler & roguelike: a multiplayer hub and procedural dungeon floor with action combat, paperdoll gear, and boss fight."),
             RealmTemplateInfo("demo-roguelike", "Roguelike demo", "A bigger demo co-op roguelike: a town and twelve generated floors down to the final boss.")
         )
 

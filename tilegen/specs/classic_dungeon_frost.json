@@ -1,0 +1,39 @@
+{
+  "name": "tf_dungeon_frost",
+  "seed": 7070,
+  "tileSize": 16,
+  "columns": 8,
+  "style": "CLASSIC_RPG",
+  "materials": [
+    { "name": "frost_paver", "pattern": "DIAGONAL_PAVER", "palette": "ruins_slate", "scale": 1.0, "detail": 0.2 },
+    { "name": "frost_cracked", "pattern": "DIAGONAL_PAVER", "palette": "ruins_slate", "scale": 1.0, "detail": 0.2, "decal": "CRACKS" },
+    { "name": "frost_brick", "pattern": "BRICK_MASONRY", "palette": "ruins_slate", "scale": 1.0, "detail": 0.2 },
+    { "name": "snow_drift", "pattern": "ORGANIC_FBM", "palette": "frost_snow", "scale": 1.2, "detail": 0.25 },
+    { "name": "ice_slab", "pattern": "DIAGONAL_PAVER", "palette": "frost_snow", "scale": 1.0, "detail": 0.15 },
+    { "name": "glacial_water", "pattern": "WATER_CAUSTICS", "palette": "ruins_blue", "frames": 4 }
+  ],
+  "cliffs": [
+    { "name": "glacial_wall", "topMaterial": "ice_slab", "faceMaterial": "frost_brick", "trimColor": "#5688f2", "a4Layout": true },
+    { "name": "snow_wall", "topMaterial": "snow_drift", "faceMaterial": "frost_brick", "trimColor": "#96bcf8", "a4Layout": true }
+  ],
+  "props": [
+    { "name": "frost_urn", "kind": "URN", "primaryPalette": "ruins_slate", "secondaryPalette": "ruins_blue" },
+    { "name": "frost_stairs_down", "kind": "STAIRS_DOWN", "primaryPalette": "ruins_slate" },
+    { "name": "frost_stairs_up", "kind": "STAIRS_UP", "primaryPalette": "ruins_slate" },
+    { "name": "frost_gargoyle", "kind": "GARGOYLE_PLAQUE", "primaryPalette": "ruins_slate", "secondaryPalette": "ruins_blue" },
+    { "name": "frost_banner", "kind": "WALL_BANNER", "primaryPalette": "ruins_slate", "secondaryPalette": "ruins_blue" },
+    { "name": "frost_skulls", "kind": "SKULL_PILE", "primaryPalette": "ruins_slate" },
+    { "name": "frost_pillar", "kind": "PILLAR", "primaryPalette": "ruins_slate", "secondaryPalette": "ruins_blue" },
+    { "name": "frost_shrine", "kind": "SHRINE", "primaryPalette": "ruins_slate", "secondaryPalette": "ruins_blue" }
+  ],
+  "autotiles": [
+    {
+      "name": "snow_on_slate",
+      "mode": "BLOB_47",
+      "columns": 8,
+      "foregroundMaterial": "snow_drift",
+      "backgroundMaterial": "frost_paver",
+      "style": { "margin": 3.0, "rimWidth": 1.0, "wobbleAmplitude": 1.8, "rimColor": "#94aecc" }
+    }
+  ]
+}

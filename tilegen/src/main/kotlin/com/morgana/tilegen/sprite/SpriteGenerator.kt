@@ -34,7 +34,7 @@ enum class EnemyKind {
 
 /**
  * Deterministic enemy sprite generator supporting native 16x16 retro templates
- * and native 32x32+ 3/4-perspective RPG Maker / Time Fantasy sprites with auto-outlining.
+ * and native 32x32+ 3/4-perspective RPG Maker-style sprites with auto-outlining.
  */
 class SpriteGenerator(
     val seed: Long = 1337L,
@@ -84,7 +84,7 @@ class SpriteGenerator(
             val base16 = renderTemplate(grid, palette)
             if (tileSize == 16) base16 else scaleNearest(base16, tileSize)
         }
-        return if (style == PixelStyle.STANDARD || (tileSize >= 32 && style == PixelStyle.TIME_FANTASY)) {
+        return if (style == PixelStyle.STANDARD || (tileSize >= 32 && style == PixelStyle.CLASSIC_RPG)) {
             raw
         } else {
             PixelDither.applyStyle(raw, style, palette)
@@ -119,7 +119,7 @@ class SpriteGenerator(
             EnemyKind.ZOMBIE -> PaletteRamp(intArrayOf(c(16, 20, 18), c(48, 72, 54), c(84, 118, 82), c(132, 162, 110), c(182, 204, 154)))
             EnemyKind.GOATMAN -> PaletteRamp(intArrayOf(c(22, 14, 12), c(78, 46, 34), c(128, 82, 56), c(174, 124, 86), c(226, 196, 148)))
             EnemyKind.CULTIST -> PaletteRamp(intArrayOf(c(16, 12, 26), c(48, 28, 78), c(88, 48, 132), c(132, 82, 182), c(124, 214, 248)))
-            EnemyKind.GARGOYLE -> PalettePresets.TIME_FANTASY_STONE
+            EnemyKind.GARGOYLE -> PalettePresets.CLASSIC_RPG_STONE
             EnemyKind.BLOOD_GOLEM -> PaletteRamp(intArrayOf(c(26, 10, 12), c(84, 20, 24), c(142, 34, 34), c(196, 68, 52), c(238, 128, 92)))
             EnemyKind.DEMON_LORD -> PaletteRamp(intArrayOf(c(20, 8, 10), c(92, 16, 22), c(162, 28, 28), c(218, 62, 42), c(252, 216, 78)))
             EnemyKind.GIANT_SPIDER -> PaletteRamp(intArrayOf(c(14, 12, 22), c(42, 34, 58), c(74, 58, 92), c(116, 94, 132), c(232, 64, 54)))
@@ -190,7 +190,7 @@ class SpriteGenerator(
                 val d = hypot(dx, dy) + wobble
                 if (d <= 1f) {
                     val light = (0.78f - dx * 0.25f - dy * 0.35f).coerceIn(0.15f, 1f)
-                    val col = if (style == PixelStyle.TIME_FANTASY) PixelDither.sampleDithered(pal, light, x, y, 4, 0.14f) else pal.sample(light)
+                    val col = if (style == PixelStyle.CLASSIC_RPG) PixelDither.sampleDithered(pal, light, x, y, 4, 0.14f) else pal.sample(light)
                     img.setPixel(x, y, col)
                 }
             }
@@ -230,7 +230,7 @@ class SpriteGenerator(
             for (x in (16 - halfW)..(16 + halfW)) {
                 if (y > 23 && (x + y) % 3 == 0) continue // wispy tattered bottom
                 val light = (0.75f - abs(x - 16) / 12f - frac * 0.25f).coerceIn(0.15f, 1f)
-                val col = if (style == PixelStyle.TIME_FANTASY) PixelDither.sampleDithered(pal, light, x, y, 4, 0.15f) else pal.sample(light)
+                val col = if (style == PixelStyle.CLASSIC_RPG) PixelDither.sampleDithered(pal, light, x, y, 4, 0.15f) else pal.sample(light)
                 img.setPixel(x, y, col)
             }
         }
@@ -412,7 +412,7 @@ class SpriteGenerator(
             val botY = (rootY + 3 - i / 3).coerceIn(topY, 30)
             for (y in topY..botY) {
                 val t = 0.35f + 0.45f * (1f - (y - topY).toFloat() / (botY - topY).coerceAtLeast(1))
-                val col = if (style == PixelStyle.TIME_FANTASY) PixelDither.sampleDithered(pal, t, wx, y, 4, 0.14f) else pal.sample(t)
+                val col = if (style == PixelStyle.CLASSIC_RPG) PixelDither.sampleDithered(pal, t, wx, y, 4, 0.14f) else pal.sample(t)
                 img.setPixel(wx, y, col)
             }
         }
@@ -425,7 +425,7 @@ class SpriteGenerator(
                 val nx = (x - x0).toFloat() / w.coerceAtLeast(1)
                 val ny = (y - y0).toFloat() / h.coerceAtLeast(1)
                 val t = (baseLight + (1f - nx) * 0.25f - ny * 0.2f).coerceIn(0.15f, 1f)
-                val col = if (style == PixelStyle.TIME_FANTASY) PixelDither.sampleDithered(pal, t, x, y, 4, 0.15f) else pal.sample(t)
+                val col = if (style == PixelStyle.CLASSIC_RPG) PixelDither.sampleDithered(pal, t, x, y, 4, 0.15f) else pal.sample(t)
                 img.setPixel(x, y, col)
             }
         }
@@ -443,7 +443,7 @@ class SpriteGenerator(
                 val d = hypot(dx, dy)
                 if (d <= 1f) {
                     val light = (0.72f - dx * 0.28f - dy * 0.30f + TileNoise.hash(x, y, seed) * 0.06f).coerceIn(0.15f, 1f)
-                    val col = if (style == PixelStyle.TIME_FANTASY) {
+                    val col = if (style == PixelStyle.CLASSIC_RPG) {
                         PixelDither.sampleDithered(pal, light, x, y, 4, 0.15f)
                     } else {
                         pal.sample(light)

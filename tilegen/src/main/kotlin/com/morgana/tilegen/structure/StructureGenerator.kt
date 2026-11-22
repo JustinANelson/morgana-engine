@@ -66,14 +66,14 @@ class StructureGenerator(
     }
 
     /**
-     * Generates a 9-tile RMXP/Time Fantasy A4-style wall set with solid `#2b2632` void top-caps
+     * Generates a 9-tile RMXP A4-style wall set with solid `#2b2632` void top-caps
      * and 2-tile-tall masonry faces (upper cornice tile + lower fluted plinth tile).
      */
     fun generateA4WallSet(
         name: String,
         topMaterial: TileImage,
         faceMaterial: TileImage,
-        style: PixelStyle = PixelStyle.TIME_FANTASY,
+        style: PixelStyle = PixelStyle.CLASSIC_RPG,
         castShadow: Boolean = true,
         trimColor: Int? = null
     ): List<NamedTile> {
@@ -114,7 +114,7 @@ class StructureGenerator(
     }
 
     /**
-     * Generates a 9-tile modular 3/4-perspective JRPG town building facade set (Suikoden II / Ragnarok Online style):
+     * Generates a 9-tile modular 3/4-perspective JRPG town building facade set:
      * - `<name>_roof_left`, `<name>_roof_center`, `<name>_roof_right`: Pitched roof eaves with ridge cap & bottom lip bevel
      * - `<name>_wall_left`, `<name>_wall_center`, `<name>_wall_right`: Upper story wall with overhanging eave drop shadow & warm paned window
      * - `<name>_base_left`, `<name>_base_center`, `<name>_base_right`: Lower story wall with stone foundation plinth & ground AO
@@ -123,7 +123,7 @@ class StructureGenerator(
         name: String,
         roofMaterial: TileImage,
         wallMaterial: TileImage,
-        style: PixelStyle = PixelStyle.SUIKODEN_32BIT,
+        style: PixelStyle = PixelStyle.JRPG_32BIT,
         windowGlow: Boolean = true,
         timberColor: Int = PaletteRamp.rgba(104, 58, 38)
     ): List<NamedTile> {

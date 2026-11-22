@@ -186,55 +186,55 @@ object PalettePresets {
     val PICO8_FOREST = PaletteRamp(intArrayOf(c(0, 0, 0), c(29, 43, 83), c(0, 135, 81), c(0, 228, 54)))
     val PICO8_WATER = PaletteRamp(intArrayOf(c(29, 43, 83), c(41, 173, 255), c(194, 195, 199), c(255, 241, 232)))
 
-    // RMXP / Time Fantasy inspired earthy low-saturation 5-stop RPG ramps
-    val TIME_FANTASY_GRASS = PaletteRamp(intArrayOf(c(38, 56, 45), c(58, 92, 62), c(82, 122, 74), c(114, 152, 92), c(150, 182, 118)))
-    val TIME_FANTASY_EARTH = PaletteRamp(intArrayOf(c(56, 40, 34), c(88, 64, 52), c(120, 92, 74), c(150, 120, 96), c(178, 150, 124)))
-    val TIME_FANTASY_STONE = PaletteRamp(intArrayOf(c(42, 44, 54), c(68, 74, 86), c(98, 106, 118), c(130, 138, 150), c(164, 172, 182)))
+    // RMXP-style earthy low-saturation 5-stop RPG ramps
+    val CLASSIC_RPG_GRASS = PaletteRamp(intArrayOf(c(38, 56, 45), c(58, 92, 62), c(82, 122, 74), c(114, 152, 92), c(150, 182, 118)))
+    val CLASSIC_RPG_EARTH = PaletteRamp(intArrayOf(c(56, 40, 34), c(88, 64, 52), c(120, 92, 74), c(150, 120, 96), c(178, 150, 124)))
+    val CLASSIC_RPG_STONE = PaletteRamp(intArrayOf(c(42, 44, 54), c(68, 74, 86), c(98, 106, 118), c(130, 138, 150), c(164, 172, 182)))
 
-    // Time Fantasy Ruin Dungeon palettes (sampled from samples/tf_ruin_dungeon)
-    val TF_RUINS_MARBLE = PaletteRamp(intArrayOf(c(43, 38, 50), c(123, 129, 122), c(166, 170, 155), c(199, 200, 184), c(232, 230, 216)))
-    val TF_RUINS_SLATE = PaletteRamp(intArrayOf(c(43, 38, 50), c(49, 66, 78), c(77, 105, 120), c(115, 147, 163), c(157, 184, 194)))
-    val TF_RUINS_GOLD = PaletteRamp(intArrayOf(c(43, 38, 50), c(125, 86, 32), c(181, 133, 48), c(224, 178, 72), c(242, 210, 114)))
-    val TF_RUINS_TERRA = PaletteRamp(intArrayOf(c(43, 38, 50), c(79, 37, 36), c(124, 62, 54), c(168, 93, 76), c(204, 132, 110)))
-    val TF_RUINS_BLUE = PaletteRamp(intArrayOf(c(31, 63, 143), c(47, 98, 212), c(86, 136, 242), c(150, 188, 248)))
+    // Classic ruin-dungeon palettes
+    val RUINS_MARBLE = PaletteRamp(intArrayOf(c(43, 38, 50), c(123, 129, 122), c(166, 170, 155), c(199, 200, 184), c(232, 230, 216)))
+    val RUINS_SLATE = PaletteRamp(intArrayOf(c(43, 38, 50), c(49, 66, 78), c(77, 105, 120), c(115, 147, 163), c(157, 184, 194)))
+    val RUINS_GOLD = PaletteRamp(intArrayOf(c(43, 38, 50), c(125, 86, 32), c(181, 133, 48), c(224, 178, 72), c(242, 210, 114)))
+    val RUINS_TERRA = PaletteRamp(intArrayOf(c(43, 38, 50), c(79, 37, 36), c(124, 62, 54), c(168, 93, 76), c(204, 132, 110)))
+    val RUINS_BLUE = PaletteRamp(intArrayOf(c(31, 63, 143), c(47, 98, 212), c(86, 136, 242), c(150, 188, 248)))
 
-    // Conquer Online (Wuxia Imperial Dynasty) signature 5-stop palettes
-    val CO_IMPERIAL_JADE = PaletteRamp(intArrayOf(c(43, 38, 50), c(18, 78, 58), c(32, 128, 94), c(64, 184, 138), c(154, 242, 198)))
-    val CO_DYNASTY_LACQUER = PaletteRamp(intArrayOf(c(43, 38, 50), c(98, 18, 24), c(158, 30, 36), c(212, 56, 48), c(248, 138, 96)))
-    val CO_CELESTIAL_GOLD = PaletteRamp(intArrayOf(c(43, 38, 50), c(138, 88, 18), c(198, 142, 32), c(242, 196, 58), c(255, 242, 148)))
-    val CO_MYSTIC_SILK = PaletteRamp(intArrayOf(c(43, 38, 50), c(36, 54, 118), c(62, 98, 184), c(108, 158, 232), c(188, 226, 255)))
-    val CO_DRAGON_BRONZE = PaletteRamp(intArrayOf(c(43, 38, 50), c(76, 56, 38), c(118, 88, 56), c(164, 126, 78), c(214, 178, 118)))
+    // Imperial East Asian lacquer, jade and gold 5-stop palettes
+    val JADE_GREEN = PaletteRamp(intArrayOf(c(43, 38, 50), c(18, 78, 58), c(32, 128, 94), c(64, 184, 138), c(154, 242, 198)))
+    val LACQUER_RED = PaletteRamp(intArrayOf(c(43, 38, 50), c(98, 18, 24), c(158, 30, 36), c(212, 56, 48), c(248, 138, 96)))
+    val CELESTIAL_GOLD = PaletteRamp(intArrayOf(c(43, 38, 50), c(138, 88, 18), c(198, 142, 32), c(242, 196, 58), c(255, 242, 148)))
+    val MYSTIC_SILK = PaletteRamp(intArrayOf(c(43, 38, 50), c(36, 54, 118), c(62, 98, 184), c(108, 158, 232), c(188, 226, 255)))
+    val DRAGON_BRONZE = PaletteRamp(intArrayOf(c(43, 38, 50), c(76, 56, 38), c(118, 88, 56), c(164, 126, 78), c(214, 178, 118)))
 
-    // White River / Black Desert Online (Dark Medieval High-Fantasy) signature 5-stop palettes
-    val WR_ABYSSAL_OBSIDIAN = PaletteRamp(intArrayOf(c(22, 18, 30), c(38, 30, 52), c(62, 48, 84), c(96, 76, 126), c(148, 124, 184)))
-    val WR_BLACK_SPIRIT = PaletteRamp(intArrayOf(c(18, 14, 24), c(56, 16, 28), c(118, 24, 38), c(196, 38, 52), c(252, 98, 92)))
-    val WR_SERENDIA_IRON = PaletteRamp(intArrayOf(c(32, 34, 42), c(58, 64, 76), c(92, 100, 116), c(134, 144, 162), c(188, 198, 214)))
-    val WR_KAMASYLVE_LEAF = PaletteRamp(intArrayOf(c(28, 48, 42), c(46, 86, 68), c(74, 134, 98), c(118, 186, 136), c(186, 238, 196)))
-    val WR_VALENCIA_AMBER = PaletteRamp(intArrayOf(c(48, 34, 24), c(104, 68, 36), c(158, 112, 54), c(206, 158, 82), c(244, 208, 132)))
+    // Dark medieval high-fantasy 5-stop palettes
+    val ABYSSAL_OBSIDIAN = PaletteRamp(intArrayOf(c(22, 18, 30), c(38, 30, 52), c(62, 48, 84), c(96, 76, 126), c(148, 124, 184)))
+    val RIFT_CRIMSON = PaletteRamp(intArrayOf(c(18, 14, 24), c(56, 16, 28), c(118, 24, 38), c(196, 38, 52), c(252, 98, 92)))
+    val DARK_IRON = PaletteRamp(intArrayOf(c(32, 34, 42), c(58, 64, 76), c(92, 100, 116), c(134, 144, 162), c(188, 198, 214)))
+    val ANCIENT_LEAF = PaletteRamp(intArrayOf(c(28, 48, 42), c(46, 86, 68), c(74, 134, 98), c(118, 186, 136), c(186, 238, 196)))
+    val RELIC_AMBER = PaletteRamp(intArrayOf(c(48, 34, 24), c(104, 68, 36), c(158, 112, 54), c(206, 158, 82), c(244, 208, 132)))
 
-    // Suikoden II (PS1 32-bit JRPG) 6-stop warm-to-indigo cluster palettes
-    val SK_HIGHLAND_GRASS = PaletteRamp(intArrayOf(c(27, 36, 50), c(40, 74, 60), c(62, 114, 74), c(100, 158, 88), c(152, 198, 110), c(200, 228, 142)))
-    val SK_KYARO_TIMBER = PaletteRamp(intArrayOf(c(34, 24, 36), c(74, 42, 34), c(120, 70, 48), c(168, 106, 68), c(210, 150, 98), c(236, 192, 142)))
-    val SK_MUSE_LIMESTONE = PaletteRamp(intArrayOf(c(36, 32, 48), c(76, 70, 88), c(122, 116, 130), c(174, 168, 174), c(216, 210, 206), c(244, 238, 230)))
-    val SK_SCARLET_ROOF = PaletteRamp(intArrayOf(c(38, 22, 36), c(94, 34, 42), c(150, 56, 54), c(200, 88, 72), c(230, 132, 102), c(248, 182, 146)))
-    val SK_TRUE_RUNE_GOLD = PaletteRamp(intArrayOf(c(40, 28, 40), c(110, 70, 30), c(173, 120, 44), c(223, 172, 68), c(248, 218, 120), c(255, 246, 184)))
+    // 32-bit JRPG-style 6-stop warm-to-indigo cluster palettes
+    val HIGHLAND_GRASS = PaletteRamp(intArrayOf(c(27, 36, 50), c(40, 74, 60), c(62, 114, 74), c(100, 158, 88), c(152, 198, 110), c(200, 228, 142)))
+    val WARM_TIMBER = PaletteRamp(intArrayOf(c(34, 24, 36), c(74, 42, 34), c(120, 70, 48), c(168, 106, 68), c(210, 150, 98), c(236, 192, 142)))
+    val PALE_LIMESTONE = PaletteRamp(intArrayOf(c(36, 32, 48), c(76, 70, 88), c(122, 116, 130), c(174, 168, 174), c(216, 210, 206), c(244, 238, 230)))
+    val SCARLET_ROOF = PaletteRamp(intArrayOf(c(38, 22, 36), c(94, 34, 42), c(150, 56, 54), c(200, 88, 72), c(230, 132, 102), c(248, 182, 146)))
+    val RUNE_GOLD = PaletteRamp(intArrayOf(c(40, 28, 40), c(110, 70, 30), c(173, 120, 44), c(223, 172, 68), c(248, 218, 120), c(255, 246, 184)))
 
-    // Ragnarok Online (Midgard 2.5D Anime-Chibi & Painted Terrain) 6-stop luminous palettes
-    val RO_PRONTERA_MARBLE = PaletteRamp(intArrayOf(c(40, 44, 68), c(82, 92, 130), c(136, 150, 184), c(194, 204, 226), c(232, 238, 248), c(255, 255, 255)))
-    val RO_PAYON_JADE = PaletteRamp(intArrayOf(c(30, 50, 56), c(50, 94, 84), c(82, 146, 108), c(126, 196, 136), c(180, 230, 168), c(226, 250, 210)))
-    val RO_GEFFEN_ARCANE = PaletteRamp(intArrayOf(c(30, 26, 54), c(60, 50, 104), c(100, 82, 162), c(148, 126, 210), c(196, 178, 242), c(236, 226, 255)))
-    val RO_MORROC_SANDSTONE = PaletteRamp(intArrayOf(c(54, 34, 40), c(104, 66, 56), c(158, 108, 78), c(206, 158, 110), c(238, 214, 168), c(255, 242, 214)))
-    val RO_PORING_PASTEL = PaletteRamp(intArrayOf(c(56, 28, 50), c(120, 48, 88), c(184, 82, 130), c(232, 130, 172), c(248, 182, 210), c(255, 232, 244)))
+    // Painted 2.5D anime-chibi 6-stop luminous palettes
+    val CREAM_MARBLE = PaletteRamp(intArrayOf(c(40, 44, 68), c(82, 92, 130), c(136, 150, 184), c(194, 204, 226), c(232, 238, 248), c(255, 255, 255)))
+    val FOREST_JADE = PaletteRamp(intArrayOf(c(30, 50, 56), c(50, 94, 84), c(82, 146, 108), c(126, 196, 136), c(180, 230, 168), c(226, 250, 210)))
+    val ARCANE_VIOLET = PaletteRamp(intArrayOf(c(30, 26, 54), c(60, 50, 104), c(100, 82, 162), c(148, 126, 210), c(196, 178, 242), c(236, 226, 255)))
+    val DUNE_SANDSTONE = PaletteRamp(intArrayOf(c(54, 34, 40), c(104, 66, 56), c(158, 108, 78), c(206, 158, 110), c(238, 214, 168), c(255, 242, 214)))
+    val PASTEL_PINK = PaletteRamp(intArrayOf(c(56, 28, 50), c(120, 48, 88), c(184, 82, 130), c(232, 130, 172), c(248, 182, 210), c(255, 232, 244)))
 
-    // RoboCop / Old Detroit / OCP (1987 Cyber-Industrial RPG) 5-stop palettes
-    val RC_OCP_STEEL = PaletteRamp(intArrayOf(c(24, 28, 38), c(56, 68, 88), c(102, 122, 148), c(166, 188, 214), c(228, 242, 255)))
-    val RC_OLD_DETROIT = PaletteRamp(intArrayOf(c(22, 20, 26), c(44, 42, 50), c(72, 70, 80), c(108, 104, 114), c(150, 146, 156)))
-    val RC_CRT_GREEN = PaletteRamp(intArrayOf(c(14, 30, 20), c(26, 78, 44), c(44, 148, 76), c(88, 224, 124), c(182, 255, 198)))
-    val RC_SIREN_BLUE = PaletteRamp(intArrayOf(c(18, 28, 58), c(32, 62, 138), c(54, 118, 220), c(108, 184, 252), c(204, 238, 255)))
-    val RC_HAZARD_AMBER = PaletteRamp(intArrayOf(c(42, 26, 16), c(116, 64, 18), c(188, 118, 26), c(244, 184, 44), c(255, 238, 132)))
-    val RC_NUKE_CRIMSON = PaletteRamp(intArrayOf(c(36, 14, 22), c(102, 20, 34), c(178, 34, 48), c(236, 72, 76), c(255, 164, 152)))
-    val RC_NEON_VIOLET = PaletteRamp(intArrayOf(c(28, 16, 46), c(68, 30, 112), c(122, 54, 188), c(186, 102, 244), c(236, 188, 255)))
-    val RC_TOXIC_SLUDGE = PaletteRamp(intArrayOf(c(20, 34, 16), c(44, 88, 24), c(82, 154, 34), c(146, 218, 54), c(218, 252, 128)))
+    // Cyber-industrial urban 5-stop palettes
+    val GUNMETAL_STEEL = PaletteRamp(intArrayOf(c(24, 28, 38), c(56, 68, 88), c(102, 122, 148), c(166, 188, 214), c(228, 242, 255)))
+    val URBAN_ASPHALT = PaletteRamp(intArrayOf(c(22, 20, 26), c(44, 42, 50), c(72, 70, 80), c(108, 104, 114), c(150, 146, 156)))
+    val CRT_GREEN = PaletteRamp(intArrayOf(c(14, 30, 20), c(26, 78, 44), c(44, 148, 76), c(88, 224, 124), c(182, 255, 198)))
+    val SIREN_BLUE = PaletteRamp(intArrayOf(c(18, 28, 58), c(32, 62, 138), c(54, 118, 220), c(108, 184, 252), c(204, 238, 255)))
+    val HAZARD_AMBER = PaletteRamp(intArrayOf(c(42, 26, 16), c(116, 64, 18), c(188, 118, 26), c(244, 184, 44), c(255, 238, 132)))
+    val NEON_CRIMSON = PaletteRamp(intArrayOf(c(36, 14, 22), c(102, 20, 34), c(178, 34, 48), c(236, 72, 76), c(255, 164, 152)))
+    val NEON_VIOLET = PaletteRamp(intArrayOf(c(28, 16, 46), c(68, 30, 112), c(122, 54, 188), c(186, 102, 244), c(236, 188, 255)))
+    val TOXIC_SLUDGE = PaletteRamp(intArrayOf(c(20, 34, 16), c(44, 88, 24), c(82, 154, 34), c(146, 218, 54), c(218, 252, 128)))
 
     // High-Craft 2.5D Top-Down Dungeon palettes (hue-shifted warm stone, dark plum cobble, teal water, spectral cyan)
     val DUNGEON_FLAGSTONE = PaletteRamp(intArrayOf(c(38, 30, 34), c(62, 53, 52), c(88, 76, 71), c(116, 102, 93), c(141, 126, 115), c(166, 150, 136)))

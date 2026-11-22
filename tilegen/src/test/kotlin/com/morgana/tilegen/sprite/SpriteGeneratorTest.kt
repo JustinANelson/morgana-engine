@@ -59,19 +59,19 @@ class SpriteGeneratorTest {
     }
 
     @Test
-    fun `all 8 player classes generate 4 directions in time fantasy style with 2x scaling`() {
+    fun `all 8 player classes generate 4 directions in classic style with 2x scaling`() {
         val gen16 = PlayerSpriteGenerator(seed = 11L, tileSize = 16)
         val gen32 = PlayerSpriteGenerator(seed = 11L, tileSize = 32)
         val voidOutline = PaletteRamp.rgba(0x2B, 0x26, 0x32)
 
-        val (sheet, tiles) = gen16.generateAllPlayersSheet(includeDirections = true, frameCount = 1, style = PixelStyle.TIME_FANTASY)
+        val (sheet, tiles) = gen16.generateAllPlayersSheet(includeDirections = true, frameCount = 1, style = PixelStyle.CLASSIC_RPG)
         assertEquals(32, tiles.size)
         assertEquals(8 * 16, sheet.width)
         assertEquals(4 * 16, sheet.height)
 
         for (cls in PlayerClass.entries) {
-            val p16 = gen16.generatePlayerFrame(cls, FacingDirection.DOWN, 0, PixelStyle.TIME_FANTASY)
-            val p32 = gen32.generatePlayerFrame(cls, FacingDirection.DOWN, 0, PixelStyle.TIME_FANTASY)
+            val p16 = gen16.generatePlayerFrame(cls, FacingDirection.DOWN, 0, PixelStyle.CLASSIC_RPG)
+            val p32 = gen32.generatePlayerFrame(cls, FacingDirection.DOWN, 0, PixelStyle.CLASSIC_RPG)
             assertTrue(p16.pixels.any { it == voidOutline }, "$cls should use #2b2632 selective outline")
             assertEquals(p16.getPixel(8, 8), p32.getPixel(16, 16))
         }
@@ -81,7 +81,7 @@ class SpriteGeneratorTest {
     fun `cli player all command exports 8-wide 4-direction sheet`(@TempDir tempDir: Path) {
         val outDir = tempDir.resolve("players")
         val code = TilesetCli.run(
-            arrayOf("player", "all", "--size", "16", "--frames", "1", "--directions", "--style", "time_fantasy", "--out", outDir.toString(), "--split"),
+            arrayOf("player", "all", "--size", "16", "--frames", "1", "--directions", "--style", "classic_rpg", "--out", outDir.toString(), "--split"),
             PrintStream(ByteArrayOutputStream()),
             PrintStream(ByteArrayOutputStream())
         )

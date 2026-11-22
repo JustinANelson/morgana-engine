@@ -1,0 +1,32 @@
+{
+  "name": "wr_mediah_canyon",
+  "seed": 2006,
+  "tileSize": 16,
+  "columns": 8,
+  "style": "CLASSIC_RPG",
+  "materials": [
+    { "name": "mc_earth", "pattern": "OBSIDIAN_CRAG", "palette": "relic_amber", "scale": 1.2, "detail": 0.35 },
+    { "name": "mc_stone", "pattern": "HERRINGBONE_COBBLE", "palette": "dark_iron", "scale": 1.0, "detail": 0.35 },
+    { "name": "mc_brick", "pattern": "OBSIDIAN_CRAG", "palette": "abyssal_obsidian", "scale": 1.0, "detail": 0.25 },
+    { "name": "mc_lava", "pattern": "WATER_CAUSTICS", "palette": "rift_crimson", "frames": 4 }
+  ],
+  "cliffs": [
+    { "name": "mc_canyon_wall", "topMaterial": "mc_earth", "faceMaterial": "mc_stone", "trimColor": "#7c1422", "a4Layout": true }
+  ],
+  "props": [
+    { "name": "mc_excavation", "kind": "ANCIENT_EXCAVATION", "primaryPalette": "abyssal_obsidian", "secondaryPalette": "relic_amber" },
+    { "name": "mc_ballista", "kind": "SIEGE_BALLISTA", "primaryPalette": "dark_iron", "secondaryPalette": "relic_amber" },
+    { "name": "mc_wagon", "kind": "TRADE_WAGON", "primaryPalette": "relic_amber", "secondaryPalette": "dark_iron" },
+    { "name": "mc_rift", "kind": "DARK_RIFT_ALTAR", "primaryPalette": "abyssal_obsidian", "secondaryPalette": "rift_crimson" }
+  ],
+  "autotiles": [
+    {
+      "name": "mc_stone_on_earth",
+      "mode": "BLOB_47",
+      "columns": 8,
+      "foregroundMaterial": "mc_stone",
+      "backgroundMaterial": "mc_earth",
+      "style": { "margin": 3.0, "rimWidth": 1.0, "wobbleAmplitude": 1.4, "rimColor": "#2a2c36" }
+    }
+  ]
+}

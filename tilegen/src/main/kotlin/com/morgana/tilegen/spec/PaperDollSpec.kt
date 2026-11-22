@@ -135,7 +135,7 @@ data class CustomAttachmentSpec(
  */
 data class PaperDollSpec(
     val name: String,
-    val job: PaperDollJob = PaperDollJob.RUNE_HERO,
+    val job: PaperDollJob = PaperDollJob.HERO,
     val tileSize: Int = 32,
     val tileHeight: Int = tileSize,
     val seed: Long = 1337L,
@@ -202,7 +202,7 @@ object PaperDollSpecJson {
 
     internal fun parseObj(obj: JsonValue.Obj, path: String): PaperDollSpec {
         val name = obj.reqString("name", path)
-        val job = obj.optEnum("job", PaperDollJob.RUNE_HERO, path)
+        val job = obj.optEnum("job", PaperDollJob.HERO, path)
         val tileSize = obj.optInt("tileSize", 32, path)
         val tileHeight = obj.optInt("tileHeight", tileSize, path)
         val seed = obj.optLong("seed", 1337L, path)
@@ -230,7 +230,7 @@ object PaperDollSpecJson {
                 when (raw.lowercase().trim()) {
                     "all" -> PaperDollAction.ALL
                     "lpc", "lpc_standard" -> PaperDollAction.LPC_STANDARD
-                    "trevana" -> PaperDollAction.TREVANA
+                    "extended" -> PaperDollAction.EXTENDED
                     else -> listOf(parseEnumValue<PaperDollAction>(raw, "$path.actions"))
                 }
             }.distinct()

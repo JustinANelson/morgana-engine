@@ -23,7 +23,7 @@ class PaperDollUniversalTest {
     fun `layered frame separates shadow from body and equipment with direction-aware z-order`() {
         val gen = PaperDollSpriteGenerator(seed = 1337L, tileSize = 32)
         val loadout = PaperDollLoadout(
-            job = PaperDollJob.LORD_KNIGHT,
+            job = PaperDollJob.KNIGHT,
             attachments = listOf(AttachmentKind.KNIGHT_PAULDRONS, AttachmentKind.ANGEL_WINGS, AttachmentKind.ROYAL_CROWN)
         )
 
@@ -59,7 +59,7 @@ class PaperDollUniversalTest {
     @Test
     fun `all 12 universal actions render deterministically with distinct action poses`() {
         val gen = PaperDollSpriteGenerator(seed = 42L, tileSize = 32)
-        val loadout = PaperDollLoadout.forJob(PaperDollJob.PALADIN_CRUSADER)
+        val loadout = PaperDollLoadout.forJob(PaperDollJob.PALADIN)
 
         val rendered = PaperDollAction.ALL.associateWith { action ->
             val f0 = gen.generateCharacterFrame(loadout, Direction8.SW, action, frameIndex = 0)
@@ -86,9 +86,9 @@ class PaperDollUniversalTest {
     @Test
     fun `custom themes, ancestries, and custom pixel-grid attachments customize rendered layers`() {
         val gen = PaperDollSpriteGenerator(seed = 99L, tileSize = 32)
-        val human = PaperDollLoadout.forJobWithTheme(PaperDollJob.SNIPER_HUNTER, PaperDollThemes.HIGHLAND_HERO)
-        val elf = PaperDollLoadout.forJobWithTheme(PaperDollJob.SNIPER_HUNTER, PaperDollThemes.ELVEN_RANGER)
-        val orc = PaperDollLoadout.forJobWithTheme(PaperDollJob.SNIPER_HUNTER, PaperDollThemes.ORC_WARLORD)
+        val human = PaperDollLoadout.forJobWithTheme(PaperDollJob.HUNTER, PaperDollThemes.HIGHLAND_HERO)
+        val elf = PaperDollLoadout.forJobWithTheme(PaperDollJob.HUNTER, PaperDollThemes.ELVEN_RANGER)
+        val orc = PaperDollLoadout.forJobWithTheme(PaperDollJob.HUNTER, PaperDollThemes.ORC_WARLORD)
 
         val humanFrame = gen.generateCharacterFrame(human, Direction8.S, PaperDollAction.IDLE)
         val elfFrame = gen.generateCharacterFrame(elf, Direction8.S, PaperDollAction.IDLE)
@@ -121,8 +121,8 @@ class PaperDollUniversalTest {
     fun `universal sheet and equipment pack export cleanly with manifest and interactive previewer`(@TempDir tmpDir: Path) {
         val gen = PaperDollSpriteGenerator(seed = 1337L, tileSize = 64)
         val loadout = PaperDollLoadout(
-            job = PaperDollJob.HIGH_WIZARD,
-            theme = PaperDollThemes.GEFFEN_ARCHMAGE,
+            job = PaperDollJob.WIZARD,
+            theme = PaperDollThemes.ARCHMAGE,
             attachments = listOf(AttachmentKind.RUNE_CIRCLE, AttachmentKind.FAIRY_WINGS, AttachmentKind.GLASSES)
         )
         val actions = listOf(PaperDollAction.IDLE, PaperDollAction.WALK, PaperDollAction.CAST, PaperDollAction.SLASH)
@@ -154,7 +154,7 @@ class PaperDollUniversalTest {
 
         // Equipment pack generates hair, headgear, weapon, shield, and attachment sheets
         val pack = PaperDollSpriteGenerator(seed = 1337L, tileSize = 32).generateEquipmentPack(
-            theme = PaperDollThemes.PRONTERA_KNIGHT,
+            theme = PaperDollThemes.ROYAL_KNIGHT,
             actions = listOf(PaperDollAction.IDLE, PaperDollAction.WALK),
             directions = listOf(Direction8.S, Direction8.W)
         )
@@ -168,7 +168,7 @@ class PaperDollUniversalTest {
         val rawJson = """
             {
               "name": "elven_hero",
-              "job": "sniper_hunter",
+              "job": "hunter",
               "tileSize": 32,
               "seed": 777,
               "theme": {
@@ -176,7 +176,7 @@ class PaperDollUniversalTest {
                 "ancestry": "elf",
                 "eyeColor": "#44ddaa",
                 "outfitPalette": ["#1b2e26", "#2f5a44", "#4d8a64", "#82c48c", "#c8f0c0"],
-                "style": "ragnarok_25d"
+                "style": "painted_25d"
               },
               "attachments": ["quiver", "fairy_wings", "glasses"],
               "customAttachments": [
@@ -234,10 +234,10 @@ class PaperDollUniversalTest {
     }
 
     @Test
-    fun `trevana action set, harvest swing, and neutral equipment pack include torsos, legs, feet, and offhand blades`() {
+    fun `extended action set, harvest swing, and neutral equipment pack include torsos, legs, feet, and offhand blades`() {
         val gen = PaperDollSpriteGenerator(seed = 3001L, tileSize = 32)
         val miner = PaperDollLoadout(
-            job = PaperDollJob.BLACKSMITH_MERCHANT,
+            job = PaperDollJob.SMITH,
             weapon = WeaponKind.PICKAXE,
             torsoStyle = TorsoStyle.BRIGANDINE
         )
@@ -246,8 +246,8 @@ class PaperDollUniversalTest {
         assertFalse(h0.pixels.contentEquals(h1.pixels))
 
         val pack = gen.generateEquipmentPack(
-            theme = PaperDollThemes.TREVANA_NEUTRAL,
-            actions = PaperDollAction.TREVANA,
+            theme = PaperDollThemes.NEUTRAL_THEME,
+            actions = PaperDollAction.EXTENDED,
             directions = listOf(Direction8.S, Direction8.W, Direction8.E, Direction8.N)
         )
         assertTrue("torso_traveler" in pack)
@@ -268,8 +268,8 @@ class PaperDollUniversalTest {
         assertTrue("attachment_silk_garment" in pack)
 
         // Every pack sheet's tile list is grid-aligned to (actions * directions) rows x maxFrames columns
-        val expectedRows = PaperDollAction.TREVANA.size * 4
-        val expectedCols = PaperDollAction.TREVANA.maxOf { it.defaultFrames }
+        val expectedRows = PaperDollAction.EXTENDED.size * 4
+        val expectedCols = PaperDollAction.EXTENDED.maxOf { it.defaultFrames }
         val (swordSheet, swordTiles) = pack.getValue("weapon_knight_sword")
         assertEquals(expectedCols * 32, swordSheet.width)
         assertEquals(expectedRows * 32, swordSheet.height)
@@ -279,8 +279,8 @@ class PaperDollUniversalTest {
 
         // Chunky proportions fill ~22-26px wide x 28-30px tall inside 32x32 with feet landing at y=28..29
         val chunkyLoadout = PaperDollLoadout(
-            job = PaperDollJob.LORD_KNIGHT,
-            theme = PaperDollThemes.TREVANA_NEUTRAL,
+            job = PaperDollJob.KNIGHT,
+            theme = PaperDollThemes.NEUTRAL_THEME,
             attachments = listOf(AttachmentKind.KNIGHT_PAULDRONS)
         )
         val chunkyFrame = gen.generateCharacterFrame(chunkyLoadout, Direction8.S, PaperDollAction.IDLE, frameIndex = 0)
@@ -302,9 +302,9 @@ class PaperDollUniversalTest {
         // RMXP 32x48 proportions: 32px wide x 48px tall with headgear headroom and feet at y=44..47
         val rmxpGen = PaperDollSpriteGenerator(seed = 3003L, tileSize = 32, tileHeight = 48)
         val rmxpLoadout = PaperDollLoadout(
-            job = PaperDollJob.HIGH_WIZARD,
+            job = PaperDollJob.WIZARD,
             headgear = HeadgearKind.WIZARD_HAT,
-            theme = PaperDollThemes.TREVANA_NEUTRAL.copy(proportions = PaperDollProportions.RMXP_32X48)
+            theme = PaperDollThemes.NEUTRAL_THEME.copy(proportions = PaperDollProportions.RMXP_32X48)
         )
         val rmxpSheet = rmxpGen.generateUniversalSheet(
             name = "rmxp_mage",
@@ -339,22 +339,6 @@ class PaperDollUniversalTest {
                 assertTrue(PaperDollSlot.LEGS in layers, "Missing LEGS layer for $legsStyle facing $dir")
                 assertTrue(PaperDollSlot.FEET in layers, "Missing FEET layer for $legsStyle facing $dir")
             }
-        }
-
-        // Trevana Realms 32x48 RMXP NPCs (12) and Enemies (22)
-        val trevanaGen = TrevanaSpriteGenerator(seed = 1337L, cellWidth = 32, cellHeight = 48)
-        assertEquals(12, TrevanaNpcKind.entries.size)
-        assertEquals(22, TrevanaEnemyKind.entries.size)
-        val (npcSheet, npcTiles) = trevanaGen.generateNpcSheet(TrevanaNpcKind.CAPTAIN)
-        assertEquals(4 * 32, npcSheet.width)
-        assertEquals(36 * 48, npcSheet.height)
-        assertEquals(36 * 4, npcTiles.size)
-
-        for (enemy in TrevanaEnemyKind.entries) {
-            val frame = trevanaGen.generateEnemyFrame(enemy, Direction8.S, PaperDollAction.IDLE, 0)
-            assertEquals(32, frame.width)
-            assertEquals(48, frame.height)
-            assertTrue(frame.pixels.any { (it and 0xFF) != 0 }, "Expected visible pixels for ${enemy.key}")
         }
     }
 }

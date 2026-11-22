@@ -14,6 +14,7 @@ stale_after: 2027-05-06T00:00:00Z
 ```
 client-desktop --> client-core --> shared-protocol --> core-domain
 client-core --> tilegen  (pure Kotlin, no project or library dependencies)
+game-art --> tilegen    (tooling for the bundled games; no engine module depends on it)
 client-android --> client-core
 client-desktop --> client-net-netty --> client-core
 client-android --> client-net-netty
@@ -32,6 +33,7 @@ dev-tools  (standalone: snakeyaml only)
 | `server-persistence` | core-domain (`api`), serialization json |
 | `server-app` | core-domain, shared-protocol, server-persistence, Netty, coroutines, SLF4J, Logback (runtime) |
 | `tilegen` | Kotlin stdlib only; procedural 32x32 tile generation ([tilegen](/architecture/tilegen.md)) |
+| `game-art` | tilegen; per-game sprite kits and exporters ([game-art](/architecture/game_art.md)) |
 | `client-core` | core-domain + shared-protocol + tilegen (`api`), LibGDX, KTX, VisUI, coroutines (no networking library) |
 | `script-luak` | the only module that may depend on Luak (vendored, checksum-pinned); today only smoke tests, the script host and its `ScriptRuntime` port arrive in phase 2 |
 | `client-net-netty` | client-core, Netty; `MorganaNetClient`, the TCP `ClientTransport` used by desktop and Android |

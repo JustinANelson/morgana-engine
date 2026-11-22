@@ -31,20 +31,20 @@ class PixelStyleTest {
     }
 
     @Test
-    fun `time fantasy style produces deterministic dithered tiles with earthy presets`() {
+    fun `classic style produces deterministic dithered tiles with earthy presets`() {
         val gen = MaterialTileGenerator(seed = 123L, tileSize = 32)
         val spec = MaterialSpec(
-            name = "tf_grass",
+            name = "classic_grass",
             pattern = MaterialPattern.ORGANIC_FBM,
-            palette = PalettePresets.TIME_FANTASY_GRASS,
-            style = PixelStyle.TIME_FANTASY
+            palette = PalettePresets.CLASSIC_RPG_GRASS,
+            style = PixelStyle.CLASSIC_RPG
         )
         val tileA = gen.generateTile(spec)
         val tileB = gen.generateTile(spec)
         assertArrayEquals(tileA.pixels, tileB.pixels)
 
         val uniqueColors = tileA.pixels.filter { (it and 0xFF) != 0 }.toSet()
-        assertTrue(uniqueColors.size >= 3, "Expected >= 3 colors in TIME_FANTASY, got ${uniqueColors.size}")
+        assertTrue(uniqueColors.size >= 3, "Expected >= 3 colors in CLASSIC_RPG, got ${uniqueColors.size}")
     }
 
     @Test
@@ -92,7 +92,7 @@ class PixelStyleTest {
               "style": "RETRO_8BIT",
               "materials": [
                 { "name": "gb_ground", "pattern": "ORGANIC_FBM", "palette": "gameboy_dmg" },
-                { "name": "tf_path", "pattern": "COBBLESTONE", "palette": "time_fantasy_earth", "style": "TIME_FANTASY" }
+                { "name": "classic_path", "pattern": "COBBLESTONE", "palette": "classic_rpg_earth", "style": "CLASSIC_RPG" }
               ]
             }
         """.trimIndent()
@@ -106,6 +106,6 @@ class PixelStyleTest {
         val gbColors = rendered.tiles[0].image.pixels.filter { (it and 0xFF) != 0 }.toSet()
         assertTrue(gbColors.size <= 4)
         assertTrue(TilesetSpecJson.jsonSchema().contains("RETRO_8BIT"))
-        assertTrue(TilesetSpecJson.jsonSchema().contains("time_fantasy_grass"))
+        assertTrue(TilesetSpecJson.jsonSchema().contains("classic_rpg_grass"))
     }
 }

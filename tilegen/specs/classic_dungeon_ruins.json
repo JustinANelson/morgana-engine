@@ -1,0 +1,42 @@
+{
+  "name": "tf_dungeon_ruins",
+  "seed": 4040,
+  "tileSize": 16,
+  "columns": 8,
+  "style": "CLASSIC_RPG",
+  "materials": [
+    { "name": "marble_paver", "pattern": "DIAGONAL_PAVER", "palette": "ruins_marble", "scale": 1.0, "detail": 0.25 },
+    { "name": "marble_cracked", "pattern": "DIAGONAL_PAVER", "palette": "ruins_marble", "scale": 1.0, "detail": 0.25, "decal": "CRACKS" },
+    { "name": "marble_brick", "pattern": "BRICK_MASONRY", "palette": "ruins_marble", "scale": 1.0, "detail": 0.2 },
+    { "name": "marble_brick_vines", "pattern": "BRICK_MASONRY", "palette": "ruins_marble", "scale": 1.0, "detail": 0.2, "decal": "VINES" },
+    { "name": "slate_inlay", "pattern": "BRICK_MASONRY", "palette": "ruins_slate", "scale": 1.2, "detail": 0.2 },
+    { "name": "gold_sandstone", "pattern": "DIAGONAL_PAVER", "palette": "ruins_gold", "scale": 1.0, "detail": 0.25 },
+    { "name": "terra_ruins", "pattern": "COBBLESTONE", "palette": "ruins_terra", "scale": 1.0, "detail": 0.3 },
+    { "name": "ruins_water", "pattern": "WATER_CAUSTICS", "palette": "ruins_blue", "frames": 4 }
+  ],
+  "cliffs": [
+    { "name": "marble_wall", "topMaterial": "marble_paver", "faceMaterial": "marble_brick", "trimColor": "#2f62d4", "a4Layout": true },
+    { "name": "gold_wall", "topMaterial": "gold_sandstone", "faceMaterial": "marble_brick", "trimColor": "#e0b248", "a4Layout": true }
+  ],
+  "props": [
+    { "name": "marble_urn", "kind": "URN", "primaryPalette": "ruins_marble", "secondaryPalette": "ruins_blue" },
+    { "name": "ruin_skulls", "kind": "SKULL_PILE", "primaryPalette": "ruins_marble" },
+    { "name": "ruin_stairs_down", "kind": "STAIRS_DOWN", "primaryPalette": "ruins_marble" },
+    { "name": "ruin_stairs_up", "kind": "STAIRS_UP", "primaryPalette": "ruins_marble" },
+    { "name": "gargoyle_relief", "kind": "GARGOYLE_PLAQUE", "primaryPalette": "ruins_marble", "secondaryPalette": "ruins_blue" },
+    { "name": "marble_pillar", "kind": "PILLAR", "primaryPalette": "ruins_marble", "secondaryPalette": "ruins_blue" },
+    { "name": "rune_shrine", "kind": "SHRINE", "primaryPalette": "ruins_marble", "secondaryPalette": "ruins_blue" },
+    { "name": "blue_banner", "kind": "WALL_BANNER", "primaryPalette": "ruins_marble", "secondaryPalette": "ruins_blue" },
+    { "name": "marble_arch", "kind": "STONE_ARCHWAY", "primaryPalette": "ruins_marble" }
+  ],
+  "autotiles": [
+    {
+      "name": "slate_on_marble",
+      "mode": "BLOB_47",
+      "columns": 8,
+      "foregroundMaterial": "slate_inlay",
+      "backgroundMaterial": "marble_paver",
+      "style": { "margin": 3.0, "rimWidth": 1.0, "wobbleAmplitude": 1.5, "rimColor": "#4d6978" }
+    }
+  ]
+}

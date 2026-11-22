@@ -54,7 +54,7 @@ enum class DungeonTheme(
         floor = PaletteRamp.fromBaseColor(PaletteRamp.rgba(86, 78, 84), steps = 6, hueShift = 0.05f, valueSpread = 0.28f),
         wall = PaletteRamp.fromBaseColor(PaletteRamp.rgba(52, 40, 44), steps = 6, hueShift = 0.05f, valueSpread = 0.26f),
         liquid = PalettePresets.LAVA_MAGMA,
-        statue = PalettePresets.CO_DRAGON_BRONZE,
+        statue = PalettePresets.DRAGON_BRONZE,
         gold = PalettePresets.DUNGEON_TREASURE_GOLD,
         bone = PalettePresets.DUNGEON_BONE,
         flame = PaletteRamp(
@@ -77,8 +77,8 @@ enum class DungeonTheme(
         label = "Mossy Ruins",
         floor = PaletteRamp.fromBaseColor(PaletteRamp.rgba(124, 122, 112), steps = 6, hueShift = 0.05f, valueSpread = 0.26f),
         wall = PaletteRamp.fromBaseColor(PaletteRamp.rgba(64, 72, 74), steps = 6, hueShift = 0.05f, valueSpread = 0.26f),
-        liquid = PalettePresets.CO_IMPERIAL_JADE,
-        statue = PalettePresets.TF_RUINS_MARBLE,
+        liquid = PalettePresets.JADE_GREEN,
+        statue = PalettePresets.RUINS_MARBLE,
         gold = PalettePresets.DUNGEON_TREASURE_GOLD,
         bone = PalettePresets.DUNGEON_BONE,
         flame = PaletteRamp(

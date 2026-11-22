@@ -8,7 +8,7 @@ import com.morgana.tilegen.TileImage
  *
  * Designed for 2D top-down & 3/4-perspective RPGs:
  * - [IDLE]: 2-frame or 4-frame subtle breathing / stance sway (`180–250ms` per frame, looping).
- * - [WALK]: 4-frame RMXP/Time Fantasy stride cycle (`LEFT_PASS -> NEUTRAL -> RIGHT_PASS -> NEUTRAL`, `120–150ms` per frame, looping).
+ * - [WALK]: 4-frame RMXP-style stride cycle (`LEFT_PASS -> NEUTRAL -> RIGHT_PASS -> NEUTRAL`, `120–150ms` per frame, looping).
  * - [ATTACK]: 3-to-4-frame combat swing (`WINDUP -> STRIKE ->SMEAR/IMPACT -> RECOVERY`, `80–110ms` per frame, non-looping).
  * - [CAST]: 4-frame skill/spell invocation (`CHANNEL -> SURGE -> RELEASE -> FADE`, `100–130ms` per frame, non-looping).
  * - [HURT]: 2-frame hit-recoil & flash (`90ms` per frame, non-looping).

@@ -16,22 +16,22 @@ enum class PixelStyle {
     RETRO_8BIT,
 
     /**
-     * RMXP / Time Fantasy RPG style:
+     * Classic RMXP-style RPG:
      * subtle 4x4 ordered Bayer cluster dithering for hand-pixeled ground and foliage texture.
      */
-    TIME_FANTASY,
+    CLASSIC_RPG,
 
     /**
-     * PS1 32-bit JRPG style (Suikoden II):
+     * PS1 32-bit JRPG style:
      * warm cluster shading, deep indigo-shifted shadows, and light-aware selective outlining ("sel-out").
      */
-    SUIKODEN_32BIT,
+    JRPG_32BIT,
 
     /**
-     * 2.5D Anime-Chibi & Painted Environment style (Ragnarok Online):
+     * 2.5D Anime-Chibi & Painted Environment style:
      * luminous pastel-to-deep-shade gradients, top-left inner rim highlights, and hue-tinted selective outlines.
      */
-    RAGNAROK_25D,
+    PAINTED_25D,
 
     /**
      * Morgana house style for characters, monsters and gear: muted colour, rim-shaded volume and a soft cool outline
@@ -92,16 +92,16 @@ object PixelDither {
 
         val effectiveRamp = when (style) {
             PixelStyle.RETRO_8BIT -> palette.limitColors(4)
-            PixelStyle.TIME_FANTASY, PixelStyle.SUIKODEN_32BIT, PixelStyle.RAGNAROK_25D -> palette
+            PixelStyle.CLASSIC_RPG, PixelStyle.JRPG_32BIT, PixelStyle.PAINTED_25D -> palette
             PixelStyle.MORGANA -> return source // shading and outline are done per layer by SpriteFinish
             PixelStyle.STANDARD -> return source
         }
         val matrixSize = if (style == PixelStyle.RETRO_8BIT) 2 else 4
         val strength = when (style) {
             PixelStyle.RETRO_8BIT -> 0.22f
-            PixelStyle.TIME_FANTASY -> 0.14f
-            PixelStyle.SUIKODEN_32BIT -> 0.10f
-            PixelStyle.RAGNAROK_25D -> 0.08f
+            PixelStyle.CLASSIC_RPG -> 0.14f
+            PixelStyle.JRPG_32BIT -> 0.10f
+            PixelStyle.PAINTED_25D -> 0.08f
             PixelStyle.MORGANA, PixelStyle.STANDARD -> 0f
         }
 
@@ -134,8 +134,8 @@ object PixelDither {
                             nearest
                         }
                     }
-                    PixelStyle.TIME_FANTASY -> {
-                        // TIME_FANTASY: subtle ordered cluster dithering toward the ramp
+                    PixelStyle.CLASSIC_RPG -> {
+                        // CLASSIC_RPG: subtle ordered cluster dithering toward the ramp
                         val nearest = effectiveRamp.quantize(rgba)
                         if (effectiveRamp.colors.any { (it and 0xFFFFFF00.toInt()) == (rgba and 0xFFFFFF00.toInt()) }) {
                             val ditheredT = (luma + threshold(x, y, matrixSize) * strength).coerceIn(0f, 1f)
@@ -145,7 +145,7 @@ object PixelDither {
                             nearest
                         }
                     }
-                    PixelStyle.SUIKODEN_32BIT -> {
+                    PixelStyle.JRPG_32BIT -> {
                         // Warm sunlit top-left bias + deep indigo-violet shadow enrichment
                         val dirBias = ((0.5f - x.toFloat() / source.width.coerceAtLeast(1)) * 0.04f +
                             (0.5f - y.toFloat() / source.height.coerceAtLeast(1)) * 0.05f)
@@ -153,13 +153,13 @@ object PixelDither {
                             val ditheredT = (luma + dirBias + threshold(x, y, 4) * strength).coerceIn(0f, 1f)
                             if (kotlin.math.abs(threshold(x, y, 4)) > 0.38f) effectiveRamp.sample(ditheredT) else rgba
                         } else {
-                            tintSuikodenTone(rgba, luma)
+                            tintJrpgTone(rgba, luma)
                         }
                     }
-                    PixelStyle.RAGNAROK_25D -> {
+                    PixelStyle.PAINTED_25D -> {
                         // Luminous 2.5D directional gradient + pastel highlight bloom
                         val lightGrad = ((1f - (x + y).toFloat() / (source.width + source.height).coerceAtLeast(2)) - 0.5f) * 0.10f
-                        tintRagnarokTone(rgba, luma + lightGrad)
+                        tintPaintedTone(rgba, luma + lightGrad)
                     }
                     PixelStyle.MORGANA, PixelStyle.STANDARD -> rgba
                 }
@@ -235,7 +235,7 @@ object PixelDither {
         return out
     }
 
-    private fun tintSuikodenTone(rgba: Int, luma: Float): Int {
+    private fun tintJrpgTone(rgba: Int, luma: Float): Int {
         val a = rgba and 0xFF
         val r = (rgba ushr 24) and 0xFF
         val g = (rgba ushr 16) and 0xFF
@@ -255,7 +255,7 @@ object PixelDither {
         }
     }
 
-    private fun tintRagnarokTone(rgba: Int, adjustedLuma: Float): Int {
+    private fun tintPaintedTone(rgba: Int, adjustedLuma: Float): Int {
         val a = rgba and 0xFF
         val r = (rgba ushr 24) and 0xFF
         val g = (rgba ushr 16) and 0xFF

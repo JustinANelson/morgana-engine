@@ -1,0 +1,33 @@
+{
+  "name": "wr_hexe_sanctuary",
+  "seed": 2008,
+  "tileSize": 16,
+  "columns": 8,
+  "style": "CLASSIC_RPG",
+  "materials": [
+    { "name": "hs_slate", "pattern": "OBSIDIAN_CRAG", "palette": "abyssal_obsidian", "scale": 1.0, "detail": 0.35, "decal": "CRACKS" },
+    { "name": "hs_metal", "pattern": "METAL_PLATING", "palette": "dark_iron", "scale": 1.0, "detail": 0.3 },
+    { "name": "hs_paver", "pattern": "HERRINGBONE_COBBLE", "palette": "abyssal_obsidian", "scale": 1.0, "detail": 0.2 }
+  ],
+  "cliffs": [
+    { "name": "hs_crypt_wall", "topMaterial": "hs_paver", "faceMaterial": "hs_slate", "trimColor": "#bd2438", "a4Layout": true }
+  ],
+  "props": [
+    { "name": "hs_spire", "kind": "GARGOYLE_SPIRE", "primaryPalette": "abyssal_obsidian" },
+    { "name": "hs_rift", "kind": "DARK_RIFT_ALTAR", "primaryPalette": "abyssal_obsidian", "secondaryPalette": "rift_crimson" },
+    { "name": "hs_sarcophagus", "kind": "SARCOPHAGUS", "primaryPalette": "abyssal_obsidian", "secondaryPalette": "rift_crimson" },
+    { "name": "hs_bars", "kind": "IRON_BARS", "primaryPalette": "dark_iron" },
+    { "name": "hs_chest", "kind": "CHEST_CLOSED", "primaryPalette": "relic_amber", "secondaryPalette": "dark_iron" },
+    { "name": "hs_skulls", "kind": "SKULL_PILE", "primaryPalette": "abyssal_obsidian" }
+  ],
+  "autotiles": [
+    {
+      "name": "hs_paver_on_slate",
+      "mode": "BLOB_47",
+      "columns": 8,
+      "foregroundMaterial": "hs_paver",
+      "backgroundMaterial": "hs_slate",
+      "style": { "margin": 3.0, "rimWidth": 1.0, "wobbleAmplitude": 1.1, "rimColor": "#2b2632" }
+    }
+  ]
+}

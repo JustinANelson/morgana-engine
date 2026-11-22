@@ -7,10 +7,8 @@ import com.morgana.tilegen.autotile.AutotileGenerator
 import com.morgana.tilegen.autotile.AutotileMode
 import com.morgana.tilegen.autotile.TerrainPair
 import com.morgana.tilegen.export.ExportResult
-import com.morgana.tilegen.export.TrevanaGameExporter
 import com.morgana.tilegen.export.PaperDollExporter
 import com.morgana.tilegen.export.PngEncoder
-import com.morgana.tilegen.export.RoguelikeGameExporter
 import com.morgana.tilegen.export.TilesetExporter
 import com.morgana.tilegen.material.MaterialPattern
 import com.morgana.tilegen.material.MaterialSpec
@@ -25,9 +23,6 @@ import com.morgana.tilegen.sprite.BodyAncestry
 import com.morgana.tilegen.sprite.Direction8
 import com.morgana.tilegen.sprite.EnemyKind
 import com.morgana.tilegen.sprite.FacingDirection
-import com.morgana.tilegen.sprite.TrevanaEnemyKind
-import com.morgana.tilegen.sprite.TrevanaNpcKind
-import com.morgana.tilegen.sprite.TrevanaSpriteGenerator
 import com.morgana.tilegen.sprite.JrpgMonsterKind
 import com.morgana.tilegen.sprite.PaperDollAction
 import com.morgana.tilegen.sprite.PaperDollJob
@@ -51,14 +46,6 @@ import com.morgana.tilegen.structure.PlazaGenerator
 import com.morgana.tilegen.structure.PavingKind
 import com.morgana.tilegen.structure.PropGenerator
 import com.morgana.tilegen.structure.PropKind
-import com.morgana.tilegen.whiteriver.WhiteRiverEnemyGenerator
-import com.morgana.tilegen.whiteriver.WhiteRiverEnemyKind
-import com.morgana.tilegen.whiteriver.WhiteRiverItemGenerator
-import com.morgana.tilegen.whiteriver.WhiteRiverItemKind
-import com.morgana.tilegen.whiteriver.WhiteRiverPlayerClass
-import com.morgana.tilegen.whiteriver.WhiteRiverPlayerGenerator
-import com.morgana.tilegen.whiteriver.WhiteRiverSkillGenerator
-import com.morgana.tilegen.whiteriver.WhiteRiverSkillKind
 import java.io.PrintStream
 import java.nio.file.Files
 import java.nio.file.Path
@@ -92,10 +79,6 @@ object TilesetCli {
                     out.println("Prop kinds: ${PropKind.entries.joinToString { it.name.lowercase() }}")
                     out.println("Enemy kinds: ${EnemyKind.entries.joinToString { it.name.lowercase() }}")
                     out.println("Player classes: ${PlayerClass.entries.joinToString { it.name.lowercase() }}")
-                    out.println("White River classes: ${WhiteRiverPlayerClass.entries.joinToString { it.name.lowercase() }}")
-                    out.println("White River enemies: ${WhiteRiverEnemyKind.entries.joinToString { it.name.lowercase() }}")
-                    out.println("White River items: ${WhiteRiverItemKind.entries.joinToString { it.name.lowercase() }}")
-                    out.println("White River skills: ${WhiteRiverSkillKind.entries.joinToString { it.name.lowercase() }}")
                     out.println("Paper-doll jobs: ${PaperDollJob.entries.joinToString { it.name.lowercase() }}")
                     out.println("Paper-doll themes: ${PaperDollThemes.presets.keys.sorted().joinToString()}")
                     out.println("Paper-doll ancestries: ${BodyAncestry.entries.joinToString { it.name.lowercase() }}")
@@ -271,7 +254,7 @@ object TilesetCli {
                     val size = flags["size"]?.toInt() ?: 16
                     val frames = flags["frames"]?.toInt() ?: 1
                     val seed = flags["seed"]?.toLong() ?: 1337L
-                    val style = PixelStyle.valueOf((flags["style"] ?: "time_fantasy").uppercase())
+                    val style = PixelStyle.valueOf((flags["style"] ?: "classic_rpg").uppercase())
                     val directions = "directions" in flags
                     val outDir = Paths.get(flags["out"] ?: "build/tilesets/players_${target.lowercase()}")
                     val split = "split" in flags
@@ -324,73 +307,12 @@ object TilesetCli {
                     results.forEach { reportResult(out, it) }
                     0
                 }
-                "whiteriver" -> {
-                    val target = (args.getOrNull(1)?.takeIf { !it.startsWith("--") } ?: "all").lowercase()
-                    val size = flags["size"]?.toInt() ?: 16
-                    val seed = flags["seed"]?.toLong() ?: 1337L
-                    val style = PixelStyle.valueOf((flags["style"] ?: "time_fantasy").uppercase())
-                    val outRoot = Paths.get(flags["out"] ?: "assets/time_fantasy/white_river")
-                    val split = "split" in flags
-                    val frames = flags["frames"]?.toInt() ?: 2
-                    val directions = "directions" in flags || target == "all"
-
-                    fun exportGroup(sub: String, name: String, sheet: com.morgana.tilegen.TileImage, tiles: List<NamedTile>, cols: Int) {
-                        val res = TilesetExporter.exportNamedSheet(
-                            name = name,
-                            sheet = sheet,
-                            tiles = tiles,
-                            tileSize = size,
-                            columns = cols,
-                            outDir = outRoot.resolve(sub),
-                            splitTiles = split
-                        )
-                        reportResult(out, res)
-                    }
-
-                    when (target) {
-                        "players", "all" -> {
-                            val pGen = WhiteRiverPlayerGenerator(seed = seed, tileSize = size)
-                            val (sheet, tiles) = pGen.generateAllPlayersSheet(
-                                includeDirections = directions,
-                                frameCount = frames,
-                                style = style
-                            )
-                            exportGroup("players", "whiteriver_players_all", sheet, tiles, 6)
-                        }
-                    }
-                    when (target) {
-                        "enemies", "all" -> {
-                            val eGen = WhiteRiverEnemyGenerator(seed = seed, tileSize = size)
-                            val (sheet, tiles) = eGen.generateAllEnemiesSheet(frameCount = frames, style = style)
-                            exportGroup("enemies", "whiteriver_enemies_all", sheet, tiles, 8)
-                        }
-                    }
-                    when (target) {
-                        "items", "all" -> {
-                            val iGen = WhiteRiverItemGenerator(seed = seed, tileSize = size)
-                            val (sheet, tiles) = iGen.generateAllItemsSheet(style = style)
-                            exportGroup("items", "whiteriver_items_all", sheet, tiles, 8)
-                        }
-                    }
-                    when (target) {
-                        "skills", "all" -> {
-                            val skillFrames = flags["frames"]?.toInt() ?: 4
-                            val sGen = WhiteRiverSkillGenerator(seed = seed, tileSize = size)
-                            val (sheet, tiles) = sGen.generateAllSkillsSheet(frameCount = skillFrames, style = style)
-                            exportGroup("skills", "whiteriver_skills_all", sheet, tiles, skillFrames.coerceAtMost(8))
-                        }
-                    }
-                    if (target !in setOf("players", "enemies", "items", "skills", "all")) {
-                        error("Unknown whiteriver target '$target'. Expected players, enemies, items, skills, or all.")
-                    }
-                    0
-                }
                 "paperdoll" -> {
                     val target = (args.getOrNull(1)?.takeIf { !it.startsWith("--") } ?: "all").lowercase()
                     val size = flags["size"]?.toInt() ?: 32
                     val height = flags["height"]?.toInt() ?: size
                     val seed = flags["seed"]?.toLong() ?: 1337L
-                    val style = PixelStyle.valueOf((flags["style"] ?: "ragnarok_25d").uppercase())
+                    val style = PixelStyle.valueOf((flags["style"] ?: "painted_25d").uppercase())
                     val frames = flags["frames"]?.toInt() ?: 2
                     val directions8 = "directions" in flags || target == "all" || target == "jobs"
                     val outRoot = Paths.get(flags["out"] ?: "build/tilesets/paperdoll")
@@ -627,81 +549,6 @@ object TilesetCli {
                     }
                     0
                 }
-                "roguelike" -> {
-                    val target = (args.getOrNull(1)?.takeIf { !it.startsWith("--") } ?: "export").lowercase()
-                    if (target != "export") error("Unknown roguelike target '$target'. Expected 'export'.")
-                    val game = flags["game"] ?: error("Missing --game <game folder> for 'roguelike export'")
-                    val parts = flags["only"]?.split(',')?.map { RoguelikeGameExporter.Part.valueOf(it.trim().uppercase()) }?.toSet()
-                        ?: RoguelikeGameExporter.Part.entries.toSet()
-                    val result = RoguelikeGameExporter.export(Paths.get(game), parts, flags["seed"]?.toLong() ?: 4040L)
-                    out.println("Wrote ${result.written.size} files into $game/assets")
-                    out.println("sprites.uiHeights: " + result.uiHeights.entries.joinToString(", ") { "\"${it.key}\": ${it.value}" })
-                    0
-                }
-                "trevana" -> {
-                    val target = (args.getOrNull(1)?.takeIf { !it.startsWith("--") } ?: "all").lowercase()
-                    if (target == "export") {
-                        // trevana export --game games/trevana-realms [--specs tilegen/specs] [--only bodies,gear,npcs,enemies]
-                        val game = flags["game"] ?: error("Missing --game <game folder> for 'trevana export'")
-                        val parts = flags["only"]?.split(',')?.map { TrevanaGameExporter.Part.valueOf(it.trim().uppercase()) }?.toSet()
-                            ?: TrevanaGameExporter.Part.entries.toSet()
-                        val result = TrevanaGameExporter.export(
-                            Paths.get(game),
-                            Paths.get(flags["specs"] ?: "tilegen/specs"),
-                            parts,
-                            flags["seed"]?.toLong() ?: 1337L
-                        )
-                        out.println("Wrote ${result.written.size} files into $game/assets (sprites 1-5, 10-21, 101-122 and paperdolls 1-21 only)")
-                        out.println("sprites.uiHeights for those sprites: " + result.uiHeights.entries.joinToString(", ") { "\"${it.key}\": ${it.value}" })
-                        return 0
-                    }
-                    val size = flags["size"]?.toInt() ?: 32
-                    val height = flags["height"]?.toInt() ?: 48
-                    val seed = flags["seed"]?.toLong() ?: 1337L
-                    val outRoot = Paths.get(flags["out"] ?: "build/tilesets/trevana_realms_rmxp")
-                    val split = "split" in flags
-                    val gen = TrevanaSpriteGenerator(seed = seed, cellWidth = size, cellHeight = height)
-                    val actions = parsePaperDollActions(flags["actions"]) ?: PaperDollAction.TREVANA
-                    val cols = actions.maxOf { it.defaultFrames }
-
-                    if (target == "npcs" || target == "all") {
-                        for (npc in TrevanaNpcKind.entries) {
-                            val (sheet, tiles) = gen.generateNpcSheet(npc, actions)
-                            val res = TilesetExporter.exportNamedSheet(
-                                name = "${npc.spriteId}",
-                                sheet = sheet,
-                                tiles = tiles,
-                                tileSize = size,
-                                columns = cols,
-                                outDir = outRoot.resolve("npcs"),
-                                splitTiles = split,
-                                exportEngineFormats = false,
-                                exportPreview = false,
-                                cellHeight = height
-                            )
-                            reportResult(out, res)
-                        }
-                    }
-                    if (target == "enemies" || target == "all") {
-                        for (enemy in TrevanaEnemyKind.entries) {
-                            val (sheet, tiles) = gen.generateEnemySheet(enemy, actions)
-                            val res = TilesetExporter.exportNamedSheet(
-                                name = "${enemy.spriteId}",
-                                sheet = sheet,
-                                tiles = tiles,
-                                tileSize = size,
-                                columns = cols,
-                                outDir = outRoot.resolve("enemies"),
-                                splitTiles = split,
-                                exportEngineFormats = false,
-                                exportPreview = false,
-                                cellHeight = height
-                            )
-                            reportResult(out, res)
-                        }
-                    }
-                    0
-                }
                 else -> {
                     err.println("Unknown command: $cmd")
                     printUsage(err)
@@ -724,18 +571,18 @@ object TilesetCli {
         MaterialPattern.WOOD_PLANKS -> "timber_wood"
         MaterialPattern.WATER_CAUSTICS -> "ocean_water"
         MaterialPattern.METAL_PLATING -> "void_metal"
-        MaterialPattern.DIAGONAL_PAVER -> "tf_ruins_marble"
-        MaterialPattern.GLAZED_ROOF_TILE -> "co_dynasty_lacquer"
-        MaterialPattern.JADE_COURTYARD -> "co_imperial_jade"
-        MaterialPattern.HERRINGBONE_COBBLE -> "wr_serendia_iron"
-        MaterialPattern.OBSIDIAN_CRAG -> "wr_abyssal_obsidian"
-        MaterialPattern.LEAF_CANOPY_CLUSTER -> "sk_highland_grass"
-        MaterialPattern.HALF_TIMBER_PLASTER -> "sk_muse_limestone"
-        MaterialPattern.SHINGLE_THATCH_ROOF -> "sk_scarlet_roof"
-        MaterialPattern.PRONTERA_COURTYARD -> "ro_prontera_marble"
-        MaterialPattern.ASPHALT_ROAD -> "rc_old_detroit"
-        MaterialPattern.HAZARD_GRATE -> "rc_ocp_steel"
-        MaterialPattern.CYBER_CIRCUIT -> "rc_crt_green"
+        MaterialPattern.DIAGONAL_PAVER -> "ruins_marble"
+        MaterialPattern.GLAZED_ROOF_TILE -> "lacquer_red"
+        MaterialPattern.JADE_COURTYARD -> "jade_green"
+        MaterialPattern.HERRINGBONE_COBBLE -> "dark_iron"
+        MaterialPattern.OBSIDIAN_CRAG -> "abyssal_obsidian"
+        MaterialPattern.LEAF_CANOPY_CLUSTER -> "highland_grass"
+        MaterialPattern.HALF_TIMBER_PLASTER -> "pale_limestone"
+        MaterialPattern.SHINGLE_THATCH_ROOF -> "scarlet_roof"
+        MaterialPattern.SANCTUARY_COURTYARD -> "cream_marble"
+        MaterialPattern.ASPHALT_ROAD -> "urban_asphalt"
+        MaterialPattern.HAZARD_GRATE -> "gunmetal_steel"
+        MaterialPattern.CYBER_CIRCUIT -> "crt_green"
     }
 
     private fun parseFlags(tokens: List<String>): Map<String, String> {
@@ -769,7 +616,7 @@ object TilesetCli {
                 when (token) {
                     "all" -> PaperDollAction.ALL
                     "lpc", "lpc_standard" -> PaperDollAction.LPC_STANDARD
-                    "trevana" -> PaperDollAction.TREVANA
+                    "extended" -> PaperDollAction.EXTENDED
                     else -> listOf(PaperDollAction.valueOf(token.uppercase()))
                 }
             }.distinct()
@@ -797,16 +644,13 @@ object TilesetCli {
               material <pattern> [--palette <name>] [--size 32] [--frames 1] [--style <style>] [--seed 1337] [--out <dir>] [--split]
               prop <kind> [--size 32] [--style <style>] [--seed 1337] [--out <dir>] [--split]
               enemy <kind|all> [--size 16] [--frames 2] [--style retro_8bit] [--seed 1337] [--out <dir>] [--split]
-              player <class|all> [--size 16] [--frames 1] [--directions] [--style time_fantasy] [--seed 1337] [--out <dir>] [--split]
-              conquer <players|enemies|items|skills|all> [--size 16] [--frames 2] [--directions] [--style time_fantasy] [--seed 1337] [--out <dir>] [--split]
-              robocop <players|enemies|items|skills|all> [--size 16] [--frames 2] [--directions] [--style time_fantasy] [--seed 1337] [--out <dir>] [--split]
-              whiteriver <players|enemies|items|skills|all> [--size 16] [--frames 2] [--directions] [--style time_fantasy] [--seed 1337] [--out <dir>] [--split]
+              player <class|all> [--size 16] [--frames 1] [--directions] [--style classic_rpg] [--seed 1337] [--out <dir>] [--split]
               plaza [--seed 1337] [--out <dir>]   (fountain, well, lamp post, bench, planter)
               grounddetail [--seed 1337] [--out <dir>]   (pebbles, weeds, worn dirt, puddles, ruts, hay, dirt spill)
               paving [--variants 4] [--seed 1337] [--out <dir>]   (town cobble and flagstone tiles, a row per kind)
               building <kind|all> [--theme default|desert|ember|port] [--roof red|brown|slate|green|thatch] [--name <file>] [--seed 1337] [--out <dir>]   (large town buildings: cottage_large inn smithy shop chapel guardhouse great_hall)
               dungeon [crypt|ember_forge|mossy_ruins] [--seed 1337] [--out <dir>] [--split]   (high-craft 2.5D dungeon tileset, sculpted props & showcase room)
-              paperdoll <jobs|monsters|all|pack|spec|jobName> [--size 32] [--frames 2] [--directions] [--layers] [--theme <name>] [--ancestry <name>] [--actions <list|all|lpc>] [--attachments <list>] [--style ragnarok_25d|suikoden_32bit] [--seed 1337] [--out <dir>] [--split]
+              paperdoll <jobs|monsters|all|pack|spec|jobName> [--size 32] [--frames 2] [--directions] [--layers] [--theme <name>] [--ancestry <name>] [--actions <list|all|lpc>] [--attachments <list>] [--style painted_25d|jrpg_32bit] [--seed 1337] [--out <dir>] [--split]
               spec <file.json> [--out <dir>] [--split]
               schema
             """.trimIndent()

@@ -209,8 +209,8 @@ class AutotileGenerator(
                     style.wobbleAmplitude
                 val wobble = when (style.pixelStyle) {
                     PixelStyle.RETRO_8BIT -> round(rawWobble)
-                    PixelStyle.TIME_FANTASY, PixelStyle.SUIKODEN_32BIT -> rawWobble + PixelDither.threshold(px, py, 4) * 0.75f
-                    PixelStyle.RAGNAROK_25D, PixelStyle.MORGANA, PixelStyle.STANDARD -> rawWobble
+                    PixelStyle.CLASSIC_RPG, PixelStyle.JRPG_32BIT -> rawWobble + PixelDither.threshold(px, py, 4) * 0.75f
+                    PixelStyle.PAINTED_25D, PixelStyle.MORGANA, PixelStyle.STANDARD -> rawWobble
                 }
                 val effectiveDist = dist + wobble
 
@@ -311,8 +311,8 @@ class AutotileGenerator(
                 Triple(fg, bg, AutotileStyle(margin = 5.5f, rimWidth = 2.5f, wobbleAmplitude = 3.5f, rimColor = base.waterFoam))
             }
             TerrainPair.GRASS_ON_WATER -> {
-                val grass = materialGen.generateTile(MaterialSpec("grass", MaterialPattern.ORGANIC_FBM, PalettePresets.TIME_FANTASY_GRASS, style = PixelStyle.TIME_FANTASY))
-                val water = materialGen.generateTile(MaterialSpec("water", MaterialPattern.WATER_CAUSTICS, PalettePresets.CALM_WATER, style = PixelStyle.TIME_FANTASY))
+                val grass = materialGen.generateTile(MaterialSpec("grass", MaterialPattern.ORGANIC_FBM, PalettePresets.CLASSIC_RPG_GRASS, style = PixelStyle.CLASSIC_RPG))
+                val water = materialGen.generateTile(MaterialSpec("water", MaterialPattern.WATER_CAUSTICS, PalettePresets.CALM_WATER, style = PixelStyle.CLASSIC_RPG))
                 Triple(grass, water, AutotileStyle(margin = 5.5f, rimWidth = 2.5f, wobbleAmplitude = 3.5f, rimColor = PalettePresets.DESERT_SAND.mid))
             }
             TerrainPair.COBBLE_ON_GRASS -> {
@@ -352,8 +352,8 @@ class AutotileGenerator(
                 AutotileStyle(margin = 5.5f * scale, rimWidth = 2.5f * scale, wobbleAmplitude = 3.5f * scale, rimColor = PalettePresets.OCEAN_WATER.highlight)
             )
             TerrainPair.GRASS_ON_WATER -> Triple(
-                materialGen.generateTile(MaterialSpec("grass", MaterialPattern.ORGANIC_FBM, PalettePresets.TIME_FANTASY_GRASS, style = PixelStyle.TIME_FANTASY)),
-                materialGen.generateTile(MaterialSpec("water", MaterialPattern.WATER_CAUSTICS, PalettePresets.CALM_WATER, style = PixelStyle.TIME_FANTASY)),
+                materialGen.generateTile(MaterialSpec("grass", MaterialPattern.ORGANIC_FBM, PalettePresets.CLASSIC_RPG_GRASS, style = PixelStyle.CLASSIC_RPG)),
+                materialGen.generateTile(MaterialSpec("water", MaterialPattern.WATER_CAUSTICS, PalettePresets.CALM_WATER, style = PixelStyle.CLASSIC_RPG)),
                 AutotileStyle(margin = 5.5f * scale, rimWidth = 2.5f * scale, wobbleAmplitude = 3.5f * scale, rimColor = PalettePresets.DESERT_SAND.mid)
             )
             TerrainPair.COBBLE_ON_GRASS -> Triple(

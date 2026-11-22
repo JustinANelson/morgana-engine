@@ -9,7 +9,7 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 enum class RunStateMode {
-    /** Keep everything gained during a run, win or lose (classic ARPG / Lanternfall default). */
+    /** Keep everything gained during a run, win or lose (the classic ARPG default). */
     PERSISTENT,
     /** Extraction: items, level and XP gained during a run are kept only if you exit alive; wiping, timing out or abandoning restores your pre-run state. */
     EXTRACTION,

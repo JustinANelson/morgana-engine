@@ -171,7 +171,7 @@ enum class PaperDollAction(
 
     companion object {
         val LPC_STANDARD: List<PaperDollAction> = listOf(CAST, THRUST, WALK, SLASH, SHOOT, HURT)
-        val TREVANA: List<PaperDollAction> = listOf(IDLE, WALK, SLASH, THRUST, SHOOT, CAST, HARVEST, JUMP, HURT)
+        val EXTENDED: List<PaperDollAction> = listOf(IDLE, WALK, SLASH, THRUST, SHOOT, CAST, HARVEST, JUMP, HURT)
         val ALL: List<PaperDollAction> = entries.toList()
 
         fun fromSpriteAnimationClip(clip: SpriteAnimationClip): PaperDollAction = when (clip) {
@@ -342,11 +342,11 @@ data class PaperDollTheme(
     val skinPalette: PaletteRamp = defaultSkinFor(ancestry),
     val eyeColor: Int = defaultEyeFor(ancestry),
     val hairPalette: PaletteRamp = PaletteRamp.fromBaseColor(PaletteRamp.rgba(52, 44, 58), steps = 5),
-    val outfitPalette: PaletteRamp = PalettePresets.SK_SCARLET_ROOF,
-    val accentPalette: PaletteRamp = PalettePresets.SK_TRUE_RUNE_GOLD,
-    val secondaryPalette: PaletteRamp = PalettePresets.SK_KYARO_TIMBER,
-    val auraPalette: PaletteRamp = PalettePresets.RO_GEFFEN_ARCANE,
-    val style: PixelStyle = PixelStyle.RAGNAROK_25D,
+    val outfitPalette: PaletteRamp = PalettePresets.SCARLET_ROOF,
+    val accentPalette: PaletteRamp = PalettePresets.RUNE_GOLD,
+    val secondaryPalette: PaletteRamp = PalettePresets.WARM_TIMBER,
+    val auraPalette: PaletteRamp = PalettePresets.ARCANE_VIOLET,
+    val style: PixelStyle = PixelStyle.PAINTED_25D,
     val proportions: PaperDollProportions = PaperDollProportions.STANDARD
 ) {
     companion object {
@@ -376,9 +376,9 @@ data class PaperDollTheme(
             hairPalette = PaperDollLoadout.defaultHairPalette(job),
             outfitPalette = PaperDollLoadout.defaultOutfitPalette(job),
             accentPalette = PaperDollLoadout.defaultAccentPalette(job),
-            secondaryPalette = PalettePresets.SK_KYARO_TIMBER,
-            auraPalette = PalettePresets.RO_GEFFEN_ARCANE,
-            style = PixelStyle.RAGNAROK_25D
+            secondaryPalette = PalettePresets.WARM_TIMBER,
+            auraPalette = PalettePresets.ARCANE_VIOLET,
+            style = PixelStyle.PAINTED_25D
         )
     }
 }
@@ -390,87 +390,87 @@ object PaperDollThemes {
     val HIGHLAND_HERO = PaperDollTheme(
         name = "highland_hero",
         ancestry = BodyAncestry.HUMAN,
-        outfitPalette = PalettePresets.SK_SCARLET_ROOF,
-        accentPalette = PalettePresets.SK_TRUE_RUNE_GOLD,
-        secondaryPalette = PalettePresets.SK_KYARO_TIMBER,
+        outfitPalette = PalettePresets.SCARLET_ROOF,
+        accentPalette = PalettePresets.RUNE_GOLD,
+        secondaryPalette = PalettePresets.WARM_TIMBER,
         hairPalette = PaletteRamp.fromBaseColor(PaletteRamp.rgba(52, 44, 58), steps = 5),
-        auraPalette = PalettePresets.SK_TRUE_RUNE_GOLD,
-        style = PixelStyle.SUIKODEN_32BIT
+        auraPalette = PalettePresets.RUNE_GOLD,
+        style = PixelStyle.JRPG_32BIT
     )
 
-    val PRONTERA_KNIGHT = PaperDollTheme(
-        name = "prontera_knight",
+    val ROYAL_KNIGHT = PaperDollTheme(
+        name = "royal_knight",
         ancestry = BodyAncestry.HUMAN,
-        outfitPalette = PalettePresets.RO_PRONTERA_MARBLE,
-        accentPalette = PalettePresets.SK_SCARLET_ROOF,
-        secondaryPalette = PalettePresets.SK_KYARO_TIMBER,
-        hairPalette = PalettePresets.SK_TRUE_RUNE_GOLD,
-        auraPalette = PalettePresets.RO_PRONTERA_MARBLE,
-        style = PixelStyle.RAGNAROK_25D
+        outfitPalette = PalettePresets.CREAM_MARBLE,
+        accentPalette = PalettePresets.SCARLET_ROOF,
+        secondaryPalette = PalettePresets.WARM_TIMBER,
+        hairPalette = PalettePresets.RUNE_GOLD,
+        auraPalette = PalettePresets.CREAM_MARBLE,
+        style = PixelStyle.PAINTED_25D
     )
 
     val ELVEN_RANGER = PaperDollTheme(
         name = "elven_ranger",
         ancestry = BodyAncestry.ELF,
-        outfitPalette = PalettePresets.SK_HIGHLAND_GRASS,
-        accentPalette = PalettePresets.SK_KYARO_TIMBER,
-        secondaryPalette = PalettePresets.RO_PAYON_JADE,
-        hairPalette = PalettePresets.SK_TRUE_RUNE_GOLD,
-        auraPalette = PalettePresets.RO_PAYON_JADE,
-        style = PixelStyle.RAGNAROK_25D
+        outfitPalette = PalettePresets.HIGHLAND_GRASS,
+        accentPalette = PalettePresets.WARM_TIMBER,
+        secondaryPalette = PalettePresets.FOREST_JADE,
+        hairPalette = PalettePresets.RUNE_GOLD,
+        auraPalette = PalettePresets.FOREST_JADE,
+        style = PixelStyle.PAINTED_25D
     )
 
-    val GEFFEN_ARCHMAGE = PaperDollTheme(
-        name = "geffen_archmage",
+    val ARCHMAGE = PaperDollTheme(
+        name = "archmage",
         ancestry = BodyAncestry.HUMAN,
-        outfitPalette = PalettePresets.RO_GEFFEN_ARCANE,
-        accentPalette = PalettePresets.SK_TRUE_RUNE_GOLD,
-        secondaryPalette = PalettePresets.WR_ABYSSAL_OBSIDIAN,
-        hairPalette = PalettePresets.RO_PORING_PASTEL,
-        auraPalette = PalettePresets.RO_GEFFEN_ARCANE,
-        style = PixelStyle.RAGNAROK_25D
+        outfitPalette = PalettePresets.ARCANE_VIOLET,
+        accentPalette = PalettePresets.RUNE_GOLD,
+        secondaryPalette = PalettePresets.ABYSSAL_OBSIDIAN,
+        hairPalette = PalettePresets.PASTEL_PINK,
+        auraPalette = PalettePresets.ARCANE_VIOLET,
+        style = PixelStyle.PAINTED_25D
     )
 
     val ORC_WARLORD = PaperDollTheme(
         name = "orc_warlord",
         ancestry = BodyAncestry.ORC,
-        outfitPalette = PalettePresets.WR_SERENDIA_IRON,
-        accentPalette = PalettePresets.CO_DYNASTY_LACQUER,
-        secondaryPalette = PalettePresets.SK_KYARO_TIMBER,
+        outfitPalette = PalettePresets.DARK_IRON,
+        accentPalette = PalettePresets.LACQUER_RED,
+        secondaryPalette = PalettePresets.WARM_TIMBER,
         hairPalette = PaletteRamp.fromBaseColor(PaletteRamp.rgba(36, 32, 34), steps = 5),
-        auraPalette = PalettePresets.CO_DYNASTY_LACQUER,
-        style = PixelStyle.RAGNAROK_25D
+        auraPalette = PalettePresets.LACQUER_RED,
+        style = PixelStyle.PAINTED_25D
     )
 
     val DEMON_REAPER = PaperDollTheme(
         name = "demon_reaper",
         ancestry = BodyAncestry.DEMON,
-        outfitPalette = PalettePresets.WR_ABYSSAL_OBSIDIAN,
-        accentPalette = PalettePresets.WR_BLACK_SPIRIT,
-        secondaryPalette = PalettePresets.WR_SERENDIA_IRON,
-        hairPalette = PalettePresets.RO_PRONTERA_MARBLE,
-        auraPalette = PalettePresets.WR_BLACK_SPIRIT,
-        style = PixelStyle.RAGNAROK_25D
+        outfitPalette = PalettePresets.ABYSSAL_OBSIDIAN,
+        accentPalette = PalettePresets.RIFT_CRIMSON,
+        secondaryPalette = PalettePresets.DARK_IRON,
+        hairPalette = PalettePresets.CREAM_MARBLE,
+        auraPalette = PalettePresets.RIFT_CRIMSON,
+        style = PixelStyle.PAINTED_25D
     )
 
     val UNDEAD_LICH = PaperDollTheme(
         name = "undead_lich",
         ancestry = BodyAncestry.UNDEAD,
-        outfitPalette = PalettePresets.WR_ABYSSAL_OBSIDIAN,
-        accentPalette = PalettePresets.RO_GEFFEN_ARCANE,
-        secondaryPalette = PalettePresets.WR_SERENDIA_IRON,
-        hairPalette = PalettePresets.RO_PRONTERA_MARBLE,
-        auraPalette = PalettePresets.RO_GEFFEN_ARCANE,
-        style = PixelStyle.RAGNAROK_25D
+        outfitPalette = PalettePresets.ABYSSAL_OBSIDIAN,
+        accentPalette = PalettePresets.ARCANE_VIOLET,
+        secondaryPalette = PalettePresets.DARK_IRON,
+        hairPalette = PalettePresets.CREAM_MARBLE,
+        auraPalette = PalettePresets.ARCANE_VIOLET,
+        style = PixelStyle.PAINTED_25D
     )
 
     val CYBER_SENTINEL = PaperDollTheme(
         name = "cyber_sentinel",
         ancestry = BodyAncestry.CONSTRUCT,
-        outfitPalette = PalettePresets.WR_SERENDIA_IRON,
+        outfitPalette = PalettePresets.DARK_IRON,
         accentPalette = PaletteRamp.fromBaseColor(PaletteRamp.rgba(60, 200, 240), steps = 5),
-        secondaryPalette = PalettePresets.WR_ABYSSAL_OBSIDIAN,
-        hairPalette = PalettePresets.RO_PRONTERA_MARBLE,
+        secondaryPalette = PalettePresets.ABYSSAL_OBSIDIAN,
+        hairPalette = PalettePresets.CREAM_MARBLE,
         auraPalette = PaletteRamp.fromBaseColor(PaletteRamp.rgba(60, 200, 240), steps = 5),
         style = PixelStyle.STANDARD
     )
@@ -478,50 +478,50 @@ object PaperDollThemes {
     val SHRINE_PRIESTESS = PaperDollTheme(
         name = "shrine_priestess",
         ancestry = BodyAncestry.HUMAN,
-        outfitPalette = PalettePresets.RO_PORING_PASTEL,
-        accentPalette = PalettePresets.SK_SCARLET_ROOF,
-        secondaryPalette = PalettePresets.RO_PRONTERA_MARBLE,
+        outfitPalette = PalettePresets.PASTEL_PINK,
+        accentPalette = PalettePresets.SCARLET_ROOF,
+        secondaryPalette = PalettePresets.CREAM_MARBLE,
         hairPalette = PaletteRamp.fromBaseColor(PaletteRamp.rgba(44, 38, 64), steps = 5),
-        auraPalette = PalettePresets.SK_TRUE_RUNE_GOLD,
-        style = PixelStyle.SUIKODEN_32BIT
+        auraPalette = PalettePresets.RUNE_GOLD,
+        style = PixelStyle.JRPG_32BIT
     )
 
     val DESERT_NOMAD = PaperDollTheme(
         name = "desert_nomad",
         ancestry = BodyAncestry.HUMAN,
         skinPalette = PaletteRamp.fromBaseColor(PaletteRamp.rgba(198, 146, 108), steps = 5),
-        outfitPalette = PalettePresets.RO_MORROC_SANDSTONE,
-        accentPalette = PalettePresets.CO_CELESTIAL_GOLD,
-        secondaryPalette = PalettePresets.SK_KYARO_TIMBER,
+        outfitPalette = PalettePresets.DUNE_SANDSTONE,
+        accentPalette = PalettePresets.CELESTIAL_GOLD,
+        secondaryPalette = PalettePresets.WARM_TIMBER,
         hairPalette = PaletteRamp.fromBaseColor(PaletteRamp.rgba(42, 34, 32), steps = 5),
-        auraPalette = PalettePresets.CO_CELESTIAL_GOLD,
-        style = PixelStyle.RAGNAROK_25D
+        auraPalette = PalettePresets.CELESTIAL_GOLD,
+        style = PixelStyle.PAINTED_25D
     )
 
-    val TREVANA_NEUTRAL = PaperDollTheme(
-        name = "trevana_neutral",
+    val NEUTRAL_THEME = PaperDollTheme(
+        name = "neutral",
         ancestry = BodyAncestry.HUMAN,
-        outfitPalette = PalettePresets.RO_PRONTERA_MARBLE,
-        accentPalette = PalettePresets.SK_MUSE_LIMESTONE,
-        secondaryPalette = PalettePresets.WR_SERENDIA_IRON,
+        outfitPalette = PalettePresets.CREAM_MARBLE,
+        accentPalette = PalettePresets.PALE_LIMESTONE,
+        secondaryPalette = PalettePresets.DARK_IRON,
         hairPalette = PaletteRamp.fromBaseColor(PaletteRamp.rgba(72, 64, 78), steps = 5),
-        auraPalette = PalettePresets.RO_PRONTERA_MARBLE,
-        style = PixelStyle.RAGNAROK_25D,
+        auraPalette = PalettePresets.CREAM_MARBLE,
+        style = PixelStyle.PAINTED_25D,
         proportions = PaperDollProportions.CHUNKY
     )
 
     val presets: Map<String, PaperDollTheme> = listOf(
         HIGHLAND_HERO,
-        PRONTERA_KNIGHT,
+        ROYAL_KNIGHT,
         ELVEN_RANGER,
-        GEFFEN_ARCHMAGE,
+        ARCHMAGE,
         ORC_WARLORD,
         DEMON_REAPER,
         UNDEAD_LICH,
         CYBER_SENTINEL,
         SHRINE_PRIESTESS,
         DESERT_NOMAD,
-        TREVANA_NEUTRAL
+        NEUTRAL_THEME
     ).associateBy { it.name }
 
     fun resolve(name: String): PaperDollTheme? = presets[name.lowercase().trim()]
