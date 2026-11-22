@@ -1,0 +1,46 @@
+{
+    "id": 2,
+    "name": "Ranger",
+    "description": "Agile bow-hunter with rapid arrow combos, Piercing Arrow, and Backstep.",
+    "spriteIds": [
+        2
+    ],
+    "baseAttributes": {
+        "str": 9,
+        "agi": 15,
+        "int": 9,
+        "vit": 10
+    },
+    "statPointsPerLevel": 3,
+    "startMapId": 1,
+    "startX": 17,
+    "startY": 16,
+    "startingItems": [
+        {
+            "itemId": 6,
+            "amount": 1
+        },
+        {
+            "itemId": 12,
+            "amount": 80
+        },
+        {
+            "itemId": 21,
+            "amount": 1
+        },
+        {
+            "itemId": 25,
+            "amount": 1
+        },
+        {
+            "itemId": 32,
+            "amount": 3
+        }
+    ],
+    "autoEquipStartingItems": true,
+    "startingSpellIds": [
+        4
+    ],
+    "abilityTerminology": "SKILLS",
+    "schemaVersion": 1
+}

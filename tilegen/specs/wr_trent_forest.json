@@ -1,0 +1,32 @@
+{
+  "name": "wr_trent_forest",
+  "seed": 2005,
+  "tileSize": 16,
+  "columns": 8,
+  "style": "TIME_FANTASY",
+  "materials": [
+    { "name": "tf_grass", "pattern": "ORGANIC_FBM", "palette": "wr_kamasylve_leaf", "scale": 1.3, "detail": 0.35, "decal": "GRASS_BLADES" },
+    { "name": "tf_earth", "pattern": "ORGANIC_FBM", "palette": "wr_valencia_amber", "scale": 1.2, "detail": 0.35, "decal": "PEBBLES" },
+    { "name": "tf_stone", "pattern": "HERRINGBONE_COBBLE", "palette": "wr_serendia_iron", "scale": 1.0, "detail": 0.3 }
+  ],
+  "cliffs": [
+    { "name": "tf_cliff", "topMaterial": "tf_grass", "faceMaterial": "tf_stone", "trimColor": "#284830", "a4Layout": false }
+  ],
+  "props": [
+    { "name": "tf_oak", "kind": "OAK_TREE", "primaryPalette": "wr_kamasylve_leaf", "secondaryPalette": "wr_valencia_amber" },
+    { "name": "tf_wagon", "kind": "TRADE_WAGON", "primaryPalette": "wr_kamasylve_leaf", "secondaryPalette": "wr_valencia_amber" },
+    { "name": "tf_tent", "kind": "MEDIEVAL_TENT", "primaryPalette": "wr_kamasylve_leaf", "secondaryPalette": "wr_valencia_amber" },
+    { "name": "tf_ballista", "kind": "SIEGE_BALLISTA", "primaryPalette": "wr_serendia_iron", "secondaryPalette": "wr_valencia_amber" },
+    { "name": "tf_rift", "kind": "BLACK_SPIRIT_RIFT", "primaryPalette": "wr_abyssal_obsidian", "secondaryPalette": "wr_black_spirit" }
+  ],
+  "autotiles": [
+    {
+      "name": "tf_grass_on_earth",
+      "mode": "BLOB_47",
+      "columns": 8,
+      "foregroundMaterial": "tf_grass",
+      "backgroundMaterial": "tf_earth",
+      "style": { "margin": 3.0, "rimWidth": 1.0, "wobbleAmplitude": 1.8, "rimColor": "#26382d" }
+    }
+  ]
+}

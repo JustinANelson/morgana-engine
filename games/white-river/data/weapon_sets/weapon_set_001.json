@@ -1,0 +1,124 @@
+{
+    "id": 1,
+    "name": "Ford Sword and Shield",
+    "description": "The Bladewarden's main weapon set: a three-cut chain, a launcher, a stun, two dodges and a guard.",
+    "slot": "MAIN",
+    "classIds": [
+        1
+    ],
+    "levelReq": 1,
+    "inputBufferTicks": 6,
+    "skillIds": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+    ],
+    "entries": [
+        {
+            "input": "LMB",
+            "skillId": 1
+        },
+        {
+            "input": "F",
+            "skillId": 5
+        },
+        {
+            "input": "SPACE",
+            "skillId": 6
+        },
+        {
+            "input": "BACK+SPACE",
+            "skillId": 7
+        },
+        {
+            "input": "Q",
+            "skillId": 8
+        }
+    ],
+    "edges": [
+        {
+            "fromSkillId": 1,
+            "input": "LMB",
+            "toSkillId": 2,
+            "windowTicks": 8,
+            "requiresHit": false
+        },
+        {
+            "fromSkillId": 2,
+            "input": "LMB",
+            "toSkillId": 3,
+            "windowTicks": 8,
+            "requiresHit": false
+        },
+        {
+            "fromSkillId": 2,
+            "input": "SHIFT+RMB",
+            "toSkillId": 4,
+            "windowTicks": 8,
+            "requiresHit": false
+        },
+        {
+            "fromSkillId": 4,
+            "input": "LMB",
+            "toSkillId": 3,
+            "windowTicks": 10,
+            "requiresHit": true
+        },
+        {
+            "fromSkillId": 1,
+            "input": "SPACE",
+            "toSkillId": 6,
+            "windowTicks": 10,
+            "requiresHit": false
+        },
+        {
+            "fromSkillId": 2,
+            "input": "SPACE",
+            "toSkillId": 6,
+            "windowTicks": 10,
+            "requiresHit": false
+        },
+        {
+            "fromSkillId": 1,
+            "input": "BACK+SPACE",
+            "toSkillId": 7,
+            "windowTicks": 10,
+            "requiresHit": false
+        },
+        {
+            "fromSkillId": 2,
+            "input": "BACK+SPACE",
+            "toSkillId": 7,
+            "windowTicks": 10,
+            "requiresHit": false
+        },
+        {
+            "fromSkillId": 6,
+            "input": "LMB",
+            "toSkillId": 1,
+            "windowTicks": 8,
+            "requiresHit": false
+        },
+        {
+            "fromSkillId": 8,
+            "input": "LMB",
+            "toSkillId": 9,
+            "windowTicks": 6,
+            "requiresHit": false
+        },
+        {
+            "fromSkillId": 9,
+            "input": "LMB",
+            "toSkillId": 2,
+            "windowTicks": 8,
+            "requiresHit": false
+        }
+    ],
+    "schemaVersion": 2
+}

@@ -1,0 +1,112 @@
+{
+    "id": 36,
+    "name": "The Pale Warden",
+    "title": "Keeper of the headwaters",
+    "spriteId": 117,
+    "behavior": "ATTACK_ON_SIGHT",
+    "level": 40,
+    "attributes": {
+        "str": 51,
+        "agi": 31,
+        "int": 51,
+        "vit": 54
+    },
+    "vitals": {
+        "hp": 9648,
+        "mp": 100
+    },
+    "attackDamage": 108,
+    "attackSpeedTicks": 16,
+    "moveSpeedTicks": 16,
+    "aggroRangeTiles": 8,
+    "leashRangeTiles": 20,
+    "xpReward": 24324,
+    "drops": [
+        {
+            "itemId": 1,
+            "minAmount": 800,
+            "maxAmount": 1600,
+            "chanceBasisPoints": 10000
+        },
+        {
+            "itemId": 4,
+            "minAmount": 2,
+            "maxAmount": 4,
+            "chanceBasisPoints": 10000
+        },
+        {
+            "itemId": 29,
+            "minAmount": 1,
+            "maxAmount": 2,
+            "chanceBasisPoints": 2500
+        },
+        {
+            "itemId": 28,
+            "minAmount": 6,
+            "maxAmount": 10,
+            "chanceBasisPoints": 10000
+        },
+        {
+            "itemId": 43,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 1500
+        },
+        {
+            "itemId": 44,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 1500
+        },
+        {
+            "itemId": 45,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 1500
+        },
+        {
+            "itemId": 49,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 1500
+        },
+        {
+            "itemId": 53,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 1500
+        },
+        {
+            "itemId": 56,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 1500
+        },
+        {
+            "itemId": 60,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 1500
+        },
+        {
+            "itemId": 30,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 10000
+        },
+        {
+            "itemId": 65,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 2500
+        }
+    ],
+    "spellIds": [
+        17
+    ],
+    "shopId": 0,
+    "eventId": 0,
+    "chatGreeting": "",
+    "animationId": 0,
+    "schemaVersion": 2
+}

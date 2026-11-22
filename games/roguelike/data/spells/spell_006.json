@@ -1,0 +1,16 @@
+{
+    "id": 6,
+    "name": "Ashen Slam",
+    "description": "Malakor smashes the crypt floor, erupting in a ring of embers.",
+    "iconId": 39,
+    "targetType": "GROUND_AOE",
+    "levelReq": 1,
+    "costs": {},
+    "scales": false,
+    "cooldownTicks": 70,
+    "rangeTiles": 6,
+    "aoeRadiusTiles": 2,
+    "basePower": 28,
+    "animationId": 6,
+    "schemaVersion": 1
+}

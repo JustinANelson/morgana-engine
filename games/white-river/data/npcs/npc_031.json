@@ -1,0 +1,98 @@
+{
+    "id": 31,
+    "name": "Hollow Reaver",
+    "title": "",
+    "spriteId": 110,
+    "behavior": "ATTACK_ON_SIGHT",
+    "level": 24,
+    "attributes": {
+        "str": 30,
+        "agi": 18,
+        "int": 30,
+        "vit": 30
+    },
+    "vitals": {
+        "hp": 414,
+        "mp": 100
+    },
+    "attackDamage": 39,
+    "attackSpeedTicks": 20,
+    "moveSpeedTicks": 18,
+    "aggroRangeTiles": 6,
+    "leashRangeTiles": 12,
+    "xpReward": 944,
+    "drops": [
+        {
+            "itemId": 1,
+            "minAmount": 24,
+            "maxAmount": 96,
+            "chanceBasisPoints": 7500
+        },
+        {
+            "itemId": 4,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 600
+        },
+        {
+            "itemId": 27,
+            "minAmount": 1,
+            "maxAmount": 2,
+            "chanceBasisPoints": 4000
+        },
+        {
+            "itemId": 40,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 41,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 42,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 48,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 52,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 59,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 63,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 29,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 16
+        }
+    ],
+    "spellIds": [],
+    "shopId": 0,
+    "eventId": 0,
+    "chatGreeting": "",
+    "animationId": 0,
+    "schemaVersion": 2
+}

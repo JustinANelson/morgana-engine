@@ -1,0 +1,75 @@
+{
+    "id": 2,
+    "name": "Delve Warden Orin",
+    "mapId": 1,
+    "tileX": 21,
+    "tileY": 7,
+    "pages": [
+        {
+            "pageIndex": 0,
+            "condition": {},
+            "trigger": "ACTION_INTERACT",
+            "spriteId": 0,
+            "commands": [
+                {
+                    "_type": "dialogue",
+                    "speakerName": "Delve Warden Orin",
+                    "text": "Choose the difficulty for your next delve into the Sunken Crypt. Higher tiers toughen every foe and boost experience and loot drops.",
+                    "portraitId": 0,
+                    "choices": [
+                        {
+                            "label": "Normal",
+                            "commands": [
+                                {
+                                    "_type": "set_variable",
+                                    "variableId": "dungeon_tier",
+                                    "scope": "PLAYER",
+                                    "value": 0
+                                },
+                                {
+                                    "_type": "message",
+                                    "text": "Dungeon difficulty set to Normal."
+                                }
+                            ]
+                        },
+                        {
+                            "label": "Hard (+50% life, +25% damage, better drops)",
+                            "commands": [
+                                {
+                                    "_type": "set_variable",
+                                    "variableId": "dungeon_tier",
+                                    "scope": "PLAYER",
+                                    "value": 1
+                                },
+                                {
+                                    "_type": "message",
+                                    "text": "Dungeon difficulty set to Hard."
+                                }
+                            ]
+                        },
+                        {
+                            "label": "Nightmare (+120% life, +60% damage, best drops)",
+                            "commands": [
+                                {
+                                    "_type": "set_variable",
+                                    "variableId": "dungeon_tier",
+                                    "scope": "PLAYER",
+                                    "value": 2
+                                },
+                                {
+                                    "_type": "message",
+                                    "text": "Dungeon difficulty set to Nightmare."
+                                }
+                            ]
+                        },
+                        {
+                            "label": "Not now",
+                            "commands": []
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "schemaVersion": 1
+}

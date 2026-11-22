@@ -1,0 +1,14 @@
+{
+    "id": 33,
+    "name": "Mana Draught",
+    "description": "Restores 40 MP instantly.",
+    "type": "CONSUMABLE",
+    "iconId": 33,
+    "price": 20,
+    "schemaVersion": 1,
+    "stackable": true,
+    "maxStack": 20,
+    "restore": {
+        "mp": 40
+    }
+}

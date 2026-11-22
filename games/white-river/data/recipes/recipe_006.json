@@ -1,0 +1,20 @@
+{
+    "id": 6,
+    "name": "Brew Tonic",
+    "stationType": "ALCHEMY_TABLE",
+    "levelReq": 5,
+    "ingredients": [
+        {
+            "itemId": 2,
+            "amount": 2
+        },
+        {
+            "itemId": 22,
+            "amount": 2
+        }
+    ],
+    "outputItemId": 3,
+    "outputAmount": 1,
+    "xpReward": 16,
+    "schemaVersion": 2
+}

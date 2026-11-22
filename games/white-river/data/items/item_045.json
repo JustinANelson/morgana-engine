@@ -1,0 +1,22 @@
+{
+    "id": 45,
+    "name": "Rimeheart Staff",
+    "description": "A shard of the glacier, bound in iron.",
+    "type": "WEAPON",
+    "iconId": 45,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 3200,
+    "levelReq": 30,
+    "schemaVersion": 2,
+    "attackDamage": 19,
+    "attackSpeedTicks": 12,
+    "rangeTiles": 1,
+    "weaponStyle": "MAGIC_STAFF",
+    "classReqIds": [
+        3
+    ],
+    "attributeBonuses": {
+        "int": 18
+    }
+}

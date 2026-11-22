@@ -1,0 +1,29 @@
+{
+    "id": 14,
+    "name": "Backstep",
+    "description": "Leap backward out of danger with invulnerability.",
+    "iconId": 25,
+    "startupTicks": 1,
+    "activeTicks": 5,
+    "recoveryTicks": 4,
+    "costs": {
+        "stamina": 16
+    },
+    "cooldownTicks": 16,
+    "soundId": "ui_click",
+    "schemaVersion": 2,
+    "armor": [
+        {
+            "fromTick": 1,
+            "toTick": 5,
+            "type": "INVULNERABLE"
+        }
+    ],
+    "moves": [
+        {
+            "fromTick": 1,
+            "toTick": 5,
+            "forwardPixels": -48
+        }
+    ]
+}

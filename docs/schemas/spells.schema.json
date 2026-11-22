@@ -1,0 +1,184 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Morgana spells document",
+    "$ref": "#/$defs/com.morgana.domain.content.SpellDefinition",
+    "$defs": {
+        "com.morgana.domain.content.SpellDefinition": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "iconId": {
+                    "type": "integer"
+                },
+                "targetType": {
+                    "type": "string",
+                    "enum": [
+                        "SELF",
+                        "SINGLE_TARGET",
+                        "DIRECTIONAL_PROJECTILE",
+                        "AOE_SELF_CENTERED",
+                        "AOE_TARGET_CENTERED",
+                        "GROUND_AOE",
+                        "WARP"
+                    ]
+                },
+                "levelReq": {
+                    "type": "integer"
+                },
+                "classReqIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "weaponTypeReqs": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "weaponProficiencyLevelReq": {
+                    "type": "integer"
+                },
+                "costs": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "scales": {
+                    "type": "boolean"
+                },
+                "castTimeTicks": {
+                    "type": "integer"
+                },
+                "cooldownTicks": {
+                    "type": "integer"
+                },
+                "rangeTiles": {
+                    "type": "integer"
+                },
+                "aoeRadiusTiles": {
+                    "type": "integer"
+                },
+                "basePower": {
+                    "type": "integer"
+                },
+                "isHealing": {
+                    "type": "boolean"
+                },
+                "projectileSpriteId": {
+                    "type": "integer"
+                },
+                "pierce": {
+                    "type": "boolean"
+                },
+                "animationId": {
+                    "type": "integer"
+                },
+                "statusEffectType": {
+                    "anyOf": [
+                        {
+                            "type": "string",
+                            "enum": [
+                                "DOT_POISON",
+                                "DOT_BURN",
+                                "DOT_BLEED",
+                                "HOT_REGEN",
+                                "STUN",
+                                "ROOT",
+                                "SLOW",
+                                "HASTE",
+                                "SHIELD",
+                                "STAT_BUFF",
+                                "STAT_DEBUFF",
+                                "FLY",
+                                "REFLECT",
+                                "TAUNT"
+                            ]
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "statusMagnitude": {
+                    "type": "integer"
+                },
+                "statusDurationTicks": {
+                    "type": "integer"
+                },
+                "warpMapId": {
+                    "type": "integer"
+                },
+                "warpX": {
+                    "type": "integer"
+                },
+                "warpY": {
+                    "type": "integer"
+                },
+                "maxTargets": {
+                    "type": "integer"
+                },
+                "allyTargetable": {
+                    "type": "boolean"
+                },
+                "groupTarget": {
+                    "type": "boolean"
+                },
+                "cleanses": {
+                    "type": "boolean"
+                },
+                "rebirthReq": {
+                    "type": "integer"
+                },
+                "promotionReq": {
+                    "type": "integer"
+                },
+                "killExtendTicks": {
+                    "type": "integer"
+                },
+                "revivePercent": {
+                    "type": "integer"
+                },
+                "hitCount": {
+                    "type": "integer"
+                },
+                "maxHitCount": {
+                    "type": "integer"
+                },
+                "baseDamagePercent": {
+                    "type": "integer"
+                },
+                "baseDamagePercentPerLevel": {
+                    "type": "integer"
+                },
+                "powerPercentPerLevel": {
+                    "type": "integer"
+                },
+                "maxSpellLevel": {
+                    "type": "integer"
+                },
+                "castsPerLevel": {
+                    "type": "integer"
+                },
+                "schemaVersion": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "id",
+                "name"
+            ],
+            "additionalProperties": false
+        }
+    }
+}

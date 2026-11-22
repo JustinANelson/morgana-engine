@@ -1,0 +1,16 @@
+{
+    "id": 73,
+    "name": "Manual: Galeburst",
+    "description": "Teaches a Windrunner Galeburst (level 20).",
+    "type": "SPELL_SCROLL",
+    "iconId": 66,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 1200,
+    "levelReq": 20,
+    "schemaVersion": 2,
+    "teachSpellId": 10,
+    "classReqIds": [
+        2
+    ]
+}

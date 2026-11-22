@@ -1,0 +1,20 @@
+{
+    "id": 1,
+    "name": "Bone Cleaver",
+    "stationType": "ANYWHERE",
+    "levelReq": 2,
+    "ingredients": [
+        {
+            "itemId": 38,
+            "amount": 4
+        },
+        {
+            "itemId": 39,
+            "amount": 2
+        }
+    ],
+    "outputItemId": 5,
+    "outputAmount": 1,
+    "xpReward": 60,
+    "schemaVersion": 1
+}

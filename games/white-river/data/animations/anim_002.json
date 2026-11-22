@@ -1,0 +1,10 @@
+{
+    "id": 2,
+    "name": "Sweep",
+    "spriteSheetId": 2,
+    "frameCount": 4,
+    "frameDurationMs": 80,
+    "soundId": "",
+    "renderAboveEntities": true,
+    "schemaVersion": 2
+}

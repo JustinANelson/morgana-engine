@@ -1,0 +1,544 @@
+{
+    "id": 2,
+    "name": "The Sunken Crypt (Floor 1)",
+    "revision": 1,
+    "width": 5,
+    "height": 5,
+    "tileSize": 32,
+    "moral": "INSTANCED_DUNGEON",
+    "bgmTrackId": "dungeon",
+    "weather": "NONE",
+    "ambientLightHex": "#b8c0d4",
+    "isIndoors": true,
+    "zoneId": 2,
+    "instanced": true,
+    "instanceOwner": "PARTY",
+    "cells": [
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 7,
+                    "srcTileX": 0,
+                    "srcTileY": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 7,
+                    "srcTileX": 0,
+                    "srcTileY": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 7,
+                    "srcTileX": 0,
+                    "srcTileY": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 7,
+                    "srcTileX": 0,
+                    "srcTileY": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 7,
+                    "srcTileX": 0,
+                    "srcTileY": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 7,
+                    "srcTileX": 0,
+                    "srcTileY": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 7,
+                    "srcTileX": 0,
+                    "srcTileY": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 7,
+                    "srcTileX": 0,
+                    "srcTileY": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 7,
+                    "srcTileX": 0,
+                    "srcTileY": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 7,
+                    "srcTileX": 0,
+                    "srcTileY": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 7,
+                    "srcTileX": 0,
+                    "srcTileY": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 7,
+                    "srcTileX": 0,
+                    "srcTileY": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 7,
+                    "srcTileX": 0,
+                    "srcTileY": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 7,
+                    "srcTileX": 0,
+                    "srcTileY": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 7,
+                    "srcTileX": 0,
+                    "srcTileY": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 7,
+                    "srcTileX": 0,
+                    "srcTileY": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 7,
+                    "srcTileX": 0,
+                    "srcTileY": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 7,
+                    "srcTileX": 0,
+                    "srcTileY": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 7,
+                    "srcTileX": 0,
+                    "srcTileY": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 7,
+                    "srcTileX": 0,
+                    "srcTileY": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 7,
+                    "srcTileX": 0,
+                    "srcTileY": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 7,
+                    "srcTileX": 0,
+                    "srcTileY": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 7,
+                    "srcTileX": 0,
+                    "srcTileY": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 7,
+                    "srcTileX": 0,
+                    "srcTileY": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 7,
+                    "srcTileX": 0,
+                    "srcTileY": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        }
+    ],
+    "npcSpawns": [],
+    "eventIds": [],
+    "generator": {
+        "width": 44,
+        "height": 34,
+        "algorithm": "BSP_DUNGEON",
+        "corridorWidth": 2,
+        "roomsMin": 7,
+        "roomsMax": 11,
+        "roomSizeMin": 5,
+        "roomSizeMax": 9,
+        "floorTile": {
+            "tilesetId": 7,
+            "srcTileX": 0,
+            "srcTileY": 0
+        },
+        "wallTile": {
+            "tilesetId": 7,
+            "srcTileX": 2,
+            "srcTileY": 0
+        },
+        "wallFaceTile": {
+            "tilesetId": 7,
+            "srcTileX": 3,
+            "srcTileY": 0
+        },
+        "stairsTile": {
+            "tilesetId": 7,
+            "srcTileX": 4,
+            "srcTileY": 0
+        },
+        "decorations": [
+            {
+                "tile": {
+                    "tilesetId": 7,
+                    "srcTileX": 5,
+                    "srcTileY": 0
+                },
+                "weight": 30
+            },
+            {
+                "tile": {
+                    "tilesetId": 7,
+                    "srcTileX": 6,
+                    "srcTileY": 0
+                },
+                "weight": 25
+            },
+            {
+                "tile": {
+                    "tilesetId": 7,
+                    "srcTileX": 7,
+                    "srcTileY": 0
+                },
+                "weight": 15
+            },
+            {
+                "tile": {
+                    "tilesetId": 7,
+                    "srcTileX": 0,
+                    "srcTileY": 1
+                },
+                "weight": 20
+            },
+            {
+                "tile": {
+                    "tilesetId": 7,
+                    "srcTileX": 2,
+                    "srcTileY": 1
+                },
+                "weight": 10
+            },
+            {
+                "tile": {
+                    "tilesetId": 7,
+                    "srcTileX": 4,
+                    "srcTileY": 1
+                },
+                "weight": 10
+            }
+        ],
+        "decorationChanceBp": 450,
+        "monsters": [
+            {
+                "npcId": 10,
+                "weight": 30
+            },
+            {
+                "npcId": 11,
+                "weight": 22
+            },
+            {
+                "npcId": 12,
+                "weight": 22
+            },
+            {
+                "npcId": 13,
+                "weight": 16
+            },
+            {
+                "npcId": 14,
+                "weight": 10
+            }
+        ],
+        "monstersPerRoomMin": 2,
+        "monstersPerRoomMax": 4,
+        "loot": [
+            {
+                "itemId": 1,
+                "minAmount": 12,
+                "maxAmount": 30,
+                "weight": 35
+            },
+            {
+                "itemId": 32,
+                "minAmount": 1,
+                "maxAmount": 2,
+                "weight": 20
+            },
+            {
+                "itemId": 33,
+                "minAmount": 1,
+                "maxAmount": 2,
+                "weight": 12
+            },
+            {
+                "itemId": 38,
+                "minAmount": 1,
+                "maxAmount": 2,
+                "weight": 15
+            },
+            {
+                "itemId": 39,
+                "minAmount": 1,
+                "maxAmount": 1,
+                "weight": 10
+            },
+            {
+                "itemId": 3,
+                "minAmount": 1,
+                "maxAmount": 1,
+                "weight": 5
+            },
+            {
+                "itemId": 7,
+                "minAmount": 1,
+                "maxAmount": 1,
+                "weight": 5
+            },
+            {
+                "itemId": 10,
+                "minAmount": 1,
+                "maxAmount": 1,
+                "weight": 5
+            },
+            {
+                "itemId": 18,
+                "minAmount": 1,
+                "maxAmount": 1,
+                "weight": 5
+            },
+            {
+                "itemId": 27,
+                "minAmount": 1,
+                "maxAmount": 1,
+                "weight": 4
+            }
+        ],
+        "lootMin": 6,
+        "lootMax": 12,
+        "itemLevel": 3,
+        "features": [
+            {
+                "npcId": 7,
+                "weight": 50
+            },
+            {
+                "npcId": 8,
+                "weight": 50
+            }
+        ],
+        "featuresMin": 1,
+        "featuresMax": 2,
+        "bossNpcId": 15,
+        "nextMapId": 0,
+        "exitMapId": 1,
+        "exitX": 17,
+        "exitY": 6
+    },
+    "scaling": {
+        "hpPercentPerMember": 45,
+        "attackPercentPerMember": 12,
+        "xpPercentPerMember": 15,
+        "maxMembers": 6,
+        "levelFollowsMembers": true,
+        "percentPerLevel": 15,
+        "maxLevelShift": 10,
+        "tierVariable": "dungeon_tier",
+        "tiers": [
+            {
+                "name": "Normal",
+                "hpPercent": 100,
+                "attackPercent": 100,
+                "xpPercent": 100,
+                "dropRatePercent": 100,
+                "minLevel": 1
+            },
+            {
+                "name": "Hard",
+                "hpPercent": 150,
+                "attackPercent": 125,
+                "xpPercent": 150,
+                "dropRatePercent": 150,
+                "minLevel": 3
+            },
+            {
+                "name": "Nightmare",
+                "hpPercent": 220,
+                "attackPercent": 160,
+                "xpPercent": 200,
+                "dropRatePercent": 220,
+                "minLevel": 6
+            }
+        ]
+    },
+    "schemaVersion": 1
+}

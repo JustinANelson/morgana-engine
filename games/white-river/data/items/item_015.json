@@ -1,0 +1,12 @@
+{
+    "id": 15,
+    "name": "Ash Log",
+    "description": "Pale, straight-grained wood from the valley. Saw it into planks at a workbench.",
+    "type": "MATERIAL",
+    "iconId": 17,
+    "stackable": true,
+    "maxStack": 999,
+    "price": 4,
+    "levelReq": 1,
+    "schemaVersion": 2
+}

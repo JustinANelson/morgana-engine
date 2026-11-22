@@ -1,0 +1,18 @@
+{
+    "id": 6,
+    "name": "Riverleaf Patch",
+    "category": "HERB_PATCH",
+    "intactSpriteId": 1,
+    "depletedSpriteId": 2,
+    "requiredTool": "NONE",
+    "rewardItemId": 22,
+    "minYield": 1,
+    "maxYield": 3,
+    "maxHealth": 2,
+    "respawnTicks": 240,
+    "xpReward": 6,
+    "emptyMessage": "Nothing left here for now. Give it a little while.",
+    "successMessage": "You pick riverleaf.",
+    "animationId": 0,
+    "schemaVersion": 2
+}

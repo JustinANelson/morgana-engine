@@ -1,0 +1,112 @@
+{
+    "id": 24,
+    "name": "Marsh Viper",
+    "title": "",
+    "spriteId": 105,
+    "behavior": "ATTACK_ON_SIGHT",
+    "level": 9,
+    "attributes": {
+        "str": 15,
+        "agi": 10,
+        "int": 15,
+        "vit": 14
+    },
+    "vitals": {
+        "hp": 139,
+        "mp": 100
+    },
+    "attackDamage": 12,
+    "attackSpeedTicks": 20,
+    "moveSpeedTicks": 18,
+    "aggroRangeTiles": 6,
+    "leashRangeTiles": 12,
+    "xpReward": 220,
+    "drops": [
+        {
+            "itemId": 1,
+            "minAmount": 9,
+            "maxAmount": 36,
+            "chanceBasisPoints": 7500
+        },
+        {
+            "itemId": 2,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 600
+        },
+        {
+            "itemId": 25,
+            "minAmount": 1,
+            "maxAmount": 2,
+            "chanceBasisPoints": 4000
+        },
+        {
+            "itemId": 37,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 38,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 39,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 47,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 51,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 55,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 58,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 62,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 64,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 29,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 8
+        }
+    ],
+    "spellIds": [
+        16
+    ],
+    "shopId": 0,
+    "eventId": 0,
+    "chatGreeting": "",
+    "animationId": 0,
+    "schemaVersion": 2
+}

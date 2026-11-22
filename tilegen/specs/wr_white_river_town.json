@@ -1,0 +1,49 @@
+{
+  "name": "wr_white_river_town",
+  "seed": 2001,
+  "tileSize": 16,
+  "columns": 8,
+  "style": "TIME_FANTASY",
+  "materials": [
+    { "name": "wr_grass", "pattern": "ORGANIC_FBM", "palette": "wr_kamasylve_leaf", "scale": 1.3, "detail": 0.3, "decal": "FLOWER_TUFT" },
+    { "name": "wr_earth", "pattern": "ORGANIC_FBM", "palette": "wr_valencia_amber", "scale": 1.2, "detail": 0.3, "decal": "PEBBLES" },
+    { "name": "wr_cobble", "pattern": "HERRINGBONE_COBBLE", "palette": "wr_serendia_iron", "scale": 1.0, "detail": 0.25 },
+    { "name": "wr_marble", "pattern": "HERRINGBONE_COBBLE", "palette": "wr_abyssal_obsidian", "scale": 1.0, "detail": 0.2 },
+    { "name": "wr_wood", "pattern": "WOOD_PLANKS", "palette": "wr_valencia_amber", "scale": 1.0, "detail": 0.25 },
+    { "name": "wr_river", "pattern": "WATER_CAUSTICS", "palette": "wr_serendia_iron", "frames": 4 }
+  ],
+  "cliffs": [
+    { "name": "wr_town_wall", "topMaterial": "wr_marble", "faceMaterial": "wr_cobble", "trimColor": "#545d6c", "a4Layout": true }
+  ],
+  "props": [
+    { "name": "wr_tent", "kind": "MEDIEVAL_TENT", "primaryPalette": "wr_black_spirit", "secondaryPalette": "wr_valencia_amber" },
+    { "name": "wr_wagon", "kind": "TRADE_WAGON", "primaryPalette": "wr_valencia_amber", "secondaryPalette": "wr_serendia_iron" },
+    { "name": "wr_ballista", "kind": "SIEGE_BALLISTA", "primaryPalette": "wr_serendia_iron", "secondaryPalette": "wr_valencia_amber" },
+    { "name": "wr_spire", "kind": "GARGOYLE_SPIRE", "primaryPalette": "wr_serendia_iron" },
+    { "name": "wr_rift", "kind": "BLACK_SPIRIT_RIFT", "primaryPalette": "wr_abyssal_obsidian", "secondaryPalette": "wr_black_spirit" },
+    { "name": "wr_arch", "kind": "STONE_ARCHWAY", "primaryPalette": "wr_serendia_iron" },
+    { "name": "wr_bridge", "kind": "WOOD_BRIDGE", "secondaryPalette": "wr_valencia_amber" },
+    { "name": "wr_fence", "kind": "WOOD_FENCE", "secondaryPalette": "wr_valencia_amber" },
+    { "name": "wr_barrel", "kind": "BARREL", "secondaryPalette": "wr_valencia_amber" },
+    { "name": "wr_crate", "kind": "CRATE", "secondaryPalette": "wr_valencia_amber" },
+    { "name": "wr_banner", "kind": "WALL_BANNER", "primaryPalette": "wr_black_spirit", "secondaryPalette": "wr_valencia_amber" }
+  ],
+  "autotiles": [
+    {
+      "name": "wr_grass_on_earth",
+      "mode": "BLOB_47",
+      "columns": 8,
+      "foregroundMaterial": "wr_grass",
+      "backgroundMaterial": "wr_earth",
+      "style": { "margin": 3.0, "rimWidth": 1.0, "wobbleAmplitude": 1.6, "rimColor": "#3a5c3e" }
+    },
+    {
+      "name": "wr_cobble_on_grass",
+      "mode": "BLOB_47",
+      "columns": 8,
+      "foregroundMaterial": "wr_cobble",
+      "backgroundMaterial": "wr_grass",
+      "style": { "margin": 3.0, "rimWidth": 1.0, "wobbleAmplitude": 1.2, "rimColor": "#444a56" }
+    }
+  ]
+}

@@ -1,0 +1,249 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Morgana npcs document",
+    "$ref": "#/$defs/com.morgana.domain.content.NpcDefinition",
+    "$defs": {
+        "com.morgana.domain.content.NpcDefinition": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "spriteId": {
+                    "type": "integer"
+                },
+                "behavior": {
+                    "type": "string",
+                    "enum": [
+                        "PASSIVE",
+                        "ATTACK_ON_SIGHT",
+                        "GUARD",
+                        "SHOPKEEPER",
+                        "BANKER",
+                        "GUILD_BANKER",
+                        "QUEST_GIVER",
+                        "FRIENDLY_ROAM"
+                    ]
+                },
+                "level": {
+                    "type": "integer"
+                },
+                "attributes": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "vitals": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "attackDamage": {
+                    "type": "integer"
+                },
+                "attackSpeedTicks": {
+                    "type": "integer"
+                },
+                "moveSpeedTicks": {
+                    "type": "integer"
+                },
+                "aggroRangeTiles": {
+                    "type": "integer"
+                },
+                "leashRangeTiles": {
+                    "type": "integer"
+                },
+                "xpReward": {
+                    "type": "integer"
+                },
+                "drops": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.content.NpcDropEntry"
+                    }
+                },
+                "spellIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "shopId": {
+                    "type": "integer"
+                },
+                "eventId": {
+                    "type": "integer"
+                },
+                "chatGreeting": {
+                    "type": "string"
+                },
+                "animationId": {
+                    "type": "integer"
+                },
+                "guildWarRole": {
+                    "type": "string"
+                },
+                "encounter": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.content.BossEncounter"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "pet": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.content.PetTraits"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "schemaVersion": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "id",
+                "name"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.content.NpcDropEntry": {
+            "type": "object",
+            "properties": {
+                "itemId": {
+                    "type": "integer"
+                },
+                "minAmount": {
+                    "type": "integer"
+                },
+                "maxAmount": {
+                    "type": "integer"
+                },
+                "chanceBasisPoints": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "itemId"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.content.BossEncounter": {
+            "type": "object",
+            "properties": {
+                "phases": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.content.BossPhase"
+                    }
+                },
+                "lockoutTicks": {
+                    "type": "integer"
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.content.BossPhase": {
+            "type": "object",
+            "properties": {
+                "fromLifePercent": {
+                    "type": "integer"
+                },
+                "announce": {
+                    "type": "string"
+                },
+                "attackPercent": {
+                    "type": "integer"
+                },
+                "moveSpeedPercent": {
+                    "type": "integer"
+                },
+                "summonNpcIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "abilities": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.content.BossAbility"
+                    }
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.content.BossAbility": {
+            "type": "object",
+            "properties": {
+                "spellId": {
+                    "type": "integer"
+                },
+                "shape": {
+                    "type": "string",
+                    "enum": [
+                        "AROUND_TARGET",
+                        "AROUND_SELF"
+                    ]
+                },
+                "radiusTiles": {
+                    "type": "integer"
+                },
+                "windUpTicks": {
+                    "type": "integer"
+                },
+                "cooldownTicks": {
+                    "type": "integer"
+                },
+                "warning": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "spellId"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.content.PetTraits": {
+            "type": "object",
+            "properties": {
+                "maxLevel": {
+                    "type": "integer"
+                },
+                "xpPerLevel": {
+                    "type": "integer"
+                },
+                "xpSharePercent": {
+                    "type": "integer"
+                },
+                "damagePerLevelPercent": {
+                    "type": "integer"
+                },
+                "followDistance": {
+                    "type": "integer"
+                },
+                "fights": {
+                    "type": "boolean"
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        }
+    }
+}

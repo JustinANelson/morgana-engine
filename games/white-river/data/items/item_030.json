@@ -1,0 +1,12 @@
+{
+    "id": 30,
+    "name": "Warden's Core",
+    "description": "The cold heart of the Pale Warden.",
+    "type": "MATERIAL",
+    "iconId": 30,
+    "stackable": true,
+    "maxStack": 999,
+    "price": 900,
+    "levelReq": 1,
+    "schemaVersion": 2
+}

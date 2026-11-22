@@ -1,0 +1,18 @@
+{
+    "id": 7,
+    "name": "Sunroot Patch",
+    "category": "HERB_PATCH",
+    "intactSpriteId": 1,
+    "depletedSpriteId": 2,
+    "requiredTool": "NONE",
+    "rewardItemId": 23,
+    "minYield": 1,
+    "maxYield": 2,
+    "maxHealth": 2,
+    "respawnTicks": 320,
+    "xpReward": 12,
+    "emptyMessage": "Nothing left here for now. Give it a little while.",
+    "successMessage": "You dig up sunroot.",
+    "animationId": 0,
+    "schemaVersion": 2
+}

@@ -1,0 +1,31 @@
+{
+    "id": 1,
+    "name": "Town Guide",
+    "title": "Elder of Blank Game",
+    "spriteId": 2,
+    "behavior": "FRIENDLY_ROAM",
+    "level": 1,
+    "attributes": {
+        "str": 10,
+        "agi": 10,
+        "int": 10,
+        "vit": 10
+    },
+    "vitals": {
+        "hp": 100,
+        "mp": 50
+    },
+    "attackDamage": 6,
+    "attackSpeedTicks": 16,
+    "moveSpeedTicks": 10,
+    "aggroRangeTiles": 5,
+    "leashRangeTiles": 10,
+    "xpReward": 25,
+    "drops": [],
+    "spellIds": [],
+    "shopId": 0,
+    "eventId": 0,
+    "chatGreeting": "Welcome to Blank Game, adventurer! The realm awaits.",
+    "animationId": 0,
+    "schemaVersion": 2
+}

@@ -1,0 +1,1267 @@
+{
+    "formatVersion": 1,
+    "seed": 4208861222,
+    "contentFingerprint": "661a98b6e09a4cc7",
+    "inputs": [
+        {
+            "_type": "com.morgana.domain.replay.SimInput.SpawnPlayer",
+            "character": {
+                "id": "char-golden",
+                "accountId": "acc-golden",
+                "name": "Golden",
+                "classId": 1,
+                "spriteId": 1,
+                "paperdollBaseLayers": [],
+                "accessLevel": "PLAYER",
+                "level": 1,
+                "xp": 0,
+                "unspentStatPoints": 0,
+                "attributes": {
+                    "str": 10,
+                    "agi": 10,
+                    "int": 10,
+                    "vit": 10
+                },
+                "vitals": {
+                    "hp": {
+                        "cur": 250,
+                        "max": 250
+                    },
+                    "mp": {
+                        "cur": 140,
+                        "max": 140
+                    },
+                    "sp": {
+                        "cur": 185,
+                        "max": 185
+                    }
+                },
+                "position": {
+                    "mapId": 1,
+                    "tileX": 5,
+                    "tileY": 5,
+                    "pixelX": 160.0,
+                    "pixelY": 160.0,
+                    "direction": "DOWN"
+                },
+                "movementMode": "GRID_LOCKED",
+                "inventory": {
+                    "maxSlots": 24,
+                    "slots": [
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null
+                    ]
+                },
+                "bank": {
+                    "maxSlots": 48,
+                    "slots": [
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null
+                    ]
+                },
+                "equipment": {
+                    "equipped": {}
+                },
+                "knownSpellIds": [],
+                "spellLevels": {},
+                "spellUses": {},
+                "weaponProficiencyLevels": {},
+                "weaponProficiencyHits": {},
+                "hotbar": [
+                    {
+                        "index": 0,
+                        "type": "NONE",
+                        "targetId": 0
+                    },
+                    {
+                        "index": 1,
+                        "type": "NONE",
+                        "targetId": 0
+                    },
+                    {
+                        "index": 2,
+                        "type": "NONE",
+                        "targetId": 0
+                    },
+                    {
+                        "index": 3,
+                        "type": "NONE",
+                        "targetId": 0
+                    },
+                    {
+                        "index": 4,
+                        "type": "NONE",
+                        "targetId": 0
+                    },
+                    {
+                        "index": 5,
+                        "type": "NONE",
+                        "targetId": 0
+                    },
+                    {
+                        "index": 6,
+                        "type": "NONE",
+                        "targetId": 0
+                    },
+                    {
+                        "index": 7,
+                        "type": "NONE",
+                        "targetId": 0
+                    },
+                    {
+                        "index": 8,
+                        "type": "NONE",
+                        "targetId": 0
+                    },
+                    {
+                        "index": 9,
+                        "type": "NONE",
+                        "targetId": 0
+                    }
+                ],
+                "statusEffects": [],
+                "spellCooldowns": {},
+                "castingSpellId": null,
+                "castFinishTick": 0,
+                "castTotalTicks": 0,
+                "castTargetEntityId": null,
+                "castTargetTileX": 0,
+                "castTargetTileY": 0,
+                "quests": {},
+                "switches": {},
+                "variables": {},
+                "stringVariables": {},
+                "guildId": null,
+                "guildRank": "",
+                "partyId": null,
+                "instanceReturn": null,
+                "pets": {},
+                "activePetNpcId": 0,
+                "bestiary": {},
+                "arenaRating": 0,
+                "arenaWins": 0,
+                "arenaLosses": 0,
+                "encounterLockouts": {},
+                "friendNames": [],
+                "ignoredNames": [],
+                "pkPoints": 0,
+                "isRoguePk": false,
+                "pkMode": "PEACE",
+                "lastMoveTick": 0,
+                "lastAttackTick": 0,
+                "isGhost": false,
+                "ghostSinceTick": 0,
+                "fallen": false,
+                "restedXp": 0,
+                "lastSeenWorldTick": 0,
+                "upgradePityStacks": 0,
+                "schemaVersion": 2
+            }
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Move",
+            "characterId": "char-golden",
+            "direction": "LEFT",
+            "mode": "GRID_LOCKED",
+            "deltaPixelsX": 0.0,
+            "deltaPixelsY": 0.0
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.InteractFacing",
+            "characterId": "char-golden"
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Attack",
+            "characterId": "char-golden"
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Move",
+            "characterId": "char-golden",
+            "direction": "LEFT",
+            "mode": "GRID_LOCKED",
+            "deltaPixelsX": 0.0,
+            "deltaPixelsY": 0.0
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.InteractFacing",
+            "characterId": "char-golden"
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Attack",
+            "characterId": "char-golden"
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Move",
+            "characterId": "char-golden",
+            "direction": "UP",
+            "mode": "GRID_LOCKED",
+            "deltaPixelsX": 0.0,
+            "deltaPixelsY": 0.0
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.InteractFacing",
+            "characterId": "char-golden"
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Attack",
+            "characterId": "char-golden"
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Move",
+            "characterId": "char-golden",
+            "direction": "UP",
+            "mode": "GRID_LOCKED",
+            "deltaPixelsX": 0.0,
+            "deltaPixelsY": 0.0
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.InteractFacing",
+            "characterId": "char-golden"
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Attack",
+            "characterId": "char-golden"
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Move",
+            "characterId": "char-golden",
+            "direction": "RIGHT",
+            "mode": "GRID_LOCKED",
+            "deltaPixelsX": 0.0,
+            "deltaPixelsY": 0.0
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.InteractFacing",
+            "characterId": "char-golden"
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Attack",
+            "characterId": "char-golden"
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Move",
+            "characterId": "char-golden",
+            "direction": "DOWN",
+            "mode": "GRID_LOCKED",
+            "deltaPixelsX": 0.0,
+            "deltaPixelsY": 0.0
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.InteractFacing",
+            "characterId": "char-golden"
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Attack",
+            "characterId": "char-golden"
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Move",
+            "characterId": "char-golden",
+            "direction": "RIGHT",
+            "mode": "GRID_LOCKED",
+            "deltaPixelsX": 0.0,
+            "deltaPixelsY": 0.0
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.InteractFacing",
+            "characterId": "char-golden"
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Attack",
+            "characterId": "char-golden"
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Move",
+            "characterId": "char-golden",
+            "direction": "RIGHT",
+            "mode": "GRID_LOCKED",
+            "deltaPixelsX": 0.0,
+            "deltaPixelsY": 0.0
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.InteractFacing",
+            "characterId": "char-golden"
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Attack",
+            "characterId": "char-golden"
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        },
+        {
+            "_type": "com.morgana.domain.replay.SimInput.Tick",
+            "deltaMs": 50
+        }
+    ],
+    "checkpoints": [
+        {
+            "tick": 25,
+            "hash": "4acf73a3ee7b0fc1"
+        },
+        {
+            "tick": 50,
+            "hash": "d95e96aff50447b5"
+        },
+        {
+            "tick": 75,
+            "hash": "f2d4f9ea558c1cb4"
+        },
+        {
+            "tick": 100,
+            "hash": "41ac7878a2d6a819"
+        },
+        {
+            "tick": 125,
+            "hash": "ca6c7551400eca4e"
+        },
+        {
+            "tick": 150,
+            "hash": "eff1546c761d8711"
+        },
+        {
+            "tick": 175,
+            "hash": "4b0a0a834261b7e6"
+        },
+        {
+            "tick": 200,
+            "hash": "eb3ff7c320278d8f"
+        }
+    ],
+    "finalTick": 217,
+    "finalHash": "1166c79f88fd3477",
+    "gaps": [],
+    "startingEpochTicks": 0,
+    "startingWorldSwitches": {},
+    "startingWorldVariables": {},
+    "startingWorldStringVariables": {}
+}

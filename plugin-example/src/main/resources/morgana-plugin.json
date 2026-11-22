@@ -1,0 +1,8 @@
+{
+  "id": "hello",
+  "name": "Hello Plugin",
+  "version": "1.0.0",
+  "apiVersion": 1,
+  "main": "com.morgana.example.HelloPlugin",
+  "description": "Example: shows a welcome window on login and counts waves in the plugin's own storage."
+}

@@ -1,0 +1,13 @@
+{
+  "name": "morgana-smoke-test",
+  "private": true,
+  "type": "module",
+  "description": "Headless-browser smoke test for the Morgana web client (see README.md). Development tooling only; nothing here ships.",
+  "scripts": {
+    "smoke": "node run.mjs"
+  },
+  "dependencies": {
+    "playwright-core": "1.65.0",
+    "pngjs": "7.0.0"
+  }
+}

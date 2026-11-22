@@ -1,0 +1,39 @@
+{
+    "id": 6,
+    "name": "Marrow Jack",
+    "summary": "Kill the reaver captain in his redoubt and bring back his seal.",
+    "levelReq": 22,
+    "prerequisiteQuestIds": [
+        5
+    ],
+    "startText": "Their captain is a man called Marrow Jack. He sits in the redoubt on the east side of the Hollow. Bring me his seal.",
+    "inProgressText": "Marrow Jack still holds the redoubt. Bring me his seal.",
+    "completionText": "Then the quarry is open. This ring was meant for the next Marshal. You have earned it more.",
+    "objectives": [
+        {
+            "type": "KILL_NPC",
+            "targetId": 32,
+            "requiredCount": 1,
+            "description": "Marrow Jack"
+        },
+        {
+            "type": "COLLECT_ITEM",
+            "targetId": 31,
+            "requiredCount": 1,
+            "description": "Reaver Captain's Seal"
+        }
+    ],
+    "reward": {
+        "xp": 15000,
+        "currencyAmount": 2000,
+        "items": [
+            {
+                "itemId": 63,
+                "amount": 1
+            }
+        ],
+        "teachSpellId": 0
+    },
+    "repeatable": false,
+    "schemaVersion": 2
+}

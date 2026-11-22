@@ -1,0 +1,112 @@
+{
+    "id": 27,
+    "name": "Drowned Wisp",
+    "title": "",
+    "spriteId": 108,
+    "behavior": "ATTACK_ON_SIGHT",
+    "level": 16,
+    "attributes": {
+        "str": 22,
+        "agi": 14,
+        "int": 22,
+        "vit": 21
+    },
+    "vitals": {
+        "hp": 228,
+        "mp": 100
+    },
+    "attackDamage": 20,
+    "attackSpeedTicks": 20,
+    "moveSpeedTicks": 18,
+    "aggroRangeTiles": 6,
+    "leashRangeTiles": 12,
+    "xpReward": 516,
+    "drops": [
+        {
+            "itemId": 1,
+            "minAmount": 16,
+            "maxAmount": 64,
+            "chanceBasisPoints": 7500
+        },
+        {
+            "itemId": 3,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 600
+        },
+        {
+            "itemId": 26,
+            "minAmount": 1,
+            "maxAmount": 2,
+            "chanceBasisPoints": 4000
+        },
+        {
+            "itemId": 37,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 38,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 39,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 47,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 51,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 55,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 58,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 62,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 64,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 29,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 12
+        }
+    ],
+    "spellIds": [
+        18
+    ],
+    "shopId": 0,
+    "eventId": 0,
+    "chatGreeting": "",
+    "animationId": 0,
+    "schemaVersion": 2
+}

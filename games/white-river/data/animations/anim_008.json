@@ -1,0 +1,10 @@
+{
+    "id": 8,
+    "name": "Volley",
+    "spriteSheetId": 8,
+    "frameCount": 4,
+    "frameDurationMs": 80,
+    "soundId": "",
+    "renderAboveEntities": true,
+    "schemaVersion": 2
+}

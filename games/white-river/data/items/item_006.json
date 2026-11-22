@@ -1,0 +1,15 @@
+{
+    "id": 6,
+    "name": "Deepwater Draught",
+    "description": "Restores 150 mana.",
+    "type": "CONSUMABLE",
+    "iconId": 6,
+    "stackable": true,
+    "maxStack": 999,
+    "price": 60,
+    "levelReq": 15,
+    "schemaVersion": 2,
+    "restore": {
+        "mp": 150
+    }
+}

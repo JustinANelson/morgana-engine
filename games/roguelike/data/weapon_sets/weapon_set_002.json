@@ -1,0 +1,39 @@
+{
+    "id": 2,
+    "name": "Ranger Arsenal",
+    "description": "Quick Shot, Twin Shot, Piercing Arrow, and Backstep.",
+    "slot": "MAIN",
+    "classIds": [
+        2
+    ],
+    "inputBufferTicks": 6,
+    "skillIds": [
+        11,
+        12,
+        13,
+        14
+    ],
+    "entries": [
+        {
+            "input": "LMB",
+            "skillId": 11
+        },
+        {
+            "input": "RMB",
+            "skillId": 13
+        },
+        {
+            "input": "SPACE",
+            "skillId": 14
+        }
+    ],
+    "edges": [
+        {
+            "fromSkillId": 11,
+            "input": "LMB",
+            "toSkillId": 12,
+            "windowTicks": 12
+        }
+    ],
+    "schemaVersion": 2
+}

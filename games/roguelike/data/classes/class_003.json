@@ -1,0 +1,44 @@
+{
+    "id": 3,
+    "name": "Pyromancer",
+    "description": "Ember-weaving battlemage with flame combos, Fireball, Mending Light, and Blink.",
+    "spriteIds": [
+        3
+    ],
+    "baseAttributes": {
+        "str": 8,
+        "agi": 10,
+        "int": 16,
+        "vit": 9
+    },
+    "statPointsPerLevel": 3,
+    "startMapId": 1,
+    "startX": 17,
+    "startY": 16,
+    "startingItems": [
+        {
+            "itemId": 9,
+            "amount": 1
+        },
+        {
+            "itemId": 22,
+            "amount": 1
+        },
+        {
+            "itemId": 33,
+            "amount": 3
+        },
+        {
+            "itemId": 32,
+            "amount": 2
+        }
+    ],
+    "autoEquipStartingItems": true,
+    "startingSpellIds": [
+        1,
+        2,
+        4
+    ],
+    "abilityTerminology": "SPELLS",
+    "schemaVersion": 1
+}

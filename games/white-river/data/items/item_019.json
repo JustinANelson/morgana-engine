@@ -1,0 +1,12 @@
+{
+    "id": 19,
+    "name": "Iron Ingot",
+    "description": "A bar of valley iron, ready for the hammer.",
+    "type": "MATERIAL",
+    "iconId": 21,
+    "stackable": true,
+    "maxStack": 999,
+    "price": 26,
+    "levelReq": 1,
+    "schemaVersion": 2
+}

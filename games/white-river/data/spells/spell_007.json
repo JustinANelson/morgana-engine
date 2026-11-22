@@ -1,0 +1,33 @@
+{
+    "id": 7,
+    "name": "Reedstep",
+    "description": "A burst of speed to open the distance.",
+    "iconId": 73,
+    "targetType": "SELF",
+    "levelReq": 4,
+    "classReqIds": [
+        2
+    ],
+    "costs": {
+        "sp": 20
+    },
+    "scales": true,
+    "castTimeTicks": 0,
+    "cooldownTicks": 160,
+    "rangeTiles": 1,
+    "aoeRadiusTiles": 0,
+    "basePower": 0,
+    "isHealing": false,
+    "projectileSpriteId": 0,
+    "animationId": 7,
+    "statusEffectType": "HASTE",
+    "statusMagnitude": 3,
+    "statusDurationTicks": 60,
+    "warpMapId": 0,
+    "warpX": 0,
+    "warpY": 0,
+    "powerPercentPerLevel": 8,
+    "maxSpellLevel": 5,
+    "castsPerLevel": 60,
+    "schemaVersion": 2
+}

@@ -1,0 +1,32 @@
+{
+  "name": "wr_serendia_swamp",
+  "seed": 2003,
+  "tileSize": 16,
+  "columns": 8,
+  "style": "TIME_FANTASY",
+  "materials": [
+    { "name": "ss_moss", "pattern": "ORGANIC_FBM", "palette": "wr_kamasylve_leaf", "scale": 1.2, "detail": 0.4, "decal": "MOSS" },
+    { "name": "ss_mud", "pattern": "OBSIDIAN_CRAG", "palette": "wr_abyssal_obsidian", "scale": 1.2, "detail": 0.4 },
+    { "name": "ss_water", "pattern": "WATER_CAUSTICS", "palette": "wr_serendia_iron", "frames": 4 }
+  ],
+  "cliffs": [
+    { "name": "ss_bank", "topMaterial": "ss_moss", "faceMaterial": "ss_mud", "trimColor": "#284830", "a4Layout": false }
+  ],
+  "props": [
+    { "name": "ss_tent", "kind": "MEDIEVAL_TENT", "primaryPalette": "wr_serendia_iron", "secondaryPalette": "wr_kamasylve_leaf" },
+    { "name": "ss_bridge", "kind": "WOOD_BRIDGE", "secondaryPalette": "wr_valencia_amber" },
+    { "name": "ss_ballista", "kind": "SIEGE_BALLISTA", "primaryPalette": "wr_serendia_iron" },
+    { "name": "ss_rift", "kind": "BLACK_SPIRIT_RIFT", "primaryPalette": "wr_abyssal_obsidian", "secondaryPalette": "wr_black_spirit" },
+    { "name": "ss_spire", "kind": "GARGOYLE_SPIRE", "primaryPalette": "wr_serendia_iron" }
+  ],
+  "autotiles": [
+    {
+      "name": "ss_moss_on_mud",
+      "mode": "BLOB_47",
+      "columns": 8,
+      "foregroundMaterial": "ss_moss",
+      "backgroundMaterial": "ss_mud",
+      "style": { "margin": 3.0, "rimWidth": 1.0, "wobbleAmplitude": 1.8, "rimColor": "#26382d" }
+    }
+  ]
+}

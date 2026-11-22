@@ -1,0 +1,16 @@
+{
+    "id": 56,
+    "name": "Warden's Bulwark",
+    "description": "A shield of glacier-cold steel.",
+    "type": "SHIELD",
+    "iconId": 56,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 2600,
+    "levelReq": 28,
+    "schemaVersion": 2,
+    "armorDefense": 16,
+    "classReqIds": [
+        1
+    ]
+}

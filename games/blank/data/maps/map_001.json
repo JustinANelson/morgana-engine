@@ -1,0 +1,6435 @@
+{
+    "id": 1,
+    "name": "Blank Game Town Square",
+    "revision": 1,
+    "width": 20,
+    "height": 20,
+    "tileSize": 32,
+    "moral": "SAFE_ZONE",
+    "bgmTrackId": "town_theme",
+    "weather": "NONE",
+    "weatherIntensity": 0.5,
+    "ambientLightHex": "#FFFFFF",
+    "isIndoors": false,
+    "zoneId": 0,
+    "instanced": false,
+    "neighbors": {
+        "northMapId": 0,
+        "southMapId": 0,
+        "eastMapId": 0,
+        "westMapId": 0
+    },
+    "cells": [
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "none"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        },
+        {
+            "layers": {
+                "GROUND": {
+                    "tilesetId": 1,
+                    "srcTileX": 0,
+                    "srcTileY": 0,
+                    "autotileMode": "NONE",
+                    "animationFrames": 1,
+                    "animationSpeedMs": 250,
+                    "roofGroupId": 0
+                }
+            },
+            "attribute": {
+                "_type": "blocked"
+            }
+        }
+    ],
+    "npcSpawns": [
+        {
+            "slotIndex": 0,
+            "npcId": 1,
+            "spawnX": 10,
+            "spawnY": 10,
+            "respawnTicks": 60
+        }
+    ],
+    "eventIds": [],
+    "schemaVersion": 2
+}

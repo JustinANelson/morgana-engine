@@ -1,0 +1,22 @@
+{
+    "id": 6,
+    "name": "Hesper's cooking fire",
+    "mapId": 1,
+    "tileX": 17,
+    "tileY": 33,
+    "schemaVersion": 2,
+    "pages": [
+        {
+            "pageIndex": 0,
+            "condition": {},
+            "trigger": "ACTION_INTERACT",
+            "spriteId": 0,
+            "commands": [
+                {
+                    "_type": "open_crafting",
+                    "stationType": "COOKING_FIRE"
+                }
+            ]
+        }
+    ]
+}

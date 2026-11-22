@@ -1,0 +1,2 @@
+# Vendored third-party files must be stored byte for byte so the pinned checksums stay valid on every OS.
+third-party/** -text

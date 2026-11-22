@@ -1,0 +1,12 @@
+{
+    "id": 25,
+    "name": "Viper Fang",
+    "description": "Still a little venomous. Smiths etch marshsteel with it.",
+    "type": "MATERIAL",
+    "iconId": 25,
+    "stackable": true,
+    "maxStack": 999,
+    "price": 12,
+    "levelReq": 1,
+    "schemaVersion": 2
+}

@@ -1,0 +1,31 @@
+{
+    "id": 17,
+    "name": "Rime Shard",
+    "description": "A shard of glacier ice.",
+    "iconId": 82,
+    "targetType": "SINGLE_TARGET",
+    "levelReq": 1,
+    "classReqIds": [],
+    "costs": {
+        "mp": 4
+    },
+    "scales": false,
+    "castTimeTicks": 0,
+    "cooldownTicks": 50,
+    "rangeTiles": 6,
+    "aoeRadiusTiles": 0,
+    "basePower": 34,
+    "isHealing": false,
+    "projectileSpriteId": 3,
+    "animationId": 16,
+    "statusEffectType": "SLOW",
+    "statusMagnitude": 20,
+    "statusDurationTicks": 40,
+    "warpMapId": 0,
+    "warpX": 0,
+    "warpY": 0,
+    "powerPercentPerLevel": 8,
+    "maxSpellLevel": 5,
+    "castsPerLevel": 60,
+    "schemaVersion": 2
+}

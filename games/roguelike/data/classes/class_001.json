@@ -1,0 +1,46 @@
+{
+    "id": 1,
+    "name": "Vanguard",
+    "description": "Armored front-liner with a 3-hit blade combo, Shield Bash, Roll, and Guard.",
+    "spriteIds": [
+        1
+    ],
+    "baseAttributes": {
+        "str": 14,
+        "agi": 10,
+        "int": 8,
+        "vit": 13
+    },
+    "statPointsPerLevel": 3,
+    "startMapId": 1,
+    "startX": 17,
+    "startY": 16,
+    "startingItems": [
+        {
+            "itemId": 2,
+            "amount": 1
+        },
+        {
+            "itemId": 14,
+            "amount": 1
+        },
+        {
+            "itemId": 20,
+            "amount": 1
+        },
+        {
+            "itemId": 17,
+            "amount": 1
+        },
+        {
+            "itemId": 32,
+            "amount": 3
+        }
+    ],
+    "autoEquipStartingItems": true,
+    "startingSpellIds": [
+        4
+    ],
+    "abilityTerminology": "SKILLS",
+    "schemaVersion": 1
+}

@@ -1,0 +1,12 @@
+{
+    "id": 17,
+    "name": "Chalkstone",
+    "description": "Soft white stone from Chalk Hollow. It is what turns the river white.",
+    "type": "MATERIAL",
+    "iconId": 19,
+    "stackable": true,
+    "maxStack": 999,
+    "price": 6,
+    "levelReq": 1,
+    "schemaVersion": 2
+}

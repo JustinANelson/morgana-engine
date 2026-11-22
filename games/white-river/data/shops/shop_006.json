@@ -1,0 +1,28 @@
+{
+    "id": 6,
+    "name": "Wyn's Trinkets",
+    "buyRatePercent": 100,
+    "sellRatePercent": 75,
+    "currencyItemId": 1,
+    "entries": [
+        {
+            "itemId": 61,
+            "amount": 1,
+            "currencyItemId": 1,
+            "priceOverride": 0
+        },
+        {
+            "itemId": 62,
+            "amount": 1,
+            "currencyItemId": 1,
+            "priceOverride": 0
+        },
+        {
+            "itemId": 64,
+            "amount": 1,
+            "currencyItemId": 1,
+            "priceOverride": 0
+        }
+    ],
+    "schemaVersion": 2
+}

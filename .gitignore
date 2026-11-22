@@ -1,0 +1,49 @@
+node_modules/
+dist/
+build/
+**/build/
+.gradle/
+local.properties
+server-data/
+server-data-*/
+worlds/
+packs/
+# The runtime-data names above must not hide source packages with the same name (com.morgana.server.worlds).
+!**/src/**/worlds/
+!**/src/**/packs/
+client-data/
+coverage/
+*.log
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
+*.hprof
+hs_err_pid*.log
+# The admin panel token (see wiki/server/admin_panel.md) is a secret wherever the data folder is.
+admin-token.txt
+
+# IDE, Kotlin daemon, and OS files
+.kotlin/
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+
+# IDE (Eclipse) build output
+bin/
+# The SDK launcher templates live in a folder named bin/ on purpose.
+!distribution/src/bin/
+
+# Python bytecode from game tool scripts
+__pycache__/
+
+# Lossless master audio kept beside a game (large); the shipped OGGs in assets/music/ are converted from it
+games/*/source-audio/
+
+# Private / developer games kept locally outside the public engine repo
+games/halcyon-reach/
+HALCYON_REACH_DESIGN_AND_CONTENT.md

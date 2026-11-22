@@ -1,0 +1,11 @@
+{
+    "id": 38,
+    "name": "Crypt Bone",
+    "description": "Dense, pale bone salvaged from crypt undead.",
+    "type": "MATERIAL",
+    "iconId": 38,
+    "price": 12,
+    "schemaVersion": 1,
+    "stackable": true,
+    "maxStack": 99
+}

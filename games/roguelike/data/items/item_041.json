@@ -1,0 +1,10 @@
+{
+    "id": 41,
+    "name": "Warden's Signet",
+    "description": "The cracked bronze signet ring of Malakor, the Ashen Warden.",
+    "type": "QUEST",
+    "iconId": 41,
+    "price": 0,
+    "schemaVersion": 1,
+    "boundOnPickup": true
+}

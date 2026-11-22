@@ -1,0 +1,25 @@
+{
+    "id": 8,
+    "name": "Cryptstalker Bow",
+    "description": "Crafted from pale crypt sinew and ironwood.",
+    "type": "WEAPON",
+    "iconId": 8,
+    "price": 220,
+    "schemaVersion": 1,
+    "levelReq": 3,
+    "attackDamage": 14,
+    "attackSpeedTicks": 9,
+    "rangeTiles": 7,
+    "weaponStyle": "RANGED_BOW",
+    "weaponType": "bow",
+    "twoHanded": true,
+    "projectileSpriteId": 4,
+    "requiredAmmoItemId": 12,
+    "attributeBonuses": {
+        "agi": 3
+    },
+    "paperdollSpriteId": 1,
+    "paperdollOffHandSpriteId": 2,
+    "paperdollSlot": "MAIN_HAND",
+    "paperdollTintHex": "#7cc8e8"
+}

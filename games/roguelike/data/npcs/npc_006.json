@@ -1,0 +1,12 @@
+{
+    "id": 6,
+    "name": "Vaultkeeper Maren",
+    "title": "Shared Stash",
+    "spriteId": 15,
+    "behavior": "BANKER",
+    "level": 10,
+    "vitals": {
+        "hp": 300
+    },
+    "schemaVersion": 1
+}

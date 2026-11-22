@@ -1,0 +1,30 @@
+{
+    "id": 10,
+    "name": "Cryptfire Staff",
+    "description": "Channels both flame and hollow resonance.",
+    "type": "WEAPON",
+    "iconId": 10,
+    "price": 120,
+    "schemaVersion": 1,
+    "levelReq": 2,
+    "attackDamage": 9,
+    "attackSpeedTicks": 11,
+    "rangeTiles": 6,
+    "weaponStyle": "MAGIC_STAFF",
+    "weaponType": "staff",
+    "twoHanded": true,
+    "attributeBonuses": {
+        "int": 4
+    },
+    "vitalMaxBonuses": {
+        "mp": 15
+    },
+    "projectileSpriteId": 2,
+    "paperdollSpriteId": 6,
+    "paperdollSlot": "MAIN_HAND",
+    "paperdollClassTints": {
+        "1": "#c95046",
+        "2": "#4f8a5b",
+        "3": "#d97736"
+    }
+}

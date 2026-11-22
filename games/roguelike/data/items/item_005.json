@@ -1,0 +1,21 @@
+{
+    "id": 5,
+    "name": "Bone Cleaver",
+    "description": "Forged from dense crypt bone; bites deep into armor.",
+    "type": "WEAPON",
+    "iconId": 5,
+    "price": 190,
+    "schemaVersion": 1,
+    "levelReq": 3,
+    "attackDamage": 15,
+    "attackSpeedTicks": 10,
+    "rangeTiles": 1,
+    "weaponStyle": "MELEE",
+    "weaponType": "sword",
+    "attributeBonuses": {
+        "str": 2
+    },
+    "paperdollSpriteId": 4,
+    "paperdollSlot": "MAIN_HAND",
+    "paperdollTintHex": "#d8ccb8"
+}

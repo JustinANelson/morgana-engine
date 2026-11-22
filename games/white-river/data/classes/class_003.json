@@ -1,0 +1,56 @@
+{
+    "id": 3,
+    "name": "Duskweaver",
+    "description": "Twilight magic. Short casts between steps, ground that turns against the enemy and a veil for bad moments.",
+    "spriteIds": [
+        3
+    ],
+    "baseAttributes": {
+        "str": 5,
+        "agi": 9,
+        "int": 16,
+        "vit": 9
+    },
+    "statPointsPerLevel": 3,
+    "autoStatGrowthPerLevel": {
+        "int": 1,
+        "vit": 1
+    },
+    "startMapId": 1,
+    "startX": 26,
+    "startY": 24,
+    "startingItems": [
+        {
+            "itemId": 36,
+            "amount": 1,
+            "durability": 100
+        },
+        {
+            "itemId": 50,
+            "amount": 1,
+            "durability": 100
+        },
+        {
+            "itemId": 2,
+            "amount": 4,
+            "durability": 100
+        },
+        {
+            "itemId": 5,
+            "amount": 4,
+            "durability": 100
+        },
+        {
+            "itemId": 8,
+            "amount": 1,
+            "durability": 100
+        }
+    ],
+    "autoEquipStartingItems": true,
+    "startingSpellIds": [
+        11,
+        12
+    ],
+    "abilityTerminology": "SKILLS",
+    "schemaVersion": 2
+}

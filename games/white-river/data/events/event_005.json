@@ -1,0 +1,22 @@
+{
+    "id": 5,
+    "name": "Soren's alchemy table",
+    "mapId": 1,
+    "tileX": 31,
+    "tileY": 33,
+    "schemaVersion": 2,
+    "pages": [
+        {
+            "pageIndex": 0,
+            "condition": {},
+            "trigger": "ACTION_INTERACT",
+            "spriteId": 0,
+            "commands": [
+                {
+                    "_type": "open_crafting",
+                    "stationType": "ALCHEMY_TABLE"
+                }
+            ]
+        }
+    ]
+}

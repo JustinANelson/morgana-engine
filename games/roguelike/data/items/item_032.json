@@ -1,0 +1,14 @@
+{
+    "id": 32,
+    "name": "Healing Draught",
+    "description": "Restores 55 HP instantly.",
+    "type": "CONSUMABLE",
+    "iconId": 32,
+    "price": 20,
+    "schemaVersion": 1,
+    "stackable": true,
+    "maxStack": 20,
+    "restore": {
+        "hp": 55
+    }
+}

@@ -1,0 +1,26 @@
+{
+    "id": 11,
+    "name": "Warden's Scepter",
+    "description": "An ornate ember-forged scepter of the Keep.",
+    "type": "WEAPON",
+    "iconId": 11,
+    "price": 230,
+    "schemaVersion": 1,
+    "levelReq": 3,
+    "attackDamage": 13,
+    "attackSpeedTicks": 10,
+    "rangeTiles": 6,
+    "weaponStyle": "MAGIC_STAFF",
+    "weaponType": "staff",
+    "twoHanded": true,
+    "attributeBonuses": {
+        "int": 6
+    },
+    "vitalMaxBonuses": {
+        "mp": 25
+    },
+    "projectileSpriteId": 4,
+    "paperdollSpriteId": 6,
+    "paperdollSlot": "MAIN_HAND",
+    "paperdollTintHex": "#e8b848"
+}

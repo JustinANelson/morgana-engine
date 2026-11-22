@@ -1,0 +1,32 @@
+{
+    "id": 21,
+    "name": "Flame Lash",
+    "description": "Whip a bolt of ember magic toward your cursor.",
+    "iconId": 9,
+    "startupTicks": 3,
+    "activeTicks": 2,
+    "recoveryTicks": 5,
+    "cancelFromTick": 4,
+    "animationId": 1,
+    "soundId": "spell_fire",
+    "schemaVersion": 2,
+    "hitboxes": [
+        {
+            "fromTick": 3,
+            "toTick": 3,
+            "shape": "CIRCLE",
+            "forwardPixels": 18,
+            "radiusPixels": 18,
+            "hit": {
+                "damageKind": "SPELL",
+                "damagePercent": 95
+            },
+            "projectile": {
+                "spriteId": 2,
+                "speedPixelsPerTick": 16,
+                "rangePixels": 210,
+                "pierce": false
+            }
+        }
+    ]
+}

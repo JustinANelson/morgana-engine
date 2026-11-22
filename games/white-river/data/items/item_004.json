@@ -1,0 +1,15 @@
+{
+    "id": 4,
+    "name": "Greater Tonic",
+    "description": "Restores 320 health.",
+    "type": "CONSUMABLE",
+    "iconId": 4,
+    "stackable": true,
+    "maxStack": 999,
+    "price": 130,
+    "levelReq": 22,
+    "schemaVersion": 2,
+    "restore": {
+        "hp": 320
+    }
+}

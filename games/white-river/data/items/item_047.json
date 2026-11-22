@@ -1,0 +1,13 @@
+{
+    "id": 47,
+    "name": "Marsh Helm",
+    "description": "Iron, with a reed-green crest.",
+    "type": "HELMET",
+    "iconId": 47,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 240,
+    "levelReq": 10,
+    "schemaVersion": 2,
+    "armorDefense": 5
+}

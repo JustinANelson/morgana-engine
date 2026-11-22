@@ -1,0 +1,31 @@
+{
+    "id": 9,
+    "name": "A Day's Catch",
+    "summary": "Catch whitefin for the Ford kitchen.",
+    "levelReq": 1,
+    "prerequisiteQuestIds": [],
+    "startText": "The kitchen is out of fish. Pim sells a willow rod; the shoals are off the banks south of the bridge. Bring me six whitefin.",
+    "inProgressText": "Six whitefin. The shoals are south of the bridge.",
+    "completionText": "Lovely. Here, I grilled a few for you.",
+    "objectives": [
+        {
+            "type": "COLLECT_ITEM",
+            "targetId": 20,
+            "requiredCount": 6,
+            "description": "Whitefin"
+        }
+    ],
+    "reward": {
+        "xp": 80,
+        "currencyAmount": 40,
+        "items": [
+            {
+                "itemId": 9,
+                "amount": 4
+            }
+        ],
+        "teachSpellId": 0
+    },
+    "repeatable": false,
+    "schemaVersion": 2
+}

@@ -1,0 +1,12 @@
+{
+    "id": 27,
+    "name": "Ring of Vigor",
+    "description": "A warm iron band set with a ruby chip.",
+    "type": "RING",
+    "iconId": 27,
+    "price": 80,
+    "schemaVersion": 1,
+    "vitalMaxBonuses": {
+        "hp": 20
+    }
+}

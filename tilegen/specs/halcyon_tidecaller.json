@@ -1,0 +1,34 @@
+{
+  "name": "halcyon_tidecaller",
+  "job": "high_priest",
+  "tileSize": 32,
+  "seed": 3004,
+  "hairStyle": "braided_crown",
+  "headgear": "priest_mitre",
+  "weapon": "holy_rod",
+  "shield": "spellbook",
+  "torsoStyle": "traveler",
+  "legsStyle": "robe_skirt",
+  "robeHem": "scalloped",
+  "feetStyle": "sandals",
+  "includeCape": false,
+  "theme": {
+    "ancestry": "human",
+    "outfitPalette": "co_mystic_silk",
+    "accentPalette": "co_imperial_jade",
+    "secondaryPalette": "ro_prontera_marble",
+    "auraPalette": "ro_prontera_marble",
+    "hairPalette": ["#262a3e", "#444c6e", "#6874a2", "#929ec8", "#c2ccf0"],
+    "eyeColor": "#58c4d8",
+    "style": "morgana",
+    "proportions": "chunky"
+  },
+  "attachments": [
+    "silk_sash",
+    "holy_glow"
+  ],
+  "actions": ["halcyon"],
+  "directions8": false,
+  "exportLayers": true,
+  "includeShadow": true
+}

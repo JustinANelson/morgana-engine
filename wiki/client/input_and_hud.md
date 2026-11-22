@@ -1,0 +1,96 @@
+---
+type: Concept
+title: "Input and HUD"
+description: "Keyboard/mouse bindings, HUD windows, hotbar, minimap, and touch controls."
+tags: [client, ui]
+code: ["client-core/src/main/kotlin/com/morgana/client/ui/PartyFramesModel.kt", "client-core/src/main/kotlin/com/morgana/client/MorganaGame.kt", "client-core/src/main/kotlin/com/morgana/client/ui/PlayerHudAndWindows.kt", "client-core/src/main/kotlin/com/morgana/client/ui/bag/CharacterMenu.kt", "client-core/src/main/kotlin/com/morgana/client/ui/bag/InventoryPanel.kt", "client-core/src/main/kotlin/com/morgana/client/ui/bag/CharacterPanel.kt", "client-core/src/main/kotlin/com/morgana/client/ui/bag/ShopWindow.kt", "client-core/src/main/kotlin/com/morgana/client/ui/bag/BagModels.kt", "client-core/src/main/kotlin/com/morgana/client/ui/bag/ItemGrid.kt", "client-core/src/main/kotlin/com/morgana/client/ui/HudWindow.kt", "client-core/src/main/kotlin/com/morgana/client/ui/TouchControls.kt", "client-core/src/main/kotlin/com/morgana/client/ui/CompactStatus.kt", "client-web/src/main/kotlin/com/morgana/client/web/WebLauncher.kt"]
+symbols: ["PartyFramesModel","PartyFramesOverlay","CharacterMenu","InventoryPanel","CharacterPanel","MenuSection","ShopWindow","ItemGrid","BagView","ItemInfo","BagFilter","CompactStatus","TouchControls","HudWindow","heldTouchDirection","Input.Keys.F1", "toggleMinimap", "triggerHotbar", "toggleSpellbookWindow", "toggleQuestWindow", "toggleCraftingWindow"]
+generated: { by: claude-code/claude-sonnet-5-5, at: 2026-11-07T12:00:00Z }
+stale_after: 2027-05-06T00:00:00Z
+---
+
+# Input and HUD
+
+The keys below are the defaults. The **Controls** window (`H`, the top bar's *Controls* button, Settings > *Controls...*, or the phone Menu) lists every key and what each quickbar slot holds, and **every key except `F1` and `Esc` can be rebound** there, including the quickbar slots ([accessibility](/client/accessibility.md)).
+
+| Key | Action |
+| :--- | :--- |
+| WASD / arrows | Move (predicted locally; [prediction](/client/client_state_and_prediction.md)) |
+| `Space` / `Ctrl` | Attack |
+| `E` / `Enter` | Interact with the facing tile |
+| `G` | Pick up ground item |
+| `1`..`0` / numpad `1`..`0` | Trigger quickbar slot 1-10 (spell or item); the quickbar buttons show each slot's current key |
+| `V` | Character menu on its Stats tab (one window with tabs: Stats, Equipment, Inventory, Skills, Proficiency) |
+| `I` | The same character menu on its Inventory tab. With the menu open, `V` and `I` switch to their tab; pressing the key of the tab you are on closes it |
+| `K` | Spellbook |
+| `J` | Quest log and crafting |
+| `P` | Party management window |
+| `M` | Toggle minimap/radar |
+| `N` | World map ([exploration](/systems/exploration.md)) |
+| `H` | Controls window: all keys, rebinding, quickbar contents |
+| `F1` | Toggle the [F1 editor](/client/f1_editor.md) (available per [access level](/domain/access_levels.md)) |
+| `Esc` | Unfocus UI |
+
+Keys are ignored while a text field has focus. The HUD (`PlayerHudAndWindows`, Scene2D + VisUI) shows vitals, an active status/buff icon strip under the unit frame, hotbar, a tabbed translucent chat box (`All`, `Global`, `Party`, `Guild`, `System`) with channel color-coding, a top-right circular radar minimap with `-`/`+` zoom buttons, zone header, and `Ping / FPS` readout, a top-center staff GM quick-bar (for access rank > 0), party/guild/trade windows, and on touch devices a virtual D-pad + action pad ([Android](/architecture/client_android.md)). Party members other than you also get always-visible frames on the left edge (`PartyFramesOverlay`, model `PartyFramesModel`): mini portrait, name, level, HP bar, and MP bar, with members on other maps shown as away.
+Sound cues are triggered locally ([assets and audio](/client/assets_and_audio.md)).
+
+## Inventory and shop windows (2026-11-14)
+Rewritten after owner feedback that the old text lists were limited and had no selling. Both are live windows (`ui/bag/`): they follow the character and redraw after every server update, so using, equipping, dropping, sorting, buying and selling never close them.
+- **Character menu** (`CharacterMenu`, 2026-11-17): one window, one tab bar (Stats, Equipment, Inventory, Skills, Proficiency; tabs the game does not use are left out). It replaced the separate Character and Inventory windows and their swap buttons, which resized and moved the window on every switch. Tabs switch in place (same position and size, 680 x 410 at most, less on a phone) and both panels are kept, so a filter, search or selected spell survives a trip to another tab. `V` opens it on Stats, `I` (Menu > Inventory on phones) on Inventory. **Inventory tab** (`InventoryPanel`): the bag. Bag: an icon grid showing every slot (`ItemGrid`, drawn by hand in one pass; empty slots visible so the bag's size is), filter chips (All, Gear, Use, Materials, Other), **Sort**, and a **Compact** toggle above the grid (in Compact mode, the details pane hides so the icon grid expands across the full width, relying on hover tooltips with a compact action strip below; in standard mode, the details pane spans the full height on the right) for the selected item: name, kind, description, stats compared with what is worn (green better, red worse), requirements (red when unmet), value, and **Use / Equip**, **Quickbar**, **Move** (tap a second square to swap; only with no filter), **Drop 1** and **Drop all** (asks twice). **Stats, Equipment, Skills, Proficiency tabs** (`CharacterPanel`; equipment is one slot per row so Unequip always fits a phone): tabs Stats (vitals, gear bonuses, **+1** buttons, Battle Power, Nobility), Equipment (one slot per row, name wraps, Unequip always visible), Skills (tap one for details and Quickbar) and Proficiency (weapon levels); tabs the game does not use are left out. Swapping windows keeps the position.
+- **Shop** (`ShopWindow`): see [shops](/systems/economy.md). Closes itself when you walk out of range (`SHOP_RANGE_TILES`) or change map.
+- The rules about what to list and say are pure and unit-tested (`BagView`, `ItemInfo`, `TradeMath`, `BagFilter` in `BagModels.kt`; `BagModelsTest`); the browser smoke test opens, sorts and switches the inventory.
+- Lesson: libGDX `ButtonGroup.add` presses a chip by code, which fires its change listener; tab and filter chips are built with `setProgrammaticChangeEvents(false)` (`BagUi.chip`), or building them redraws the window which builds them again, without end (the first shop version crashed the page that way).
+
+## Quest tracker and waypoints (2026-11-14)
+An always-on panel (`Quest Tracker`, a `HudWindow`: draggable, collapsible, position remembered) lists the character's quests in progress, one line per objective with progress (`Defeat Rat (1/3)`, `(done)` once met, "(ready to hand in)" when every objective is met), and marks where each quest points in the world.
+- **Rules** (`QuestTracker`, `ui/QuestTracker.kt`, pure, `QuestTrackerTest`): at most 5 quests; the objective's own `description` is used when set, else a neutral phrase from its type and target (Defeat, Collect, Talk to, Gather, Craft, Visit). A `KILL_NPC`, `TALK_TO_NPC` or `HARVEST_RESOURCE` objective whose target is on the current map gets a **waypoint** at the nearest live NPC or intact resource node; when it is not there the line says "not on this map", and a `VISIT_MAP` objective for another map says "another map". Collect and craft objectives have no place to point to, so they have no waypoint. The world shows at most 6 waypoints: the first open objective of each quest, nearest first.
+- **World markers** (`MorganaWorldRenderer.renderQuestWaypoints`): a gold diamond with the target's name bobs over the tile; when the target is off screen a smaller diamond sits on the screen edge in its direction.
+- **Other maps** (`QuestGuides` in `core-domain/.../map/QuestGuides.kt`, `QuestGuidesTest`; packet `s_quest_guides`): the client only knows its own map, so for an objective whose target is elsewhere the server searches the map graph (borders and warp tiles, like Town Portals) for the nearest map holding the target (NPC spawns, resource nodes, or the map itself for a visit objective) and sends the tile of the player's map that leads toward it. `MorganaWorldCoordinator.sendQuestGuides` re-sends only when the map or the quest progress changes, and at login. The tracker marks that tile `To <map>` and the line's hint reads `in <map> via <map>`.
+- **Control**: the Menu has **Hide tracker / Show tracker** (`ClientWorldState.showQuestTracker`), and the quest log (`J`) has a **Track / Untrack** button on every quest in progress (`untrackedQuests`, kept for the session). Everything in progress is tracked by default. The panel rebuilds only when its words change, and is hidden while the F1 editor is open or when nothing is tracked.
+- Data comes from what the client already has (`npcsOnMap`, `resourcesOnMap`, the content catalog), so no packet or server change was needed.
+- **Not built yet**: quest-giver and hand-in waypoints (the server does not tell the client who gives or accepts a quest), directions to other maps, a world map, and saving untracked quests between sessions.
+
+## Minimizing windows
+Every HUD window is a `HudWindow`: a `-`/`+` button in the title bar (or a double-tap/double-click on the title) collapses it to just its title bar (shrinking width as well as height) and restores it, keeping the top-left corner fixed. Windows are semi-transparent (`HudWindow.opacity`, adjustable in Settings).
+
+- **Partial minimize** (2026-11-17): a window can name rows that stay visible when it is minimized (`HudWindow.keepWhenCollapsed`). The top-left status window keeps the vitals, XP and character line and folds away only the shortcut buttons; it has no title text (it saves its position under the old key `Morgana ORPG`). Folded rows are squeezed to zero size and get their constraints back on restore.
+- **Remembered**: a window that remembers its position also remembers being left minimized (preference key `<name>#collapsed`, written only by the player's own `-`/`+` click, not by the phone's automatic minimize).
+- **Unread badge**: a minimized Chat window shows the number of lines that arrived since (`Chat & Command Console (3)`, `UnreadCounter`).
+- **F1 Admin button** shows only for characters above the Player access level; the `F1` key still opens the editors.
+- **Quickbar tips**: hovering a spell slot adds cost, cooldown, range and time left (`SpellInfo.quickLine`).
+- **Stall window** (`Stall` button, only where `stall` allows the current map): a form over the `/stall` commands (`StallCommands`, `StallWindow`) to list bag items, open and close, view open stalls in reach and buy. The goods of the stall you looked at (or your own) are listed in the window with Buy 1 and Remove buttons: the server sends them as `s_stall_view` after every view, change and purchase (`ClientWorldState.stallView`), and the window rebuilds when a new list arrives. Replies and refusals still arrive in chat.
+- **Clicking a ghost** picks it as the target of the next revive spell (`ClientWorldState.selectGhostAt` / `castTargetFor`; the client now sends `targetEntityId` on casts of revive spells).
+- **Ground loot labels and click-to-loot** (`GroundLootLabels`, 2026-11-21): holding `Alt` displays stacked, rarity-colored nameplates above all ground items on the map (highlighted drops still show without `Alt`). Clicking a ground item or its nameplate picks it up immediately if within reach, or walks to it and picks it up on arrival.
+- **Ground-targeted AoE spells** (`SpellTargetType.GROUND_AOE`, 2026-11-21): triggering a `GROUND_AOE` spell from a hotbar key quick-casts at the hovered tile; triggering from a HUD button enters aim mode with a range-clamped AoE reticle (`MorganaWorldRenderer.renderGroundSpellReticle`), where left-click casts and right-click or `Esc` cancels.
+
+## Touch devices (Android and touch browsers)
+`MorganaGame(touchDevice = true)` is set by the Android launcher and by `WebLauncher` when the browser reports touch (`ontouchstart` / `maxTouchPoints`). It then:
+- shows `TouchControls` behind all windows: a floating circular joystick that appears wherever a finger lands on the left half of the screen (4-way via `joystickDirection`, polled with `heldTouchDirection()`), up to four round face buttons (Atk / Use / Get / Spell) at bottom right, and a column of small hotkeys down the right edge (hotbar 1-5, Inv, Spl) inset below the top-right `Menu` button (`topRightInset = 58f`). Multi-touch: walk and attack at once. Toggle in Settings;
+- obeys the realm's `UiProfile` (`game.json` -> `ui`) and combat module: when combat or spells are disabled (`showCombatUi()`, `showSpellsUi()`), the touch **Atk** and **Spell** face buttons, `Spl` hotkey, and empty hotbar slots `1`–`5` are hidden automatically (assigned item slots still appear);
+- swaps the wide top bar and hotbar window for a minimal HUD: `CompactStatus` (frameless name/level + thin vital bars, touch-transparent) and one `Menu` button that opens a grid launcher (filtering out Spells, Party, Map or Chat when disabled by the realm's `UiProfile`). Chat starts minimized;
+- closes open dialogue, shop, and bank modal windows (`closeMapWindows()`) when warping to another map, and provides an in-window **Close** button for choice-less dialogues;
+- the web launcher also injects a non-zoomable viewport and `touch-action: none` so the browser does not pan, zoom or pull-to-refresh over the canvas.
+
+## Settings
+The top bar's `Settings` window (on touch devices: Menu > Settings) has master / sound-effect / music mute + volume sliders (`RetroSoundEngine.sfxVolume`, `sfxMuted`, `bgmVolume`, `musicMuted`), window opacity, the on-screen touch controls toggle, and the interface size. Settings are not yet persisted between sessions.
+
+The attack and interact buttons are **context-sensitive**: from what the hero faces (`ClientWorldState.facingTarget`) they read Work / Harvest (a resource node), Talk (a friendly villager), Shop, Bank, or the plain Atk / Use, so a farming realm never shows "Atk" over a wheat field.
+
+Known gaps: no on-screen keyboard trigger for the chat field in the browser, and no tap-to-move on the map.
+
+## Tap or click to move
+A short tap or click (under 12 px of travel and half a second) on the world walks the player to that tile; the Settings window has a "Tap or click to move" checkbox. `TapPathfinder` (client-core `input`) finds a shortest four-direction route with a breadth-first search, using `ClientWorldState.canTapStep`, which applies the same rules as movement prediction. `TapMoveController` then sends one ordinary move direction per move tick, so the server sees normal `MoveInput`; it re-plans each step and stops on arrival, a map change, any key or touch-pad input, or after about 16 attempts without progress. If the tapped tile cannot be entered (an NPC, a tree), the player walks next to it and turns to face it, ready to talk or harvest. In sub-tile movement it also lines up with the tile before stopping. Routes stay on the current map; crossing a seam is not planned yet.
+
+## World zoom
+World zoom is separate from the interface size below. `WorldZoom` (client-core `render`) picks an integer scale of 1x, 2x or 3x: Auto uses screen density (or 2x on 900p+ screens) but never shows fewer than about 10 tiles on the short side; Settings has a World zoom button to force 1x, 2x or 3x. The camera zoom is `1 / scale` and the camera position snaps to whole screen pixels, so tiles stay crisp. Picking a tile from the mouse already accounts for the camera zoom. While the F1 editor is open its zoom buttons (and **-** / **=**) use finer, non-integer levels instead (`WorldZoom.EDITOR_LEVELS`, 25% to 400%; `MorganaGame.editorScale`), snapped with `WorldZoom.snap(value, Float)`; the game's own setting returns when the editor closes.
+
+## UI zoom
+The `Interface size` button in Settings cycles 75% / 100% / 125% / 150% (`ScreenViewport.unitsPerPixel`, default 100% everywhere) and pulls windows back on screen. Touch detection also accepts `(pointer: coarse)`; on any device the on-screen controls can be switched on in Settings.
+
+## Vital and experience bars
+
+The top-left **Player Unit Frame** (frameless) shows a framed character portrait, character name and level, and stacked vital bars (HP, MP, SP). A kill-charged gauge (`xpGauge`) is hidden unless the character's class can cast a skill that spends it (`VitalBars.visibleIds`, also used by `CompactStatus`). Navigation and system buttons sit in a frameless **bottom-right menu dock** with 16×16 pixel-art icons (`IconArt`: `hud_char`, `hud_bag`, `hud_skills`, `hud_quests`, `hud_craft`, `hud_party`, `hud_guild`, `hud_map`, `hud_settings`) and hotkey labels. All game windows, buttons, and HUD docks use `EditorTheme.beveledPanel` (2-px pixel-art beveled 9-patch chrome). The **hotbar** (`CooldownButton`) renders icon-only 42×42 slots with corner keybind and stack/cost badges in a frameless bottom-center dock, with the full-width **XP bar** (`PaletteRole.XP`) tucked directly underneath.
+
+**Repeat gating (2026-11-17)**: every cast entry point (hotkeys, spellbook Cast, touch buttons) goes through `ClientWorldState.castReady` (not on cooldown, costs payable, 400 ms since the last cast of that spell), and item use, interact and pickup through `actionReady`. A refused press does nothing: no sound, animation or packet.
+
+**Bestiary** (`bestiary` in `game.json`, `BestiaryDefinition`; `CharacterState.bestiary`; `BestiaryModel`, `BestiaryWindow`; `BestiaryModelTest`, `BestiaryTest`): the server counts every kill per monster kind for the killer. The Menu's **Bestiary** window lists the kinds killed; a kind shows its level and kill count from the first kill, its attributes from `statsAfterKills`, and its drops from `dropsAfterKills`, with a hint of how many more kills reveal the next part.

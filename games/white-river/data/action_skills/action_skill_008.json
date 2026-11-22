@@ -1,0 +1,21 @@
+{
+    "id": 8,
+    "name": "Wardstance",
+    "description": "Raise the shield and hold. Blows from the front are mostly turned, at a price in stamina.",
+    "iconId": 69,
+    "levelReq": 4,
+    "startupTicks": 1,
+    "activeTicks": 0,
+    "recoveryTicks": 2,
+    "animationId": 3,
+    "schemaVersion": 2,
+    "aimLock": false,
+    "guard": {
+        "arcDegrees": 140,
+        "maxHoldTicks": 0,
+        "blockCosts": {
+            "sp": 12
+        },
+        "damageReductionPercent": 80
+    }
+}

@@ -1,0 +1,31 @@
+{
+    "id": 2,
+    "name": "Bones of the Crypt",
+    "summary": "Gather 4 Crypt Bones from the undead of Floor 1.",
+    "levelReq": 2,
+    "prerequisiteQuestIds": [
+        1
+    ],
+    "startText": "Forgemaster Torin can shape Crypt Bone into strong gear. Bring back four pieces.",
+    "inProgressText": "Four Crypt Bones \u2014 Gnashers, Marauders, and Grave Golems carry them.",
+    "completionText": "Fine material. Check your crafting menu (J) to forge bone weaponry.",
+    "objectives": [
+        {
+            "type": "COLLECT_ITEM",
+            "targetId": 38,
+            "requiredCount": 4,
+            "description": "Collect Crypt Bones"
+        }
+    ],
+    "reward": {
+        "xp": 180,
+        "currencyAmount": 90,
+        "items": [
+            {
+                "itemId": 39,
+                "amount": 2
+            }
+        ]
+    },
+    "schemaVersion": 1
+}

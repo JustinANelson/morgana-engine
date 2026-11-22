@@ -1,0 +1,16 @@
+{
+    "id": 55,
+    "name": "Ironbound Shield",
+    "description": "Ash, rimmed and bossed with iron.",
+    "type": "SHIELD",
+    "iconId": 55,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 300,
+    "levelReq": 12,
+    "schemaVersion": 2,
+    "armorDefense": 8,
+    "classReqIds": [
+        1
+    ]
+}

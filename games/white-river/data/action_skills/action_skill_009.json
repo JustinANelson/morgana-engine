@@ -1,0 +1,30 @@
+{
+    "id": 9,
+    "name": "Riposte",
+    "description": "The answer from behind the shield.",
+    "iconId": 67,
+    "levelReq": 4,
+    "startupTicks": 2,
+    "activeTicks": 2,
+    "recoveryTicks": 8,
+    "animationId": 1,
+    "schemaVersion": 2,
+    "costs": {
+        "sp": 10
+    },
+    "hitboxes": [
+        {
+            "fromTick": 2,
+            "toTick": 3,
+            "shape": "ARC",
+            "radiusPixels": 48,
+            "arcDegrees": 100,
+            "hit": {
+                "damagePercent": 140,
+                "reaction": "STAGGER",
+                "reactionTicks": 10,
+                "hitStopTicks": 2
+            }
+        }
+    ]
+}

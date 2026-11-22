@@ -1,0 +1,70 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Morgana recipes document",
+    "$ref": "#/$defs/com.morgana.domain.content.RecipeDefinition",
+    "$defs": {
+        "com.morgana.domain.content.RecipeDefinition": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "stationType": {
+                    "type": "string",
+                    "enum": [
+                        "ANYWHERE",
+                        "ANVIL",
+                        "ALCHEMY_TABLE",
+                        "COOKING_FIRE",
+                        "WORKBENCH"
+                    ]
+                },
+                "levelReq": {
+                    "type": "integer"
+                },
+                "ingredients": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.content.RecipeIngredient"
+                    }
+                },
+                "outputItemId": {
+                    "type": "integer"
+                },
+                "outputAmount": {
+                    "type": "integer"
+                },
+                "xpReward": {
+                    "type": "integer"
+                },
+                "schemaVersion": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "id",
+                "name",
+                "outputItemId"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.content.RecipeIngredient": {
+            "type": "object",
+            "properties": {
+                "itemId": {
+                    "type": "integer"
+                },
+                "amount": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "itemId"
+            ],
+            "additionalProperties": false
+        }
+    }
+}

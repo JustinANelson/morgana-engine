@@ -1,0 +1,94 @@
+{
+    "id": 2,
+    "name": "Bex's Smithy",
+    "buyRatePercent": 100,
+    "sellRatePercent": 50,
+    "currencyItemId": 1,
+    "entries": [
+        {
+            "itemId": 34,
+            "amount": 1,
+            "currencyItemId": 1,
+            "priceOverride": 0
+        },
+        {
+            "itemId": 35,
+            "amount": 1,
+            "currencyItemId": 1,
+            "priceOverride": 0
+        },
+        {
+            "itemId": 36,
+            "amount": 1,
+            "currencyItemId": 1,
+            "priceOverride": 0
+        },
+        {
+            "itemId": 46,
+            "amount": 1,
+            "currencyItemId": 1,
+            "priceOverride": 0
+        },
+        {
+            "itemId": 50,
+            "amount": 1,
+            "currencyItemId": 1,
+            "priceOverride": 0
+        },
+        {
+            "itemId": 54,
+            "amount": 1,
+            "currencyItemId": 1,
+            "priceOverride": 0
+        },
+        {
+            "itemId": 57,
+            "amount": 1,
+            "currencyItemId": 1,
+            "priceOverride": 0
+        },
+        {
+            "itemId": 37,
+            "amount": 1,
+            "currencyItemId": 1,
+            "priceOverride": 0
+        },
+        {
+            "itemId": 38,
+            "amount": 1,
+            "currencyItemId": 1,
+            "priceOverride": 0
+        },
+        {
+            "itemId": 39,
+            "amount": 1,
+            "currencyItemId": 1,
+            "priceOverride": 0
+        },
+        {
+            "itemId": 47,
+            "amount": 1,
+            "currencyItemId": 1,
+            "priceOverride": 0
+        },
+        {
+            "itemId": 51,
+            "amount": 1,
+            "currencyItemId": 1,
+            "priceOverride": 0
+        },
+        {
+            "itemId": 55,
+            "amount": 1,
+            "currencyItemId": 1,
+            "priceOverride": 0
+        },
+        {
+            "itemId": 58,
+            "amount": 1,
+            "currencyItemId": 1,
+            "priceOverride": 0
+        }
+    ],
+    "schemaVersion": 2
+}

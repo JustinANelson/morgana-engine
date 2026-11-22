@@ -1,0 +1,19 @@
+{
+    "id": 43,
+    "name": "Paleback Greatsword",
+    "description": "Quenched in glacier melt. Frost follows the edge.",
+    "type": "WEAPON",
+    "iconId": 37,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 3200,
+    "levelReq": 30,
+    "schemaVersion": 2,
+    "attackDamage": 46,
+    "attackSpeedTicks": 11,
+    "rangeTiles": 1,
+    "weaponStyle": "MELEE",
+    "classReqIds": [
+        1
+    ]
+}

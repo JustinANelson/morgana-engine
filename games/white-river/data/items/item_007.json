@@ -1,0 +1,15 @@
+{
+    "id": 7,
+    "name": "Wayfarer's Tea",
+    "description": "Restores 60 stamina.",
+    "type": "CONSUMABLE",
+    "iconId": 7,
+    "stackable": true,
+    "maxStack": 999,
+    "price": 10,
+    "levelReq": 1,
+    "schemaVersion": 2,
+    "restore": {
+        "sp": 60
+    }
+}

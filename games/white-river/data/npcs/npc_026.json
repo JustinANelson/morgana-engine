@@ -1,0 +1,110 @@
+{
+    "id": 26,
+    "name": "Reedfolk Stalker",
+    "title": "",
+    "spriteId": 106,
+    "behavior": "ATTACK_ON_SIGHT",
+    "level": 13,
+    "attributes": {
+        "str": 19,
+        "agi": 12,
+        "int": 19,
+        "vit": 19
+    },
+    "vitals": {
+        "hp": 238,
+        "mp": 100
+    },
+    "attackDamage": 22,
+    "attackSpeedTicks": 20,
+    "moveSpeedTicks": 18,
+    "aggroRangeTiles": 6,
+    "leashRangeTiles": 12,
+    "xpReward": 378,
+    "drops": [
+        {
+            "itemId": 1,
+            "minAmount": 13,
+            "maxAmount": 52,
+            "chanceBasisPoints": 7500
+        },
+        {
+            "itemId": 3,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 600
+        },
+        {
+            "itemId": 25,
+            "minAmount": 1,
+            "maxAmount": 2,
+            "chanceBasisPoints": 4000
+        },
+        {
+            "itemId": 37,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 38,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 39,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 47,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 51,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 55,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 58,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 62,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 64,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 29,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 10
+        }
+    ],
+    "spellIds": [],
+    "shopId": 0,
+    "eventId": 0,
+    "chatGreeting": "",
+    "animationId": 0,
+    "schemaVersion": 2
+}

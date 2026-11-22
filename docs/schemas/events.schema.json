@@ -1,0 +1,949 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Morgana events document",
+    "$ref": "#/$defs/com.morgana.domain.event.EventDefinition",
+    "$defs": {
+        "com.morgana.domain.event.EventDefinition": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "mapId": {
+                    "type": "integer"
+                },
+                "tileX": {
+                    "type": "integer"
+                },
+                "tileY": {
+                    "type": "integer"
+                },
+                "pages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.event.EventPage"
+                    }
+                },
+                "schemaVersion": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "id",
+                "name"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.event.EventPage": {
+            "type": "object",
+            "properties": {
+                "pageIndex": {
+                    "type": "integer"
+                },
+                "condition": {
+                    "$ref": "#/$defs/com.morgana.domain.event.EventPageCondition"
+                },
+                "trigger": {
+                    "type": "string",
+                    "enum": [
+                        "ACTION_INTERACT",
+                        "PLAYER_TOUCH",
+                        "AUTORUN_ON_ENTER"
+                    ]
+                },
+                "spriteId": {
+                    "type": "integer"
+                },
+                "commands": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.event.EventCommand"
+                    }
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.event.EventPageCondition": {
+            "type": "object",
+            "properties": {
+                "requiredSwitchId": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "requiredSwitchValue": {
+                    "type": "boolean"
+                },
+                "switchScope": {
+                    "type": "string",
+                    "enum": [
+                        "PLAYER",
+                        "WORLD"
+                    ]
+                },
+                "variableId": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "minVariableValue": {
+                    "type": "integer"
+                },
+                "variableScope": {
+                    "type": "string",
+                    "enum": [
+                        "PLAYER",
+                        "WORLD"
+                    ]
+                },
+                "requiredQuestId": {
+                    "type": "integer"
+                },
+                "requiredQuestStatus": {
+                    "anyOf": [
+                        {
+                            "type": "string",
+                            "enum": [
+                                "IN_PROGRESS",
+                                "COMPLETED"
+                            ]
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "requiredItemId": {
+                    "type": "integer"
+                },
+                "minPlayerLevel": {
+                    "type": "integer"
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.event.EventCommand": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "add_variable"
+                        },
+                        "variableId": {
+                            "type": "string"
+                        },
+                        "delta": {
+                            "type": "integer"
+                        },
+                        "scope": {
+                            "type": "string",
+                            "enum": [
+                                "PLAYER",
+                                "WORLD"
+                            ]
+                        }
+                    },
+                    "required": [
+                        "_type",
+                        "variableId",
+                        "delta"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "arena_queue"
+                        },
+                        "action": {
+                            "type": "string",
+                            "enum": [
+                                "JOIN",
+                                "LEAVE",
+                                "RATING",
+                                "STANDINGS"
+                            ]
+                        },
+                        "size": {
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "_type"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "break_loop"
+                        }
+                    },
+                    "required": [
+                        "_type"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "complete_quest"
+                        },
+                        "questId": {
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "_type",
+                        "questId"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "if"
+                        },
+                        "condition": {
+                            "$ref": "#/$defs/com.morgana.domain.event.EventCondition"
+                        },
+                        "then": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/com.morgana.domain.event.EventCommand"
+                            }
+                        },
+                        "otherwise": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/com.morgana.domain.event.EventCommand"
+                            }
+                        },
+                        "extraConditions": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/com.morgana.domain.event.EventCondition"
+                            }
+                        },
+                        "matchMode": {
+                            "type": "string",
+                            "enum": [
+                                "ALL",
+                                "ANY"
+                            ]
+                        }
+                    },
+                    "required": [
+                        "_type"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "give_item"
+                        },
+                        "itemId": {
+                            "type": "integer"
+                        },
+                        "amount": {
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "_type",
+                        "itemId"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "give_xp"
+                        },
+                        "amount": {
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "_type",
+                        "amount"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "heal_player"
+                        }
+                    },
+                    "required": [
+                        "_type"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "kotlin_hook"
+                        },
+                        "hookId": {
+                            "type": "string"
+                        },
+                        "payload": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "required": [
+                        "_type",
+                        "hookId"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "jump_to_label"
+                        },
+                        "name": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "_type"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "label"
+                        },
+                        "name": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "_type"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "loop"
+                        },
+                        "commands": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/com.morgana.domain.event.EventCommand"
+                            }
+                        }
+                    },
+                    "required": [
+                        "_type"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "move_npc"
+                        },
+                        "npcId": {
+                            "type": "integer"
+                        },
+                        "direction": {
+                            "type": "string",
+                            "enum": [
+                                "UP",
+                                "DOWN",
+                                "LEFT",
+                                "RIGHT",
+                                "UP_LEFT",
+                                "UP_RIGHT",
+                                "DOWN_LEFT",
+                                "DOWN_RIGHT"
+                            ]
+                        },
+                        "steps": {
+                            "type": "integer"
+                        },
+                        "faceOnly": {
+                            "type": "boolean"
+                        }
+                    },
+                    "required": [
+                        "_type"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "open_bank"
+                        }
+                    },
+                    "required": [
+                        "_type"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "open_crafting"
+                        },
+                        "stationType": {
+                            "type": "string",
+                            "enum": [
+                                "ANYWHERE",
+                                "ANVIL",
+                                "ALCHEMY_TABLE",
+                                "COOKING_FIRE",
+                                "WORKBENCH"
+                            ]
+                        }
+                    },
+                    "required": [
+                        "_type"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "open_shop"
+                        },
+                        "shopId": {
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "_type",
+                        "shopId"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "play_animation"
+                        },
+                        "animationId": {
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "_type",
+                        "animationId"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "play_sound"
+                        },
+                        "soundId": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "_type"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "promote"
+                        }
+                    },
+                    "required": [
+                        "_type"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "rebirth"
+                        },
+                        "classId": {
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "_type"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "repair_gear"
+                        },
+                        "currencyItemId": {
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "_type"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "respec_attributes"
+                        },
+                        "currencyItemId": {
+                            "type": "integer"
+                        },
+                        "pricePerPoint": {
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "_type"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "run_common_event"
+                        },
+                        "commonEventId": {
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "_type",
+                        "commonEventId"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "set_switch"
+                        },
+                        "switchId": {
+                            "type": "string"
+                        },
+                        "value": {
+                            "type": "boolean"
+                        },
+                        "scope": {
+                            "type": "string",
+                            "enum": [
+                                "PLAYER",
+                                "WORLD"
+                            ]
+                        }
+                    },
+                    "required": [
+                        "_type",
+                        "switchId",
+                        "value"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "set_variable"
+                        },
+                        "variableId": {
+                            "type": "string"
+                        },
+                        "value": {
+                            "type": "integer"
+                        },
+                        "scope": {
+                            "type": "string",
+                            "enum": [
+                                "PLAYER",
+                                "WORLD"
+                            ]
+                        }
+                    },
+                    "required": [
+                        "_type",
+                        "variableId",
+                        "value"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "dialogue"
+                        },
+                        "speakerName": {
+                            "type": "string"
+                        },
+                        "text": {
+                            "type": "string"
+                        },
+                        "portraitId": {
+                            "type": "integer"
+                        },
+                        "choices": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/com.morgana.domain.event.DialogueChoice"
+                            }
+                        }
+                    },
+                    "required": [
+                        "_type",
+                        "speakerName",
+                        "text"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "message"
+                        },
+                        "text": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "_type",
+                        "text"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "show_picture"
+                        },
+                        "pictureId": {
+                            "type": "string"
+                        },
+                        "title": {
+                            "type": "string"
+                        },
+                        "durationTicks": {
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "_type"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "start_quest"
+                        },
+                        "questId": {
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "_type",
+                        "questId"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "stop"
+                        }
+                    },
+                    "required": [
+                        "_type"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "take_item"
+                        },
+                        "itemId": {
+                            "type": "integer"
+                        },
+                        "amount": {
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "_type",
+                        "itemId"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "teach_spell"
+                        },
+                        "spellId": {
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "_type",
+                        "spellId"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "text_input"
+                        },
+                        "prompt": {
+                            "type": "string"
+                        },
+                        "variableId": {
+                            "type": "string"
+                        },
+                        "scope": {
+                            "type": "string",
+                            "enum": [
+                                "PLAYER",
+                                "WORLD"
+                            ]
+                        },
+                        "isNumeric": {
+                            "type": "boolean"
+                        },
+                        "defaultValue": {
+                            "type": "string"
+                        },
+                        "maxLength": {
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "_type"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "upgrade_gear"
+                        },
+                        "kind": {
+                            "type": "string",
+                            "enum": [
+                                "ADD_SOCKET",
+                                "SOCKET_GEM",
+                                "UPGRADE_LEVEL",
+                                "UPGRADE_QUALITY",
+                                "ENHANCE"
+                            ]
+                        },
+                        "slot": {
+                            "$ref": "#/$defs/com.morgana.domain.item.EquipmentSlot"
+                        },
+                        "materialItemId": {
+                            "type": "integer"
+                        },
+                        "amount": {
+                            "type": "integer"
+                        },
+                        "successPercent": {
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "_type"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "wait"
+                        },
+                        "ticks": {
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "_type"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "warp_player"
+                        },
+                        "mapId": {
+                            "type": "integer"
+                        },
+                        "tileX": {
+                            "type": "integer"
+                        },
+                        "tileY": {
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "_type",
+                        "mapId",
+                        "tileX",
+                        "tileY"
+                    ],
+                    "additionalProperties": false
+                }
+            ]
+        },
+        "com.morgana.domain.event.EventCondition": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "SWITCH",
+                        "VARIABLE",
+                        "HAS_ITEM",
+                        "QUEST",
+                        "LEVEL",
+                        "CLASS",
+                        "KNOWS_SPELL",
+                        "CHANCE",
+                        "GUILD_HOLDS_AREA"
+                    ]
+                },
+                "key": {
+                    "type": "string"
+                },
+                "targetId": {
+                    "type": "integer"
+                },
+                "comparison": {
+                    "type": "string",
+                    "enum": [
+                        "EQUAL",
+                        "NOT_EQUAL",
+                        "AT_LEAST",
+                        "AT_MOST",
+                        "GREATER",
+                        "LESS"
+                    ]
+                },
+                "value": {
+                    "type": "integer"
+                },
+                "quest": {
+                    "type": "string",
+                    "enum": [
+                        "NOT_STARTED",
+                        "IN_PROGRESS",
+                        "READY_TO_COMPLETE",
+                        "COMPLETED"
+                    ]
+                },
+                "scope": {
+                    "type": "string",
+                    "enum": [
+                        "PLAYER",
+                        "WORLD"
+                    ]
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.event.DialogueChoice": {
+            "type": "object",
+            "properties": {
+                "label": {
+                    "type": "string"
+                },
+                "commands": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.event.EventCommand"
+                    }
+                }
+            },
+            "required": [
+                "label"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.item.EquipmentSlot": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id"
+            ],
+            "additionalProperties": false
+        }
+    }
+}

@@ -1,0 +1,18 @@
+{
+    "id": 4,
+    "name": "Whitefin Shoal",
+    "category": "FISHING_SPOT",
+    "intactSpriteId": 1,
+    "depletedSpriteId": 2,
+    "requiredTool": "FISHING_ROD",
+    "rewardItemId": 20,
+    "minYield": 1,
+    "maxYield": 2,
+    "maxHealth": 3,
+    "respawnTicks": 240,
+    "xpReward": 8,
+    "emptyMessage": "Nothing left here for now. Give it a little while.",
+    "successMessage": "You land a whitefin.",
+    "animationId": 0,
+    "schemaVersion": 2
+}

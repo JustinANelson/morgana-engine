@@ -1,0 +1,32 @@
+{
+    "id": 23,
+    "name": "Fire Wave",
+    "description": "Sweep a blazing arc around you, pushing foes back.",
+    "iconId": 35,
+    "startupTicks": 4,
+    "activeTicks": 3,
+    "recoveryTicks": 8,
+    "costs": {
+        "mp": 12
+    },
+    "cooldownTicks": 40,
+    "animationId": 1,
+    "soundId": "spell_fire",
+    "schemaVersion": 2,
+    "hitboxes": [
+        {
+            "fromTick": 4,
+            "toTick": 6,
+            "shape": "ARC",
+            "radiusPixels": 64,
+            "arcDegrees": 150,
+            "hit": {
+                "damageKind": "SPELL",
+                "damagePercent": 150,
+                "reaction": "STAGGER",
+                "reactionTicks": 8,
+                "knockbackPixels": 20
+            }
+        }
+    ]
+}

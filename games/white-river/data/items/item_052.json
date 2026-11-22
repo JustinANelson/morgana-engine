@@ -1,0 +1,16 @@
+{
+    "id": 52,
+    "name": "Chalkmail",
+    "description": "Mail dusted white from the Hollow.",
+    "type": "ARMOR",
+    "iconId": 52,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 1000,
+    "levelReq": 20,
+    "schemaVersion": 2,
+    "armorDefense": 17,
+    "vitalMaxBonuses": {
+        "hp": 70
+    }
+}

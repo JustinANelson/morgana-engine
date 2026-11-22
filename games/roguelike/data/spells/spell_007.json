@@ -1,0 +1,19 @@
+{
+    "id": 7,
+    "name": "Crypt Nova",
+    "description": "A wave of dark ash bursts around the Ashen Warden.",
+    "iconId": 40,
+    "targetType": "AOE_SELF_CENTERED",
+    "levelReq": 1,
+    "costs": {},
+    "scales": false,
+    "cooldownTicks": 80,
+    "rangeTiles": 0,
+    "aoeRadiusTiles": 3,
+    "basePower": 24,
+    "animationId": 5,
+    "statusEffectType": "SLOW",
+    "statusMagnitude": 30,
+    "statusDurationTicks": 60,
+    "schemaVersion": 1
+}

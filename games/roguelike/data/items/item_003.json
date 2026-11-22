@@ -1,0 +1,22 @@
+{
+    "id": 3,
+    "name": "Iron Broadsword",
+    "description": "A dependable Keep-forged blade.",
+    "type": "WEAPON",
+    "iconId": 3,
+    "price": 95,
+    "schemaVersion": 1,
+    "levelReq": 2,
+    "attackDamage": 11,
+    "attackSpeedTicks": 10,
+    "rangeTiles": 1,
+    "weaponStyle": "MELEE",
+    "weaponType": "sword",
+    "paperdollSpriteId": 4,
+    "paperdollSlot": "MAIN_HAND",
+    "paperdollClassTints": {
+        "1": "#c95046",
+        "2": "#4f8a5b",
+        "3": "#d97736"
+    }
+}

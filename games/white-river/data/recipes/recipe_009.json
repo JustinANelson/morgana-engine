@@ -1,0 +1,16 @@
+{
+    "id": 9,
+    "name": "Fletch Arrows",
+    "stationType": "WORKBENCH",
+    "levelReq": 1,
+    "ingredients": [
+        {
+            "itemId": 16,
+            "amount": 1
+        }
+    ],
+    "outputItemId": 32,
+    "outputAmount": 40,
+    "xpReward": 10,
+    "schemaVersion": 2
+}

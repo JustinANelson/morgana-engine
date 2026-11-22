@@ -1,0 +1,98 @@
+{
+    "id": 33,
+    "name": "Rime Yeti",
+    "title": "",
+    "spriteId": 114,
+    "behavior": "ATTACK_ON_SIGHT",
+    "level": 28,
+    "attributes": {
+        "str": 34,
+        "agi": 20,
+        "int": 34,
+        "vit": 37
+    },
+    "vitals": {
+        "hp": 764,
+        "mp": 100
+    },
+    "attackDamage": 51,
+    "attackSpeedTicks": 20,
+    "moveSpeedTicks": 20,
+    "aggroRangeTiles": 6,
+    "leashRangeTiles": 12,
+    "xpReward": 1189,
+    "drops": [
+        {
+            "itemId": 1,
+            "minAmount": 28,
+            "maxAmount": 112,
+            "chanceBasisPoints": 7500
+        },
+        {
+            "itemId": 4,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 600
+        },
+        {
+            "itemId": 28,
+            "minAmount": 1,
+            "maxAmount": 2,
+            "chanceBasisPoints": 4000
+        },
+        {
+            "itemId": 43,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 44,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 45,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 49,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 53,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 56,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 60,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 29,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 18
+        }
+    ],
+    "spellIds": [],
+    "shopId": 0,
+    "eventId": 0,
+    "chatGreeting": "",
+    "animationId": 0,
+    "schemaVersion": 2
+}

@@ -1,0 +1,29 @@
+{
+    "id": 1,
+    "name": "Keep Slash",
+    "description": "Swift opening cut. Chains into Cross Cut.",
+    "iconId": 2,
+    "startupTicks": 2,
+    "activeTicks": 3,
+    "recoveryTicks": 5,
+    "cancelFromTick": 4,
+    "animationId": 6,
+    "soundId": "combat_swing",
+    "schemaVersion": 2,
+    "hitboxes": [
+        {
+            "fromTick": 2,
+            "toTick": 4,
+            "shape": "ARC",
+            "radiusPixels": 46,
+            "arcDegrees": 115,
+            "hit": {
+                "damageKind": "MELEE",
+                "damagePercent": 90,
+                "reaction": "STAGGER",
+                "reactionTicks": 4,
+                "hitStopTicks": 1
+            }
+        }
+    ]
+}

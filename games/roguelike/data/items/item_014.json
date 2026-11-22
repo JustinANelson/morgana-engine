@@ -1,0 +1,17 @@
+{
+    "id": 14,
+    "name": "Wooden Buckler",
+    "description": "A light iron-rimmed buckler.",
+    "type": "SHIELD",
+    "iconId": 14,
+    "price": 35,
+    "schemaVersion": 1,
+    "armorDefense": 3,
+    "paperdollSpriteId": 7,
+    "paperdollSlot": "OFF_HAND",
+    "paperdollClassTints": {
+        "1": "#c95046",
+        "2": "#4f8a5b",
+        "3": "#d97736"
+    }
+}

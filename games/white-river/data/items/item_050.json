@@ -1,0 +1,13 @@
+{
+    "id": 50,
+    "name": "Padded Coat",
+    "description": "Quilted wool. Keeps out rats and rain.",
+    "type": "ARMOR",
+    "iconId": 50,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 55,
+    "levelReq": 1,
+    "schemaVersion": 2,
+    "armorDefense": 4
+}

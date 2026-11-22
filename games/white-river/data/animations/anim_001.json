@@ -1,0 +1,10 @@
+{
+    "id": 1,
+    "name": "Slash",
+    "spriteSheetId": 1,
+    "frameCount": 4,
+    "frameDurationMs": 80,
+    "soundId": "",
+    "renderAboveEntities": true,
+    "schemaVersion": 2
+}

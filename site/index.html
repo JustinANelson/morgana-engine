@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Morgana ORPG — a 2D engine for online RPGs</title>
+<meta name="description" content="Morgana ORPG is a cross-platform 2D game engine on Kotlin and LibGDX for online RPGs and co-op dungeon crawlers. Desktop, Android and browser from one client core. A game is data plus sandboxed Lua.">
+<meta property="og:title" content="Morgana ORPG">
+<meta property="og:description" content="Build online RPGs and roguelikes while standing in the world. Deterministic Kotlin core, live F1 editors, data-first content.">
+<meta property="og:image" content="img/08-painted.png">
+<style>
+:root{
+  --bg:#12100e; --panel:#1c1814; --panel2:#241f19; --line:#3a3128;
+  --text:#e9e1d3; --muted:#a79b88; --accent:#e0a040; --accent2:#7fb069;
+  --code:#0d0b09; --radius:10px;
+}
+:root[data-theme="light"]{
+  --bg:#f6f1e7; --panel:#fffaf0; --panel2:#efe6d3; --line:#d8cbb0;
+  --text:#2a241b; --muted:#6d6252; --accent:#a8650a; --accent2:#3d7a2e; --code:#2a241b;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#f6f1e7; --panel:#fffaf0; --panel2:#efe6d3; --line:#d8cbb0;
+    --text:#2a241b; --muted:#6d6252; --accent:#a8650a; --accent2:#3d7a2e; --code:#2a241b;
+  }
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);
+  font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+.wrap{max-width:1080px;margin:0 auto;padding:0 16px}
+nav{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--bg) 88%,transparent);
+  backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;gap:20px;height:56px}
+nav .brand{font-weight:700;letter-spacing:.04em;color:var(--text)}
+nav .brand span{color:var(--accent)}
+nav .links{margin-left:auto;display:flex;gap:18px;align-items:center;font-size:14px}
+nav .links a.hide-sm{color:var(--muted)}
+button.theme{background:none;border:1px solid var(--line);color:var(--muted);border-radius:6px;
+  padding:4px 9px;cursor:pointer;font:inherit;font-size:13px}
+.hero{padding:72px 0 48px;text-align:center}
+.hero h1{font-size:clamp(2.2rem,6vw,3.8rem);line-height:1.1;margin:0 0 16px;letter-spacing:-.02em}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.hero p.lead{max-width:680px;margin:0 auto 28px;color:var(--muted);font-size:1.15rem}
+.btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn{display:inline-block;padding:11px 22px;border-radius:8px;font-weight:600;border:1px solid var(--line);
+  color:var(--text);background:var(--panel)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#1a1209}
+.btn:hover{text-decoration:none;filter:brightness(1.1)}
+.hero .shot{margin:48px auto 0;max-width:960px}
+.shot img{width:100%;height:auto;display:block;border-radius:var(--radius);border:1px solid var(--line);
+  box-shadow:0 20px 60px rgba(0,0,0,.45);image-rendering:auto}
+.badges{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:28px}
+.badge{font-size:13px;color:var(--muted);border:1px solid var(--line);background:var(--panel);
+  border-radius:999px;padding:3px 12px}
+section{padding:56px 0;border-top:1px solid var(--line)}
+section h2{font-size:1.9rem;margin:0 0 8px;letter-spacing:-.01em}
+section .sub{color:var(--muted);margin:0 0 32px;max-width:720px}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+.card h3{margin:0 0 8px;font-size:1.05rem;color:var(--accent)}
+.card p{margin:0;color:var(--muted);font-size:.95rem}
+.split{display:grid;gap:32px;grid-template-columns:1fr 1fr;align-items:center}
+.split.flip .text{order:2}
+.split h3{font-size:1.4rem;margin:0 0 10px}
+.split p{color:var(--muted)}
+.split ul{color:var(--muted);padding-left:20px}
+.split li{margin:4px 0}
+pre{background:var(--code);color:#e9e1d3;border:1px solid var(--line);border-radius:var(--radius);
+  padding:16px;overflow-x:auto;font:13.5px/1.55 ui-monospace,Consolas,Menlo,monospace;margin:0}
+pre .c{color:#8a7f6c}
+pre .k{color:#e0a040}
+code{font-family:ui-monospace,Consolas,Menlo,monospace;font-size:.9em;background:var(--panel2);
+  padding:1px 6px;border-radius:4px}
+.layers{display:grid;gap:10px}
+.layer{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--accent);
+  border-radius:8px;padding:14px 18px}
+.layer:nth-child(2){border-left-color:var(--accent2)}
+.layer:nth-child(3){border-left-color:#6aa0d8}
+.layer:nth-child(4){border-left-color:#c070b0}
+.layer b{display:block}
+.layer span{color:var(--muted);font-size:.93rem}
+table{width:100%;border-collapse:collapse;font-size:.95rem}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:600;font-size:.85rem;text-transform:uppercase;letter-spacing:.05em}
+td:first-child{white-space:nowrap}
+.tablewrap{overflow-x:auto}
+.steps{counter-reset:s;display:grid;gap:12px}
+.step{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px 16px 56px;position:relative}
+.step::before{counter-increment:s;content:counter(s);position:absolute;left:16px;top:14px;width:28px;height:28px;
+  border-radius:50%;background:var(--accent);color:#1a1209;font-weight:700;display:grid;place-items:center}
+.step b{display:block;margin-bottom:6px}
+footer{border-top:1px solid var(--line);padding:32px 0 48px;color:var(--muted);font-size:14px;text-align:center}
+@media (max-width:760px){
+  .split,.split.flip{grid-template-columns:1fr}
+  .split.flip .text{order:0}
+  nav .links a.hide-sm{display:none}
+  .hero{padding-top:48px}
+}
+</style>
+</head>
+<body>
+<nav>
+  <div class="wrap">
+    <a class="brand" href="#top">MORGANA<span>·</span>ORPG</a>
+    <div class="links">
+      <a class="hide-sm" href="#features">Features</a>
+      <a class="hide-sm" href="#editor">Editor</a>
+      <a class="hide-sm" href="#architecture">Architecture</a>
+      <a class="hide-sm" href="#games">Games</a>
+      <a class="hide-sm" href="#start">Get started</a>
+      <a href="https://github.com/JustinANelson/morgana-orpg">GitHub</a>
+      <button class="theme" id="theme" aria-label="Toggle light and dark theme">Theme</button>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <h1>Build online RPGs<br><em>while standing in them.</em></h1>
+    <p class="lead">Morgana is a cross-platform 2D engine on Kotlin and LibGDX for online RPGs and co-op dungeon crawlers. One client core runs on desktop, Android and the browser. A game is just data and sandboxed Lua.</p>
+    <div class="btns">
+      <a class="btn primary" href="#start">Get started</a>
+      <a class="btn" href="https://github.com/JustinANelson/morgana-orpg">View on GitHub</a>
+    </div>
+    <div class="badges">
+      <span class="badge">Kotlin</span><span class="badge">LibGDX</span><span class="badge">Desktop</span>
+      <span class="badge">Android</span><span class="badge">Browser (TeaVM)</span><span class="badge">Lua scripting</span>
+      <span class="badge">Deterministic 20 TPS</span>
+    </div>
+    <figure class="shot" style="margin-top:48px">
+      <img src="img/08-painted.png" alt="The F1 live map editor open over a running world, with tileset, layers and map properties panels" width="1280" height="720">
+    </figure>
+  </div>
+</header>
+
+<section id="features">
+  <div class="wrap">
+    <h2>What you get</h2>
+    <p class="sub">The spirit of Mirage Source and Player Worlds (simple to run, easy to host yourself) with a modern, testable core.</p>
+    <div class="grid">
+      <div class="card"><h3>Live <code>F1</code> editors</h3><p>Press F1 in-game to edit maps, dungeon floor recipes, items, NPCs and bosses, spells, shops, quests, events, animations, classes, game rules and more, without a restart.</p></div>
+      <div class="card"><h3>Deterministic core</h3><p>A pure Kotlin simulation at 20 ticks per second with seeded RNG, so results are reproducible and easy to test.</p></div>
+      <div class="card"><h3>Data first</h3><p>Every piece of content is a schema-validated JSON file. Author it in the GUI, a text editor, Tiled or scripts; it all goes through one validation and hot-reload pipeline.</p></div>
+      <div class="card"><h3>Roguelike dungeons</h3><p>Procedural floors (rooms and corridors, caves, BSP, open arena), instanced co-op runs, configurable permadeath, extraction runs, boons, skill trees and random loot affixes.</p></div>
+      <div class="card"><h3>Realtime and action combat</h3><p>Combos, hitboxes, dodge i-frames, piercing projectiles and ground-targeted AoEs, alongside parties, guilds, trading and page-based quests.</p></div>
+      <div class="card"><h3>Engine and game are separate</h3><p>The engine knows no particular game. Attributes, formulas, loot and rules live in a game folder, and a boundary test enforces the split.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="editor">
+  <div class="wrap">
+    <div class="split">
+      <div class="text">
+        <h3>Edit the world you're standing in</h3>
+        <p>The first account on a server becomes Owner. Press <code>F1</code> and a full editor suite opens over the live game: paint tiles on layered maps, place NPC spawns, tune items and spells, then save. Changes go through the same validation as hand-edited JSON.</p>
+        <ul>
+          <li>Layered tile painting with undo, zoom and attributes</li>
+          <li>Dockable, resizable panels and saved layouts</li>
+          <li>Never GUI-only: everything it makes is plain JSON on disk</li>
+        </ul>
+      </div>
+      <figure class="shot" style="margin:0"><img src="img/08-painted.png" alt="Map editor with tileset, layers and attributes panels" loading="lazy"></figure>
+    </div>
+    <div class="split flip" style="margin-top:56px">
+      <div class="text">
+        <h3>Plugins describe UI, the client draws it</h3>
+        <p>Server plugins and Lua scripts declare windows as data, and the standard client renders them identically on every platform. The welcome window here was described by a server plugin.</p>
+        <ul>
+          <li>Minimap, chat channels, hotbar and window system built in</li>
+          <li>Inventory, equipment, character and world map panels</li>
+        </ul>
+      </div>
+      <figure class="shot" style="margin:0"><img src="img/02-in-world.png" alt="In-game HUD with a plugin-described welcome window, chat and minimap" loading="lazy"></figure>
+    </div>
+    <div class="split" style="margin-top:56px">
+      <div class="text">
+        <h3>Play anywhere</h3>
+        <p>The same client core compiles to JavaScript for the browser, with touch controls and a phone layout, and ships as an Android APK. A browser build can be published straight to itch.io.</p>
+        <ul>
+          <li>Desktop: LibGDX on the JVM</li>
+          <li>Browser: TeaVM, served by the game server or hosted statically</li>
+          <li>Android: debug APK from one Gradle task</li>
+        </ul>
+      </div>
+      <figure class="shot" style="margin:0;max-width:300px;justify-self:center"><img src="img/15-phone-in-world.png" alt="The browser client on a phone with touch buttons" loading="lazy"></figure>
+    </div>
+  </div>
+</section>
+
+<section id="architecture">
+  <div class="wrap">
+    <h2>Architecture</h2>
+    <p class="sub">Four layers with strict seams. Optional features are systems that plug into the kernel; nothing else reaches in.</p>
+    <div class="layers">
+      <div class="layer"><b>Core</b><span>Pure deterministic rules and the 20 TPS simulation. No I/O, networking, persistence or rendering.</span></div>
+      <div class="layer"><b>Systems</b><span>Optional gameplay features installed by the simulation through kernel seams. A genre is a tag on systems, never a layer.</span></div>
+      <div class="layer"><b>Templates</b><span>Starting games and content you can copy and reshape.</span></div>
+      <div class="layer"><b>Plugins</b><span>Server extensions and sandboxed Lua scripts for per-game behaviour.</span></div>
+    </div>
+    <div class="tablewrap" style="margin-top:32px">
+      <table>
+        <thead><tr><th>Module</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td><code>core-domain</code></td><td>Pure rules, simulation, content validation</td></tr>
+          <tr><td><code>shared-protocol</code></td><td>Client and server packets and codecs</td></tr>
+          <tr><td><code>server-persistence</code></td><td>JSON document store, content loader, schema export</td></tr>
+          <tr><td><code>server-app</code></td><td>Netty server, hot reload, content CLI</td></tr>
+          <tr><td><code>client-core</code></td><td>LibGDX renderer, HUD, F1 editors, net client</td></tr>
+          <tr><td><code>script-luak</code></td><td>Sandboxed Lua runtime</td></tr>
+          <tr><td><code>client-desktop</code> · <code>client-android</code> · <code>client-web</code></td><td>Platform launchers around the shared client core</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="games">
+  <div class="wrap">
+    <h2>A game is a folder</h2>
+    <p class="sub">No engine changes needed to make a new game. Scaffold one, then edit it directly in a text editor or in the F1 editors.</p>
+    <div class="split">
+      <pre><span class="c"># games/my-game</span>
+game.json      <span class="c"># rules, attributes, formulas</span>
+data/          <span class="c"># schema-versioned JSON content</span>
+assets/        <span class="c"># your art and audio</span>
+scripts/       <span class="c"># sandboxed Lua</span></pre>
+      <div class="text">
+        <p>The repo ships several games to learn from:</p>
+        <ul>
+          <li><b>blank</b> and <b>tutorial-village</b>: minimal starting points</li>
+          <li><b>roguelike</b>: the Ashen Keep co-op dungeon crawler template</li>
+          <li><b>halcyon-reach</b> and <b>white-river</b>: larger worlds</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="start">
+  <div class="wrap">
+    <h2>Get started</h2>
+    <p class="sub">Needs Java 17+. On macOS or Linux use <code>./gradlew</code> instead of <code>.\gradlew.bat</code>.</p>
+    <div class="steps">
+      <div class="step"><b>No code: use the GUI</b>
+<pre>.\gradlew.bat :client-desktop:run</pre>
+        Open Local Worlds, run the New Realm Wizard, press Play, then press <code>F1</code>.</div>
+      <div class="step"><b>Or scaffold a game and run a dedicated server</b>
+<pre>.\gradlew.bat :server-app:newGame -PcontentArgs="--name 'My Game' --dir games/my-game"
+.\gradlew.bat :server-app:run --args="--game games/my-game"
+.\gradlew.bat :client-desktop:run</pre></div>
+      <div class="step"><b>Verify everything</b>
+<pre>.\gradlew.bat check</pre>
+        Runs unit and integration tests, schema drift and module-boundary checks, and the wiki lint.</div>
+    </div>
+    <div class="btns" style="margin-top:32px">
+      <a class="btn primary" href="https://github.com/JustinANelson/morgana-orpg/blob/main/docs/GETTING_STARTED.md">Make your first game</a>
+      <a class="btn" href="https://github.com/JustinANelson/morgana-orpg/blob/main/docs/BUILD_A_ROGUELIKE_IN_F1.md">Build a roguelike in F1</a>
+      <a class="btn" href="https://github.com/JustinANelson/morgana-orpg/blob/main/docs/API_REFERENCE.md">Lua API reference</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    Morgana ORPG · <a href="https://github.com/JustinANelson/morgana-orpg">Source on GitHub</a> ·
+    <a href="https://github.com/JustinANelson/morgana-orpg/blob/main/wiki/index.md">Project wiki</a> ·
+    <a href="https://github.com/JustinANelson/morgana-orpg/blob/main/CONTRIBUTING.md">Contribute</a>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var root=document.documentElement,btn=document.getElementById('theme');
+  try{var t=localStorage.getItem('theme');if(t)root.setAttribute('data-theme',t)}catch(e){}
+  btn.addEventListener('click',function(){
+    var cur=root.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');
+    var next=cur==='dark'?'light':'dark';
+    root.setAttribute('data-theme',next);
+    try{localStorage.setItem('theme',next)}catch(e){}
+  });
+})();
+</script>
+</body>
+</html>

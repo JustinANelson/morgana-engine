@@ -1,0 +1,16 @@
+{
+    "id": 1,
+    "name": "Saw Ash Planks",
+    "stationType": "WORKBENCH",
+    "levelReq": 1,
+    "ingredients": [
+        {
+            "itemId": 15,
+            "amount": 2
+        }
+    ],
+    "outputItemId": 16,
+    "outputAmount": 1,
+    "xpReward": 10,
+    "schemaVersion": 2
+}

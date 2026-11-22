@@ -1,0 +1,31 @@
+{
+    "id": 18,
+    "name": "Drowned Wail",
+    "description": "A cry from under the water.",
+    "iconId": 83,
+    "targetType": "AOE_SELF_CENTERED",
+    "levelReq": 1,
+    "classReqIds": [],
+    "costs": {
+        "mp": 6
+    },
+    "scales": false,
+    "castTimeTicks": 0,
+    "cooldownTicks": 90,
+    "rangeTiles": 3,
+    "aoeRadiusTiles": 2,
+    "basePower": 18,
+    "isHealing": false,
+    "projectileSpriteId": 0,
+    "animationId": 17,
+    "statusEffectType": "SLOW",
+    "statusMagnitude": 25,
+    "statusDurationTicks": 50,
+    "warpMapId": 0,
+    "warpX": 0,
+    "warpY": 0,
+    "powerPercentPerLevel": 8,
+    "maxSpellLevel": 5,
+    "castsPerLevel": 60,
+    "schemaVersion": 2
+}

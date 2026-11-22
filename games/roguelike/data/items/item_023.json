@@ -1,0 +1,21 @@
+{
+    "id": 23,
+    "name": "Keep Plate",
+    "description": "Steel plate armor forged for deep delves.",
+    "type": "ARMOR",
+    "iconId": 23,
+    "price": 150,
+    "schemaVersion": 1,
+    "levelReq": 2,
+    "armorDefense": 9,
+    "vitalMaxBonuses": {
+        "hp": 25
+    },
+    "paperdollSpriteId": 14,
+    "paperdollSlot": "TORSO",
+    "paperdollClassTints": {
+        "1": "#c95046",
+        "2": "#4f8a5b",
+        "3": "#d97736"
+    }
+}

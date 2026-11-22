@@ -1,0 +1,2 @@
+-- Ashen Keep: starter Lua script hook.
+-- Add custom server hooks here (see docs/API_REFERENCE.md).

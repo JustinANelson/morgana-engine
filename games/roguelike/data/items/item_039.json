@@ -1,0 +1,11 @@
+{
+    "id": 39,
+    "name": "Ashen Ember",
+    "description": "A smoldering coal that never quite goes cold.",
+    "type": "MATERIAL",
+    "iconId": 39,
+    "price": 25,
+    "schemaVersion": 1,
+    "stackable": true,
+    "maxStack": 99
+}

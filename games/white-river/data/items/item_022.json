@@ -1,0 +1,12 @@
+{
+    "id": 22,
+    "name": "Riverleaf",
+    "description": "A broad green herb from the banks. Tonics and broth.",
+    "type": "MATERIAL",
+    "iconId": 22,
+    "stackable": true,
+    "maxStack": 999,
+    "price": 4,
+    "levelReq": 1,
+    "schemaVersion": 2
+}

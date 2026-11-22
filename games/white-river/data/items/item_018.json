@@ -1,0 +1,12 @@
+{
+    "id": 18,
+    "name": "Iron Ore",
+    "description": "Dark, heavy ore. Smelt it into ingots at an anvil.",
+    "type": "MATERIAL",
+    "iconId": 20,
+    "stackable": true,
+    "maxStack": 999,
+    "price": 9,
+    "levelReq": 1,
+    "schemaVersion": 2
+}

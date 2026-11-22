@@ -1,0 +1,22 @@
+{
+    "id": 38,
+    "name": "Heron Recurve",
+    "description": "A recurve bow backed with reedfolk sinew.",
+    "type": "WEAPON",
+    "iconId": 39,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 340,
+    "levelReq": 10,
+    "schemaVersion": 2,
+    "attackDamage": 15,
+    "attackSpeedTicks": 12,
+    "rangeTiles": 8,
+    "weaponStyle": "RANGED_BOW",
+    "twoHanded": true,
+    "projectileSpriteId": 1,
+    "requiredAmmoItemId": 32,
+    "classReqIds": [
+        2
+    ]
+}

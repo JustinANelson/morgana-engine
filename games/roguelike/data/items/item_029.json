@@ -1,0 +1,13 @@
+{
+    "id": 29,
+    "name": "Ring of the Ashen",
+    "description": "A gold band glowing faintly with forge heat.",
+    "type": "RING",
+    "iconId": 29,
+    "price": 180,
+    "schemaVersion": 1,
+    "attributeBonuses": {
+        "str": 2,
+        "agi": 2
+    }
+}

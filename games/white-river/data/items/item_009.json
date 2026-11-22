@@ -1,0 +1,16 @@
+{
+    "id": 9,
+    "name": "Grilled Whitefin",
+    "description": "Fresh off the fire. Restores 90 health and 30 stamina.",
+    "type": "CONSUMABLE",
+    "iconId": 11,
+    "stackable": true,
+    "maxStack": 999,
+    "price": 20,
+    "levelReq": 1,
+    "schemaVersion": 2,
+    "restore": {
+        "hp": 90,
+        "sp": 30
+    }
+}

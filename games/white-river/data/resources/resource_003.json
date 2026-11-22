@@ -1,0 +1,18 @@
+{
+    "id": 3,
+    "name": "Iron Seam",
+    "category": "ORE_VEIN",
+    "intactSpriteId": 1,
+    "depletedSpriteId": 2,
+    "requiredTool": "PICKAXE",
+    "rewardItemId": 18,
+    "minYield": 1,
+    "maxYield": 2,
+    "maxHealth": 4,
+    "respawnTicks": 400,
+    "xpReward": 18,
+    "emptyMessage": "Nothing left here for now. Give it a little while.",
+    "successMessage": "You pry out iron ore.",
+    "animationId": 0,
+    "schemaVersion": 2
+}

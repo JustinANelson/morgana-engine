@@ -1,0 +1,39 @@
+{
+    "id": 7,
+    "name": "The Headwaters",
+    "summary": "Follow the river to its source and thin what lives there.",
+    "levelReq": 28,
+    "prerequisiteQuestIds": [
+        6
+    ],
+    "startText": "The river runs white because of what the glacier grinds out of the Paleback. Follow it up past the Hollow. Kill eight yetis and six shades, and tell me what you see.",
+    "inProgressText": "Eight rime yetis and six glacier shades at the headwaters.",
+    "completionText": "A court of ice, and something keeping it. I was afraid of that.",
+    "objectives": [
+        {
+            "type": "KILL_NPC",
+            "targetId": 33,
+            "requiredCount": 8,
+            "description": "Rime Yetis"
+        },
+        {
+            "type": "KILL_NPC",
+            "targetId": 34,
+            "requiredCount": 6,
+            "description": "Glacier Shades"
+        }
+    ],
+    "reward": {
+        "xp": 30000,
+        "currencyAmount": 3500,
+        "items": [
+            {
+                "itemId": 4,
+                "amount": 6
+            }
+        ],
+        "teachSpellId": 0
+    },
+    "repeatable": false,
+    "schemaVersion": 2
+}

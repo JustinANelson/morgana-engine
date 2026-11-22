@@ -1,0 +1,98 @@
+{
+    "id": 29,
+    "name": "Chalk Cutter",
+    "title": "",
+    "spriteId": 109,
+    "behavior": "ATTACK_ON_SIGHT",
+    "level": 19,
+    "attributes": {
+        "str": 25,
+        "agi": 15,
+        "int": 25,
+        "vit": 25
+    },
+    "vitals": {
+        "hp": 334,
+        "mp": 100
+    },
+    "attackDamage": 31,
+    "attackSpeedTicks": 20,
+    "moveSpeedTicks": 18,
+    "aggroRangeTiles": 6,
+    "leashRangeTiles": 12,
+    "xpReward": 666,
+    "drops": [
+        {
+            "itemId": 1,
+            "minAmount": 19,
+            "maxAmount": 76,
+            "chanceBasisPoints": 7500
+        },
+        {
+            "itemId": 3,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 600
+        },
+        {
+            "itemId": 27,
+            "minAmount": 1,
+            "maxAmount": 2,
+            "chanceBasisPoints": 4000
+        },
+        {
+            "itemId": 40,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 41,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 42,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 48,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 52,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 59,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 63,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 29,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 13
+        }
+    ],
+    "spellIds": [],
+    "shopId": 0,
+    "eventId": 0,
+    "chatGreeting": "",
+    "animationId": 0,
+    "schemaVersion": 2
+}

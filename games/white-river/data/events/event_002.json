@@ -1,0 +1,414 @@
+{
+    "id": 2,
+    "name": "The Ford kitchen",
+    "mapId": 0,
+    "tileX": 0,
+    "tileY": 0,
+    "schemaVersion": 2,
+    "pages": [
+        {
+            "pageIndex": 0,
+            "condition": {},
+            "trigger": "ACTION_INTERACT",
+            "spriteId": 0,
+            "commands": [
+                {
+                    "_type": "dialogue",
+                    "speakerName": "Cook Hesper",
+                    "text": "Sit, eat. Or cook: the fire is free to anyone who brings their own fish.",
+                    "portraitId": 0,
+                    "choices": [
+                        {
+                            "label": "Use the cooking fire.",
+                            "commands": [
+                                {
+                                    "_type": "open_crafting",
+                                    "stationType": "COOKING_FIRE"
+                                }
+                            ]
+                        },
+                        {
+                            "label": "Does the kitchen need anything?",
+                            "commands": [
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 9,
+                                        "quest": "READY_TO_COMPLETE"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Cook Hesper",
+                                            "text": "Lovely. Here, I grilled a few for you.",
+                                            "portraitId": 0,
+                                            "choices": []
+                                        },
+                                        {
+                                            "_type": "complete_quest",
+                                            "questId": 9
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": []
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 9,
+                                        "quest": "IN_PROGRESS"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Cook Hesper",
+                                            "text": "Six whitefin. The shoals are south of the bridge.",
+                                            "portraitId": 0,
+                                            "choices": []
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": []
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 9,
+                                        "quest": "NOT_STARTED"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Cook Hesper",
+                                            "text": "The kitchen is out of fish. Pim sells a willow rod; the shoals are off the banks south of the bridge. Bring me six whitefin.",
+                                            "portraitId": 0,
+                                            "choices": [
+                                                {
+                                                    "label": "I will do it.",
+                                                    "commands": [
+                                                        {
+                                                            "_type": "start_quest",
+                                                            "questId": 9
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "label": "Not now.",
+                                                    "commands": []
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": []
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 10,
+                                        "quest": "READY_TO_COMPLETE"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Cook Hesper",
+                                            "text": "That will keep the fires going. Take the broth.",
+                                            "portraitId": 0,
+                                            "choices": []
+                                        },
+                                        {
+                                            "_type": "complete_quest",
+                                            "questId": 10
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": []
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 10,
+                                        "quest": "IN_PROGRESS"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Cook Hesper",
+                                            "text": "Ten ash logs and eight riverleaf from the fields.",
+                                            "portraitId": 0,
+                                            "choices": []
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": []
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 10,
+                                        "quest": "NOT_STARTED"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Cook Hesper",
+                                            "text": "The ovens need ash and the broth needs riverleaf. Pim sells a hatchet; riverleaf you can pick by hand along the millrace. Ten logs, eight leaves.",
+                                            "portraitId": 0,
+                                            "choices": [
+                                                {
+                                                    "label": "I will do it.",
+                                                    "commands": [
+                                                        {
+                                                            "_type": "start_quest",
+                                                            "questId": 10
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "label": "Not now.",
+                                                    "commands": []
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": [],
+                                    "extraConditions": [
+                                        {
+                                            "type": "QUEST",
+                                            "targetId": 9,
+                                            "quest": "COMPLETED"
+                                        },
+                                        {
+                                            "type": "LEVEL",
+                                            "comparison": "AT_LEAST",
+                                            "value": 2
+                                        }
+                                    ],
+                                    "matchMode": "ALL"
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 11,
+                                        "quest": "READY_TO_COMPLETE"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Cook Hesper",
+                                            "text": "Now that is a stew. Keep two; I only wanted to taste it.",
+                                            "portraitId": 0,
+                                            "choices": []
+                                        },
+                                        {
+                                            "_type": "complete_quest",
+                                            "questId": 11
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": []
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 11,
+                                        "quest": "IN_PROGRESS"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Cook Hesper",
+                                            "text": "Three marsh stews, cooked at the fire beside me.",
+                                            "portraitId": 0,
+                                            "choices": []
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": []
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 11,
+                                        "quest": "NOT_STARTED"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Cook Hesper",
+                                            "text": "A proper marsh stew is pike, riverleaf and sunroot, cooked on my fire. Pike and sunroot both come from Heronreach. Cook three and bring them to me.",
+                                            "portraitId": 0,
+                                            "choices": [
+                                                {
+                                                    "label": "I will do it.",
+                                                    "commands": [
+                                                        {
+                                                            "_type": "start_quest",
+                                                            "questId": 11
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "label": "Not now.",
+                                                    "commands": []
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": [],
+                                    "extraConditions": [
+                                        {
+                                            "type": "QUEST",
+                                            "targetId": 10,
+                                            "quest": "COMPLETED"
+                                        },
+                                        {
+                                            "type": "LEVEL",
+                                            "comparison": "AT_LEAST",
+                                            "value": 8
+                                        }
+                                    ],
+                                    "matchMode": "ALL"
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 12,
+                                        "quest": "READY_TO_COMPLETE"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Cook Hesper",
+                                            "text": "The Ford runs on people like you. Take this: the glacier grinds one out now and then, and smiths prize them.",
+                                            "portraitId": 0,
+                                            "choices": []
+                                        },
+                                        {
+                                            "_type": "complete_quest",
+                                            "questId": 12
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": []
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 12,
+                                        "quest": "IN_PROGRESS"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Cook Hesper",
+                                            "text": "Six ash planks and four iron ingots.",
+                                            "portraitId": 0,
+                                            "choices": []
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": []
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 12,
+                                        "quest": "NOT_STARTED"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Cook Hesper",
+                                            "text": "The bridge wants planks and the smithy wants iron. Saw six planks at Pim's bench and smelt four ingots at Bex's anvil. The seams are up in Chalk Hollow.",
+                                            "portraitId": 0,
+                                            "choices": [
+                                                {
+                                                    "label": "I will do it.",
+                                                    "commands": [
+                                                        {
+                                                            "_type": "start_quest",
+                                                            "questId": 12
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "label": "Not now.",
+                                                    "commands": []
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": [],
+                                    "extraConditions": [
+                                        {
+                                            "type": "QUEST",
+                                            "targetId": 11,
+                                            "quest": "COMPLETED"
+                                        },
+                                        {
+                                            "type": "LEVEL",
+                                            "comparison": "AT_LEAST",
+                                            "value": 14
+                                        }
+                                    ],
+                                    "matchMode": "ALL"
+                                },
+                                {
+                                    "_type": "dialogue",
+                                    "speakerName": "Cook Hesper",
+                                    "text": "The larder is full, thanks to you. Come back hungry.",
+                                    "portraitId": 0,
+                                    "choices": []
+                                }
+                            ]
+                        },
+                        {
+                            "label": "Goodbye.",
+                            "commands": []
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

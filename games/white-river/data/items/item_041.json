@@ -1,0 +1,22 @@
+{
+    "id": 41,
+    "name": "Hollow Longbow",
+    "description": "Taller than its archer. It was made for shooting across a quarry.",
+    "type": "WEAPON",
+    "iconId": 40,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 1100,
+    "levelReq": 20,
+    "schemaVersion": 2,
+    "attackDamage": 25,
+    "attackSpeedTicks": 12,
+    "rangeTiles": 9,
+    "weaponStyle": "RANGED_BOW",
+    "twoHanded": true,
+    "projectileSpriteId": 1,
+    "requiredAmmoItemId": 32,
+    "classReqIds": [
+        2
+    ]
+}

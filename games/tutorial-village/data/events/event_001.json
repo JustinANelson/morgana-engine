@@ -1,0 +1,146 @@
+{
+    "id": 1,
+    "name": "Mara: the garden quest",
+    "mapId": 1,
+    "tileX": 11,
+    "tileY": 11,
+    "pages": [
+        {
+            "pageIndex": 0,
+            "condition": {
+                "requiredSwitchId": null,
+                "requiredSwitchValue": true,
+                "switchScope": "PLAYER",
+                "variableId": null,
+                "minVariableValue": 0,
+                "variableScope": "PLAYER",
+                "requiredQuestId": 0,
+                "requiredQuestStatus": null,
+                "requiredItemId": 0,
+                "minPlayerLevel": 1
+            },
+            "trigger": "ACTION_INTERACT",
+            "spriteId": 0,
+            "commands": [
+                {
+                    "_type": "dialogue",
+                    "speakerName": "Mara",
+                    "text": "Oh, thank goodness you are here! Garden Pests keep nibbling my vegetables. Could you chase three of them away?",
+                    "portraitId": 0,
+                    "choices": [
+                        {
+                            "label": "I'll help",
+                            "commands": [
+                                {
+                                    "_type": "start_quest",
+                                    "questId": 1
+                                },
+                                {
+                                    "_type": "dialogue",
+                                    "speakerName": "Mara",
+                                    "text": "Wonderful! They are in the garden to the north east, past the fence.",
+                                    "portraitId": 0,
+                                    "choices": []
+                                }
+                            ]
+                        },
+                        {
+                            "label": "Not right now",
+                            "commands": [
+                                {
+                                    "_type": "dialogue",
+                                    "speakerName": "Mara",
+                                    "text": "That is all right. Come back if you change your mind.",
+                                    "portraitId": 0,
+                                    "choices": []
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "pageIndex": 1,
+            "condition": {
+                "requiredSwitchId": null,
+                "requiredSwitchValue": true,
+                "switchScope": "PLAYER",
+                "variableId": null,
+                "minVariableValue": 0,
+                "variableScope": "PLAYER",
+                "requiredQuestId": 1,
+                "requiredQuestStatus": "IN_PROGRESS",
+                "requiredItemId": 0,
+                "minPlayerLevel": 1
+            },
+            "trigger": "ACTION_INTERACT",
+            "spriteId": 0,
+            "commands": [
+                {
+                    "_type": "if",
+                    "condition": {
+                        "type": "QUEST",
+                        "key": "",
+                        "targetId": 1,
+                        "comparison": "AT_LEAST",
+                        "value": 1,
+                        "quest": "READY_TO_COMPLETE",
+                        "scope": "PLAYER"
+                    },
+                    "then": [
+                        {
+                            "_type": "complete_quest",
+                            "questId": 1
+                        },
+                        {
+                            "_type": "dialogue",
+                            "speakerName": "Mara",
+                            "text": "You did it! Please take this charm. It is not much, but it is made with thanks.",
+                            "portraitId": 0,
+                            "choices": []
+                        }
+                    ],
+                    "otherwise": [
+                        {
+                            "_type": "dialogue",
+                            "speakerName": "Mara",
+                            "text": "Still some pests left, I am afraid. Three of them, remember.",
+                            "portraitId": 0,
+                            "choices": []
+                        }
+                    ],
+                    "extraConditions": [],
+                    "matchMode": "ALL"
+                }
+            ]
+        },
+        {
+            "pageIndex": 2,
+            "condition": {
+                "requiredSwitchId": null,
+                "requiredSwitchValue": true,
+                "switchScope": "PLAYER",
+                "variableId": null,
+                "minVariableValue": 0,
+                "variableScope": "PLAYER",
+                "requiredQuestId": 1,
+                "requiredQuestStatus": "COMPLETED",
+                "requiredItemId": 0,
+                "minPlayerLevel": 1
+            },
+            "trigger": "ACTION_INTERACT",
+            "spriteId": 0,
+            "commands": [
+                {
+                    "_type": "dialogue",
+                    "speakerName": "Mara",
+                    "text": "The garden has never looked better. Thank you again!",
+                    "portraitId": 0,
+                    "choices": []
+                }
+            ]
+        }
+    ],
+    "schemaVersion": 2
+}

@@ -1,0 +1,16 @@
+{
+    "id": 76,
+    "name": "Manual: Nightfall",
+    "description": "Teaches a Duskweaver Nightfall (level 18).",
+    "type": "SPELL_SCROLL",
+    "iconId": 66,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 1080,
+    "levelReq": 18,
+    "schemaVersion": 2,
+    "teachSpellId": 15,
+    "classReqIds": [
+        3
+    ]
+}

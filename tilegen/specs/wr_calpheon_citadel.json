@@ -1,0 +1,34 @@
+{
+  "name": "wr_calpheon_citadel",
+  "seed": 2004,
+  "tileSize": 16,
+  "columns": 8,
+  "style": "TIME_FANTASY",
+  "materials": [
+    { "name": "cc_marble", "pattern": "HERRINGBONE_COBBLE", "palette": "wr_serendia_iron", "scale": 1.0, "detail": 0.2 },
+    { "name": "cc_gold", "pattern": "HERRINGBONE_COBBLE", "palette": "wr_valencia_amber", "scale": 1.0, "detail": 0.2 },
+    { "name": "cc_cobble", "pattern": "OBSIDIAN_CRAG", "palette": "wr_abyssal_obsidian", "scale": 1.0, "detail": 0.25 },
+    { "name": "cc_brick", "pattern": "BRICK_MASONRY", "palette": "wr_black_spirit", "scale": 1.0, "detail": 0.2 }
+  ],
+  "cliffs": [
+    { "name": "cc_citadel_wall", "topMaterial": "cc_gold", "faceMaterial": "cc_cobble", "trimColor": "#bc7e2c", "a4Layout": true }
+  ],
+  "props": [
+    { "name": "cc_tent", "kind": "MEDIEVAL_TENT", "primaryPalette": "wr_black_spirit", "secondaryPalette": "wr_serendia_iron" },
+    { "name": "cc_spire", "kind": "GARGOYLE_SPIRE", "primaryPalette": "wr_serendia_iron" },
+    { "name": "cc_ballista", "kind": "SIEGE_BALLISTA", "primaryPalette": "wr_serendia_iron", "secondaryPalette": "wr_valencia_amber" },
+    { "name": "cc_banner", "kind": "WALL_BANNER", "primaryPalette": "wr_black_spirit", "secondaryPalette": "wr_valencia_amber" },
+    { "name": "cc_rack", "kind": "WEAPON_RACK", "primaryPalette": "wr_serendia_iron", "secondaryPalette": "wr_valencia_amber" },
+    { "name": "cc_rift", "kind": "BLACK_SPIRIT_RIFT", "primaryPalette": "wr_abyssal_obsidian", "secondaryPalette": "wr_black_spirit" }
+  ],
+  "autotiles": [
+    {
+      "name": "cc_marble_on_cobble",
+      "mode": "BLOB_47",
+      "columns": 8,
+      "foregroundMaterial": "cc_marble",
+      "backgroundMaterial": "cc_cobble",
+      "style": { "margin": 3.0, "rimWidth": 1.0, "wobbleAmplitude": 1.0, "rimColor": "#444a56" }
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+    "id": 6,
+    "name": "Iron Guard",
+    "description": "Hold to block incoming attacks from the front.",
+    "iconId": 14,
+    "startupTicks": 1,
+    "activeTicks": 16,
+    "recoveryTicks": 3,
+    "cancelFromTick": 2,
+    "soundId": "ui_click",
+    "schemaVersion": 2,
+    "guard": {
+        "arcDegrees": 140,
+        "maxHoldTicks": 40,
+        "blockCosts": {
+            "stamina": 8
+        },
+        "damageReductionPercent": 80
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "id": 1,
+    "name": "Gold",
+    "description": "Ashen Keep coinage.",
+    "type": "CURRENCY",
+    "iconId": 1,
+    "price": 1,
+    "schemaVersion": 1,
+    "stackable": true,
+    "maxStack": 999999
+}

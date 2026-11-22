@@ -1,0 +1,95 @@
+:root {
+  --bg: #14110f;
+  --panel: #1e1a17;
+  --panel-2: #26211d;
+  --line: #3a322c;
+  --text: #ece4da;
+  --muted: #a39789;
+  --accent: #e0a458;
+  --accent-ink: #1a1208;
+  --danger: #d9604c;
+  --ok: #7fb069;
+  --radius: 8px;
+}
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f6f1ea;
+    --panel: #ffffff;
+    --panel-2: #f0e9df;
+    --line: #d9cfc1;
+    --text: #231d17;
+    --muted: #6d6256;
+    --accent: #a8651b;
+    --accent-ink: #ffffff;
+    --danger: #b23a27;
+    --ok: #3f7a2c;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+.bar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px;
+  padding: 12px 16px; background: var(--panel); border-bottom: 1px solid var(--line);
+}
+.bar h1 { margin: 0; font-size: 18px; letter-spacing: .02em; }
+.tabs { display: flex; flex-wrap: wrap; gap: 4px; flex: 1; }
+.tab, button {
+  font: inherit; color: var(--text); background: var(--panel-2);
+  border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 6px 12px; cursor: pointer; min-height: 36px;
+}
+.tab.active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+button:hover { border-color: var(--accent); }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+button.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+button.ghost { background: transparent; }
+button.small { padding: 2px 8px; min-height: 28px; font-size: 13px; }
+.badge { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 0 7px; font-size: 12px; }
+.badge.alert { background: var(--danger); border-color: var(--danger); color: #fff; }
+main { max-width: 1100px; margin: 0 auto; padding: 16px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; }
+.card h2 { margin: 0 0 8px; font-size: 16px; }
+.login { max-width: 420px; margin: 40px auto; }
+.login form, .form { display: grid; gap: 8px; }
+label { font-size: 13px; color: var(--muted); }
+input, select {
+  font: inherit; color: var(--text); background: var(--bg);
+  border: 1px solid var(--line); border-radius: var(--radius); padding: 8px 10px; min-height: 36px; width: 100%;
+}
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; }
+.row > * { flex: 1 1 160px; }
+.row > button { flex: 0 0 auto; }
+.muted { color: var(--muted); }
+code { background: var(--panel-2); padding: 1px 5px; border-radius: 4px; }
+.banner { margin: 0 0 16px; padding: 10px 14px; border-radius: var(--radius); border: 1px solid var(--line); background: var(--panel-2); }
+.banner.ok { border-color: var(--ok); }
+.banner.error { border-color: var(--danger); color: var(--danger); }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.stat { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; }
+.stat .value { font-size: 22px; font-weight: 600; }
+.stat .label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.stat.warn .value { color: var(--danger); }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.actions { display: flex; flex-wrap: wrap; gap: 6px; }
+canvas { width: 100%; height: 140px; display: block; background: var(--bg); border-radius: var(--radius); }
+.legend { font-size: 12px; color: var(--muted); margin-top: 6px; }
+.empty { color: var(--muted); padding: 12px 0; }
+@media (max-width: 600px) {
+  main { padding: 10px; }
+  th, td { padding: 6px; }
+  .bar h1 { flex: 1; }
+  .tabs { order: 3; flex: 1 1 100%; }
+  .tab { flex: 1 1 auto; padding: 6px 8px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  button { transition: border-color .12s; }
+}

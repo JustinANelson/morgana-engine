@@ -1,0 +1,75 @@
+---
+type: Concept
+title: "Game Definition (game.json) and the Formula Language"
+description: "Data-defined attributes, vitals, progression and combat formulas in game.json, written in an integer-only expression language; the rules every game runs on."
+tags: [domain, game-definition, formulas, scripting]
+code: ["core-domain/src/main/kotlin/com/morgana/domain/game/GameDefinition.kt", "core-domain/src/main/kotlin/com/morgana/domain/game/WorldWeather.kt", "core-domain/src/main/kotlin/com/morgana/domain/game/Formula.kt", "core-domain/src/main/kotlin/com/morgana/domain/game/GameDefinitionValidator.kt", "core-domain/src/main/kotlin/com/morgana/domain/game/CompiledGame.kt", "core-domain/src/testFixtures/kotlin/com/morgana/domain/game/MorganaClassic.kt", "core-domain/src/main/kotlin/com/morgana/domain/game/BlankGame.kt", "server-persistence/src/main/kotlin/com/morgana/persistence/GameDefinitionLoader.kt"]
+symbols: ["GameDefinition", "WorldWeather", "WeatherZone", "Formula", "GameDefinitionValidator", "CompiledGame", "MorganaClassic", "BlankGame", "GameDefinitionLoader"]
+generated: { by: claude-code/claude-sonnet-5-5, at: 2026-11-08T12:00:00Z }
+stale_after: 2027-05-06T00:00:00Z
+---
+
+# Game Definition (`game.json`) and the Formula Language
+
+**Status: in use.** `WorldSimulation` runs entirely from the `GameDefinition` of the running game: attributes, vitals, progression, combat formulas and the combat rule constants all come from `game.json`. Without a `game.json` the engine runs `BlankGame`. The direction is [ADR 0013](/decisions/0013_engine_game_split_and_lua_scripting.md); the plan is in `docs/GAME_DEFINITION.md`.
+
+## What it is
+A `GameDefinition` declares what the engine used to hard-wire:
+- **Bag size** (`inventorySlots`, default 24, 8..200): how many slots a character's bag has; existing characters grow to it at login ([inventory](/systems/inventory_interaction.md)).
+- **Metadata** (`id`, `name`, optional `description` up to 400 chars, optional `tags` list up to 16 tags used by auto-discovered realm templates and directory entries).
+- **UI profile** (`ui`, optional `UiProfile` with booleans `combat`, `spells`, `hotbar`, `minimap`, `chat`, `party`, all `true` by default): sent to the client inside `AuthResult.gameDefinition` so peaceful games (`"ui": { "combat": false, "spells": false }`) hide combat/spell buttons and empty hotbar slots automatically.
+- **Sprite geometry & animation states** (`sprites`, optional `SpriteProfile` with `cellWidth`, `cellHeight`, `stateFrames`, `anchor`, `paperdollingV2`): defaults to classic `32 x 32`, `3 x 4` sheets when omitted (`null`). When configured (e.g. `32 x 64` modern tall sprites with `idle`, `walk`, `attack`, `cast`, `harvest`; sheet columns follow the order idle, walk, attack, cast, harvest, jump, hurt. `jump` plays across a leap, `hurt` flinches when damage text lands on a character; a state with 0 frames plays walk, and `hurt` plays idle. A walk of 4 or more frames cycles on the clock; `scales` maps a sprite id to a draw scale of 0.25 to 8, default 1, so a small-drawn character can be shown larger without redrawing its sheet; `uiHeights` maps a sprite id to its visible height in cell pixels, so a short sprite in a tall cell gets its name plate, bars, bubbles and damage text on its head rather than above the empty cell). Items can also carry `paperdollOffHandSpriteId`, the picture used instead of `paperdollSpriteId` when the item is worn in the off-hand slot (a dual-wielded blade drawn in the off-hand pose), `GameDefinitionValidator` validates cell bounds (`8..256`), `walk >= 1`, per-state frame counts (`0..16`), and sheet size limits (`<= 4096`), `GameAssets.scan` enforces `cellWidth * totalFrames` x `cellHeight * 4`, and the renderer slices by the declared cell size, draws anchored bottom-center at the feet, Y-sorts entities/seams by foot Y, and raises world-space UI (HP bars, cast bars, nameplates, chat bubbles, floating text) above `cellHeight`. Setting `"paperdollingV2": true` opts into slot-based, direction-ordered, tinted, and composited paperdolls (`PaperdollSlot`, `PaperdollComposer`).
+- **Attributes** (id, name, base, floor, optional cap, allocatable), **vitals** (id, a `max` formula, optional regeneration, and exactly one with `role: "life"`), **progression** (`maxLevel` plus an `xpTable` or an `xpExpr`) and **combat** (`module`: `"morgana_classic"`, `"lua"`, or `"noop"`, plus formulas for melee, ranged, spell, critical chance, dodge chance). Setting `"module": "noop"` selects `NoOpCombatModule` for non-combat realms without writing code. Every formula is a plain string. Attribute and vital ids share one namespace, because formulas use them as variable names.
+
+`GameDefinitionLoader` (`:server-persistence`) reads `<data dir>/game.json` strictly (unknown fields are errors, like `server.json`), validates it, and falls back to the
+engine default `BlankGame` when the file is absent. Tool: `.\gradlew.bat :server-app:gameDefinition` validates and summarizes; with `-PcontentArgs="--write"` it creates an
+editable `game.json` from the built-in definition. Schema: `docs/schemas/game.schema.json` (drift-tested).
+
+## New-player tips (`onboarding`, optional)
+`"onboarding": { "enabled": true, "defaults": true, "tips": [ ... ] }`: rewrite, remove or add the short hints shown once per account (welcome, equip, stat points, skills, repairs, ghosts, low health, level milestones). Without the section the built-in tips apply. Format, triggers and delivery: [new-player tips](/systems/onboarding.md).
+
+## The clock (`clock`, optional)
+`"clock": { "dayLengthTicks": 1200, "daysPerSeason": 7, "seasons": ["Spring","Summer","Autumn","Winter"], "startTimePermille": 350, "dayNight": false }`.
+A game with a `clock` section has a calendar; without it there is none (Morgana Classic has none, so it looks exactly as before). Time is the
+simulation tick: `WorldClock.at(tick)` gives day, day of season, season, year, time of day (thousandths of a day, 0 = midnight), a phase
+(night, dawn, day, dusk) and a light level (150 at night to 1000 by day), all in integers so replays agree. Defaults: 1200 ticks per day
+(one minute), 7 days per season, 4 seasons, tick 0 at 08:24. `dayNight: true` opts in to the visual cycle: the client darkens outdoor maps
+after dusk. Scripts read it as `world.clock` ([scripting](/systems/scripting.md)); the client computes the same clock from the `serverTick`
+in `AuthResult`, `MapStateSnapshot` and `Pong`, so no clock packets are sent. Validation: `dayLengthTicks` 200..1,000,000, 1..365 days per
+season, 1..12 unique season names, start time 0..999. Plan for crops and homes that build on it: [ADR 0015](/decisions/0015_plots_crops_and_housing_plan.md).
+
+
+## Weather zones (`weather`, optional)
+`"weather": { "zones": [ { "id": 0, "name": "Valley", "periodTicks": 2400, "seed": 11, "states": [ { "type": "NONE", "weight": 5 }, { "type": "RAIN", "intensity": 0.5, "weight": 2 } ] } ] }`.
+Weather is a **world or zone feature**, not something each map stores. A *zone* is a named region; a map joins one through its `zoneId` (0 = the default world zone) and says whether it is an **interior** (`isIndoors`) or an exterior. Every `periodTicks` the zone picks its next weather from `states` by weight: `WorldWeather.inZone(zone, tick)` is a pure function of the zone's `seed`, its id and the tick, so the server, every client and a replay agree and **nothing is sent over the wire** (the client reads the same `serverTick` it uses for the clock). `WorldWeather.effective(map, definition, tick)` is what a map shows: an interior is always clear, an exterior shows its zone's weather (clear if the zone is not defined).
+**A game with no `weather` section keeps the older behaviour exactly**: each map's own fixed `weather` / `weatherIntensity` (kept in the map files, no longer edited in the F1 editor) applies, interior or not, so Morgana Classic is unchanged. Validation: at most 64 zones, unique non-negative ids, 1 to 40 character names, `periodTicks` 200..1,000,000, 1 to 16 states with weight 1..1000 and intensity 0..1; content validation rejects a map whose `zoneId` is not a defined zone (when the game defines zones). Not yet built: an admin command to force weather, and an in-editor zone editor (zones are authored in `game.json`).
+
+## Loot rules (`loot`, optional)
+Rarities and affixes that dropped gear rolls (Diablo-style loot): `"loot": { "rarities": [...], "affixes": [...] }`. Without the section items never roll. Format, rolling rules, validation and where rolls show are on [loot rarities and affixes](/systems/loot_and_affixes.md).
+
+## Map settings: interior and instanced
+`MapDefinition.isIndoors` is the **interior / exterior** flag: interiors ignore weather and the day and night cycle. `MapDefinition.instanced` marks a map that is copied per party, guild, or solo player (`INSTANCED_DUNGEON` ruleset; see [instanced maps](/systems/instancing.md)). It is stored, validated (an instanced map may not have neighbouring maps, because instances are always entered through a warp), and editable in the map properties panel. Per-owner persisted home instances are still planned; see [farming and housing](../../docs/FARMING_AND_HOUSING.md).
+
+## The formula language (`Formula`)
+Pure integer functions of named inputs: no floating point, loops, strings, randomness or time.
+* Operators (high to low): unary `-` `!`; `*` `/` `%`; `+` `-`; `<` `<=` `>` `>=`; `==` `!=`; `&&`; `||`; `c ? x : y`. `/` and `%` truncate toward zero like Kotlin.
+* Comparisons and logic give 0 or 1; any non-zero value is true; `&&`, `||` and `?:` evaluate only what they need.
+* Functions: `min`, `max`, `clamp`, `abs`, `mulDiv` (exact intermediate product), `pow` (exponent 0 to 16), `isqrt`.
+* Steps: `name = expression;` before the final expression (at most 16).
+* Overflow, division by zero and out-of-range arguments throw `FormulaEvaluationException`; arithmetic never wraps. Limits: 1000 characters, 200 parts, 16 steps, 40 levels of nesting.
+
+Variables by slot: vital `max` has `level`, every attribute and `bonus`; regeneration has `level` and every attribute; `xpExpr` has `level`; combat formulas have `a.<id>` and
+`d.<id>` plus `weapon`, `armor`, `ammo` (ranged), `crit`, `basePower`, `scales`, `heals` as each slot provides.
+
+## Validation (`GameDefinitionValidator`)
+Pure and deterministic; reports every problem with a JSON pointer. Besides structure, names and limits, each formula is **trial-evaluated across the extremes of its inputs**
+(attribute floor and cap, level 1 to `maxLevel`, item values up to 100,000), so an overflow or a division by zero stops the load instead of surfacing in a fight.
+`CompiledGame.compile` validates and parses once and offers typed calls (`vitalMax`, `regenAmount`, `xpToNext`, `meleeDamage`, `rangedDamage`, `spellOutput`,
+`critChanceBp`, `dodgeChanceBp`).
+
+## The Morgana Classic fixture and the oracle
+`MorganaClassic.definition` (a `:core-domain` test fixture, `testFixtures`; no shipped code may use it) reproduces the original rules exactly, using integers: the XP curve is a 99-entry table generated from `round(100 * level^1.65)`, and critical
+damage is `(3*base + 1)/2`, which equals `round(base * 1.5)` for whole numbers. `MorganaClassicOracleTest` compares it with a copy of the original formulas
+(`ClassicOracle`) over tens of thousands of generated inputs, every XP level and every small critical-damage case.
+
+Tests: `FormulaTest`, `GameDefinitionValidatorTest`, `MorganaClassicOracleTest` (`:core-domain`), `GameDefinitionLoaderTest` (`:server-persistence`), `GameCommandTest` (`:server-app`).

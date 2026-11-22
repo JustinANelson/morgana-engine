@@ -1,0 +1,63 @@
+{
+    "id": 3,
+    "name": "Wayside Shrine",
+    "mapId": 0,
+    "tileX": 0,
+    "tileY": 0,
+    "pages": [
+        {
+            "pageIndex": 0,
+            "condition": {},
+            "trigger": "ACTION_INTERACT",
+            "spriteId": 0,
+            "commands": [
+                {
+                    "_type": "dialogue",
+                    "speakerName": "Wayside Shrine",
+                    "text": "A faint ember still warms this altar. Leave an offering of 40 Gold to restore your vitality?",
+                    "portraitId": 0,
+                    "choices": [
+                        {
+                            "label": "Leave 40 gold",
+                            "commands": [
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "HAS_ITEM",
+                                        "targetId": 1,
+                                        "value": 40
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "take_item",
+                                            "itemId": 1,
+                                            "amount": 40
+                                        },
+                                        {
+                                            "_type": "heal_player"
+                                        },
+                                        {
+                                            "_type": "message",
+                                            "text": "Warmth floods your veins. Your health and mana are fully restored."
+                                        }
+                                    ],
+                                    "otherwise": [
+                                        {
+                                            "_type": "message",
+                                            "text": "You do not have 40 Gold to offer."
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "label": "Leave it",
+                            "commands": []
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "schemaVersion": 1
+}

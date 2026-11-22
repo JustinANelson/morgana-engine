@@ -1,0 +1,16 @@
+{
+    "id": 49,
+    "name": "Rimeguard Helm",
+    "description": "Frost-rimed steel.",
+    "type": "HELMET",
+    "iconId": 49,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 2400,
+    "levelReq": 30,
+    "schemaVersion": 2,
+    "armorDefense": 14,
+    "vitalMaxBonuses": {
+        "hp": 40
+    }
+}

@@ -1,0 +1,22 @@
+{
+    "id": 22,
+    "name": "Pyromancer Vestments",
+    "description": "Ember-trimmed robes woven for flame casters.",
+    "type": "ARMOR",
+    "iconId": 22,
+    "price": 40,
+    "schemaVersion": 1,
+    "armorDefense": 2,
+    "attributeBonuses": {
+        "int": 1
+    },
+    "vitalMaxBonuses": {
+        "mp": 12
+    },
+    "classReqIds": [
+        3
+    ],
+    "paperdollSpriteId": 12,
+    "paperdollSlot": "TORSO",
+    "paperdollTintHex": "#d46e34"
+}

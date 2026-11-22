@@ -1,0 +1,15 @@
+{
+    "id": 2,
+    "name": "Minor Tonic",
+    "description": "Restores 50 health.",
+    "type": "CONSUMABLE",
+    "iconId": 2,
+    "stackable": true,
+    "maxStack": 999,
+    "price": 12,
+    "levelReq": 1,
+    "schemaVersion": 2,
+    "restore": {
+        "hp": 50
+    }
+}

@@ -1,0 +1,34 @@
+{
+  "name": "halcyon_bulwark",
+  "job": "lord_knight",
+  "tileSize": 32,
+  "seed": 3002,
+  "hairStyle": "spiky_hero",
+  "headgear": "iron_helmet",
+  "weapon": "knight_sword",
+  "shield": "tower_shield",
+  "torsoStyle": "brigandine",
+  "legsStyle": "greaves",
+  "feetStyle": "sabatons",
+  "includeCape": true,
+  "theme": {
+    "ancestry": "human",
+    "outfitPalette": "wr_serendia_iron",
+    "accentPalette": "co_celestial_gold",
+    "secondaryPalette": "co_dragon_bronze",
+    "auraPalette": "ro_prontera_marble",
+    "hairPalette": ["#2c2420", "#4a3b34", "#6e584d", "#94786a", "#bc9f90"],
+    "eyeColor": "#4670b4",
+    "style": "morgana",
+    "proportions": "chunky"
+  },
+  "attachments": [
+    "cape",
+    "knight_pauldrons",
+    "utility_belt"
+  ],
+  "actions": ["halcyon"],
+  "directions8": false,
+  "exportLayers": true,
+  "includeShadow": true
+}

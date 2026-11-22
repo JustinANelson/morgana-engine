@@ -1,0 +1,41 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Morgana animations document",
+    "$ref": "#/$defs/com.morgana.domain.content.AnimationDefinition",
+    "$defs": {
+        "com.morgana.domain.content.AnimationDefinition": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "spriteSheetId": {
+                    "type": "integer"
+                },
+                "frameCount": {
+                    "type": "integer"
+                },
+                "frameDurationMs": {
+                    "type": "integer"
+                },
+                "soundId": {
+                    "type": "string"
+                },
+                "renderAboveEntities": {
+                    "type": "boolean"
+                },
+                "schemaVersion": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "id",
+                "name"
+            ],
+            "additionalProperties": false
+        }
+    }
+}

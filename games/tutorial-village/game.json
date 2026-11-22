@@ -1,0 +1,107 @@
+{
+    "schemaVersion": 1,
+    "engineApi": "1",
+    "id": "tutorial_village",
+    "name": "Tutorial Village",
+    "description": "The finished game from the 15-minute first-game guide: a small village, a gardener with a quest, a pest to chase away and a charm as the reward.",
+    "tags": [],
+    "capabilities": [
+        "damage",
+        "heal",
+        "inventory",
+        "teleport",
+        "status",
+        "message",
+        "visual",
+        "projectile",
+        "progression",
+        "vital"
+    ],
+    "attributes": [
+        {
+            "id": "str",
+            "name": "Strength",
+            "short": "STR",
+            "base": 10,
+            "floor": 1,
+            "cap": null,
+            "allocatable": true
+        },
+        {
+            "id": "agi",
+            "name": "Agility",
+            "short": "AGI",
+            "base": 10,
+            "floor": 1,
+            "cap": null,
+            "allocatable": true
+        },
+        {
+            "id": "int",
+            "name": "Intelligence",
+            "short": "INT",
+            "base": 10,
+            "floor": 1,
+            "cap": null,
+            "allocatable": true
+        },
+        {
+            "id": "vit",
+            "name": "Vitality",
+            "short": "VIT",
+            "base": 10,
+            "floor": 1,
+            "cap": null,
+            "allocatable": true
+        }
+    ],
+    "vitals": [
+        {
+            "id": "hp",
+            "name": "Health",
+            "short": "HP",
+            "color": "#dc2626",
+            "role": "life",
+            "max": "max(10, 80 + level * 15 + vit * 10 + str * 2 + bonus)",
+            "regen": {
+                "everyTicks": 40,
+                "amount": "max(1, vit / 4)"
+            }
+        },
+        {
+            "id": "mp",
+            "name": "Mana",
+            "short": "MP",
+            "color": "#2563eb",
+            "role": null,
+            "max": "max(0, 20 + level * 8 + int * 8 + bonus)",
+            "regen": {
+                "everyTicks": 40,
+                "amount": "max(1, int / 4)"
+            }
+        }
+    ],
+    "progression": {
+        "maxLevel": 50,
+        "xpTable": null,
+        "xpExpr": "100 * level * level"
+    },
+    "combat": {
+        "melee": "max(1, a.str * 2 + weapon - d.vit)",
+        "ranged": "max(1, a.agi * 2 + weapon + ammo - d.agi)",
+        "spell": "raw = max(1, basePower + (scales ? a.int * 2 : 0)); heals ? raw : max(1, raw - d.int / 2)",
+        "critChanceBp": "clamp(a.agi * 50, 500, 5000)",
+        "dodgeChanceBp": "clamp(d.agi * 50, 0, 4000)",
+        "module": "realtime",
+        "defaultAttackSpeedTicks": 12,
+        "defaultNpcRespawnTicks": 100,
+        "lootOwnerProtectionTicks": 600,
+        "groundItemDespawnTicks": 2400,
+        "partyXpBonusPercent": 20
+    },
+    "clock": null,
+    "weather": null,
+    "ui": null,
+    "sprites": null,
+    "inventorySlots": 24
+}

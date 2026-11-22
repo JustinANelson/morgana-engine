@@ -1,0 +1,20 @@
+{
+    "id": 10,
+    "name": "Barbed Arrows",
+    "stationType": "WORKBENCH",
+    "levelReq": 10,
+    "ingredients": [
+        {
+            "itemId": 16,
+            "amount": 1
+        },
+        {
+            "itemId": 19,
+            "amount": 1
+        }
+    ],
+    "outputItemId": 33,
+    "outputAmount": 40,
+    "xpReward": 24,
+    "schemaVersion": 2
+}

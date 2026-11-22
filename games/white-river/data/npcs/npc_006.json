@@ -1,0 +1,31 @@
+{
+    "id": 6,
+    "name": "Cook Hesper",
+    "title": "Keeper of the Ford kitchen",
+    "spriteId": 15,
+    "behavior": "QUEST_GIVER",
+    "level": 1,
+    "attributes": {
+        "str": 10,
+        "agi": 10,
+        "int": 10,
+        "vit": 10
+    },
+    "vitals": {
+        "hp": 400,
+        "mp": 100
+    },
+    "attackDamage": 5,
+    "attackSpeedTicks": 16,
+    "moveSpeedTicks": 10,
+    "aggroRangeTiles": 6,
+    "leashRangeTiles": 12,
+    "xpReward": 0,
+    "drops": [],
+    "spellIds": [],
+    "shopId": 0,
+    "eventId": 2,
+    "chatGreeting": "Nobody fights well hungry. The fire is yours whenever you need it.",
+    "animationId": 0,
+    "schemaVersion": 2
+}

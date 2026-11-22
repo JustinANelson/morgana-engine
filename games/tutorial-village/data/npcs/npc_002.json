@@ -1,0 +1,31 @@
+{
+    "id": 2,
+    "name": "Garden Pest",
+    "title": "Nibbler",
+    "spriteId": 7,
+    "behavior": "ATTACK_ON_SIGHT",
+    "level": 1,
+    "attributes": {
+        "str": 6,
+        "agi": 6,
+        "int": 1,
+        "vit": 4
+    },
+    "vitals": {
+        "hp": 20,
+        "mp": 0
+    },
+    "attackDamage": 2,
+    "attackSpeedTicks": 24,
+    "moveSpeedTicks": 10,
+    "aggroRangeTiles": 3,
+    "leashRangeTiles": 6,
+    "xpReward": 15,
+    "drops": [],
+    "spellIds": [],
+    "shopId": 0,
+    "eventId": 0,
+    "chatGreeting": "",
+    "animationId": 0,
+    "schemaVersion": 2
+}

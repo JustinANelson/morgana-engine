@@ -1,0 +1,39 @@
+{
+    "id": 5,
+    "name": "Chalk Hollow",
+    "summary": "Break the reavers' hold on the quarry road.",
+    "levelReq": 17,
+    "prerequisiteQuestIds": [
+        4
+    ],
+    "startText": "North of the marsh is Chalk Hollow, where our stone came from before the reavers took the quarry. Kill eight cutters and bring me eight of their tokens.",
+    "inProgressText": "Eight chalk cutters, and eight reaver tokens.",
+    "completionText": "They will feel that. Tonics, and the Ford's thanks.",
+    "objectives": [
+        {
+            "type": "KILL_NPC",
+            "targetId": 29,
+            "requiredCount": 8,
+            "description": "Chalk Cutters"
+        },
+        {
+            "type": "COLLECT_ITEM",
+            "targetId": 27,
+            "requiredCount": 8,
+            "description": "Reaver Tokens"
+        }
+    ],
+    "reward": {
+        "xp": 7000,
+        "currencyAmount": 900,
+        "items": [
+            {
+                "itemId": 4,
+                "amount": 4
+            }
+        ],
+        "teachSpellId": 0
+    },
+    "repeatable": false,
+    "schemaVersion": 2
+}

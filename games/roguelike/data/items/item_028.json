@@ -1,0 +1,15 @@
+{
+    "id": 28,
+    "name": "Ring of Focus",
+    "description": "A silver band that steadies the mind.",
+    "type": "RING",
+    "iconId": 28,
+    "price": 80,
+    "schemaVersion": 1,
+    "vitalMaxBonuses": {
+        "mp": 18
+    },
+    "attributeBonuses": {
+        "int": 1
+    }
+}

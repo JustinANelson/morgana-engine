@@ -1,0 +1,10 @@
+{
+    "id": 6,
+    "name": "Shot",
+    "spriteSheetId": 6,
+    "frameCount": 4,
+    "frameDurationMs": 80,
+    "soundId": "",
+    "renderAboveEntities": true,
+    "schemaVersion": 2
+}

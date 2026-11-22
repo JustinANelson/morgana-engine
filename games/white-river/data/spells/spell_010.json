@@ -1,0 +1,33 @@
+{
+    "id": 10,
+    "name": "Galeburst",
+    "description": "A shot that arrives with the wind behind it.",
+    "iconId": 76,
+    "targetType": "AOE_TARGET_CENTERED",
+    "levelReq": 20,
+    "classReqIds": [
+        2
+    ],
+    "costs": {
+        "sp": 40
+    },
+    "scales": true,
+    "castTimeTicks": 0,
+    "cooldownTicks": 200,
+    "rangeTiles": 8,
+    "aoeRadiusTiles": 2,
+    "basePower": 62,
+    "isHealing": false,
+    "projectileSpriteId": 5,
+    "animationId": 10,
+    "statusEffectType": null,
+    "statusMagnitude": 0,
+    "statusDurationTicks": 0,
+    "warpMapId": 0,
+    "warpX": 0,
+    "warpY": 0,
+    "powerPercentPerLevel": 8,
+    "maxSpellLevel": 5,
+    "castsPerLevel": 60,
+    "schemaVersion": 2
+}

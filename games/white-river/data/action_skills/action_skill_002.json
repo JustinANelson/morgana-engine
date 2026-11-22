@@ -1,0 +1,27 @@
+{
+    "id": 2,
+    "name": "Backhand",
+    "description": "The return stroke, hard enough to make them flinch.",
+    "iconId": 67,
+    "levelReq": 1,
+    "startupTicks": 2,
+    "activeTicks": 2,
+    "recoveryTicks": 5,
+    "animationId": 1,
+    "schemaVersion": 2,
+    "hitboxes": [
+        {
+            "fromTick": 2,
+            "toTick": 3,
+            "shape": "ARC",
+            "radiusPixels": 46,
+            "arcDegrees": 120,
+            "hit": {
+                "damagePercent": 90,
+                "reaction": "STAGGER",
+                "reactionTicks": 6,
+                "hitStopTicks": 1
+            }
+        }
+    ]
+}

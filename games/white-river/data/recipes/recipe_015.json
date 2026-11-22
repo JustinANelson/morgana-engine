@@ -1,0 +1,24 @@
+{
+    "id": 15,
+    "name": "Marshsteel Sword",
+    "stationType": "ANVIL",
+    "levelReq": 10,
+    "ingredients": [
+        {
+            "itemId": 34,
+            "amount": 1
+        },
+        {
+            "itemId": 19,
+            "amount": 4
+        },
+        {
+            "itemId": 25,
+            "amount": 4
+        }
+    ],
+    "outputItemId": 37,
+    "outputAmount": 1,
+    "xpReward": 90,
+    "schemaVersion": 2
+}

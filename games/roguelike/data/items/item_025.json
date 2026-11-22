@@ -1,0 +1,17 @@
+{
+    "id": 25,
+    "name": "Leather Boots",
+    "description": "Soft-soled boots for quiet dungeon steps.",
+    "type": "BOOTS",
+    "iconId": 25,
+    "price": 30,
+    "schemaVersion": 1,
+    "armorDefense": 2,
+    "paperdollSpriteId": 15,
+    "paperdollSlot": "FEET",
+    "paperdollClassTints": {
+        "1": "#c95046",
+        "2": "#4f8a5b",
+        "3": "#d97736"
+    }
+}

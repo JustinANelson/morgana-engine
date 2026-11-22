@@ -1,0 +1,13 @@
+{
+    "id": 8,
+    "name": "Wandering Peddler",
+    "title": "Crypt Trader",
+    "spriteId": 17,
+    "behavior": "SHOPKEEPER",
+    "level": 5,
+    "shopId": 4,
+    "vitals": {
+        "hp": 200
+    },
+    "schemaVersion": 1
+}

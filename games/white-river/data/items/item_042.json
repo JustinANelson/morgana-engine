@@ -1,0 +1,22 @@
+{
+    "id": 42,
+    "name": "Chalkglass Rod",
+    "description": "Chalk fused to glass around a core of mire essence.",
+    "type": "WEAPON",
+    "iconId": 44,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 1100,
+    "levelReq": 20,
+    "schemaVersion": 2,
+    "attackDamage": 13,
+    "attackSpeedTicks": 12,
+    "rangeTiles": 1,
+    "weaponStyle": "MAGIC_STAFF",
+    "classReqIds": [
+        3
+    ],
+    "attributeBonuses": {
+        "int": 12
+    }
+}

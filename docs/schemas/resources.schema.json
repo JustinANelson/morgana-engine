@@ -1,0 +1,107 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Morgana resources document",
+    "$ref": "#/$defs/com.morgana.domain.content.ResourceDefinition",
+    "$defs": {
+        "com.morgana.domain.content.ResourceDefinition": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "category": {
+                    "type": "string",
+                    "enum": [
+                        "TREE",
+                        "ORE_VEIN",
+                        "FISHING_SPOT",
+                        "HERB_PATCH"
+                    ]
+                },
+                "intactSpriteId": {
+                    "type": "integer"
+                },
+                "depletedSpriteId": {
+                    "type": "integer"
+                },
+                "requiredTool": {
+                    "type": "string",
+                    "enum": [
+                        "NONE",
+                        "HATCHET",
+                        "PICKAXE",
+                        "FISHING_ROD"
+                    ]
+                },
+                "rewardItemId": {
+                    "type": "integer"
+                },
+                "minYield": {
+                    "type": "integer"
+                },
+                "maxYield": {
+                    "type": "integer"
+                },
+                "maxHealth": {
+                    "type": "integer"
+                },
+                "respawnTicks": {
+                    "type": "integer"
+                },
+                "xpReward": {
+                    "type": "integer"
+                },
+                "emptyMessage": {
+                    "type": "string"
+                },
+                "successMessage": {
+                    "type": "string"
+                },
+                "swingText": {
+                    "type": "string"
+                },
+                "bonusDrops": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.content.NpcDropEntry"
+                    }
+                },
+                "animationId": {
+                    "type": "integer"
+                },
+                "schemaVersion": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "id",
+                "name"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.content.NpcDropEntry": {
+            "type": "object",
+            "properties": {
+                "itemId": {
+                    "type": "integer"
+                },
+                "minAmount": {
+                    "type": "integer"
+                },
+                "maxAmount": {
+                    "type": "integer"
+                },
+                "chanceBasisPoints": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "itemId"
+            ],
+            "additionalProperties": false
+        }
+    }
+}

@@ -1,0 +1,30 @@
+{
+    "id": 6,
+    "name": "Sidestep",
+    "description": "A quick step forward through whatever is coming. Nothing can touch you for the first five ticks.",
+    "iconId": 73,
+    "levelReq": 1,
+    "startupTicks": 0,
+    "activeTicks": 6,
+    "recoveryTicks": 3,
+    "animationId": 7,
+    "schemaVersion": 2,
+    "costs": {
+        "sp": 20
+    },
+    "cancelFromTick": 6,
+    "moves": [
+        {
+            "fromTick": 0,
+            "toTick": 5,
+            "forwardPixels": 72
+        }
+    ],
+    "armor": [
+        {
+            "fromTick": 0,
+            "toTick": 4,
+            "type": "INVULNERABLE"
+        }
+    ]
+}

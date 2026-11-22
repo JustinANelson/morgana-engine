@@ -1,0 +1,13 @@
+{
+    "id": 5,
+    "name": "Relic Broker Vex",
+    "title": "Curios & Scrolls",
+    "spriteId": 14,
+    "behavior": "SHOPKEEPER",
+    "level": 10,
+    "shopId": 3,
+    "vitals": {
+        "hp": 300
+    },
+    "schemaVersion": 1
+}

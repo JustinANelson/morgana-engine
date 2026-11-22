@@ -1,0 +1,16 @@
+{
+    "id": 54,
+    "name": "Ash Buckler",
+    "description": "A small round shield of ash planks.",
+    "type": "SHIELD",
+    "iconId": 54,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 45,
+    "levelReq": 1,
+    "schemaVersion": 2,
+    "armorDefense": 3,
+    "classReqIds": [
+        1
+    ]
+}

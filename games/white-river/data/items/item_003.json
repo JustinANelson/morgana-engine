@@ -1,0 +1,15 @@
+{
+    "id": 3,
+    "name": "Tonic",
+    "description": "Restores 140 health.",
+    "type": "CONSUMABLE",
+    "iconId": 3,
+    "stackable": true,
+    "maxStack": 999,
+    "price": 45,
+    "levelReq": 10,
+    "schemaVersion": 2,
+    "restore": {
+        "hp": 140
+    }
+}

@@ -1,0 +1,33 @@
+{
+    "id": 12,
+    "name": "Gloaming Mend",
+    "description": "Borrow a little dusk to close your wounds.",
+    "iconId": 78,
+    "targetType": "SELF",
+    "levelReq": 1,
+    "classReqIds": [
+        3
+    ],
+    "costs": {
+        "mp": 14
+    },
+    "scales": true,
+    "castTimeTicks": 0,
+    "cooldownTicks": 80,
+    "rangeTiles": 1,
+    "aoeRadiusTiles": 0,
+    "basePower": 36,
+    "isHealing": true,
+    "projectileSpriteId": 0,
+    "animationId": 12,
+    "statusEffectType": null,
+    "statusMagnitude": 0,
+    "statusDurationTicks": 0,
+    "warpMapId": 0,
+    "warpX": 0,
+    "warpY": 0,
+    "powerPercentPerLevel": 8,
+    "maxSpellLevel": 5,
+    "castsPerLevel": 60,
+    "schemaVersion": 2
+}

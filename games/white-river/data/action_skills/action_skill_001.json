@@ -1,0 +1,25 @@
+{
+    "id": 1,
+    "name": "Ford Cut",
+    "description": "The opening cut. Chains into Backhand.",
+    "iconId": 67,
+    "levelReq": 1,
+    "startupTicks": 2,
+    "activeTicks": 2,
+    "recoveryTicks": 5,
+    "animationId": 1,
+    "schemaVersion": 2,
+    "hitboxes": [
+        {
+            "fromTick": 2,
+            "toTick": 3,
+            "shape": "ARC",
+            "radiusPixels": 44,
+            "arcDegrees": 110,
+            "hit": {
+                "damagePercent": 80,
+                "hitStopTicks": 1
+            }
+        }
+    ]
+}

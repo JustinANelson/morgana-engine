@@ -1,0 +1,31 @@
+{
+    "id": 16,
+    "name": "Venom Spit",
+    "description": "A glob of marsh venom.",
+    "iconId": 79,
+    "targetType": "SINGLE_TARGET",
+    "levelReq": 1,
+    "classReqIds": [],
+    "costs": {
+        "mp": 4
+    },
+    "scales": false,
+    "castTimeTicks": 0,
+    "cooldownTicks": 60,
+    "rangeTiles": 5,
+    "aoeRadiusTiles": 0,
+    "basePower": 10,
+    "isHealing": false,
+    "projectileSpriteId": 4,
+    "animationId": 13,
+    "statusEffectType": "DOT_POISON",
+    "statusMagnitude": 3,
+    "statusDurationTicks": 60,
+    "warpMapId": 0,
+    "warpX": 0,
+    "warpY": 0,
+    "powerPercentPerLevel": 8,
+    "maxSpellLevel": 5,
+    "castsPerLevel": 60,
+    "schemaVersion": 2
+}

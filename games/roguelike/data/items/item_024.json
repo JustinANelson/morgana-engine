@@ -1,0 +1,20 @@
+{
+    "id": 24,
+    "name": "Ashen Mail",
+    "description": "Ember-infused mail crafted from crypt relics.",
+    "type": "ARMOR",
+    "iconId": 24,
+    "price": 240,
+    "schemaVersion": 1,
+    "levelReq": 3,
+    "armorDefense": 12,
+    "attributeBonuses": {
+        "vit": 3
+    },
+    "vitalMaxBonuses": {
+        "hp": 35
+    },
+    "paperdollSpriteId": 14,
+    "paperdollSlot": "TORSO",
+    "paperdollTintHex": "#d8683a"
+}

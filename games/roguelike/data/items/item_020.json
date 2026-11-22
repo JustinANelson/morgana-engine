@@ -1,0 +1,16 @@
+{
+    "id": 20,
+    "name": "Vanguard Jerkin",
+    "description": "Reinforced brigandine worn by Keep Vanguards.",
+    "type": "ARMOR",
+    "iconId": 20,
+    "price": 40,
+    "schemaVersion": 1,
+    "armorDefense": 4,
+    "classReqIds": [
+        1
+    ],
+    "paperdollSpriteId": 13,
+    "paperdollSlot": "TORSO",
+    "paperdollTintHex": "#b84a42"
+}

@@ -1,0 +1,13 @@
+{
+    "id": 2,
+    "name": "Delve Warden Orin",
+    "title": "Difficulty Master",
+    "spriteId": 11,
+    "behavior": "QUEST_GIVER",
+    "level": 20,
+    "eventId": 2,
+    "vitals": {
+        "hp": 500
+    },
+    "schemaVersion": 1
+}

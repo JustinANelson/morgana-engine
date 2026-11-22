@@ -1,0 +1,13 @@
+{
+    "id": 13,
+    "name": "Ember Arrow",
+    "description": "Arrows tipped with smoldering ash.",
+    "type": "AMMO",
+    "iconId": 13,
+    "price": 6,
+    "schemaVersion": 1,
+    "stackable": true,
+    "maxStack": 200,
+    "attackDamage": 5,
+    "projectileSpriteId": 2
+}

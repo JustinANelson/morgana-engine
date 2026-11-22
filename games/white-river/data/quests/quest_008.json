@@ -1,0 +1,39 @@
+{
+    "id": 8,
+    "name": "The Pale Warden",
+    "summary": "Bring down the Pale Warden and carry its core home.",
+    "levelReq": 34,
+    "prerequisiteQuestIds": [
+        7
+    ],
+    "startText": "Whatever keeps the headwaters, it is why the river has been rising. End it and bring me its core.",
+    "inProgressText": "The Pale Warden still keeps the headwaters. Bring me its core.",
+    "completionText": "The river will settle. The Ford will remember your name.",
+    "objectives": [
+        {
+            "type": "KILL_NPC",
+            "targetId": 36,
+            "requiredCount": 1,
+            "description": "The Pale Warden"
+        },
+        {
+            "type": "COLLECT_ITEM",
+            "targetId": 30,
+            "requiredCount": 1,
+            "description": "Warden's Core"
+        }
+    ],
+    "reward": {
+        "xp": 80000,
+        "currencyAmount": 9000,
+        "items": [
+            {
+                "itemId": 29,
+                "amount": 3
+            }
+        ],
+        "teachSpellId": 0
+    },
+    "repeatable": false,
+    "schemaVersion": 2
+}

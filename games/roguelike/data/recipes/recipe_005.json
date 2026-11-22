@@ -1,0 +1,24 @@
+{
+    "id": 5,
+    "name": "Ashen Mail",
+    "stationType": "ANYWHERE",
+    "levelReq": 3,
+    "ingredients": [
+        {
+            "itemId": 38,
+            "amount": 4
+        },
+        {
+            "itemId": 39,
+            "amount": 3
+        },
+        {
+            "itemId": 40,
+            "amount": 1
+        }
+    ],
+    "outputItemId": 24,
+    "outputAmount": 1,
+    "xpReward": 80,
+    "schemaVersion": 1
+}

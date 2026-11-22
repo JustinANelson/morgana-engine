@@ -1,0 +1,39 @@
+{
+    "id": 3,
+    "name": "Ashen Cleave",
+    "description": "Heavy downward finisher that knocks enemies back.",
+    "iconId": 4,
+    "startupTicks": 4,
+    "activeTicks": 3,
+    "recoveryTicks": 8,
+    "costs": {
+        "stamina": 10
+    },
+    "animationId": 6,
+    "soundId": "combat_hit",
+    "schemaVersion": 2,
+    "moves": [
+        {
+            "fromTick": 1,
+            "toTick": 4,
+            "forwardPixels": 14
+        }
+    ],
+    "hitboxes": [
+        {
+            "fromTick": 4,
+            "toTick": 6,
+            "shape": "CIRCLE",
+            "forwardPixels": 28,
+            "radiusPixels": 40,
+            "hit": {
+                "damageKind": "MELEE",
+                "damagePercent": 155,
+                "reaction": "KNOCKDOWN",
+                "reactionTicks": 10,
+                "knockbackPixels": 22,
+                "hitStopTicks": 2
+            }
+        }
+    ]
+}

@@ -1,0 +1,30 @@
+{
+    "id": 24,
+    "name": "Ember Blink",
+    "description": "Phase forward in a flash of ash with invulnerability.",
+    "iconId": 39,
+    "startupTicks": 1,
+    "activeTicks": 5,
+    "recoveryTicks": 4,
+    "costs": {
+        "stamina": 16
+    },
+    "cooldownTicks": 18,
+    "animationId": 1,
+    "soundId": "ui_click",
+    "schemaVersion": 2,
+    "armor": [
+        {
+            "fromTick": 1,
+            "toTick": 5,
+            "type": "INVULNERABLE"
+        }
+    ],
+    "moves": [
+        {
+            "fromTick": 1,
+            "toTick": 5,
+            "forwardPixels": 56
+        }
+    ]
+}

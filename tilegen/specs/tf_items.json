@@ -1,0 +1,26 @@
+{
+  "name": "tf_items",
+  "seed": 9090,
+  "tileSize": 16,
+  "columns": 8,
+  "style": "TIME_FANTASY",
+  "materials": [],
+  "props": [
+    { "name": "item_gold", "kind": "GOLD_PILE" },
+    { "name": "item_hp_potion", "kind": "HEALTH_POTION", "primaryPalette": "tf_ruins_marble" },
+    { "name": "item_mp_potion", "kind": "MANA_POTION", "primaryPalette": "tf_ruins_marble" },
+    { "name": "item_scroll", "kind": "SCROLL", "primaryPalette": "tf_ruins_terra" },
+    { "name": "item_key", "kind": "KEY_ITEM" },
+    { "name": "item_chest_closed", "kind": "CHEST_CLOSED", "primaryPalette": "tf_ruins_gold", "secondaryPalette": "timber_wood" },
+    { "name": "item_chest_open", "kind": "CHEST_OPEN", "primaryPalette": "tf_ruins_gold", "secondaryPalette": "timber_wood" },
+    { "name": "item_urn", "kind": "URN", "primaryPalette": "tf_ruins_marble", "secondaryPalette": "tf_ruins_blue" },
+    { "name": "item_barrel", "kind": "BARREL", "primaryPalette": "time_fantasy_stone", "secondaryPalette": "timber_wood" },
+    { "name": "item_crate", "kind": "CRATE", "secondaryPalette": "timber_wood" },
+    { "name": "item_weapon_rack", "kind": "WEAPON_RACK", "primaryPalette": "time_fantasy_stone", "secondaryPalette": "timber_wood" },
+    { "name": "item_skulls", "kind": "SKULL_PILE", "primaryPalette": "tf_ruins_marble" },
+    { "name": "item_torch", "kind": "TORCH_SCONCE", "primaryPalette": "time_fantasy_stone" },
+    { "name": "item_plate", "kind": "PRESSURE_PLATE", "primaryPalette": "tf_ruins_marble" },
+    { "name": "item_spikes", "kind": "SPIKE_TRAP", "primaryPalette": "time_fantasy_stone" },
+    { "name": "item_banner", "kind": "WALL_BANNER", "primaryPalette": "tf_ruins_marble", "secondaryPalette": "tf_ruins_blue" }
+  ]
+}

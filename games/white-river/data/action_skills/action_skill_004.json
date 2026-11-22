@@ -1,0 +1,31 @@
+{
+    "id": 4,
+    "name": "Undertow",
+    "description": "A rising cut out of Backhand that launches the target.",
+    "iconId": 71,
+    "levelReq": 8,
+    "startupTicks": 3,
+    "activeTicks": 2,
+    "recoveryTicks": 8,
+    "animationId": 5,
+    "schemaVersion": 2,
+    "costs": {
+        "sp": 15
+    },
+    "cooldownTicks": 60,
+    "hitboxes": [
+        {
+            "fromTick": 3,
+            "toTick": 4,
+            "shape": "ARC",
+            "radiusPixels": 40,
+            "arcDegrees": 90,
+            "hit": {
+                "damagePercent": 70,
+                "reaction": "AIRBORNE",
+                "reactionTicks": 24,
+                "hitStopTicks": 2
+            }
+        }
+    ]
+}

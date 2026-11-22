@@ -1,0 +1,63 @@
+---
+type: Decision
+title: "ADR 0018: Core, Systems, Templates and Plugins"
+description: "The engine's four layers: Core (every game), Systems (switchable features, grouped by genre tags), Templates (starting games that switch systems) and Plugins (sandboxed Lua that overrides how systems work in one game)."
+tags: [adr, terminology, plugins, templates, systems, genres]
+code: ["core-domain/src/main/kotlin/com/morgana/domain/sim/OptionalModules.kt", "server-app/src/main/kotlin/com/morgana/server/plugins/PluginApi.kt", "server-app/src/main/kotlin/com/morgana/server/worlds/RealmBlueprint.kt", "client-core/src/main/kotlin/com/morgana/client/realms/RealmWizardModel.kt"]
+symbols: ["OptionalModule", "MorganaPlugin", "RealmTemplate", "FeaturePreset"]
+generated: { by: claude-code/claude-sonnet-5-5, at: 2026-11-21T12:00:00Z }
+stale_after: 2027-05-20T00:00:00Z
+---
+
+# ADR 0018: Core, Systems, Templates and Plugins
+
+**Status**: Accepted 2026-11-21. Proposed earlier the same day and revised after owner direction (plugins are Lua, genres are collections of systems, templates toggle systems); the owner then asked for each step to be built and for the architecture work to be finished, and the vocabulary is now used in the code, the editors and the docs. The work below is done; what remains is listed under *Work, in order*.
+
+**Context**: the owner wants a simple structure: a base engine every game needs; a collection of **systems** that support genres (online RPG, roguelike and dungeon crawler, farming sim and so on); **templates** that switch systems on or off, which devs can change; and **plugins** written in Lua that let a dev override how any system works in their game (combat, stats, enemy skills and so on). Checking this against the code found:
+
+- **"Module" has two meanings already**: `CombatModule` (the replaceable combat engine, one per game) and `OptionalModule` (a switchable feature in `server.json`, [optional modules](/server/optional_modules.md)). Genres must not become a third.
+- **Systems live in two places.** `OptionalModule` switches (14, in `server.json`) and rule sections of `game.json` (ghost death, paragon, bestiary, sprint, jump, gear wear, rested XP, the Systems and Game rules F1 panels). They behave alike (an unticked system is removed) but have no common description.
+- **Systems carry no relationships.** That the market needs mail is a hard-coded warning in `ModulesForm`; which genre a system serves is written only in `docs/GENRES_AND_MODULES.md`.
+- **Templates cannot carry system switches.** `RealmTemplate` is a game folder under `games/` plus the built-in *Blank* and *Import a pack*. `WorldLibrary.copyGame` copies `game.json`, `data`, `scripts` and `assets` only, so a game's own `server.json` (Halcyon Reach has one) is ignored when a realm is made from it; only the wizard's choices reach `server.json`.
+- **"Plugin" currently means a trusted Kotlin jar** (`MorganaPlugin`, `plugins/`, `morgana-plugin.json`), which is operator-installed, has full JVM access and is never loaded from a pack ([ADR 0013](/decisions/0013_engine_game_split_and_lua_scripting.md)). Sandboxed Lua lives in a game's `scripts/` and can already register commands, formulas, event commands, actions and a whole combat module (`register.*`).
+- **Lua cannot yet override every system.** The enum seams (status effects, item use, NPC AI, quest objectives, tile attributes) are hard-coded; see the seams table in `docs/PLUGIN_ARCHITECTURE.md`.
+
+**Decision**:
+
+| Layer | Meaning | Where it lives |
+| :--- | :--- | :--- |
+| **Core** | The base engine every game runs on: the deterministic simulation kernel, maps, movement, persistence, networking, permissions, replay, the content pipeline, the clients and the F1 editors. Not switchable. | `core-domain` and the server and client modules |
+| **Systems** | Switchable features built into the engine. Each has an id, a one-line description, **genre tags** (`rpg`, `roguelike`, `farming`, `roleplay`, `action`) and the systems it **requires**. A genre is a *tag*, never a layer: one system (instancing, boss encounters) can serve several genres. The code type stays `OptionalModule`; docs and UI say "system". The combat engine (`combat.module`) is a *combat module*, chosen separately. | `server.json` `modules`, plus the rule sections of `game.json` |
+| **Templates** | Starting games a new realm is made from. A template **declares which systems are on** (the `modules` of its own `server.json`), and the creator can toggle any of them in the wizard or later. Genre starters (Online RPG, Roguelike, Farming) are templates; so are finished examples (Lanternfall, Halcyon Reach). After creation the realm is an ordinary game: a template has no runtime presence. | `games/<name>/` and the built-ins |
+| **Plugins** | **Lua** that overrides or extends how a system works in one game: combat, stats and formulas, enemy skills and AI, loot, statuses. A plugin lives in the game's `scripts/`, is sandboxed, shareable, and can be shipped inside a template or pack. It names the system it overrides and the systems it requires. | `games/<name>/scripts/` |
+
+Consequences:
+
+1. **Genre support is metadata on systems.** "The roguelike systems" means the systems tagged `roguelike`. A template picks a set; no new runtime concept.
+2. **Trusted Kotlin jars are *add-on systems*, not a fifth layer.** Looking at `plugin-example` (`HelloPlugin`) the owner observed that a server extension is a system under another name, and that is right: both have an id, an on/off switch (`registerModule` registers an `<id>:<name>` module in the same `server.json` map), event hooks, private storage and player windows. What differs is depth and trust:
+
+   | | Built-in system | Add-on system (Kotlin jar) | Plugin (Lua) |
+   | :--- | :--- | :--- | :--- |
+   | Runs | inside the deterministic simulation (`core-domain`), shared with the client, replayed | in the server layer, after the simulation has acted; hooks are notifications plus a veto (`onBeforeAction`) | inside the simulation through seams, sandboxed and budgeted |
+   | Can change rules (damage, requirements, AI) | yes | no, it can react and refuse | yes, where a seam exists |
+   | Trust | the engine's own code | operator-installed, full JVM access | untrusted, sandboxed |
+   | Ships in a template or pack | built in | never | yes |
+
+   So the docs call a jar an **add-on system**: the same contract as a built-in system (id, switch, tags, requires), packaged outside the engine and limited to the server layer. The long-term goal is one contract: the kernel seams ([system seams](/systems/system_seams.md)) are what built-in systems, add-ons and Lua plugins all register against. The code type (`MorganaPlugin`), the `plugins/` folder and `morgana-plugin.json` keep their names until a deliberate rename; renaming them breaks existing jars and is not part of this ADR's first steps.
+3. **A template cannot ship server extensions** (they are never loaded from a pack), but it can ship Lua plugins, content, art and its system switches.
+4. **Requirements become data.** A system's `requires` replaces the hard-coded warnings; the wizard, the Systems panel and `validateContent` all read the same list.
+5. **Override seams are added one system at a time**, each with a differential test, and only for server-authoritative rules at first. Movement overrides would desynchronise client prediction, because the client has no Lua (an open question in `docs/PLUGIN_ARCHITECTURE.md`), so they wait for client-side Lua.
+
+**Alternatives considered**
+- *Genre modules as a runtime layer* (a genre switch that enables a bundle live): more machinery than tags plus templates, and it breaks "a game is data".
+- *Gradle module per genre* (`systems-roguelike`, `systems-farming`): the strongest boundary, but `CharacterState`, the protocol, persistence and client prediction all use the same domain types, so it is a large and risky change for little gain. Revisit only if package-level separation proves too weak.
+- *Renaming `OptionalModule` in code*: churn in `server.json`, the protocol (`disabledModules`) and tests for no behaviour change. Change the words, not the type.
+
+**Work, in order**
+- **A. Words** (done with this ADR): glossary, `docs/GENRES_AND_MODULES.md`, the optional modules page and the log.
+- **B. Systems registry** (done 2026-11-21): genre tags and `requires` on every `OptionalModule`; `requires` checked from one place (`unmetRequirements`); a template's own `server.json` switches carried into a new realm. **Kernel seams, built 2026-11-21:** eleven seam interfaces (`RequirementGate`, `EventCommandHandler`, `TickParticipant`, `CombatArbiter`, `CombatObserver`, `ActionGate`, `ActivityInterrupter`, `ChatCommandHandler`, `ItemUseHandler`, `KillObserver`, `MonsterBehavior`) and `WorldSimulation.install(system)`. Promotion, rebirth, arena, guild war, pets, stalls, durability, gear upgrades, respec, the threat table and boss encounters are objects in `core-domain/.../systems/` installed through them; trading and the guild bank sit there as facade services; a boundary test allows only `WorldSimulation` to import that package ([system seams](/systems/system_seams.md)). `MonsterBehavior` is the seam an NPC AI or enemy-skill override would implement. Instancing followed (12th seam, `WarpRouter`: `InstancingSystem` routes warps to private copies; the map-copy infrastructure stays in the kernel because the arena shares it). **Kernel residue, decided rather than left over:** reflect and fly are fields of `CharacterState` read by damage and movement, so they are kernel rules; trading and the guild bank are facade services and `WorldSimulation` is the composition root, the one file allowed to import `systems/`.
+- **C. Lua plugins** (done 2026-11-21): `register.plugin{ id, requires, replaces }` plus one registration per seam (`register.requirement`, `may_fight`, `monster`, `tick`, `item_use`, `action_gate`, `on_interrupt`, `combat_observer`, `on_kill`) let a game's Lua implement every seam through the `ScriptedSystem` adapter, installed last in every world; a plugin's hooks run only while the systems it requires are on ([script host](/systems/scripting.md)). Chat commands, event commands, actions, formulas and combat were already open to Lua. Where the engine is part-way through changing a character (struck, interrupted) a hook's effects on that character are dropped. **Remaining:** taking over a death or a hit on a monster, which are done by replacing the system that owns them.
+- **B2. The unified system list** (done 2026-11-21): the engine's twelve installed rule systems plus the guild bank are now `OptionalModule` entries (27 in all, one enum, one `server.json` `modules` map) and every installed system is a `GameSystem` the kernel skips while its switch is off or a running plugin replaces it (`register.plugin{ replaces }`; the system returns if the plugin stops running). So a template, an operator or a plugin can switch off or replace any engine system ([optional modules](/server/optional_modules.md), [system seams](/systems/system_seams.md)). **Remaining:** the switches are per realm and read at startup, not per map or per player.
+- **D. Templates** (system switches done 2026-11-21): the wizard offers one **genre starter** per genre (the genre's own systems on, every other system off, from the system tags), lists systems under genre headings, starts its feature list from the systems the chosen template switches off and lets the creator switch them back on; the F1 Systems panel has the same headings and genre buttons; `world-new --genre/--enable/--disable` is the command-line twin ([new realm wizard](/server/new_realm_wizard.md), [optional modules](/server/optional_modules.md)). **Remaining:** starter *content* for genres beyond Blank and Lanternfall (a farming or online RPG game folder), and an optional `kind` (`starter` or `example`) for the wizard to group templates.
+
+**Final shape (2026-11-21)**: twelve seams; thirteen installed systems (rebirth, promotion, arena, Guild War, pets, stalls, gear wear, gear upgrades, respec, threat, boss encounters, instancing, Lua plugins) plus trading and the guild bank as facade services; one system list (`OptionalModule`, 27 entries) with a pinned list of fourteen switches the kernel checks itself; Lua access to every seam through `register.*` with `replaces` to take over a whole system; genre starters in the wizard, the F1 panel and `world-new --genre`. The boundary and list tests in `check` keep it that way, and `AGENTS.md` mandate 10 and the New-System Checklist tell the next contributor how to add a system.

@@ -1,0 +1,15 @@
+{
+    "id": 61,
+    "name": "Copper Band",
+    "description": "A plain copper ring. Lucky, they say.",
+    "type": "RING",
+    "iconId": 61,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 80,
+    "levelReq": 1,
+    "schemaVersion": 2,
+    "vitalMaxBonuses": {
+        "hp": 20
+    }
+}

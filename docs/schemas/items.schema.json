@@ -1,0 +1,319 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Morgana items document",
+    "$ref": "#/$defs/com.morgana.domain.item.ItemDefinition",
+    "$defs": {
+        "com.morgana.domain.item.ItemDefinition": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "WEAPON",
+                        "SHIELD",
+                        "HELMET",
+                        "ARMOR",
+                        "BOOTS",
+                        "RING",
+                        "AMULET",
+                        "TOOL",
+                        "AMMO",
+                        "CONSUMABLE",
+                        "SPELL_SCROLL",
+                        "KEY",
+                        "CURRENCY",
+                        "MATERIAL",
+                        "QUEST"
+                    ]
+                },
+                "iconId": {
+                    "type": "integer"
+                },
+                "paperdollSpriteId": {
+                    "type": "integer"
+                },
+                "paperdollOffHandSpriteId": {
+                    "type": "integer"
+                },
+                "stackable": {
+                    "type": "boolean"
+                },
+                "maxStack": {
+                    "type": "integer"
+                },
+                "price": {
+                    "type": "integer"
+                },
+                "boundOnPickup": {
+                    "type": "boolean"
+                },
+                "levelReq": {
+                    "type": "integer"
+                },
+                "classReqIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "promotionReq": {
+                    "type": "integer"
+                },
+                "attributeReq": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "attributeBonuses": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "vitalMaxBonuses": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "restore": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "attackDamage": {
+                    "type": "integer"
+                },
+                "armorDefense": {
+                    "type": "integer"
+                },
+                "attackSpeedTicks": {
+                    "type": "integer"
+                },
+                "rangeTiles": {
+                    "type": "integer"
+                },
+                "weaponStyle": {
+                    "type": "string",
+                    "enum": [
+                        "MELEE",
+                        "RANGED_BOW",
+                        "MAGIC_STAFF"
+                    ]
+                },
+                "weaponType": {
+                    "type": "string"
+                },
+                "twoHanded": {
+                    "type": "boolean"
+                },
+                "projectileSpriteId": {
+                    "type": "integer"
+                },
+                "requiredAmmoItemId": {
+                    "type": "integer"
+                },
+                "toolType": {
+                    "type": "string",
+                    "enum": [
+                        "NONE",
+                        "HATCHET",
+                        "PICKAXE",
+                        "FISHING_ROD"
+                    ]
+                },
+                "teachSpellId": {
+                    "type": "integer"
+                },
+                "warpMapId": {
+                    "type": "integer"
+                },
+                "warpX": {
+                    "type": "integer"
+                },
+                "warpY": {
+                    "type": "integer"
+                },
+                "townGate": {
+                    "type": "boolean"
+                },
+                "adoptPetNpcId": {
+                    "type": "integer"
+                },
+                "mountSpeedPercent": {
+                    "type": "integer"
+                },
+                "statusEffectToApply": {
+                    "anyOf": [
+                        {
+                            "type": "string",
+                            "enum": [
+                                "DOT_POISON",
+                                "DOT_BURN",
+                                "DOT_BLEED",
+                                "HOT_REGEN",
+                                "STUN",
+                                "ROOT",
+                                "SLOW",
+                                "HASTE",
+                                "SHIELD",
+                                "STAT_BUFF",
+                                "STAT_DEBUFF",
+                                "FLY",
+                                "REFLECT",
+                                "TAUNT"
+                            ]
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "statusEffectMagnitude": {
+                    "type": "integer"
+                },
+                "statusEffectDurationTicks": {
+                    "type": "integer"
+                },
+                "animationId": {
+                    "type": "integer"
+                },
+                "dropSoundId": {
+                    "type": "string"
+                },
+                "broadcastOnDrop": {
+                    "type": "boolean"
+                },
+                "highlightOnGround": {
+                    "type": "boolean"
+                },
+                "dropHighlightColorHex": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "equipSlot": {
+                    "type": "string"
+                },
+                "paperdollSlot": {
+                    "anyOf": [
+                        {
+                            "type": "string",
+                            "enum": [
+                                "BODY",
+                                "HAIR",
+                                "FEET",
+                                "LEGS",
+                                "TORSO",
+                                "BACK",
+                                "HEAD",
+                                "MAIN_HAND",
+                                "OFF_HAND",
+                                "ACCESSORY"
+                            ]
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "paperdollTintHex": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "paperdollClassTints": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "paperdollHidesSlots": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "BODY",
+                            "HAIR",
+                            "FEET",
+                            "LEGS",
+                            "TORSO",
+                            "BACK",
+                            "HEAD",
+                            "MAIN_HAND",
+                            "OFF_HAND",
+                            "ACCESSORY"
+                        ]
+                    }
+                },
+                "rollAffixes": {
+                    "type": "boolean"
+                },
+                "gem": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.item.GemEffect"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "nextTierItemId": {
+                    "type": "integer"
+                },
+                "schemaVersion": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "id",
+                "name"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.item.GemEffect": {
+            "type": "object",
+            "properties": {
+                "attributeBonuses": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "attackDamage": {
+                    "type": "integer"
+                },
+                "armorDefense": {
+                    "type": "integer"
+                },
+                "xpPercent": {
+                    "type": "integer"
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        }
+    }
+}

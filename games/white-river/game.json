@@ -1,0 +1,610 @@
+{
+    "schemaVersion": 1,
+    "engineApi": "1",
+    "id": "white-river",
+    "name": "White River Online",
+    "description": "An original online RPG of the White River valley: grind and gather your way from the trade town of Calder's Ford through Millrace Fields and Heronreach Marsh to the contested ground of Chalk Hollow and the Paleback headwaters. Three classes, life skills (gathering, fishing, cooking, alchemy, smithing), a player market and seamless zones.",
+    "tags": [
+        "orpg",
+        "mmorpg",
+        "life-skills",
+        "open-world",
+        "pvp"
+    ],
+    "capabilities": [
+        "damage",
+        "heal",
+        "inventory",
+        "teleport",
+        "status",
+        "message",
+        "visual",
+        "projectile",
+        "progression",
+        "vital",
+        "state"
+    ],
+    "attributes": [
+        {
+            "id": "str",
+            "name": "Strength",
+            "short": "STR",
+            "base": 10,
+            "floor": 1,
+            "cap": null,
+            "allocatable": true
+        },
+        {
+            "id": "agi",
+            "name": "Agility",
+            "short": "AGI",
+            "base": 10,
+            "floor": 1,
+            "cap": null,
+            "allocatable": true
+        },
+        {
+            "id": "int",
+            "name": "Insight",
+            "short": "INT",
+            "base": 10,
+            "floor": 1,
+            "cap": null,
+            "allocatable": true
+        },
+        {
+            "id": "vit",
+            "name": "Vitality",
+            "short": "VIT",
+            "base": 10,
+            "floor": 1,
+            "cap": null,
+            "allocatable": true
+        }
+    ],
+    "vitals": [
+        {
+            "id": "hp",
+            "name": "Health",
+            "short": "HP",
+            "color": "#dc2626",
+            "role": "life",
+            "max": "max(15, 90 + level * 18 + vit * 12 + str * 2 + bonus)",
+            "regen": {
+                "everyTicks": 40,
+                "amount": "max(1, vit / 4)"
+            }
+        },
+        {
+            "id": "mp",
+            "name": "Mana",
+            "short": "MP",
+            "color": "#7c3aed",
+            "role": null,
+            "max": "max(0, 20 + level * 8 + int * 10 + bonus)",
+            "regen": {
+                "everyTicks": 40,
+                "amount": "max(1, int / 4)"
+            }
+        },
+        {
+            "id": "sp",
+            "name": "Stamina",
+            "short": "SP",
+            "color": "#eab308",
+            "role": null,
+            "max": "100 + agi * 2 + bonus",
+            "regen": {
+                "everyTicks": 10,
+                "amount": "3 + agi / 10"
+            }
+        }
+    ],
+    "progression": {
+        "maxLevel": 60,
+        "xpTable": null,
+        "xpExpr": "90 * level * level"
+    },
+    "combat": {
+        "melee": "raw = a.str * 2 + weapon; mit = d.vit + armor / 2; base = max(1, raw - mit); crit ? max(2, (3 * base + 1) / 2) : base",
+        "ranged": "raw = a.agi * 2 + weapon + ammo; mit = d.agi / 2 + d.vit / 2 + armor / 2; base = max(1, raw - mit); crit ? max(2, (3 * base + 1) / 2) : base",
+        "spell": "raw = max(1, basePower + (scales ? a.int * 2 : 0)); heals ? raw : max(1, raw - d.int / 2 - d.vit / 4)",
+        "critChanceBp": "clamp(300 + a.agi * 40, 300, 5000)",
+        "dodgeChanceBp": "clamp((d.agi - a.agi) * 40, 0, 3500)",
+        "module": "realtime",
+        "defaultAttackSpeedTicks": 10,
+        "defaultNpcRespawnTicks": 100,
+        "lootOwnerProtectionTicks": 600,
+        "levelOffsetXpScaling": true,
+        "enemyVariants": [
+            {
+                "id": "hardy",
+                "label": "Hardy",
+                "spawnBasisPoints": 1000,
+                "forceAggro": false,
+                "hpPercent": 140,
+                "attackPercent": 110,
+                "moveSpeedPercent": 100,
+                "xpPercent": 150,
+                "dropRatePercent": 150,
+                "levelBonus": 1,
+                "colorHex": "34D399"
+            },
+            {
+                "id": "savage",
+                "label": "Savage",
+                "spawnBasisPoints": 700,
+                "forceAggro": true,
+                "hpPercent": 130,
+                "attackPercent": 130,
+                "moveSpeedPercent": 85,
+                "xpPercent": 180,
+                "dropRatePercent": 200,
+                "levelBonus": 2,
+                "colorHex": "F97316"
+            },
+            {
+                "id": "elder",
+                "label": "Elder",
+                "spawnBasisPoints": 350,
+                "forceAggro": true,
+                "hpPercent": 240,
+                "attackPercent": 140,
+                "moveSpeedPercent": 95,
+                "xpPercent": 300,
+                "dropRatePercent": 350,
+                "bonusDropRolls": 1,
+                "levelBonus": 4,
+                "colorHex": "C084FC"
+            },
+            {
+                "id": "gilded",
+                "label": "Gilded",
+                "spawnBasisPoints": 150,
+                "forceAggro": false,
+                "hpPercent": 170,
+                "attackPercent": 100,
+                "moveSpeedPercent": 85,
+                "xpPercent": 200,
+                "dropRatePercent": 600,
+                "bonusDropRolls": 2,
+                "levelBonus": 3,
+                "colorHex": "FBBF24"
+            }
+        ]
+    },
+    "clock": {
+        "dayLengthTicks": 24000,
+        "daysPerSeason": 7,
+        "seasons": [
+            "Thaw",
+            "Highwater",
+            "Harvest",
+            "Rime"
+        ],
+        "startTimePermille": 350,
+        "dayNight": true
+    },
+    "weather": null,
+    "ui": {
+        "xpOrbs": true
+    },
+    "sprites": null,
+    "inventorySlots": 48,
+    "loot": {
+        "rarities": [
+            {
+                "id": "plain",
+                "name": "Plain",
+                "color": "#e5e7eb",
+                "weight": 620,
+                "unlabeled": true
+            },
+            {
+                "id": "fine",
+                "name": "Fine",
+                "color": "#34d399",
+                "weight": 250,
+                "affixesMin": 1,
+                "affixesMax": 1,
+                "priceMultiplierPercent": 200
+            },
+            {
+                "id": "rare",
+                "name": "Rare",
+                "color": "#60a5fa",
+                "weight": 95,
+                "minItemLevel": 5,
+                "affixesMin": 2,
+                "affixesMax": 3,
+                "priceMultiplierPercent": 450
+            },
+            {
+                "id": "heirloom",
+                "name": "Heirloom",
+                "color": "#facc15",
+                "weight": 28,
+                "minItemLevel": 12,
+                "affixesMin": 3,
+                "affixesMax": 4,
+                "priceMultiplierPercent": 900
+            },
+            {
+                "id": "riverforged",
+                "name": "Riverforged",
+                "color": "#fb923c",
+                "weight": 7,
+                "minItemLevel": 24,
+                "affixesMin": 4,
+                "affixesMax": 5,
+                "priceMultiplierPercent": 1800
+            }
+        ],
+        "affixes": [
+            {
+                "id": "keen",
+                "name": "Keen",
+                "position": "PREFIX",
+                "stat": "ATTACK_DAMAGE",
+                "min": 1,
+                "max": 3,
+                "maxItemLevel": 9,
+                "slots": [
+                    "WEAPON"
+                ]
+            },
+            {
+                "id": "stout",
+                "name": "Stout",
+                "position": "PREFIX",
+                "stat": "ARMOR_DEFENSE",
+                "min": 1,
+                "max": 2,
+                "maxItemLevel": 9,
+                "slots": [
+                    "ARMOR",
+                    "HELMET",
+                    "SHIELD",
+                    "BOOTS"
+                ]
+            },
+            {
+                "id": "hale",
+                "name": "Hale",
+                "position": "PREFIX",
+                "stat": "VITAL_MAX",
+                "statId": "hp",
+                "min": 8,
+                "max": 20,
+                "maxItemLevel": 9
+            },
+            {
+                "id": "lucid",
+                "name": "Lucid",
+                "position": "PREFIX",
+                "stat": "VITAL_MAX",
+                "statId": "mp",
+                "min": 6,
+                "max": 15,
+                "maxItemLevel": 9
+            },
+            {
+                "id": "of_the_ox",
+                "name": "of the Ox",
+                "position": "SUFFIX",
+                "stat": "ATTRIBUTE",
+                "statId": "str",
+                "min": 1,
+                "max": 2,
+                "maxItemLevel": 9
+            },
+            {
+                "id": "of_the_hen",
+                "name": "of the Reed Hen",
+                "position": "SUFFIX",
+                "stat": "ATTRIBUTE",
+                "statId": "agi",
+                "min": 1,
+                "max": 2,
+                "maxItemLevel": 9
+            },
+            {
+                "id": "of_dusk",
+                "name": "of Dusk",
+                "position": "SUFFIX",
+                "stat": "ATTRIBUTE",
+                "statId": "int",
+                "min": 1,
+                "max": 2,
+                "maxItemLevel": 9
+            },
+            {
+                "id": "of_the_ford",
+                "name": "of the Ford",
+                "position": "SUFFIX",
+                "stat": "ATTRIBUTE",
+                "statId": "vit",
+                "min": 1,
+                "max": 2,
+                "maxItemLevel": 9
+            },
+            {
+                "id": "marshsteel",
+                "name": "Marsh-Etched",
+                "position": "PREFIX",
+                "stat": "ATTACK_DAMAGE",
+                "min": 4,
+                "max": 7,
+                "minItemLevel": 10,
+                "maxItemLevel": 19,
+                "slots": [
+                    "WEAPON"
+                ]
+            },
+            {
+                "id": "riveted",
+                "name": "Riveted",
+                "position": "PREFIX",
+                "stat": "ARMOR_DEFENSE",
+                "min": 3,
+                "max": 5,
+                "minItemLevel": 10,
+                "maxItemLevel": 19,
+                "slots": [
+                    "ARMOR",
+                    "HELMET",
+                    "SHIELD",
+                    "BOOTS"
+                ]
+            },
+            {
+                "id": "hearty",
+                "name": "Hearty",
+                "position": "PREFIX",
+                "stat": "VITAL_MAX",
+                "statId": "hp",
+                "min": 33,
+                "max": 60,
+                "minItemLevel": 10,
+                "maxItemLevel": 19
+            },
+            {
+                "id": "twilit",
+                "name": "Twilit",
+                "position": "PREFIX",
+                "stat": "VITAL_MAX",
+                "statId": "mp",
+                "min": 21,
+                "max": 40,
+                "minItemLevel": 10,
+                "maxItemLevel": 19
+            },
+            {
+                "id": "of_the_aurochs",
+                "name": "of the Aurochs",
+                "position": "SUFFIX",
+                "stat": "ATTRIBUTE",
+                "statId": "str",
+                "min": 3,
+                "max": 5,
+                "minItemLevel": 10,
+                "maxItemLevel": 19
+            },
+            {
+                "id": "of_the_heron",
+                "name": "of the Heron",
+                "position": "SUFFIX",
+                "stat": "ATTRIBUTE",
+                "statId": "agi",
+                "min": 3,
+                "max": 5,
+                "minItemLevel": 10,
+                "maxItemLevel": 19
+            },
+            {
+                "id": "of_the_mire",
+                "name": "of the Mire",
+                "position": "SUFFIX",
+                "stat": "ATTRIBUTE",
+                "statId": "int",
+                "min": 3,
+                "max": 5,
+                "minItemLevel": 10,
+                "maxItemLevel": 19
+            },
+            {
+                "id": "of_the_marsh",
+                "name": "of the Marsh",
+                "position": "SUFFIX",
+                "stat": "ATTRIBUTE",
+                "statId": "vit",
+                "min": 3,
+                "max": 5,
+                "minItemLevel": 10,
+                "maxItemLevel": 19
+            },
+            {
+                "id": "chalkhoned",
+                "name": "Chalk-Honed",
+                "position": "PREFIX",
+                "stat": "ATTACK_DAMAGE",
+                "min": 7,
+                "max": 11,
+                "minItemLevel": 20,
+                "maxItemLevel": 29,
+                "slots": [
+                    "WEAPON"
+                ]
+            },
+            {
+                "id": "reaverproof",
+                "name": "Reaverproof",
+                "position": "PREFIX",
+                "stat": "ARMOR_DEFENSE",
+                "min": 5,
+                "max": 8,
+                "minItemLevel": 20,
+                "maxItemLevel": 29,
+                "slots": [
+                    "ARMOR",
+                    "HELMET",
+                    "SHIELD",
+                    "BOOTS"
+                ]
+            },
+            {
+                "id": "stalwart",
+                "name": "Stalwart",
+                "position": "PREFIX",
+                "stat": "VITAL_MAX",
+                "statId": "hp",
+                "min": 58,
+                "max": 100,
+                "minItemLevel": 20,
+                "maxItemLevel": 29
+            },
+            {
+                "id": "gloaming",
+                "name": "Gloaming",
+                "position": "PREFIX",
+                "stat": "VITAL_MAX",
+                "statId": "mp",
+                "min": 36,
+                "max": 65,
+                "minItemLevel": 20,
+                "maxItemLevel": 29
+            },
+            {
+                "id": "of_the_quarry",
+                "name": "of the Quarry",
+                "position": "SUFFIX",
+                "stat": "ATTRIBUTE",
+                "statId": "str",
+                "min": 5,
+                "max": 8,
+                "minItemLevel": 20,
+                "maxItemLevel": 29
+            },
+            {
+                "id": "of_the_gale",
+                "name": "of the Gale",
+                "position": "SUFFIX",
+                "stat": "ATTRIBUTE",
+                "statId": "agi",
+                "min": 5,
+                "max": 8,
+                "minItemLevel": 20,
+                "maxItemLevel": 29
+            },
+            {
+                "id": "of_chalkglass",
+                "name": "of Chalkglass",
+                "position": "SUFFIX",
+                "stat": "ATTRIBUTE",
+                "statId": "int",
+                "min": 5,
+                "max": 8,
+                "minItemLevel": 20,
+                "maxItemLevel": 29
+            },
+            {
+                "id": "of_the_hollow",
+                "name": "of the Hollow",
+                "position": "SUFFIX",
+                "stat": "ATTRIBUTE",
+                "statId": "vit",
+                "min": 5,
+                "max": 8,
+                "minItemLevel": 20,
+                "maxItemLevel": 29
+            },
+            {
+                "id": "rimeforged",
+                "name": "Rimeforged",
+                "position": "PREFIX",
+                "stat": "ATTACK_DAMAGE",
+                "min": 10,
+                "max": 15,
+                "minItemLevel": 30,
+                "slots": [
+                    "WEAPON"
+                ]
+            },
+            {
+                "id": "glacial",
+                "name": "Glacial",
+                "position": "PREFIX",
+                "stat": "ARMOR_DEFENSE",
+                "min": 7,
+                "max": 11,
+                "minItemLevel": 30,
+                "slots": [
+                    "ARMOR",
+                    "HELMET",
+                    "SHIELD",
+                    "BOOTS"
+                ]
+            },
+            {
+                "id": "undying",
+                "name": "Undying",
+                "position": "PREFIX",
+                "stat": "VITAL_MAX",
+                "statId": "hp",
+                "min": 83,
+                "max": 140,
+                "minItemLevel": 30
+            },
+            {
+                "id": "nightbound",
+                "name": "Nightbound",
+                "position": "PREFIX",
+                "stat": "VITAL_MAX",
+                "statId": "mp",
+                "min": 51,
+                "max": 90,
+                "minItemLevel": 30
+            },
+            {
+                "id": "of_the_glacier",
+                "name": "of the Glacier",
+                "position": "SUFFIX",
+                "stat": "ATTRIBUTE",
+                "statId": "str",
+                "min": 7,
+                "max": 11,
+                "minItemLevel": 30
+            },
+            {
+                "id": "of_the_north_wind",
+                "name": "of the North Wind",
+                "position": "SUFFIX",
+                "stat": "ATTRIBUTE",
+                "statId": "agi",
+                "min": 7,
+                "max": 11,
+                "minItemLevel": 30
+            },
+            {
+                "id": "of_the_long_night",
+                "name": "of the Long Night",
+                "position": "SUFFIX",
+                "stat": "ATTRIBUTE",
+                "statId": "int",
+                "min": 7,
+                "max": 11,
+                "minItemLevel": 30
+            },
+            {
+                "id": "of_the_paleback",
+                "name": "of the Paleback",
+                "position": "SUFFIX",
+                "stat": "ATTRIBUTE",
+                "statId": "vit",
+                "min": 7,
+                "max": 11,
+                "minItemLevel": 30
+            }
+        ]
+    }
+}

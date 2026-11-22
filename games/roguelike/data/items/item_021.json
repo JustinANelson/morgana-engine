@@ -1,0 +1,19 @@
+{
+    "id": 21,
+    "name": "Ranger's Cloak",
+    "description": "Weatherproof green tunic suited for agile scouts.",
+    "type": "ARMOR",
+    "iconId": 21,
+    "price": 40,
+    "schemaVersion": 1,
+    "armorDefense": 3,
+    "attributeBonuses": {
+        "agi": 1
+    },
+    "classReqIds": [
+        2
+    ],
+    "paperdollSpriteId": 12,
+    "paperdollSlot": "TORSO",
+    "paperdollTintHex": "#4c8a5a"
+}

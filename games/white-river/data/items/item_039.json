@@ -1,0 +1,22 @@
+{
+    "id": 39,
+    "name": "Mirewood Staff",
+    "description": "Bog-wood that has soaked up a century of marsh light.",
+    "type": "WEAPON",
+    "iconId": 43,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 340,
+    "levelReq": 10,
+    "schemaVersion": 2,
+    "attackDamage": 8,
+    "attackSpeedTicks": 12,
+    "rangeTiles": 1,
+    "weaponStyle": "MAGIC_STAFF",
+    "classReqIds": [
+        3
+    ],
+    "attributeBonuses": {
+        "int": 7
+    }
+}

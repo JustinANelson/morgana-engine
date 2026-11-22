@@ -1,0 +1,38 @@
+{
+    "id": 3,
+    "name": "Vex's Reliquary",
+    "buyRatePercent": 100,
+    "sellRatePercent": 65,
+    "currencyItemId": 1,
+    "entries": [
+        {
+            "itemId": 27,
+            "amount": 1
+        },
+        {
+            "itemId": 28,
+            "amount": 1
+        },
+        {
+            "itemId": 29,
+            "amount": 1
+        },
+        {
+            "itemId": 30,
+            "amount": 1
+        },
+        {
+            "itemId": 35,
+            "amount": 1
+        },
+        {
+            "itemId": 36,
+            "amount": 1
+        },
+        {
+            "itemId": 37,
+            "amount": 1
+        }
+    ],
+    "schemaVersion": 1
+}

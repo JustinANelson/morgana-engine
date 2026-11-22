@@ -1,0 +1,15 @@
+{
+    "id": 34,
+    "name": "Greater Vigor Elixir",
+    "description": "Restores 120 HP and 60 MP.",
+    "type": "CONSUMABLE",
+    "iconId": 34,
+    "price": 55,
+    "schemaVersion": 1,
+    "stackable": true,
+    "maxStack": 10,
+    "restore": {
+        "hp": 120,
+        "mp": 60
+    }
+}

@@ -1,0 +1,30 @@
+{
+    "id": 7,
+    "name": "Backstep",
+    "description": "A hop straight back out of reach.",
+    "iconId": 73,
+    "levelReq": 1,
+    "startupTicks": 0,
+    "activeTicks": 6,
+    "recoveryTicks": 4,
+    "animationId": 7,
+    "schemaVersion": 2,
+    "costs": {
+        "sp": 20
+    },
+    "cancelFromTick": 6,
+    "moves": [
+        {
+            "fromTick": 0,
+            "toTick": 5,
+            "forwardPixels": -64
+        }
+    ],
+    "armor": [
+        {
+            "fromTick": 0,
+            "toTick": 3,
+            "type": "INVULNERABLE"
+        }
+    ]
+}

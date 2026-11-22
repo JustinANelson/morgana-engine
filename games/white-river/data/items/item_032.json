@@ -1,0 +1,14 @@
+{
+    "id": 32,
+    "name": "Fletched Arrow",
+    "description": "Plain ash arrows. Fired from bows.",
+    "type": "AMMO",
+    "iconId": 32,
+    "stackable": true,
+    "maxStack": 999,
+    "price": 1,
+    "levelReq": 1,
+    "schemaVersion": 2,
+    "attackDamage": 2,
+    "projectileSpriteId": 1
+}

@@ -1,0 +1,100 @@
+{
+    "id": 34,
+    "name": "Glacier Shade",
+    "title": "",
+    "spriteId": 115,
+    "behavior": "ATTACK_ON_SIGHT",
+    "level": 31,
+    "attributes": {
+        "str": 37,
+        "agi": 21,
+        "int": 37,
+        "vit": 36
+    },
+    "vitals": {
+        "hp": 420,
+        "mp": 100
+    },
+    "attackDamage": 37,
+    "attackSpeedTicks": 20,
+    "moveSpeedTicks": 18,
+    "aggroRangeTiles": 6,
+    "leashRangeTiles": 12,
+    "xpReward": 1384,
+    "drops": [
+        {
+            "itemId": 1,
+            "minAmount": 31,
+            "maxAmount": 124,
+            "chanceBasisPoints": 7500
+        },
+        {
+            "itemId": 4,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 600
+        },
+        {
+            "itemId": 28,
+            "minAmount": 1,
+            "maxAmount": 2,
+            "chanceBasisPoints": 4000
+        },
+        {
+            "itemId": 43,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 44,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 45,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 49,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 53,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 56,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 60,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 29,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 19
+        }
+    ],
+    "spellIds": [
+        17
+    ],
+    "shopId": 0,
+    "eventId": 0,
+    "chatGreeting": "",
+    "animationId": 0,
+    "schemaVersion": 2
+}

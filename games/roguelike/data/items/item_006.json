@@ -1,0 +1,25 @@
+{
+    "id": 6,
+    "name": "Hunter's Bow",
+    "description": "A light recurve bow for Keep Rangers.",
+    "type": "WEAPON",
+    "iconId": 6,
+    "price": 30,
+    "schemaVersion": 1,
+    "attackDamage": 5,
+    "attackSpeedTicks": 11,
+    "rangeTiles": 6,
+    "weaponStyle": "RANGED_BOW",
+    "weaponType": "bow",
+    "twoHanded": true,
+    "projectileSpriteId": 1,
+    "requiredAmmoItemId": 12,
+    "paperdollSpriteId": 1,
+    "paperdollOffHandSpriteId": 2,
+    "paperdollSlot": "MAIN_HAND",
+    "paperdollClassTints": {
+        "1": "#c95046",
+        "2": "#4f8a5b",
+        "3": "#d97736"
+    }
+}

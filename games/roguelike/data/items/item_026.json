@@ -1,0 +1,21 @@
+{
+    "id": 26,
+    "name": "Iron Sabatons",
+    "description": "Plated greaves and boots built to hold the line.",
+    "type": "BOOTS",
+    "iconId": 26,
+    "price": 95,
+    "schemaVersion": 1,
+    "levelReq": 2,
+    "armorDefense": 5,
+    "attributeBonuses": {
+        "vit": 1
+    },
+    "paperdollSpriteId": 16,
+    "paperdollSlot": "FEET",
+    "paperdollClassTints": {
+        "1": "#c95046",
+        "2": "#4f8a5b",
+        "3": "#d97736"
+    }
+}

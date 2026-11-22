@@ -1,0 +1,16 @@
+{
+    "id": 66,
+    "name": "Manual: Wardstance",
+    "description": "Teaches a Bladewarden Wardstance (level 4).",
+    "type": "SPELL_SCROLL",
+    "iconId": 66,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 240,
+    "levelReq": 4,
+    "schemaVersion": 2,
+    "teachSpellId": 2,
+    "classReqIds": [
+        1
+    ]
+}

@@ -1,0 +1,761 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Morgana maps document",
+    "$ref": "#/$defs/com.morgana.domain.map.MapDefinition",
+    "$defs": {
+        "com.morgana.domain.map.MapDefinition": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "revision": {
+                    "type": "integer"
+                },
+                "width": {
+                    "type": "integer"
+                },
+                "height": {
+                    "type": "integer"
+                },
+                "tileSize": {
+                    "type": "integer"
+                },
+                "moral": {
+                    "type": "string",
+                    "enum": [
+                        "SAFE_ZONE",
+                        "OPEN_PVP",
+                        "ARENA",
+                        "INSTANCED_DUNGEON"
+                    ]
+                },
+                "bgmTrackId": {
+                    "type": "string"
+                },
+                "weather": {
+                    "type": "string",
+                    "enum": [
+                        "NONE",
+                        "RAIN",
+                        "SNOW",
+                        "FOG",
+                        "ASH"
+                    ]
+                },
+                "weatherIntensity": {
+                    "type": "number"
+                },
+                "ambientLightHex": {
+                    "type": "string"
+                },
+                "isIndoors": {
+                    "type": "boolean"
+                },
+                "zoneId": {
+                    "type": "integer"
+                },
+                "instanced": {
+                    "type": "boolean"
+                },
+                "instanceOwner": {
+                    "type": "string",
+                    "enum": [
+                        "PARTY",
+                        "GUILD"
+                    ]
+                },
+                "neighbors": {
+                    "$ref": "#/$defs/com.morgana.domain.map.MapNeighborLinks"
+                },
+                "cells": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.map.MapCell"
+                    }
+                },
+                "npcSpawns": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.map.MapNpcSpawnSlot"
+                    }
+                },
+                "eventIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "schemaVersion": {
+                    "type": "integer"
+                },
+                "generator": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.map.FloorGenerator"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "scaling": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.map.InstanceScaling"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                }
+            },
+            "required": [
+                "id",
+                "name"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.map.MapNeighborLinks": {
+            "type": "object",
+            "properties": {
+                "northMapId": {
+                    "type": "integer"
+                },
+                "southMapId": {
+                    "type": "integer"
+                },
+                "eastMapId": {
+                    "type": "integer"
+                },
+                "westMapId": {
+                    "type": "integer"
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.map.MapCell": {
+            "type": "object",
+            "properties": {
+                "layers": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/$defs/com.morgana.domain.map.TilePlacement"
+                    }
+                },
+                "attribute": {
+                    "$ref": "#/$defs/com.morgana.domain.map.TileAttribute"
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.map.TilePlacement": {
+            "type": "object",
+            "properties": {
+                "tilesetId": {
+                    "type": "integer"
+                },
+                "srcTileX": {
+                    "type": "integer"
+                },
+                "srcTileY": {
+                    "type": "integer"
+                },
+                "autotileMode": {
+                    "type": "string",
+                    "enum": [
+                        "NONE",
+                        "RMXP_47",
+                        "RMVX_16",
+                        "ANIMATED_3_FRAME",
+                        "WATERFALL"
+                    ]
+                },
+                "animationFrames": {
+                    "type": "integer"
+                },
+                "animationSpeedMs": {
+                    "type": "integer"
+                },
+                "roofGroupId": {
+                    "type": "integer"
+                },
+                "animationFrameStep": {
+                    "type": "integer"
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.map.TileAttribute": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "bank"
+                        }
+                    },
+                    "required": [
+                        "_type"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "blocked"
+                        }
+                    },
+                    "required": [
+                        "_type"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "dir_block"
+                        },
+                        "blockUp": {
+                            "type": "boolean"
+                        },
+                        "blockDown": {
+                            "type": "boolean"
+                        },
+                        "blockLeft": {
+                            "type": "boolean"
+                        },
+                        "blockRight": {
+                            "type": "boolean"
+                        }
+                    },
+                    "required": [
+                        "_type"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "heal_trap"
+                        },
+                        "vitalType": {
+                            "type": "string",
+                            "enum": [
+                                "HP",
+                                "MP",
+                                "SP"
+                            ]
+                        },
+                        "amount": {
+                            "type": "integer"
+                        },
+                        "isTrapDamage": {
+                            "type": "boolean"
+                        },
+                        "intervalTicks": {
+                            "type": "integer"
+                        },
+                        "animationId": {
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "_type"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "item_spawn"
+                        },
+                        "itemId": {
+                            "type": "integer"
+                        },
+                        "amount": {
+                            "type": "integer"
+                        },
+                        "respawnTicks": {
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "_type",
+                        "itemId"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "key_door"
+                        },
+                        "keyItemId": {
+                            "type": "integer"
+                        },
+                        "consumeKey": {
+                            "type": "boolean"
+                        },
+                        "unlockDurationTicks": {
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "_type",
+                        "keyItemId"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "light_source"
+                        },
+                        "radiusPixels": {
+                            "type": "number"
+                        },
+                        "colorHex": {
+                            "type": "string"
+                        },
+                        "intensity": {
+                            "type": "number"
+                        },
+                        "flicker": {
+                            "type": "boolean"
+                        }
+                    },
+                    "required": [
+                        "_type"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "none"
+                        }
+                    },
+                    "required": [
+                        "_type"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "npc_avoid"
+                        }
+                    },
+                    "required": [
+                        "_type"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "resource_node"
+                        },
+                        "resourceId": {
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "_type",
+                        "resourceId"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "shop"
+                        },
+                        "shopId": {
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "_type",
+                        "shopId"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "slide"
+                        },
+                        "direction": {
+                            "type": "string",
+                            "enum": [
+                                "UP",
+                                "DOWN",
+                                "LEFT",
+                                "RIGHT",
+                                "UP_LEFT",
+                                "UP_RIGHT",
+                                "DOWN_LEFT",
+                                "DOWN_RIGHT"
+                            ]
+                        }
+                    },
+                    "required": [
+                        "_type",
+                        "direction"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "sound_emitter"
+                        },
+                        "soundId": {
+                            "type": "string"
+                        },
+                        "radiusTiles": {
+                            "type": "integer"
+                        },
+                        "intervalTicks": {
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "_type",
+                        "soundId"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "_type": {
+                            "const": "warp"
+                        },
+                        "targetMapId": {
+                            "type": "integer"
+                        },
+                        "targetX": {
+                            "type": "integer"
+                        },
+                        "targetY": {
+                            "type": "integer"
+                        },
+                        "targetDirection": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "enum": [
+                                        "UP",
+                                        "DOWN",
+                                        "LEFT",
+                                        "RIGHT",
+                                        "UP_LEFT",
+                                        "UP_RIGHT",
+                                        "DOWN_LEFT",
+                                        "DOWN_RIGHT"
+                                    ]
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ]
+                        }
+                    },
+                    "required": [
+                        "_type",
+                        "targetMapId",
+                        "targetX",
+                        "targetY"
+                    ],
+                    "additionalProperties": false
+                }
+            ]
+        },
+        "com.morgana.domain.map.MapNpcSpawnSlot": {
+            "type": "object",
+            "properties": {
+                "slotIndex": {
+                    "type": "integer"
+                },
+                "npcId": {
+                    "type": "integer"
+                },
+                "spawnX": {
+                    "type": "integer"
+                },
+                "spawnY": {
+                    "type": "integer"
+                },
+                "respawnTicks": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "slotIndex",
+                "npcId"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.map.FloorGenerator": {
+            "type": "object",
+            "properties": {
+                "width": {
+                    "type": "integer"
+                },
+                "height": {
+                    "type": "integer"
+                },
+                "algorithm": {
+                    "type": "string",
+                    "enum": [
+                        "ROOMS_AND_CORRIDORS",
+                        "CELLULAR_CAVES",
+                        "BSP_DUNGEON",
+                        "OPEN_ARENA"
+                    ]
+                },
+                "corridorWidth": {
+                    "type": "integer"
+                },
+                "caveFillPercent": {
+                    "type": "integer"
+                },
+                "roomsMin": {
+                    "type": "integer"
+                },
+                "roomsMax": {
+                    "type": "integer"
+                },
+                "roomSizeMin": {
+                    "type": "integer"
+                },
+                "roomSizeMax": {
+                    "type": "integer"
+                },
+                "floorTile": {
+                    "$ref": "#/$defs/com.morgana.domain.map.TilePlacement"
+                },
+                "wallTile": {
+                    "$ref": "#/$defs/com.morgana.domain.map.TilePlacement"
+                },
+                "wallFaceTile": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.map.TilePlacement"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "decorations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.map.WeightedTile"
+                    }
+                },
+                "decorationChanceBp": {
+                    "type": "integer"
+                },
+                "stairsTile": {
+                    "$ref": "#/$defs/com.morgana.domain.map.TilePlacement"
+                },
+                "monsters": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.map.WeightedSpawn"
+                    }
+                },
+                "monstersPerRoomMin": {
+                    "type": "integer"
+                },
+                "monstersPerRoomMax": {
+                    "type": "integer"
+                },
+                "loot": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.map.WeightedLoot"
+                    }
+                },
+                "lootMin": {
+                    "type": "integer"
+                },
+                "lootMax": {
+                    "type": "integer"
+                },
+                "itemLevel": {
+                    "type": "integer"
+                },
+                "features": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.map.WeightedSpawn"
+                    }
+                },
+                "featuresMin": {
+                    "type": "integer"
+                },
+                "featuresMax": {
+                    "type": "integer"
+                },
+                "bossNpcId": {
+                    "type": "integer"
+                },
+                "nextMapId": {
+                    "type": "integer"
+                },
+                "exitMapId": {
+                    "type": "integer"
+                },
+                "exitX": {
+                    "type": "integer"
+                },
+                "exitY": {
+                    "type": "integer"
+                },
+                "fixedSeed": {
+                    "type": "integer"
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.map.WeightedTile": {
+            "type": "object",
+            "properties": {
+                "tile": {
+                    "$ref": "#/$defs/com.morgana.domain.map.TilePlacement"
+                },
+                "weight": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "tile"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.map.WeightedSpawn": {
+            "type": "object",
+            "properties": {
+                "npcId": {
+                    "type": "integer"
+                },
+                "weight": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "npcId"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.map.WeightedLoot": {
+            "type": "object",
+            "properties": {
+                "itemId": {
+                    "type": "integer"
+                },
+                "minAmount": {
+                    "type": "integer"
+                },
+                "maxAmount": {
+                    "type": "integer"
+                },
+                "weight": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "itemId"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.map.InstanceScaling": {
+            "type": "object",
+            "properties": {
+                "hpPercentPerMember": {
+                    "type": "integer"
+                },
+                "attackPercentPerMember": {
+                    "type": "integer"
+                },
+                "xpPercentPerMember": {
+                    "type": "integer"
+                },
+                "maxMembers": {
+                    "type": "integer"
+                },
+                "levelFollowsMembers": {
+                    "type": "boolean"
+                },
+                "percentPerLevel": {
+                    "type": "integer"
+                },
+                "maxLevelShift": {
+                    "type": "integer"
+                },
+                "tiers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.map.DifficultyTier"
+                    }
+                },
+                "tierVariable": {
+                    "type": "string"
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.map.DifficultyTier": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "hpPercent": {
+                    "type": "integer"
+                },
+                "attackPercent": {
+                    "type": "integer"
+                },
+                "xpPercent": {
+                    "type": "integer"
+                },
+                "dropRatePercent": {
+                    "type": "integer"
+                },
+                "minLevel": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name"
+            ],
+            "additionalProperties": false
+        }
+    }
+}

@@ -1,0 +1,16 @@
+{
+    "id": 74,
+    "name": "Manual: Mirewake",
+    "description": "Teaches a Duskweaver Mirewake (level 6).",
+    "type": "SPELL_SCROLL",
+    "iconId": 66,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 360,
+    "levelReq": 6,
+    "schemaVersion": 2,
+    "teachSpellId": 13,
+    "classReqIds": [
+        3
+    ]
+}

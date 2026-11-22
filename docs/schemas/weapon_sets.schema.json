@@ -1,0 +1,109 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Morgana weapon_sets document",
+    "$ref": "#/$defs/com.morgana.domain.content.WeaponSetDefinition",
+    "$defs": {
+        "com.morgana.domain.content.WeaponSetDefinition": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "slot": {
+                    "type": "string",
+                    "enum": [
+                        "MAIN",
+                        "SUB",
+                        "AWAKENING"
+                    ]
+                },
+                "classIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "levelReq": {
+                    "type": "integer"
+                },
+                "inputBufferTicks": {
+                    "type": "integer"
+                },
+                "skillIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "entries": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.content.ComboEntry"
+                    }
+                },
+                "edges": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.content.ComboEdge"
+                    }
+                },
+                "schemaVersion": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "id",
+                "name"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.content.ComboEntry": {
+            "type": "object",
+            "properties": {
+                "input": {
+                    "type": "string"
+                },
+                "skillId": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "input",
+                "skillId"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.content.ComboEdge": {
+            "type": "object",
+            "properties": {
+                "fromSkillId": {
+                    "type": "integer"
+                },
+                "input": {
+                    "type": "string"
+                },
+                "toSkillId": {
+                    "type": "integer"
+                },
+                "windowTicks": {
+                    "type": "integer"
+                },
+                "requiresHit": {
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "fromSkillId",
+                "input",
+                "toSkillId"
+            ],
+            "additionalProperties": false
+        }
+    }
+}

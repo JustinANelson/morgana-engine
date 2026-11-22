@@ -1,0 +1,297 @@
+{
+    "id": 1,
+    "name": "Commander Vael",
+    "mapId": 1,
+    "tileX": 14,
+    "tileY": 7,
+    "pages": [
+        {
+            "pageIndex": 0,
+            "condition": {},
+            "trigger": "ACTION_INTERACT",
+            "spriteId": 0,
+            "commands": [
+                {
+                    "_type": "dialogue",
+                    "speakerName": "Commander Vael",
+                    "text": "Welcome to Ashen Keep, delver. The northern archway leads into the Sunken Crypt \u2014 every party gets its own freshly generated floor.",
+                    "portraitId": 0,
+                    "choices": [
+                        {
+                            "label": "How does a run work?",
+                            "commands": [
+                                {
+                                    "_type": "dialogue",
+                                    "speakerName": "Commander Vael",
+                                    "text": "Form a party or go solo, pick a difficulty with Delve Warden Orin, and step through the northern archway. Fight through the crypt, defeat Malakor, and take the exit portal home with your loot.",
+                                    "portraitId": 0,
+                                    "choices": []
+                                }
+                            ]
+                        },
+                        {
+                            "label": "Any contracts for me?",
+                            "commands": [
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 1,
+                                        "quest": "READY_TO_COMPLETE"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Commander Vael",
+                                            "text": "Clean work. Take this coin and restock at Lyra's Apothecary.",
+                                            "portraitId": 0,
+                                            "choices": []
+                                        },
+                                        {
+                                            "_type": "complete_quest",
+                                            "questId": 1
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": []
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 1,
+                                        "quest": "IN_PROGRESS"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Commander Vael",
+                                            "text": "Four Crypt Gnashers in the Sunken Crypt \u2014 step through the northern archway to find them.",
+                                            "portraitId": 0,
+                                            "choices": []
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": []
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 1,
+                                        "quest": "NOT_STARTED"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Commander Vael",
+                                            "text": "Crypt Gnashers have overrun the upper halls of Floor 1. Clear four of them and report back.",
+                                            "portraitId": 0,
+                                            "choices": [
+                                                {
+                                                    "label": "I will do it.",
+                                                    "commands": [
+                                                        {
+                                                            "_type": "start_quest",
+                                                            "questId": 1
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "label": "Not now.",
+                                                    "commands": []
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": []
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 2,
+                                        "quest": "READY_TO_COMPLETE"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Commander Vael",
+                                            "text": "Fine material. Check your crafting menu (J) to forge bone weaponry.",
+                                            "portraitId": 0,
+                                            "choices": []
+                                        },
+                                        {
+                                            "_type": "complete_quest",
+                                            "questId": 2
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": []
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 2,
+                                        "quest": "IN_PROGRESS"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Commander Vael",
+                                            "text": "Four Crypt Bones from the undead of the Sunken Crypt.",
+                                            "portraitId": 0,
+                                            "choices": []
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": []
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 2,
+                                        "quest": "NOT_STARTED"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Commander Vael",
+                                            "text": "Forgemaster Torin needs Crypt Bone for the forge. Bring back four pieces from Floor 1.",
+                                            "portraitId": 0,
+                                            "choices": [
+                                                {
+                                                    "label": "I will do it.",
+                                                    "commands": [
+                                                        {
+                                                            "_type": "start_quest",
+                                                            "questId": 2
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "label": "Not now.",
+                                                    "commands": []
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": []
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 3,
+                                        "quest": "READY_TO_COMPLETE"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Commander Vael",
+                                            "text": "The Sunken Crypt is ours! Ashen Keep salutes you, delver.",
+                                            "portraitId": 0,
+                                            "choices": []
+                                        },
+                                        {
+                                            "_type": "complete_quest",
+                                            "questId": 3
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": []
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 3,
+                                        "quest": "IN_PROGRESS"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Commander Vael",
+                                            "text": "Malakor waits in the farthest chamber of the Sunken Crypt. Dodge his red ground slams!",
+                                            "portraitId": 0,
+                                            "choices": []
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": []
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 3,
+                                        "quest": "NOT_STARTED"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Commander Vael",
+                                            "text": "Malakor, the Ashen Warden, guards the crypt's exit. Rally a party and defeat him.",
+                                            "portraitId": 0,
+                                            "choices": [
+                                                {
+                                                    "label": "I will do it.",
+                                                    "commands": [
+                                                        {
+                                                            "_type": "start_quest",
+                                                            "questId": 3
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "label": "Not now.",
+                                                    "commands": []
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": []
+                                },
+                                {
+                                    "_type": "dialogue",
+                                    "speakerName": "Commander Vael",
+                                    "text": "You have completed every contract for Floor 1! Try Hard or Nightmare difficulty with Warden Orin for richer relics.",
+                                    "portraitId": 0,
+                                    "choices": []
+                                }
+                            ]
+                        },
+                        {
+                            "label": "Goodbye.",
+                            "commands": []
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "schemaVersion": 1
+}

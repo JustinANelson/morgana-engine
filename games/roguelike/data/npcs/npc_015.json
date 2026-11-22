@@ -1,0 +1,141 @@
+{
+    "id": 15,
+    "name": "Malakor, the Ashen Warden",
+    "title": "Crypt Guardian",
+    "spriteId": 106,
+    "behavior": "ATTACK_ON_SIGHT",
+    "level": 5,
+    "attributes": {
+        "str": 18,
+        "agi": 11,
+        "int": 14,
+        "vit": 18
+    },
+    "vitals": {
+        "hp": 320
+    },
+    "attackDamage": 20,
+    "attackSpeedTicks": 20,
+    "moveSpeedTicks": 10,
+    "aggroRangeTiles": 8,
+    "leashRangeTiles": 16,
+    "xpReward": 260,
+    "spellIds": [
+        6,
+        7
+    ],
+    "drops": [
+        {
+            "itemId": 1,
+            "minAmount": 60,
+            "maxAmount": 110,
+            "chanceBasisPoints": 10000
+        },
+        {
+            "itemId": 41,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 10000
+        },
+        {
+            "itemId": 39,
+            "minAmount": 2,
+            "maxAmount": 4,
+            "chanceBasisPoints": 10000
+        },
+        {
+            "itemId": 19,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 3500
+        },
+        {
+            "itemId": 31,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 3500
+        },
+        {
+            "itemId": 4,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 2000
+        }
+    ],
+    "encounter": {
+        "phases": [
+            {
+                "fromLifePercent": 100,
+                "announce": "Malakor raises his greatsword: 'None pass the Sunken Crypt!'",
+                "attackPercent": 100,
+                "moveSpeedPercent": 100,
+                "abilities": [
+                    {
+                        "spellId": 6,
+                        "shape": "AROUND_TARGET",
+                        "radiusTiles": 2,
+                        "windUpTicks": 24,
+                        "cooldownTicks": 90,
+                        "warning": "Malakor winds up Ashen Slam!"
+                    }
+                ]
+            },
+            {
+                "fromLifePercent": 65,
+                "announce": "Malakor's armor cracks with ember light and he calls the crypt dead!",
+                "attackPercent": 115,
+                "moveSpeedPercent": 95,
+                "summonNpcIds": [
+                    10,
+                    11
+                ],
+                "abilities": [
+                    {
+                        "spellId": 6,
+                        "shape": "AROUND_TARGET",
+                        "radiusTiles": 2,
+                        "windUpTicks": 22,
+                        "cooldownTicks": 75,
+                        "warning": "Ashen Slam incoming!"
+                    },
+                    {
+                        "spellId": 7,
+                        "shape": "AROUND_SELF",
+                        "radiusTiles": 3,
+                        "windUpTicks": 26,
+                        "cooldownTicks": 110,
+                        "warning": "Malakor channels Crypt Nova!"
+                    }
+                ]
+            },
+            {
+                "fromLifePercent": 30,
+                "announce": "Malakor roars in fury: 'Burn with the Keep's dead!'",
+                "attackPercent": 135,
+                "moveSpeedPercent": 85,
+                "summonNpcIds": [
+                    12
+                ],
+                "abilities": [
+                    {
+                        "spellId": 6,
+                        "shape": "AROUND_TARGET",
+                        "radiusTiles": 2,
+                        "windUpTicks": 18,
+                        "cooldownTicks": 60,
+                        "warning": "Frenzied Ashen Slam!"
+                    },
+                    {
+                        "spellId": 7,
+                        "shape": "AROUND_SELF",
+                        "radiusTiles": 3,
+                        "windUpTicks": 22,
+                        "cooldownTicks": 90,
+                        "warning": "Crypt Nova!"
+                    }
+                ]
+            }
+        ]
+    },
+    "schemaVersion": 1
+}

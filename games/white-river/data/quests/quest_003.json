@@ -1,0 +1,39 @@
+{
+    "id": 3,
+    "name": "Into Heronreach",
+    "summary": "Scout the marsh road and clear vipers and bats.",
+    "levelReq": 8,
+    "prerequisiteQuestIds": [
+        2
+    ],
+    "startText": "East of the fields the road runs into Heronreach Marsh, and nothing has come down it in a month. Clear eight vipers and six mire bats off the road.",
+    "inProgressText": "Eight marsh vipers and six mire bats in Heronreach.",
+    "completionText": "So the road can be opened. Good. Here is your pay.",
+    "objectives": [
+        {
+            "type": "KILL_NPC",
+            "targetId": 24,
+            "requiredCount": 8,
+            "description": "Marsh Vipers"
+        },
+        {
+            "type": "KILL_NPC",
+            "targetId": 25,
+            "requiredCount": 6,
+            "description": "Mire Bats"
+        }
+    ],
+    "reward": {
+        "xp": 1500,
+        "currencyAmount": 320,
+        "items": [
+            {
+                "itemId": 3,
+                "amount": 4
+            }
+        ],
+        "teachSpellId": 0
+    },
+    "repeatable": false,
+    "schemaVersion": 2
+}

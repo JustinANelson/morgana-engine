@@ -1,0 +1,13 @@
+{
+    "id": 12,
+    "name": "Woodcutter's Hatchet",
+    "description": "Fells ash trees. Keep it in your bag.",
+    "type": "TOOL",
+    "iconId": 14,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 30,
+    "levelReq": 1,
+    "schemaVersion": 2,
+    "toolType": "HATCHET"
+}

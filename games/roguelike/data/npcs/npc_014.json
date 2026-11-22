@@ -1,0 +1,55 @@
+{
+    "id": 14,
+    "name": "Grave Golem",
+    "spriteId": 105,
+    "behavior": "ATTACK_ON_SIGHT",
+    "level": 4,
+    "attributes": {
+        "str": 15,
+        "agi": 6,
+        "int": 5,
+        "vit": 15
+    },
+    "vitals": {
+        "hp": 125
+    },
+    "attackDamage": 16,
+    "attackSpeedTicks": 24,
+    "moveSpeedTicks": 13,
+    "aggroRangeTiles": 6,
+    "leashRangeTiles": 12,
+    "xpReward": 95,
+    "drops": [
+        {
+            "itemId": 1,
+            "minAmount": 18,
+            "maxAmount": 35,
+            "chanceBasisPoints": 9500
+        },
+        {
+            "itemId": 38,
+            "minAmount": 2,
+            "maxAmount": 3,
+            "chanceBasisPoints": 6500
+        },
+        {
+            "itemId": 39,
+            "minAmount": 1,
+            "maxAmount": 2,
+            "chanceBasisPoints": 5000
+        },
+        {
+            "itemId": 15,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 900
+        },
+        {
+            "itemId": 23,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 800
+        }
+    ],
+    "schemaVersion": 1
+}

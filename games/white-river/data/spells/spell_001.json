@@ -1,0 +1,33 @@
+{
+    "id": 1,
+    "name": "Riverbreak Slash",
+    "description": "A two-handed cut that carries through the target.",
+    "iconId": 67,
+    "targetType": "SINGLE_TARGET",
+    "levelReq": 1,
+    "classReqIds": [
+        1
+    ],
+    "costs": {
+        "sp": 8
+    },
+    "scales": true,
+    "castTimeTicks": 0,
+    "cooldownTicks": 18,
+    "rangeTiles": 2,
+    "aoeRadiusTiles": 0,
+    "basePower": 24,
+    "isHealing": false,
+    "projectileSpriteId": 0,
+    "animationId": 1,
+    "statusEffectType": null,
+    "statusMagnitude": 0,
+    "statusDurationTicks": 0,
+    "warpMapId": 0,
+    "warpX": 0,
+    "warpY": 0,
+    "powerPercentPerLevel": 8,
+    "maxSpellLevel": 5,
+    "castsPerLevel": 60,
+    "schemaVersion": 2
+}

@@ -1,0 +1,26 @@
+{
+    "id": 4,
+    "name": "Ashen Greatsword",
+    "description": "A heavy blade tempered in the Keep's ember forge.",
+    "type": "WEAPON",
+    "iconId": 4,
+    "price": 240,
+    "schemaVersion": 1,
+    "levelReq": 4,
+    "attackDamage": 18,
+    "attackSpeedTicks": 12,
+    "rangeTiles": 1,
+    "weaponStyle": "MELEE",
+    "weaponType": "sword",
+    "twoHanded": true,
+    "attributeBonuses": {
+        "str": 3
+    },
+    "paperdollSpriteId": 5,
+    "paperdollSlot": "MAIN_HAND",
+    "paperdollClassTints": {
+        "1": "#c95046",
+        "2": "#4f8a5b",
+        "3": "#d97736"
+    }
+}

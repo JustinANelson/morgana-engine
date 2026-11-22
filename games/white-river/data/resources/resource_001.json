@@ -1,0 +1,18 @@
+{
+    "id": 1,
+    "name": "Ash Tree",
+    "category": "TREE",
+    "intactSpriteId": 1,
+    "depletedSpriteId": 2,
+    "requiredTool": "HATCHET",
+    "rewardItemId": 15,
+    "minYield": 1,
+    "maxYield": 3,
+    "maxHealth": 3,
+    "respawnTicks": 300,
+    "xpReward": 8,
+    "emptyMessage": "Nothing left here for now. Give it a little while.",
+    "successMessage": "You cut ash logs.",
+    "animationId": 0,
+    "schemaVersion": 2
+}

@@ -1,0 +1,24 @@
+{
+    "id": 5,
+    "name": "Marsh Stew",
+    "stationType": "COOKING_FIRE",
+    "levelReq": 8,
+    "ingredients": [
+        {
+            "itemId": 21,
+            "amount": 1
+        },
+        {
+            "itemId": 22,
+            "amount": 1
+        },
+        {
+            "itemId": 23,
+            "amount": 1
+        }
+    ],
+    "outputItemId": 10,
+    "outputAmount": 1,
+    "xpReward": 24,
+    "schemaVersion": 2
+}

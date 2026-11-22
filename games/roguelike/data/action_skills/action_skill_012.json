@@ -1,0 +1,33 @@
+{
+    "id": 12,
+    "name": "Twin Shot",
+    "description": "Follow-up shot that strikes harder.",
+    "iconId": 7,
+    "startupTicks": 2,
+    "activeTicks": 2,
+    "recoveryTicks": 6,
+    "costs": {
+        "stamina": 6
+    },
+    "soundId": "combat_swing",
+    "schemaVersion": 2,
+    "hitboxes": [
+        {
+            "fromTick": 2,
+            "toTick": 2,
+            "shape": "CIRCLE",
+            "forwardPixels": 16,
+            "radiusPixels": 18,
+            "hit": {
+                "damageKind": "RANGED",
+                "damagePercent": 120
+            },
+            "projectile": {
+                "spriteId": 1,
+                "speedPixelsPerTick": 20,
+                "rangePixels": 240,
+                "pierce": false
+            }
+        }
+    ]
+}

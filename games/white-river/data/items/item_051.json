@@ -1,0 +1,16 @@
+{
+    "id": 51,
+    "name": "Marsh Brigandine",
+    "description": "Iron plates riveted into waxed leather.",
+    "type": "ARMOR",
+    "iconId": 51,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 320,
+    "levelReq": 10,
+    "schemaVersion": 2,
+    "armorDefense": 10,
+    "vitalMaxBonuses": {
+        "hp": 30
+    }
+}

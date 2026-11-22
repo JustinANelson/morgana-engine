@@ -1,0 +1,19 @@
+{
+    "id": 2,
+    "name": "Mending Light",
+    "description": "Restore health to yourself or a nearby ally.",
+    "iconId": 37,
+    "targetType": "SINGLE_TARGET",
+    "levelReq": 1,
+    "costs": {
+        "mp": 10
+    },
+    "scales": true,
+    "cooldownTicks": 30,
+    "rangeTiles": 5,
+    "basePower": 26,
+    "isHealing": true,
+    "allyTargetable": true,
+    "animationId": 2,
+    "schemaVersion": 1
+}

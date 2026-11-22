@@ -1,0 +1,27 @@
+{
+    "id": 4,
+    "name": "Wandering Peddler",
+    "buyRatePercent": 150,
+    "sellRatePercent": 40,
+    "currencyItemId": 1,
+    "entries": [
+        {
+            "itemId": 32,
+            "amount": 1
+        },
+        {
+            "itemId": 33,
+            "amount": 1
+        },
+        {
+            "itemId": 34,
+            "amount": 1
+        },
+        {
+            "itemId": 12,
+            "amount": 20,
+            "priceOverride": 60
+        }
+    ],
+    "schemaVersion": 1
+}

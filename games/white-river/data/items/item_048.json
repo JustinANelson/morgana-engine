@@ -1,0 +1,13 @@
+{
+    "id": 48,
+    "name": "Reaver Helm",
+    "description": "Taken from a reaver, dents and all.",
+    "type": "HELMET",
+    "iconId": 48,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 800,
+    "levelReq": 20,
+    "schemaVersion": 2,
+    "armorDefense": 9
+}

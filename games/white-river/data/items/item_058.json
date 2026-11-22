@@ -1,0 +1,16 @@
+{
+    "id": 58,
+    "name": "Fenwalkers",
+    "description": "Waxed boots that do not sink.",
+    "type": "BOOTS",
+    "iconId": 58,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 220,
+    "levelReq": 10,
+    "schemaVersion": 2,
+    "armorDefense": 4,
+    "attributeBonuses": {
+        "agi": 1
+    }
+}

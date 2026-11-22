@@ -1,0 +1,12 @@
+{
+    "id": 23,
+    "name": "Sunroot",
+    "description": "A yellow marsh root that keeps the cold out. Stew and strong tonics.",
+    "type": "MATERIAL",
+    "iconId": 23,
+    "stackable": true,
+    "maxStack": 999,
+    "price": 10,
+    "levelReq": 1,
+    "schemaVersion": 2
+}

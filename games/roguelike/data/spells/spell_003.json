@@ -1,0 +1,21 @@
+{
+    "id": 3,
+    "name": "Frost Nova",
+    "description": "Release a ring of frost around you, chilling nearby foes.",
+    "iconId": 36,
+    "targetType": "AOE_SELF_CENTERED",
+    "levelReq": 2,
+    "costs": {
+        "mp": 14
+    },
+    "scales": true,
+    "cooldownTicks": 45,
+    "rangeTiles": 0,
+    "aoeRadiusTiles": 2,
+    "basePower": 20,
+    "animationId": 3,
+    "statusEffectType": "SLOW",
+    "statusMagnitude": 35,
+    "statusDurationTicks": 80,
+    "schemaVersion": 1
+}

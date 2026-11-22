@@ -1,0 +1,60 @@
+{
+    "id": 1,
+    "name": "Bladewarden",
+    "description": "Sword and shield. Tight chains of blows, a guard to hide behind and the strength to break one.",
+    "spriteIds": [
+        1
+    ],
+    "baseAttributes": {
+        "str": 14,
+        "agi": 9,
+        "int": 5,
+        "vit": 13
+    },
+    "statPointsPerLevel": 3,
+    "autoStatGrowthPerLevel": {
+        "str": 1,
+        "vit": 1
+    },
+    "startMapId": 1,
+    "startX": 26,
+    "startY": 24,
+    "startingItems": [
+        {
+            "itemId": 34,
+            "amount": 1,
+            "durability": 100
+        },
+        {
+            "itemId": 54,
+            "amount": 1,
+            "durability": 100
+        },
+        {
+            "itemId": 50,
+            "amount": 1,
+            "durability": 100
+        },
+        {
+            "itemId": 2,
+            "amount": 5,
+            "durability": 100
+        },
+        {
+            "itemId": 7,
+            "amount": 3,
+            "durability": 100
+        },
+        {
+            "itemId": 8,
+            "amount": 1,
+            "durability": 100
+        }
+    ],
+    "autoEquipStartingItems": true,
+    "startingSpellIds": [
+        1
+    ],
+    "abilityTerminology": "SKILLS",
+    "schemaVersion": 2
+}

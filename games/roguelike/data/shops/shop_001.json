@@ -1,0 +1,32 @@
+{
+    "id": 1,
+    "name": "Lyra's Apothecary",
+    "buyRatePercent": 100,
+    "sellRatePercent": 50,
+    "currencyItemId": 1,
+    "entries": [
+        {
+            "itemId": 32,
+            "amount": 1
+        },
+        {
+            "itemId": 33,
+            "amount": 1
+        },
+        {
+            "itemId": 34,
+            "amount": 1
+        },
+        {
+            "itemId": 12,
+            "amount": 20,
+            "priceOverride": 40
+        },
+        {
+            "itemId": 13,
+            "amount": 20,
+            "priceOverride": 120
+        }
+    ],
+    "schemaVersion": 1
+}

@@ -1,0 +1,52 @@
+{
+    "id": 11,
+    "name": "Crypt Wisp",
+    "spriteId": 102,
+    "behavior": "ATTACK_ON_SIGHT",
+    "level": 2,
+    "attributes": {
+        "str": 5,
+        "agi": 9,
+        "int": 11,
+        "vit": 6
+    },
+    "vitals": {
+        "hp": 52
+    },
+    "attackDamage": 8,
+    "attackSpeedTicks": 22,
+    "moveSpeedTicks": 11,
+    "aggroRangeTiles": 7,
+    "leashRangeTiles": 13,
+    "xpReward": 42,
+    "spellIds": [
+        5
+    ],
+    "drops": [
+        {
+            "itemId": 1,
+            "minAmount": 7,
+            "maxAmount": 15,
+            "chanceBasisPoints": 8500
+        },
+        {
+            "itemId": 40,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 4000
+        },
+        {
+            "itemId": 33,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 2500
+        },
+        {
+            "itemId": 28,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 800
+        }
+    ],
+    "schemaVersion": 1
+}

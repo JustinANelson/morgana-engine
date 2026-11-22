@@ -1,0 +1,14 @@
+{
+    "id": 29,
+    "name": "Palestone",
+    "description": "A milky stone the glacier grinds out of the mountain. Smiths say gear drinks it.",
+    "type": "MATERIAL",
+    "iconId": 29,
+    "stackable": true,
+    "maxStack": 999,
+    "price": 400,
+    "levelReq": 1,
+    "schemaVersion": 2,
+    "dropSoundId": "rare_drop",
+    "broadcastOnDrop": true
+}

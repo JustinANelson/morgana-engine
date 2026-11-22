@@ -1,0 +1,16 @@
+{
+    "id": 70,
+    "name": "Manual: Reedstep",
+    "description": "Teaches a Windrunner Reedstep (level 4).",
+    "type": "SPELL_SCROLL",
+    "iconId": 66,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 240,
+    "levelReq": 4,
+    "schemaVersion": 2,
+    "teachSpellId": 7,
+    "classReqIds": [
+        2
+    ]
+}

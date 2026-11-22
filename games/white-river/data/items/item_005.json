@@ -1,0 +1,15 @@
+{
+    "id": 5,
+    "name": "Clearwater Draught",
+    "description": "Restores 60 mana.",
+    "type": "CONSUMABLE",
+    "iconId": 5,
+    "stackable": true,
+    "maxStack": 999,
+    "price": 18,
+    "levelReq": 1,
+    "schemaVersion": 2,
+    "restore": {
+        "mp": 60
+    }
+}

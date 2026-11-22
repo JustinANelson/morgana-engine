@@ -1,0 +1,13 @@
+{
+    "id": 13,
+    "name": "Quarry Pick",
+    "description": "Breaks chalk outcrops and iron seams. Keep it in your bag.",
+    "type": "TOOL",
+    "iconId": 15,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 45,
+    "levelReq": 1,
+    "schemaVersion": 2,
+    "toolType": "PICKAXE"
+}

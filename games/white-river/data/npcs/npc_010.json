@@ -1,0 +1,31 @@
+{
+    "id": 10,
+    "name": "Ford Guard",
+    "title": "Ford watch",
+    "spriteId": 19,
+    "behavior": "GUARD",
+    "level": 60,
+    "attributes": {
+        "str": 10,
+        "agi": 10,
+        "int": 10,
+        "vit": 10
+    },
+    "vitals": {
+        "hp": 6000,
+        "mp": 100
+    },
+    "attackDamage": 90,
+    "attackSpeedTicks": 16,
+    "moveSpeedTicks": 10,
+    "aggroRangeTiles": 6,
+    "leashRangeTiles": 12,
+    "xpReward": 0,
+    "drops": [],
+    "spellIds": [],
+    "shopId": 0,
+    "eventId": 0,
+    "chatGreeting": "Keep the peace inside the Ford.",
+    "animationId": 0,
+    "schemaVersion": 2
+}

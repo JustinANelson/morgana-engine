@@ -1,0 +1,20 @@
+{
+    "id": 4,
+    "name": "Bone Bulwark",
+    "stationType": "ANYWHERE",
+    "levelReq": 2,
+    "ingredients": [
+        {
+            "itemId": 38,
+            "amount": 5
+        },
+        {
+            "itemId": 39,
+            "amount": 1
+        }
+    ],
+    "outputItemId": 16,
+    "outputAmount": 1,
+    "xpReward": 55,
+    "schemaVersion": 1
+}

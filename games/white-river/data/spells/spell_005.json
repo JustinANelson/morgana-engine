@@ -1,0 +1,33 @@
+{
+    "id": 5,
+    "name": "Floodgate Fury",
+    "description": "Let it all go. You move and strike faster for a while.",
+    "iconId": 71,
+    "targetType": "SELF",
+    "levelReq": 20,
+    "classReqIds": [
+        1
+    ],
+    "costs": {
+        "sp": 40
+    },
+    "scales": true,
+    "castTimeTicks": 0,
+    "cooldownTicks": 400,
+    "rangeTiles": 1,
+    "aoeRadiusTiles": 0,
+    "basePower": 0,
+    "isHealing": false,
+    "projectileSpriteId": 0,
+    "animationId": 5,
+    "statusEffectType": "HASTE",
+    "statusMagnitude": 3,
+    "statusDurationTicks": 200,
+    "warpMapId": 0,
+    "warpX": 0,
+    "warpY": 0,
+    "powerPercentPerLevel": 8,
+    "maxSpellLevel": 5,
+    "castsPerLevel": 60,
+    "schemaVersion": 2
+}

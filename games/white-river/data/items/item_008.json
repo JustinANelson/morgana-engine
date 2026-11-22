@@ -1,0 +1,16 @@
+{
+    "id": 8,
+    "name": "Ford Return Scroll",
+    "description": "Read it and you are standing in the market square of Calder's Ford.",
+    "type": "CONSUMABLE",
+    "iconId": 8,
+    "stackable": true,
+    "maxStack": 999,
+    "price": 40,
+    "levelReq": 1,
+    "schemaVersion": 2,
+    "warpMapId": 1,
+    "warpX": 26,
+    "warpY": 24,
+    "animationId": 18
+}

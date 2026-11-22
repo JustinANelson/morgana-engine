@@ -1,0 +1,16 @@
+{
+    "id": 11,
+    "name": "Herb Broth",
+    "description": "Riverleaf steeped over the fire. Restores 80 mana and 40 stamina.",
+    "type": "CONSUMABLE",
+    "iconId": 13,
+    "stackable": true,
+    "maxStack": 999,
+    "price": 25,
+    "levelReq": 1,
+    "schemaVersion": 2,
+    "restore": {
+        "mp": 80,
+        "sp": 40
+    }
+}

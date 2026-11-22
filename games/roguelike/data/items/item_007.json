@@ -1,0 +1,29 @@
+{
+    "id": 7,
+    "name": "Recurve Warbow",
+    "description": "Reinforced horn bow with heavy draw weight.",
+    "type": "WEAPON",
+    "iconId": 7,
+    "price": 110,
+    "schemaVersion": 1,
+    "levelReq": 2,
+    "attackDamage": 10,
+    "attackSpeedTicks": 10,
+    "rangeTiles": 7,
+    "weaponStyle": "RANGED_BOW",
+    "weaponType": "bow",
+    "twoHanded": true,
+    "projectileSpriteId": 1,
+    "requiredAmmoItemId": 12,
+    "attributeBonuses": {
+        "agi": 2
+    },
+    "paperdollSpriteId": 1,
+    "paperdollOffHandSpriteId": 2,
+    "paperdollSlot": "MAIN_HAND",
+    "paperdollClassTints": {
+        "1": "#c95046",
+        "2": "#4f8a5b",
+        "3": "#d97736"
+    }
+}

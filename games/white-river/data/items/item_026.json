@@ -1,0 +1,12 @@
+{
+    "id": 26,
+    "name": "Mire Essence",
+    "description": "Marsh light caught in a bottle. Alchemists want it.",
+    "type": "MATERIAL",
+    "iconId": 26,
+    "stackable": true,
+    "maxStack": 999,
+    "price": 22,
+    "levelReq": 1,
+    "schemaVersion": 2
+}

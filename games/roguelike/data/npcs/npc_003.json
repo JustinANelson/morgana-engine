@@ -1,0 +1,13 @@
+{
+    "id": 3,
+    "name": "Apothecary Lyra",
+    "title": "Potions & Arrows",
+    "spriteId": 12,
+    "behavior": "SHOPKEEPER",
+    "level": 10,
+    "shopId": 1,
+    "vitals": {
+        "hp": 300
+    },
+    "schemaVersion": 1
+}

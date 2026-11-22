@@ -1,0 +1,22 @@
+{
+    "id": 35,
+    "name": "Ash Shortbow",
+    "description": "A hunting bow of valley ash.",
+    "type": "WEAPON",
+    "iconId": 38,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 60,
+    "levelReq": 1,
+    "schemaVersion": 2,
+    "attackDamage": 7,
+    "attackSpeedTicks": 12,
+    "rangeTiles": 7,
+    "weaponStyle": "RANGED_BOW",
+    "twoHanded": true,
+    "projectileSpriteId": 1,
+    "requiredAmmoItemId": 32,
+    "classReqIds": [
+        2
+    ]
+}

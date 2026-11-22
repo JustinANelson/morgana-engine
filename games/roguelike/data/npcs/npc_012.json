@@ -1,0 +1,49 @@
+{
+    "id": 12,
+    "name": "Risen Marauder",
+    "spriteId": 103,
+    "behavior": "ATTACK_ON_SIGHT",
+    "level": 2,
+    "attributes": {
+        "str": 10,
+        "agi": 9,
+        "int": 5,
+        "vit": 8
+    },
+    "vitals": {
+        "hp": 68
+    },
+    "attackDamage": 10,
+    "attackSpeedTicks": 19,
+    "moveSpeedTicks": 10,
+    "aggroRangeTiles": 6,
+    "leashRangeTiles": 12,
+    "xpReward": 50,
+    "drops": [
+        {
+            "itemId": 1,
+            "minAmount": 8,
+            "maxAmount": 18,
+            "chanceBasisPoints": 8800
+        },
+        {
+            "itemId": 38,
+            "minAmount": 1,
+            "maxAmount": 2,
+            "chanceBasisPoints": 5000
+        },
+        {
+            "itemId": 3,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 800
+        },
+        {
+            "itemId": 18,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 800
+        }
+    ],
+    "schemaVersion": 1
+}

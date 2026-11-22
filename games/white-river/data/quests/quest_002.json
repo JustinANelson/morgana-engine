@@ -1,0 +1,39 @@
+{
+    "id": 2,
+    "name": "The Aurochs Problem",
+    "summary": "Drive the aurochs off the southern fields.",
+    "levelReq": 4,
+    "prerequisiteQuestIds": [
+        1
+    ],
+    "startText": "A herd of aurochs has taken the southern fields and gored two farmhands. Put down three and the rest will move on. Mind the bramblecaps on the way.",
+    "inProgressText": "Three meadow aurochs, in the south-east of the fields.",
+    "completionText": "That will hold them. Take these boots; you have walked far enough in the old ones.",
+    "objectives": [
+        {
+            "type": "KILL_NPC",
+            "targetId": 23,
+            "requiredCount": 3,
+            "description": "Meadow Aurochs"
+        },
+        {
+            "type": "KILL_NPC",
+            "targetId": 22,
+            "requiredCount": 5,
+            "description": "Bramblecaps"
+        }
+    ],
+    "reward": {
+        "xp": 420,
+        "currencyAmount": 160,
+        "items": [
+            {
+                "itemId": 58,
+                "amount": 1
+            }
+        ],
+        "teachSpellId": 0
+    },
+    "repeatable": false,
+    "schemaVersion": 2
+}

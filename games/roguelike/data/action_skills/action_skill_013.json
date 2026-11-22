@@ -1,0 +1,37 @@
+{
+    "id": 13,
+    "name": "Piercing Arrow",
+    "description": "High-velocity ember arrow that pierces a line of foes.",
+    "iconId": 13,
+    "startupTicks": 4,
+    "activeTicks": 2,
+    "recoveryTicks": 8,
+    "costs": {
+        "stamina": 16
+    },
+    "cooldownTicks": 35,
+    "animationId": 1,
+    "soundId": "combat_hit",
+    "schemaVersion": 2,
+    "hitboxes": [
+        {
+            "fromTick": 4,
+            "toTick": 4,
+            "shape": "CIRCLE",
+            "forwardPixels": 18,
+            "radiusPixels": 20,
+            "hit": {
+                "damageKind": "RANGED",
+                "damagePercent": 160,
+                "reaction": "STAGGER",
+                "reactionTicks": 6
+            },
+            "projectile": {
+                "spriteId": 2,
+                "speedPixelsPerTick": 22,
+                "rangePixels": 280,
+                "pierce": true
+            }
+        }
+    ]
+}

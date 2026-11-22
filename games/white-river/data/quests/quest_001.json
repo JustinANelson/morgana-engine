@@ -1,0 +1,37 @@
+{
+    "id": 1,
+    "name": "Rats in the Millrace",
+    "summary": "Thin out the rats and reed hens in Millrace Fields.",
+    "levelReq": 1,
+    "prerequisiteQuestIds": [],
+    "startText": "The millers say they cannot open a sack without a rat in it. Take the east road into Millrace Fields and thin them out: six rats, four reed hens.",
+    "inProgressText": "Six millrace rats and four reed hens, east of the Ford.",
+    "completionText": "The millers will sleep tonight. Your pay, and something for the road.",
+    "objectives": [
+        {
+            "type": "KILL_NPC",
+            "targetId": 20,
+            "requiredCount": 6,
+            "description": "Millrace Rats"
+        },
+        {
+            "type": "KILL_NPC",
+            "targetId": 21,
+            "requiredCount": 4,
+            "description": "Reed Hens"
+        }
+    ],
+    "reward": {
+        "xp": 90,
+        "currencyAmount": 60,
+        "items": [
+            {
+                "itemId": 2,
+                "amount": 4
+            }
+        ],
+        "teachSpellId": 0
+    },
+    "repeatable": false,
+    "schemaVersion": 2
+}

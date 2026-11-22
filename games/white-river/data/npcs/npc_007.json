@@ -1,0 +1,31 @@
+{
+    "id": 7,
+    "name": "Alchemist Soren",
+    "title": "Draughts and tonics",
+    "spriteId": 16,
+    "behavior": "SHOPKEEPER",
+    "level": 1,
+    "attributes": {
+        "str": 10,
+        "agi": 10,
+        "int": 10,
+        "vit": 10
+    },
+    "vitals": {
+        "hp": 400,
+        "mp": 100
+    },
+    "attackDamage": 5,
+    "attackSpeedTicks": 16,
+    "moveSpeedTicks": 10,
+    "aggroRangeTiles": 6,
+    "leashRangeTiles": 12,
+    "xpReward": 0,
+    "drops": [],
+    "spellIds": [],
+    "shopId": 4,
+    "eventId": 0,
+    "chatGreeting": "Bring herbs and use my table, or simply buy. I do not judge.",
+    "animationId": 0,
+    "schemaVersion": 2
+}

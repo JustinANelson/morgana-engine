@@ -1,0 +1,33 @@
+{
+    "id": 4,
+    "name": "Shieldbreaker",
+    "description": "A pommel strike that leaves the target stunned.",
+    "iconId": 70,
+    "targetType": "SINGLE_TARGET",
+    "levelReq": 14,
+    "classReqIds": [
+        1
+    ],
+    "costs": {
+        "sp": 25
+    },
+    "scales": true,
+    "castTimeTicks": 0,
+    "cooldownTicks": 120,
+    "rangeTiles": 2,
+    "aoeRadiusTiles": 0,
+    "basePower": 44,
+    "isHealing": false,
+    "projectileSpriteId": 0,
+    "animationId": 4,
+    "statusEffectType": "STUN",
+    "statusMagnitude": 1,
+    "statusDurationTicks": 30,
+    "warpMapId": 0,
+    "warpX": 0,
+    "warpY": 0,
+    "powerPercentPerLevel": 8,
+    "maxSpellLevel": 5,
+    "castsPerLevel": 60,
+    "schemaVersion": 2
+}

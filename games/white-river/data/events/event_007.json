@@ -1,0 +1,22 @@
+{
+    "id": 7,
+    "name": "Pim's workbench",
+    "mapId": 1,
+    "tileX": 26,
+    "tileY": 12,
+    "schemaVersion": 2,
+    "pages": [
+        {
+            "pageIndex": 0,
+            "condition": {},
+            "trigger": "ACTION_INTERACT",
+            "spriteId": 0,
+            "commands": [
+                {
+                    "_type": "open_crafting",
+                    "stationType": "WORKBENCH"
+                }
+            ]
+        }
+    ]
+}

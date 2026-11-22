@@ -1,0 +1,13 @@
+{
+    "id": 57,
+    "name": "Travel Boots",
+    "description": "Broken in on the river road.",
+    "type": "BOOTS",
+    "iconId": 57,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 40,
+    "levelReq": 1,
+    "schemaVersion": 2,
+    "armorDefense": 2
+}

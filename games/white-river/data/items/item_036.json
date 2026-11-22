@@ -1,0 +1,22 @@
+{
+    "id": 36,
+    "name": "Dusk Wand",
+    "description": "A wand of black willow. It hums at twilight.",
+    "type": "WEAPON",
+    "iconId": 42,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 60,
+    "levelReq": 1,
+    "schemaVersion": 2,
+    "attackDamage": 4,
+    "attackSpeedTicks": 12,
+    "rangeTiles": 1,
+    "weaponStyle": "MAGIC_STAFF",
+    "classReqIds": [
+        3
+    ],
+    "attributeBonuses": {
+        "int": 3
+    }
+}

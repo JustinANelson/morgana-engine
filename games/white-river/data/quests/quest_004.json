@@ -1,0 +1,39 @@
+{
+    "id": 4,
+    "name": "The Reedfolk",
+    "summary": "Push the reedfolk back from the road and bring proof.",
+    "levelReq": 12,
+    "prerequisiteQuestIds": [
+        3
+    ],
+    "startText": "The reedfolk are what closed the road. Kill eight stalkers and bring me six viper fangs for the smiths while you are in there.",
+    "inProgressText": "Eight reedfolk stalkers, and six viper fangs.",
+    "completionText": "The marsh is ours again, for now. Wear this.",
+    "objectives": [
+        {
+            "type": "KILL_NPC",
+            "targetId": 26,
+            "requiredCount": 8,
+            "description": "Reedfolk Stalkers"
+        },
+        {
+            "type": "COLLECT_ITEM",
+            "targetId": 25,
+            "requiredCount": 6,
+            "description": "Viper Fangs"
+        }
+    ],
+    "reward": {
+        "xp": 3200,
+        "currencyAmount": 500,
+        "items": [
+            {
+                "itemId": 62,
+                "amount": 1
+            }
+        ],
+        "teachSpellId": 0
+    },
+    "repeatable": false,
+    "schemaVersion": 2
+}

@@ -1,0 +1,98 @@
+{
+    "id": 28,
+    "name": "Quarry Ratling",
+    "title": "",
+    "spriteId": 111,
+    "behavior": "ATTACK_ON_SIGHT",
+    "level": 17,
+    "attributes": {
+        "str": 23,
+        "agi": 14,
+        "int": 23,
+        "vit": 22
+    },
+    "vitals": {
+        "hp": 256,
+        "mp": 100
+    },
+    "attackDamage": 25,
+    "attackSpeedTicks": 20,
+    "moveSpeedTicks": 14,
+    "aggroRangeTiles": 6,
+    "leashRangeTiles": 12,
+    "xpReward": 564,
+    "drops": [
+        {
+            "itemId": 1,
+            "minAmount": 17,
+            "maxAmount": 68,
+            "chanceBasisPoints": 7500
+        },
+        {
+            "itemId": 3,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 600
+        },
+        {
+            "itemId": 17,
+            "minAmount": 1,
+            "maxAmount": 2,
+            "chanceBasisPoints": 4000
+        },
+        {
+            "itemId": 40,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 41,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 42,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 48,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 52,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 59,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 63,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 29,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 12
+        }
+    ],
+    "spellIds": [],
+    "shopId": 0,
+    "eventId": 0,
+    "chatGreeting": "",
+    "animationId": 0,
+    "schemaVersion": 2
+}

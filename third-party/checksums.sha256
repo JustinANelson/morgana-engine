@@ -1,0 +1,6 @@
+# SHA-256 of every vendored file, relative to third-party/. Checked by the verifyThirdParty Gradle task.
+74846ae7bff78398d5641fd658d53fcf26808e37bbe7bbb9dcf07b925d0fa6ac  licenses/Luak-LICENSE.txt
+89c1916939f5fef4f69d388e058eb2239cfda780d4393407930b224659f6acb3  maven/net/blueva/luak-core-jvm/26.11/luak-core-jvm-26.11.jar
+1d7e5d76ef93e52bc7d8e10ca4f607d7bba94802bd567488d90105cf49cf8aa2  maven/net/blueva/luak-core-jvm/26.11/luak-core-jvm-26.11.module
+391bcf27a03ed83250242d8dba518161e7147b67acbb520169bd30f702c83f69  maven/net/blueva/luak-core-jvm/26.11/luak-core-jvm-26.11.pom
+59c0d7113168f21b9601a39d30b7a2a5bff5c01b4ca9fbf9d44d8d9abaf08f5c  maven/net/blueva/luak-core-jvm/26.11/luak-core-jvm-26.11-sources.jar

@@ -1,0 +1,10 @@
+{
+    "id": 11,
+    "name": "Duskbolt",
+    "spriteSheetId": 11,
+    "frameCount": 4,
+    "frameDurationMs": 80,
+    "soundId": "",
+    "renderAboveEntities": true,
+    "schemaVersion": 2
+}

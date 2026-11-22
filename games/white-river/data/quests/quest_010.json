@@ -1,0 +1,43 @@
+{
+    "id": 10,
+    "name": "Wood and Leaf",
+    "summary": "Gather ash logs and riverleaf from Millrace Fields.",
+    "levelReq": 2,
+    "prerequisiteQuestIds": [
+        9
+    ],
+    "startText": "The ovens need ash and the broth needs riverleaf. Pim sells a hatchet; riverleaf you can pick by hand along the millrace. Ten logs, eight leaves.",
+    "inProgressText": "Ten ash logs and eight riverleaf from the fields.",
+    "completionText": "That will keep the fires going. Take the broth.",
+    "objectives": [
+        {
+            "type": "COLLECT_ITEM",
+            "targetId": 15,
+            "requiredCount": 10,
+            "description": "Ash Logs"
+        },
+        {
+            "type": "COLLECT_ITEM",
+            "targetId": 22,
+            "requiredCount": 8,
+            "description": "Riverleaf"
+        }
+    ],
+    "reward": {
+        "xp": 300,
+        "currencyAmount": 90,
+        "items": [
+            {
+                "itemId": 11,
+                "amount": 4
+            },
+            {
+                "itemId": 7,
+                "amount": 4
+            }
+        ],
+        "teachSpellId": 0
+    },
+    "repeatable": false,
+    "schemaVersion": 2
+}

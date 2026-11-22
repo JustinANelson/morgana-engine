@@ -1,0 +1,19 @@
+{
+    "id": 34,
+    "name": "Ford Longsword",
+    "description": "Standard issue for the Ford's wardens.",
+    "type": "WEAPON",
+    "iconId": 34,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 60,
+    "levelReq": 1,
+    "schemaVersion": 2,
+    "attackDamage": 9,
+    "attackSpeedTicks": 10,
+    "rangeTiles": 1,
+    "weaponStyle": "MELEE",
+    "classReqIds": [
+        1
+    ]
+}

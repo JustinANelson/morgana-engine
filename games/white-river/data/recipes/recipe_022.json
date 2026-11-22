@@ -1,0 +1,24 @@
+{
+    "id": 22,
+    "name": "Paleback Plate",
+    "stationType": "ANVIL",
+    "levelReq": 30,
+    "ingredients": [
+        {
+            "itemId": 52,
+            "amount": 1
+        },
+        {
+            "itemId": 19,
+            "amount": 12
+        },
+        {
+            "itemId": 28,
+            "amount": 12
+        }
+    ],
+    "outputItemId": 53,
+    "outputAmount": 1,
+    "xpReward": 700,
+    "schemaVersion": 2
+}

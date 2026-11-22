@@ -1,0 +1,14 @@
+{
+    "id": 33,
+    "name": "Barbed Arrow",
+    "description": "Iron-tipped and barbed. Hits harder.",
+    "type": "AMMO",
+    "iconId": 33,
+    "stackable": true,
+    "maxStack": 999,
+    "price": 4,
+    "levelReq": 10,
+    "schemaVersion": 2,
+    "attackDamage": 7,
+    "projectileSpriteId": 1
+}

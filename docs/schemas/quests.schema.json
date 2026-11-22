@@ -1,0 +1,129 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Morgana quests document",
+    "$ref": "#/$defs/com.morgana.domain.event.QuestDefinition",
+    "$defs": {
+        "com.morgana.domain.event.QuestDefinition": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "summary": {
+                    "type": "string"
+                },
+                "levelReq": {
+                    "type": "integer"
+                },
+                "prerequisiteQuestIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "startText": {
+                    "type": "string"
+                },
+                "inProgressText": {
+                    "type": "string"
+                },
+                "completionText": {
+                    "type": "string"
+                },
+                "objectives": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.event.QuestObjective"
+                    }
+                },
+                "reward": {
+                    "$ref": "#/$defs/com.morgana.domain.event.QuestReward"
+                },
+                "repeatable": {
+                    "type": "boolean"
+                },
+                "cooldownTicks": {
+                    "type": "integer"
+                },
+                "schemaVersion": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "id",
+                "name"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.event.QuestObjective": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "KILL_NPC",
+                        "COLLECT_ITEM",
+                        "TALK_TO_NPC",
+                        "HARVEST_RESOURCE",
+                        "CRAFT_RECIPE",
+                        "VISIT_MAP"
+                    ]
+                },
+                "targetId": {
+                    "type": "integer"
+                },
+                "requiredCount": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "type",
+                "targetId"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.event.QuestReward": {
+            "type": "object",
+            "properties": {
+                "xp": {
+                    "type": "integer"
+                },
+                "currencyAmount": {
+                    "type": "integer"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.content.RecipeIngredient"
+                    }
+                },
+                "teachSpellId": {
+                    "type": "integer"
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.content.RecipeIngredient": {
+            "type": "object",
+            "properties": {
+                "itemId": {
+                    "type": "integer"
+                },
+                "amount": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "itemId"
+            ],
+            "additionalProperties": false
+        }
+    }
+}

@@ -1,0 +1,1980 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Morgana game definition (game.json)",
+    "$ref": "#/$defs/com.morgana.domain.game.GameDefinition",
+    "$defs": {
+        "com.morgana.domain.game.GameDefinition": {
+            "type": "object",
+            "properties": {
+                "schemaVersion": {
+                    "type": "integer"
+                },
+                "engineApi": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "capabilities": {
+                    "anyOf": [
+                        {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "attributes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.game.AttributeDefinition"
+                    }
+                },
+                "vitals": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.game.VitalDefinition"
+                    }
+                },
+                "progression": {
+                    "$ref": "#/$defs/com.morgana.domain.game.ProgressionDefinition"
+                },
+                "combat": {
+                    "$ref": "#/$defs/com.morgana.domain.game.CombatDefinition"
+                },
+                "clock": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.game.ClockDefinition"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "weather": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.game.WeatherDefinition"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "ui": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.game.UiProfile"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "sprites": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.game.SpriteProfile"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "inventorySlots": {
+                    "type": "integer"
+                },
+                "loot": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.item.LootRules"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "jump": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.game.JumpDefinition"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "sprint": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.game.SprintDefinition"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "townGate": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.game.TownGateDefinition"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "weaponProficiency": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.game.WeaponProficiencyConfig"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "nobility": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.game.NobilityDefinition"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "battlePower": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.game.BattlePowerDefinition"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "durability": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.game.DurabilityDefinition"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "rebirth": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.game.RebirthDefinition"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "paragon": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.game.ParagonDefinition"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "rested": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.game.RestedDefinition"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "gearUpgrade": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.game.GearUpgradeDefinition"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "xpGauge": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.game.XpGaugeDefinition"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "promotion": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.game.PromotionDefinition"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "equipmentSlots": {
+                    "anyOf": [
+                        {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/com.morgana.domain.game.EquipmentSlotDefinition"
+                            }
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "dualWield": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.game.DualWieldDefinition"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "ghost": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.game.GhostDefinition"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "onboarding": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.onboarding.OnboardingConfig"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "guildBank": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.game.GuildBankDefinition"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "guildWar": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.game.GuildWarDefinition"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "bestiary": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.game.BestiaryDefinition"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "arena": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.game.ArenaDefinition"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "stall": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.game.StallDefinition"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "runs": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.game.RunRulesDefinition"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "boons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.game.BoonDefinition"
+                    }
+                },
+                "skillTree": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.game.SkillTreeDefinition"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                }
+            },
+            "required": [
+                "id",
+                "name",
+                "vitals",
+                "progression",
+                "combat"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.AttributeDefinition": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "short": {
+                    "type": "string"
+                },
+                "base": {
+                    "type": "integer"
+                },
+                "floor": {
+                    "type": "integer"
+                },
+                "cap": {
+                    "anyOf": [
+                        {
+                            "type": "integer"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "allocatable": {
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "id",
+                "name"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.VitalDefinition": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "short": {
+                    "type": "string"
+                },
+                "color": {
+                    "type": "string"
+                },
+                "role": {
+                    "anyOf": [
+                        {
+                            "type": "string",
+                            "enum": [
+                                "life"
+                            ]
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "max": {
+                    "type": "string"
+                },
+                "regen": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.game.RegenDefinition"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                }
+            },
+            "required": [
+                "id",
+                "name",
+                "max"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.RegenDefinition": {
+            "type": "object",
+            "properties": {
+                "everyTicks": {
+                    "type": "integer"
+                },
+                "amount": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "everyTicks",
+                "amount"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.ProgressionDefinition": {
+            "type": "object",
+            "properties": {
+                "maxLevel": {
+                    "type": "integer"
+                },
+                "xpTable": {
+                    "anyOf": [
+                        {
+                            "type": "array",
+                            "items": {
+                                "type": "integer"
+                            }
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "xpExpr": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.CombatDefinition": {
+            "type": "object",
+            "properties": {
+                "melee": {
+                    "type": "string"
+                },
+                "ranged": {
+                    "type": "string"
+                },
+                "spell": {
+                    "type": "string"
+                },
+                "critChanceBp": {
+                    "type": "string"
+                },
+                "dodgeChanceBp": {
+                    "type": "string"
+                },
+                "module": {
+                    "type": "string"
+                },
+                "defaultAttackSpeedTicks": {
+                    "type": "integer"
+                },
+                "defaultNpcRespawnTicks": {
+                    "type": "integer"
+                },
+                "lootOwnerProtectionTicks": {
+                    "type": "integer"
+                },
+                "groundItemDespawnTicks": {
+                    "type": "integer"
+                },
+                "partyXpBonusPercent": {
+                    "type": "integer"
+                },
+                "levelOffsetXpScaling": {
+                    "type": "boolean"
+                },
+                "enemyVariants": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.game.EnemyVariantDefinition"
+                    }
+                },
+                "pk": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.game.PkRulesDefinition"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "npcs": {
+                    "$ref": "#/$defs/com.morgana.domain.game.NpcCombatDefinition"
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.EnemyVariantDefinition": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "spawnBasisPoints": {
+                    "type": "integer"
+                },
+                "forceAggro": {
+                    "type": "boolean"
+                },
+                "hpPercent": {
+                    "type": "integer"
+                },
+                "attackPercent": {
+                    "type": "integer"
+                },
+                "moveSpeedPercent": {
+                    "type": "integer"
+                },
+                "xpPercent": {
+                    "type": "integer"
+                },
+                "dropRatePercent": {
+                    "type": "integer"
+                },
+                "bonusDropRolls": {
+                    "type": "integer"
+                },
+                "levelBonus": {
+                    "type": "integer"
+                },
+                "colorHex": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id",
+                "label"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.PkRulesDefinition": {
+            "type": "object",
+            "properties": {
+                "pointsPerKill": {
+                    "type": "integer"
+                },
+                "redNameThreshold": {
+                    "type": "integer"
+                },
+                "blackNameThreshold": {
+                    "type": "integer"
+                },
+                "decayIntervalTicks": {
+                    "type": "integer"
+                },
+                "redEquipDropChanceBp": {
+                    "type": "integer"
+                },
+                "blackEquipDropChanceBp": {
+                    "type": "integer"
+                },
+                "jailMapId": {
+                    "type": "integer"
+                },
+                "jailX": {
+                    "type": "integer"
+                },
+                "jailY": {
+                    "type": "integer"
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.NpcCombatDefinition": {
+            "type": "object",
+            "properties": {
+                "maxAttackersPerTarget": {
+                    "type": "integer"
+                },
+                "firstStrikeDelayTicks": {
+                    "type": "integer"
+                },
+                "spellWindUpTicks": {
+                    "type": "integer"
+                },
+                "casterKeepsDistance": {
+                    "type": "boolean"
+                },
+                "threatSwitchPercent": {
+                    "type": "integer"
+                },
+                "tauntThreatPercent": {
+                    "type": "integer"
+                },
+                "healThreatPercent": {
+                    "type": "integer"
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.ClockDefinition": {
+            "type": "object",
+            "properties": {
+                "dayLengthTicks": {
+                    "type": "integer"
+                },
+                "daysPerSeason": {
+                    "type": "integer"
+                },
+                "seasons": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "startTimePermille": {
+                    "type": "integer"
+                },
+                "dayNight": {
+                    "type": "boolean"
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.WeatherDefinition": {
+            "type": "object",
+            "properties": {
+                "zones": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.game.WeatherZone"
+                    }
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.WeatherZone": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "periodTicks": {
+                    "type": "integer"
+                },
+                "seed": {
+                    "type": "integer"
+                },
+                "states": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.game.WeatherState"
+                    }
+                }
+            },
+            "required": [
+                "id",
+                "name"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.WeatherState": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "NONE",
+                        "RAIN",
+                        "SNOW",
+                        "FOG",
+                        "ASH"
+                    ]
+                },
+                "intensity": {
+                    "type": "number"
+                },
+                "weight": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "type"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.UiProfile": {
+            "type": "object",
+            "properties": {
+                "combat": {
+                    "type": "boolean"
+                },
+                "spells": {
+                    "type": "boolean"
+                },
+                "hotbar": {
+                    "type": "boolean"
+                },
+                "minimap": {
+                    "type": "boolean"
+                },
+                "chat": {
+                    "type": "boolean"
+                },
+                "party": {
+                    "type": "boolean"
+                },
+                "xpOrbs": {
+                    "type": "boolean"
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.SpriteProfile": {
+            "type": "object",
+            "properties": {
+                "cellWidth": {
+                    "type": "integer"
+                },
+                "cellHeight": {
+                    "type": "integer"
+                },
+                "stateFrames": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "anchor": {
+                    "type": "string",
+                    "enum": [
+                        "bottom_center"
+                    ]
+                },
+                "paperdollingV2": {
+                    "type": "boolean"
+                },
+                "scales": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "number"
+                    }
+                },
+                "uiHeights": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.item.LootRules": {
+            "type": "object",
+            "properties": {
+                "rarities": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.item.RarityDefinition"
+                    }
+                },
+                "affixes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.item.AffixDefinition"
+                    }
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.item.RarityDefinition": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "color": {
+                    "type": "string"
+                },
+                "weight": {
+                    "type": "integer"
+                },
+                "minItemLevel": {
+                    "type": "integer"
+                },
+                "affixesMin": {
+                    "type": "integer"
+                },
+                "affixesMax": {
+                    "type": "integer"
+                },
+                "priceMultiplierPercent": {
+                    "type": "integer"
+                },
+                "unlabeled": {
+                    "type": "boolean"
+                },
+                "socketChanceBasisPoints": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "id",
+                "name",
+                "weight"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.item.AffixDefinition": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "position": {
+                    "type": "string",
+                    "enum": [
+                        "PREFIX",
+                        "SUFFIX"
+                    ]
+                },
+                "stat": {
+                    "type": "string",
+                    "enum": [
+                        "ATTRIBUTE",
+                        "VITAL_MAX",
+                        "ATTACK_DAMAGE",
+                        "ARMOR_DEFENSE",
+                        "CRIT_CHANCE_BP",
+                        "DODGE_CHANCE_BP",
+                        "LIFE_LEECH_PERCENT",
+                        "MAGIC_FIND_PERCENT"
+                    ]
+                },
+                "statId": {
+                    "type": "string"
+                },
+                "min": {
+                    "type": "integer"
+                },
+                "max": {
+                    "type": "integer"
+                },
+                "weight": {
+                    "type": "integer"
+                },
+                "minItemLevel": {
+                    "type": "integer"
+                },
+                "maxItemLevel": {
+                    "type": "integer"
+                },
+                "slots": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.item.EquipmentSlot"
+                    }
+                }
+            },
+            "required": [
+                "id",
+                "name",
+                "stat",
+                "min",
+                "max"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.item.EquipmentSlot": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.JumpDefinition": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "maxRangeTiles": {
+                    "type": "integer"
+                },
+                "staminaCost": {
+                    "type": "integer"
+                },
+                "staminaVitalId": {
+                    "type": "string"
+                },
+                "cooldownTicks": {
+                    "type": "integer"
+                },
+                "disabledMapIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.SprintDefinition": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "speedPercent": {
+                    "type": "integer"
+                },
+                "staminaVitalId": {
+                    "type": "string"
+                },
+                "stepsPerStamina": {
+                    "type": "integer"
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.TownGateDefinition": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "towns": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.game.TownGateTown"
+                    }
+                },
+                "disabledMapIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "leaveReturnPortal": {
+                    "type": "boolean"
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.TownGateTown": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "mapId": {
+                    "type": "integer"
+                },
+                "x": {
+                    "type": "integer"
+                },
+                "y": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "mapId",
+                "x",
+                "y"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.WeaponProficiencyConfig": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "maxLevel": {
+                    "type": "integer"
+                },
+                "hitsPerLevel": {
+                    "type": "integer"
+                },
+                "damageBonusPercentPerLevel": {
+                    "type": "integer"
+                },
+                "weaponTypes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.game.WeaponTypeDefinition"
+                    }
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.WeaponTypeDefinition": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id",
+                "name"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.NobilityDefinition": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "donationVariable": {
+                    "type": "string"
+                },
+                "ranks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.game.NobilityRank"
+                    }
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.NobilityRank": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "minDonation": {
+                    "type": "integer"
+                },
+                "battlePower": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "id",
+                "name",
+                "minDonation"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.BattlePowerDefinition": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "perLevel": {
+                    "type": "integer"
+                },
+                "perItemLevel": {
+                    "type": "integer"
+                },
+                "perPlus": {
+                    "type": "integer"
+                },
+                "perGem": {
+                    "type": "integer"
+                },
+                "rarityPoints": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.DurabilityDefinition": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "weaponWearChancePercent": {
+                    "type": "integer"
+                },
+                "armorWearChancePercent": {
+                    "type": "integer"
+                },
+                "wearPerHit": {
+                    "type": "integer"
+                },
+                "repairPricePercent": {
+                    "type": "integer"
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.RebirthDefinition": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "minLevel": {
+                    "type": "integer"
+                },
+                "resetLevel": {
+                    "type": "integer"
+                },
+                "maxRebirths": {
+                    "type": "integer"
+                },
+                "countVariable": {
+                    "type": "string"
+                },
+                "bonusStatPointsPerRebirth": {
+                    "type": "integer"
+                },
+                "allowClassChange": {
+                    "type": "boolean"
+                },
+                "grantSpellIds": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    }
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.ParagonDefinition": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "variable": {
+                    "type": "string"
+                },
+                "xpBase": {
+                    "type": "integer"
+                },
+                "xpStep": {
+                    "type": "integer"
+                },
+                "statPointsPerLevel": {
+                    "type": "integer"
+                },
+                "maxLevels": {
+                    "type": "integer"
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.RestedDefinition": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "poolPercentPerOfflineHour": {
+                    "type": "integer"
+                },
+                "poolCapPercent": {
+                    "type": "integer"
+                },
+                "bonusPercent": {
+                    "type": "integer"
+                },
+                "catchUpBelowLevel": {
+                    "type": "integer"
+                },
+                "catchUpPercent": {
+                    "type": "integer"
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.GearUpgradeDefinition": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "maxSockets": {
+                    "type": "integer"
+                },
+                "enhancement": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.game.EnhancementDefinition"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "quality": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.game.QualityUpgradeDefinition"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.EnhancementDefinition": {
+            "type": "object",
+            "properties": {
+                "tiers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.game.EnhancementTier"
+                    }
+                },
+                "pityBonusBasisPointsPerStack": {
+                    "type": "integer"
+                },
+                "maxPityStacks": {
+                    "type": "integer"
+                },
+                "pityGainPerFailure": {
+                    "type": "integer"
+                },
+                "failDurabilityLoss": {
+                    "type": "integer"
+                },
+                "dropPlusOnFailFrom": {
+                    "type": "integer"
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.EnhancementTier": {
+            "type": "object",
+            "properties": {
+                "plus": {
+                    "type": "integer"
+                },
+                "chanceBasisPoints": {
+                    "type": "integer"
+                },
+                "materialItemId": {
+                    "type": "integer"
+                },
+                "materialAmount": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "plus",
+                "materialItemId"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.QualityUpgradeDefinition": {
+            "type": "object",
+            "properties": {
+                "steps": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.game.QualityStep"
+                    }
+                },
+                "pityBonusBasisPointsPerStack": {
+                    "type": "integer"
+                },
+                "maxPityStacks": {
+                    "type": "integer"
+                },
+                "pityGainPerFailure": {
+                    "type": "integer"
+                },
+                "socketChanceBasisPoints": {
+                    "type": "integer"
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.QualityStep": {
+            "type": "object",
+            "properties": {
+                "rarityId": {
+                    "type": "string"
+                },
+                "chanceBasisPoints": {
+                    "type": "integer"
+                },
+                "materialAmount": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "rarityId"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.XpGaugeDefinition": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "vitalId": {
+                    "type": "string"
+                },
+                "gainPerKill": {
+                    "type": "integer"
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.PromotionDefinition": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "variable": {
+                    "type": "string"
+                },
+                "startName": {
+                    "type": "string"
+                },
+                "tiers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.game.PromotionTier"
+                    }
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.PromotionTier": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "minLevel": {
+                    "type": "integer"
+                },
+                "bonusStatPoints": {
+                    "type": "integer"
+                },
+                "grantSpellIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "classNames": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "classGrantSpellIds": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    }
+                }
+            },
+            "required": [
+                "name",
+                "minLevel"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.EquipmentSlotDefinition": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id",
+                "name"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.DualWieldDefinition": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "classIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "strikeChancePercent": {
+                    "type": "integer"
+                },
+                "damagePercent": {
+                    "type": "integer"
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.GhostDefinition": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "autoReleaseTicks": {
+                    "type": "integer"
+                },
+                "deathWearPoints": {
+                    "type": "integer"
+                },
+                "selfReviveAfterTicks": {
+                    "type": "integer"
+                },
+                "selfRevivePercent": {
+                    "type": "integer"
+                },
+                "wipeEndsRun": {
+                    "type": "boolean"
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.onboarding.OnboardingConfig": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "defaults": {
+                    "type": "boolean"
+                },
+                "tips": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.onboarding.TipDefinition"
+                    }
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.onboarding.TipDefinition": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "trigger": {
+                    "type": "string",
+                    "enum": [
+                        "WELCOME",
+                        "EQUIPMENT_FOUND",
+                        "STAT_POINTS",
+                        "SKILL_AVAILABLE",
+                        "GEAR_WORN",
+                        "GEAR_BROKEN",
+                        "LOW_HEALTH",
+                        "DEATH",
+                        "LEVEL"
+                    ]
+                },
+                "title": {
+                    "type": "string"
+                },
+                "text": {
+                    "type": "string"
+                },
+                "level": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "id",
+                "trigger"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.GuildBankDefinition": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "defaultWithdrawRank": {
+                    "type": "string"
+                },
+                "logEntries": {
+                    "type": "integer"
+                },
+                "reachTiles": {
+                    "type": "integer"
+                },
+                "tabSlots": {
+                    "type": "integer"
+                },
+                "withdrawLimits": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "limitDayTicks": {
+                    "type": "integer"
+                },
+                "currencyItemId": {
+                    "type": "integer"
+                },
+                "upgrades": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.game.GuildBankUpgrade"
+                    }
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.GuildBankUpgrade": {
+            "type": "object",
+            "properties": {
+                "cost": {
+                    "type": "integer"
+                },
+                "extraSlots": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "cost",
+                "extraSlots"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.GuildWarDefinition": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "mapId": {
+                    "type": "integer"
+                },
+                "intervalTicks": {
+                    "type": "integer"
+                },
+                "durationTicks": {
+                    "type": "integer"
+                },
+                "minDamage": {
+                    "type": "integer"
+                },
+                "rewardItems": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.BestiaryDefinition": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "statsAfterKills": {
+                    "type": "integer"
+                },
+                "dropsAfterKills": {
+                    "type": "integer"
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.ArenaDefinition": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "mapId": {
+                    "type": "integer"
+                },
+                "teamSizes": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "teamASpawns": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.game.ArenaSpawn"
+                    }
+                },
+                "teamBSpawns": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.game.ArenaSpawn"
+                    }
+                },
+                "countdownTicks": {
+                    "type": "integer"
+                },
+                "matchTicks": {
+                    "type": "integer"
+                },
+                "startRating": {
+                    "type": "integer"
+                },
+                "ratingK": {
+                    "type": "integer"
+                },
+                "maxRatingGap": {
+                    "type": "integer"
+                },
+                "gapGrowth": {
+                    "type": "integer"
+                },
+                "gapGrowthTicks": {
+                    "type": "integer"
+                },
+                "winnerRewards": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "loserRewards": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "required": [
+                "mapId"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.ArenaSpawn": {
+            "type": "object",
+            "properties": {
+                "x": {
+                    "type": "integer"
+                },
+                "y": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "x",
+                "y"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.StallDefinition": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "mapIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "maxListings": {
+                    "type": "integer"
+                },
+                "rangeTiles": {
+                    "type": "integer"
+                },
+                "currencyItemId": {
+                    "type": "integer"
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.RunRulesDefinition": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "stateMode": {
+                    "type": "string",
+                    "enum": [
+                        "PERSISTENT",
+                        "EXTRACTION",
+                        "EPHEMERAL"
+                    ]
+                },
+                "permadeath": {
+                    "type": "string",
+                    "enum": [
+                        "OFF",
+                        "LOCK",
+                        "DELETE"
+                    ]
+                },
+                "timeLimitTicks": {
+                    "type": "integer"
+                },
+                "allowCustomSeed": {
+                    "type": "boolean"
+                },
+                "wipeEndsRun": {
+                    "type": "boolean"
+                },
+                "metaCurrencyItemIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.BoonDefinition": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "maxStacks": {
+                    "type": "integer"
+                },
+                "runOnly": {
+                    "type": "boolean"
+                },
+                "weight": {
+                    "type": "integer"
+                },
+                "attributeBonuses": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "attackDamageBonus": {
+                    "type": "integer"
+                },
+                "armorDefenseBonus": {
+                    "type": "integer"
+                },
+                "critChanceBpBonus": {
+                    "type": "integer"
+                },
+                "lifeLeechPercentBonus": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "id",
+                "name"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.SkillTreeDefinition": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "pointsPerLevel": {
+                    "type": "integer"
+                },
+                "nodes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.game.SkillNodeDefinition"
+                    }
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.SkillNodeDefinition": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "classIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "maxRank": {
+                    "type": "integer"
+                },
+                "minLevel": {
+                    "type": "integer"
+                },
+                "requires": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "grantsSpellId": {
+                    "type": "integer"
+                },
+                "attributeBonuses": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "attackDamageBonus": {
+                    "type": "integer"
+                },
+                "armorDefenseBonus": {
+                    "type": "integer"
+                },
+                "critChanceBpBonus": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "id",
+                "name"
+            ],
+            "additionalProperties": false
+        }
+    }
+}

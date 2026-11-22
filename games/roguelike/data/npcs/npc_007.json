@@ -1,0 +1,13 @@
+{
+    "id": 7,
+    "name": "Wayside Shrine",
+    "title": "Altar of Ash",
+    "spriteId": 16,
+    "behavior": "QUEST_GIVER",
+    "level": 1,
+    "eventId": 3,
+    "vitals": {
+        "hp": 200
+    },
+    "schemaVersion": 1
+}

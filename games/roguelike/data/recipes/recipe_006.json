@@ -1,0 +1,20 @@
+{
+    "id": 6,
+    "name": "Greater Vigor Elixir",
+    "stationType": "ANYWHERE",
+    "levelReq": 1,
+    "ingredients": [
+        {
+            "itemId": 39,
+            "amount": 1
+        },
+        {
+            "itemId": 40,
+            "amount": 1
+        }
+    ],
+    "outputItemId": 34,
+    "outputAmount": 2,
+    "xpReward": 30,
+    "schemaVersion": 1
+}

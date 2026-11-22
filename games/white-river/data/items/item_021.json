@@ -1,0 +1,12 @@
+{
+    "id": 21,
+    "name": "Silverscale Pike",
+    "description": "A marsh pike as long as your arm. The heart of a good stew.",
+    "type": "MATERIAL",
+    "iconId": 10,
+    "stackable": true,
+    "maxStack": 999,
+    "price": 16,
+    "levelReq": 1,
+    "schemaVersion": 2
+}

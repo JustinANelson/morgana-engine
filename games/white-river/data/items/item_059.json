@@ -1,0 +1,16 @@
+{
+    "id": 59,
+    "name": "Quarry Treads",
+    "description": "Hobnailed for loose chalk.",
+    "type": "BOOTS",
+    "iconId": 59,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 760,
+    "levelReq": 20,
+    "schemaVersion": 2,
+    "armorDefense": 7,
+    "attributeBonuses": {
+        "agi": 2
+    }
+}

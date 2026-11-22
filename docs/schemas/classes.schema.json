@@ -1,0 +1,172 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Morgana classes document",
+    "$ref": "#/$defs/com.morgana.domain.content.ClassDefinition",
+    "$defs": {
+        "com.morgana.domain.content.ClassDefinition": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "spriteIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "baseAttributes": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "statPointsPerLevel": {
+                    "type": "integer"
+                },
+                "autoStatGrowthPerLevel": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "startMapId": {
+                    "type": "integer"
+                },
+                "startX": {
+                    "type": "integer"
+                },
+                "startY": {
+                    "type": "integer"
+                },
+                "startingItems": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.item.ItemStack"
+                    }
+                },
+                "autoEquipStartingItems": {
+                    "type": "boolean"
+                },
+                "startingSpellIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "abilityTerminology": {
+                    "type": "string",
+                    "enum": [
+                        "SPELLS",
+                        "SKILLS"
+                    ]
+                },
+                "schemaVersion": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "id",
+                "name"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.item.ItemStack": {
+            "type": "object",
+            "properties": {
+                "itemId": {
+                    "type": "integer"
+                },
+                "amount": {
+                    "type": "integer"
+                },
+                "durability": {
+                    "type": "integer"
+                },
+                "rolls": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.item.ItemRolls"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "plus": {
+                    "type": "integer"
+                },
+                "sockets": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "required": [
+                "itemId"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.item.ItemRolls": {
+            "type": "object",
+            "properties": {
+                "rarity": {
+                    "type": "string"
+                },
+                "itemLevel": {
+                    "type": "integer"
+                },
+                "affixes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.item.RolledAffix"
+                    }
+                }
+            },
+            "required": [
+                "rarity"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.item.RolledAffix": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "stat": {
+                    "type": "string",
+                    "enum": [
+                        "ATTRIBUTE",
+                        "VITAL_MAX",
+                        "ATTACK_DAMAGE",
+                        "ARMOR_DEFENSE",
+                        "CRIT_CHANCE_BP",
+                        "DODGE_CHANCE_BP",
+                        "LIFE_LEECH_PERCENT",
+                        "MAGIC_FIND_PERCENT"
+                    ]
+                },
+                "statId": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "id",
+                "stat",
+                "value"
+            ],
+            "additionalProperties": false
+        }
+    }
+}

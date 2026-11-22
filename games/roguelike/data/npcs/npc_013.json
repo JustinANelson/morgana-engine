@@ -1,0 +1,49 @@
+{
+    "id": 13,
+    "name": "Hollow Reaver",
+    "spriteId": 104,
+    "behavior": "ATTACK_ON_SIGHT",
+    "level": 3,
+    "attributes": {
+        "str": 12,
+        "agi": 13,
+        "int": 7,
+        "vit": 9
+    },
+    "vitals": {
+        "hp": 86
+    },
+    "attackDamage": 13,
+    "attackSpeedTicks": 16,
+    "moveSpeedTicks": 8,
+    "aggroRangeTiles": 7,
+    "leashRangeTiles": 14,
+    "xpReward": 72,
+    "drops": [
+        {
+            "itemId": 1,
+            "minAmount": 12,
+            "maxAmount": 26,
+            "chanceBasisPoints": 9000
+        },
+        {
+            "itemId": 39,
+            "minAmount": 1,
+            "maxAmount": 2,
+            "chanceBasisPoints": 4500
+        },
+        {
+            "itemId": 7,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 750
+        },
+        {
+            "itemId": 27,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 750
+        }
+    ],
+    "schemaVersion": 1
+}

@@ -1,0 +1,12 @@
+{
+    "id": 24,
+    "name": "Soft Hide",
+    "description": "Cured hide from the fields. Tanners and trappers buy it.",
+    "type": "MATERIAL",
+    "iconId": 24,
+    "stackable": true,
+    "maxStack": 999,
+    "price": 5,
+    "levelReq": 1,
+    "schemaVersion": 2
+}

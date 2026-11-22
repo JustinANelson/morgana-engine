@@ -1,0 +1,21 @@
+{
+    "id": 15,
+    "name": "Keep Tower Shield",
+    "description": "Heavy steel shield bearing the Ashen Keep crest.",
+    "type": "SHIELD",
+    "iconId": 15,
+    "price": 130,
+    "schemaVersion": 1,
+    "levelReq": 2,
+    "armorDefense": 7,
+    "vitalMaxBonuses": {
+        "hp": 20
+    },
+    "paperdollSpriteId": 8,
+    "paperdollSlot": "OFF_HAND",
+    "paperdollClassTints": {
+        "1": "#c95046",
+        "2": "#4f8a5b",
+        "3": "#d97736"
+    }
+}

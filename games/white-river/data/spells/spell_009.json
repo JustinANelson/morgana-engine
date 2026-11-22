@@ -1,0 +1,33 @@
+{
+    "id": 9,
+    "name": "Pinning Shot",
+    "description": "An arrow through the boot. The target cannot move.",
+    "iconId": 75,
+    "targetType": "SINGLE_TARGET",
+    "levelReq": 14,
+    "classReqIds": [
+        2
+    ],
+    "costs": {
+        "sp": 25
+    },
+    "scales": true,
+    "castTimeTicks": 0,
+    "cooldownTicks": 120,
+    "rangeTiles": 8,
+    "aoeRadiusTiles": 0,
+    "basePower": 34,
+    "isHealing": false,
+    "projectileSpriteId": 1,
+    "animationId": 9,
+    "statusEffectType": "ROOT",
+    "statusMagnitude": 1,
+    "statusDurationTicks": 50,
+    "warpMapId": 0,
+    "warpX": 0,
+    "warpY": 0,
+    "powerPercentPerLevel": 8,
+    "maxSpellLevel": 5,
+    "castsPerLevel": 60,
+    "schemaVersion": 2
+}

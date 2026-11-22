@@ -1,0 +1,31 @@
+{
+    "id": 3,
+    "name": "Fall of the Ashen Warden",
+    "summary": "Defeat Malakor, the Ashen Warden, at the far end of Floor 1.",
+    "levelReq": 3,
+    "prerequisiteQuestIds": [
+        2
+    ],
+    "startText": "Malakor guards the exit portal of the Sunken Crypt. Rally a party and bring him down.",
+    "inProgressText": "Malakor waits in the farthest chamber of the Sunken Crypt. Watch for his red ground slams.",
+    "completionText": "The Sunken Crypt is ours! Ashen Keep salutes you, delver.",
+    "objectives": [
+        {
+            "type": "KILL_NPC",
+            "targetId": 15,
+            "requiredCount": 1,
+            "description": "Defeat Malakor, the Ashen Warden"
+        }
+    ],
+    "reward": {
+        "xp": 420,
+        "currencyAmount": 250,
+        "items": [
+            {
+                "itemId": 34,
+                "amount": 2
+            }
+        ]
+    },
+    "schemaVersion": 1
+}

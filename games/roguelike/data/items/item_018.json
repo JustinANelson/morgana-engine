@@ -1,0 +1,21 @@
+{
+    "id": 18,
+    "name": "Iron Helm",
+    "description": "Sturdy forged helmet of the Keep guard.",
+    "type": "HELMET",
+    "iconId": 18,
+    "price": 85,
+    "schemaVersion": 1,
+    "levelReq": 2,
+    "armorDefense": 5,
+    "vitalMaxBonuses": {
+        "hp": 12
+    },
+    "paperdollSpriteId": 10,
+    "paperdollSlot": "HEAD",
+    "paperdollClassTints": {
+        "1": "#c95046",
+        "2": "#4f8a5b",
+        "3": "#d97736"
+    }
+}

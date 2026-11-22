@@ -1,0 +1,62 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Morgana shops document",
+    "$ref": "#/$defs/com.morgana.domain.content.ShopDefinition",
+    "$defs": {
+        "com.morgana.domain.content.ShopDefinition": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "buyRatePercent": {
+                    "type": "integer"
+                },
+                "sellRatePercent": {
+                    "type": "integer"
+                },
+                "currencyItemId": {
+                    "type": "integer"
+                },
+                "entries": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.content.ShopEntry"
+                    }
+                },
+                "schemaVersion": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "id",
+                "name"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.content.ShopEntry": {
+            "type": "object",
+            "properties": {
+                "itemId": {
+                    "type": "integer"
+                },
+                "amount": {
+                    "type": "integer"
+                },
+                "currencyItemId": {
+                    "type": "integer"
+                },
+                "priceOverride": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "itemId"
+            ],
+            "additionalProperties": false
+        }
+    }
+}

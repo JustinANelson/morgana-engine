@@ -1,0 +1,13 @@
+{
+    "id": 46,
+    "name": "Leather Cap",
+    "description": "A snug cap.",
+    "type": "HELMET",
+    "iconId": 46,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 35,
+    "levelReq": 1,
+    "schemaVersion": 2,
+    "armorDefense": 2
+}

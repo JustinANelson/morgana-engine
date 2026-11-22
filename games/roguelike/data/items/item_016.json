@@ -1,0 +1,17 @@
+{
+    "id": 16,
+    "name": "Bone Bulwark",
+    "description": "Interlocked crypt ribs bound with iron.",
+    "type": "SHIELD",
+    "iconId": 16,
+    "price": 200,
+    "schemaVersion": 1,
+    "levelReq": 3,
+    "armorDefense": 9,
+    "attributeBonuses": {
+        "vit": 3
+    },
+    "paperdollSpriteId": 8,
+    "paperdollSlot": "OFF_HAND",
+    "paperdollTintHex": "#d8ccb8"
+}

@@ -1,0 +1,10 @@
+{
+    "id": 5,
+    "name": "Fury",
+    "spriteSheetId": 5,
+    "frameCount": 4,
+    "frameDurationMs": 80,
+    "soundId": "",
+    "renderAboveEntities": true,
+    "schemaVersion": 2
+}

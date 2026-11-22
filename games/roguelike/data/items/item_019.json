@@ -1,0 +1,22 @@
+{
+    "id": 19,
+    "name": "Warden's Ashen Crown",
+    "description": "Malakor's charred iron crown, radiating ancient vigor.",
+    "type": "HELMET",
+    "iconId": 19,
+    "price": 450,
+    "schemaVersion": 1,
+    "levelReq": 3,
+    "armorDefense": 9,
+    "attributeBonuses": {
+        "str": 3,
+        "vit": 4
+    },
+    "vitalMaxBonuses": {
+        "hp": 35
+    },
+    "rollAffixes": false,
+    "paperdollSpriteId": 11,
+    "paperdollSlot": "HEAD",
+    "paperdollTintHex": "#e87a38"
+}

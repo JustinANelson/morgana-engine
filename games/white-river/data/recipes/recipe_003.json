@@ -1,0 +1,16 @@
+{
+    "id": 3,
+    "name": "Grilled Whitefin",
+    "stationType": "COOKING_FIRE",
+    "levelReq": 1,
+    "ingredients": [
+        {
+            "itemId": 20,
+            "amount": 1
+        }
+    ],
+    "outputItemId": 9,
+    "outputAmount": 1,
+    "xpReward": 8,
+    "schemaVersion": 2
+}

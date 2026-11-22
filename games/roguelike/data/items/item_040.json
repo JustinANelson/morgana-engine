@@ -1,0 +1,11 @@
+{
+    "id": 40,
+    "name": "Hollow Shard",
+    "description": "A crystallized fragment of crypt magic.",
+    "type": "MATERIAL",
+    "iconId": 40,
+    "price": 35,
+    "schemaVersion": 1,
+    "stackable": true,
+    "maxStack": 99
+}

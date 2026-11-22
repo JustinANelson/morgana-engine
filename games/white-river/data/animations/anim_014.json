@@ -1,0 +1,10 @@
+{
+    "id": 14,
+    "name": "Veil",
+    "spriteSheetId": 14,
+    "frameCount": 4,
+    "frameDurationMs": 80,
+    "soundId": "",
+    "renderAboveEntities": true,
+    "schemaVersion": 2
+}

@@ -1,0 +1,46 @@
+{
+    "id": 1,
+    "name": "Maud's Provisions",
+    "buyRatePercent": 100,
+    "sellRatePercent": 50,
+    "currencyItemId": 1,
+    "entries": [
+        {
+            "itemId": 2,
+            "amount": 1,
+            "currencyItemId": 1,
+            "priceOverride": 0
+        },
+        {
+            "itemId": 3,
+            "amount": 1,
+            "currencyItemId": 1,
+            "priceOverride": 0
+        },
+        {
+            "itemId": 5,
+            "amount": 1,
+            "currencyItemId": 1,
+            "priceOverride": 0
+        },
+        {
+            "itemId": 7,
+            "amount": 1,
+            "currencyItemId": 1,
+            "priceOverride": 0
+        },
+        {
+            "itemId": 8,
+            "amount": 1,
+            "currencyItemId": 1,
+            "priceOverride": 0
+        },
+        {
+            "itemId": 32,
+            "amount": 50,
+            "currencyItemId": 1,
+            "priceOverride": 0
+        }
+    ],
+    "schemaVersion": 2
+}

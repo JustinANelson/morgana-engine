@@ -1,0 +1,60 @@
+{
+    "id": 2,
+    "name": "Windrunner",
+    "description": "Bow and quick feet. Keeps moving, keeps shooting and is gone when the answer arrives.",
+    "spriteIds": [
+        2
+    ],
+    "baseAttributes": {
+        "str": 8,
+        "agi": 15,
+        "int": 7,
+        "vit": 10
+    },
+    "statPointsPerLevel": 3,
+    "autoStatGrowthPerLevel": {
+        "agi": 1,
+        "vit": 1
+    },
+    "startMapId": 1,
+    "startX": 26,
+    "startY": 24,
+    "startingItems": [
+        {
+            "itemId": 35,
+            "amount": 1,
+            "durability": 100
+        },
+        {
+            "itemId": 32,
+            "amount": 250,
+            "durability": 100
+        },
+        {
+            "itemId": 50,
+            "amount": 1,
+            "durability": 100
+        },
+        {
+            "itemId": 2,
+            "amount": 5,
+            "durability": 100
+        },
+        {
+            "itemId": 7,
+            "amount": 3,
+            "durability": 100
+        },
+        {
+            "itemId": 8,
+            "amount": 1,
+            "durability": 100
+        }
+    ],
+    "autoEquipStartingItems": true,
+    "startingSpellIds": [
+        6
+    ],
+    "abilityTerminology": "SKILLS",
+    "schemaVersion": 2
+}

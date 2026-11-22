@@ -1,0 +1,10 @@
+{
+    "id": 7,
+    "name": "Step",
+    "spriteSheetId": 7,
+    "frameCount": 4,
+    "frameDurationMs": 80,
+    "soundId": "",
+    "renderAboveEntities": true,
+    "schemaVersion": 2
+}

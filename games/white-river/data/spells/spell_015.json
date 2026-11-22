@@ -1,0 +1,33 @@
+{
+    "id": 15,
+    "name": "Nightfall",
+    "description": "A slow cast that brings the dark down on a wide area and leaves it burning.",
+    "iconId": 81,
+    "targetType": "AOE_TARGET_CENTERED",
+    "levelReq": 18,
+    "classReqIds": [
+        3
+    ],
+    "costs": {
+        "mp": 44
+    },
+    "scales": true,
+    "castTimeTicks": 16,
+    "cooldownTicks": 160,
+    "rangeTiles": 7,
+    "aoeRadiusTiles": 3,
+    "basePower": 70,
+    "isHealing": false,
+    "projectileSpriteId": 0,
+    "animationId": 15,
+    "statusEffectType": "DOT_BURN",
+    "statusMagnitude": 8,
+    "statusDurationTicks": 60,
+    "warpMapId": 0,
+    "warpX": 0,
+    "warpY": 0,
+    "powerPercentPerLevel": 8,
+    "maxSpellLevel": 5,
+    "castsPerLevel": 60,
+    "schemaVersion": 2
+}

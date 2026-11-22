@@ -1,0 +1,19 @@
+{
+    "id": 37,
+    "name": "Marshsteel Sword",
+    "description": "Iron etched with viper venom. It bites.",
+    "type": "WEAPON",
+    "iconId": 35,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 340,
+    "levelReq": 10,
+    "schemaVersion": 2,
+    "attackDamage": 19,
+    "attackSpeedTicks": 10,
+    "rangeTiles": 1,
+    "weaponStyle": "MELEE",
+    "classReqIds": [
+        1
+    ]
+}

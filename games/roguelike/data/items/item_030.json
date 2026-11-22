@@ -1,0 +1,13 @@
+{
+    "id": 30,
+    "name": "Talisman of Ward",
+    "description": "An emerald charm that blunts incoming blows.",
+    "type": "AMULET",
+    "iconId": 30,
+    "price": 120,
+    "schemaVersion": 1,
+    "armorDefense": 3,
+    "vitalMaxBonuses": {
+        "hp": 15
+    }
+}

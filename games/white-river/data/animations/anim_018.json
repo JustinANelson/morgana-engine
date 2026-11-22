@@ -1,0 +1,10 @@
+{
+    "id": 18,
+    "name": "Recall",
+    "spriteSheetId": 18,
+    "frameCount": 4,
+    "frameDurationMs": 80,
+    "soundId": "",
+    "renderAboveEntities": true,
+    "schemaVersion": 2
+}

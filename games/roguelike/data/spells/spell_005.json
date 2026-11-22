@@ -1,0 +1,16 @@
+{
+    "id": 5,
+    "name": "Shadow Bolt",
+    "description": "A bolt of crypt shadow hurled by Hollow casters.",
+    "iconId": 40,
+    "targetType": "DIRECTIONAL_PROJECTILE",
+    "levelReq": 1,
+    "costs": {},
+    "scales": false,
+    "cooldownTicks": 35,
+    "rangeTiles": 6,
+    "basePower": 14,
+    "projectileSpriteId": 3,
+    "animationId": 5,
+    "schemaVersion": 1
+}

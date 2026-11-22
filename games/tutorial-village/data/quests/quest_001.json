@@ -1,0 +1,31 @@
+{
+    "id": 1,
+    "name": "Weed the Garden",
+    "summary": "Mara's vegetables are being eaten. Chase away three Garden Pests.",
+    "levelReq": 1,
+    "prerequisiteQuestIds": [],
+    "startText": "Mara asked you to chase away the pests in her garden.",
+    "inProgressText": "Three Garden Pests need chasing away.",
+    "completionText": "The garden is safe again.",
+    "objectives": [
+        {
+            "type": "KILL_NPC",
+            "targetId": 2,
+            "requiredCount": 3,
+            "description": "Chase away Garden Pests"
+        }
+    ],
+    "reward": {
+        "xp": 100,
+        "currencyAmount": 0,
+        "items": [
+            {
+                "itemId": 2,
+                "amount": 1
+            }
+        ],
+        "teachSpellId": 0
+    },
+    "repeatable": false,
+    "schemaVersion": 2
+}

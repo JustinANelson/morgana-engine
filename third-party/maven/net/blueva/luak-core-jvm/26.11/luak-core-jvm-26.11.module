@@ -1,0 +1,102 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "url": "../../luak-core/26.11/luak-core-26.11.module",
+    "group": "net.blueva",
+    "module": "luak-core",
+    "version": "26.11",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "9.8.1"
+    }
+  },
+  "variants": [
+    {
+      "name": "jvmApiElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "standard-jvm",
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-api",
+        "org.jetbrains.kotlin.platform.type": "jvm"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.4.10"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "luak-core-jvm-26.11.jar",
+          "url": "luak-core-jvm-26.11.jar",
+          "size": 805022,
+          "sha512": "4154f6f4d317f3e9851b82f51c79d538320bc140577851868ee17a8a3aded6e581d964b990b8823c303da6340adf1bece09e39b601679ee8b67d383187bb2f6c",
+          "sha256": "89c1916939f5fef4f69d388e058eb2239cfda780d4393407930b224659f6acb3",
+          "sha1": "04015e113c7fc67556cd6f6650e962cea9311679",
+          "md5": "a6653b7050aa83697844e5db938a675a"
+        }
+      ]
+    },
+    {
+      "name": "jvmRuntimeElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "standard-jvm",
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime",
+        "org.jetbrains.kotlin.platform.type": "jvm"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.4.10"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "luak-core-jvm-26.11.jar",
+          "url": "luak-core-jvm-26.11.jar",
+          "size": 805022,
+          "sha512": "4154f6f4d317f3e9851b82f51c79d538320bc140577851868ee17a8a3aded6e581d964b990b8823c303da6340adf1bece09e39b601679ee8b67d383187bb2f6c",
+          "sha256": "89c1916939f5fef4f69d388e058eb2239cfda780d4393407930b224659f6acb3",
+          "sha1": "04015e113c7fc67556cd6f6650e962cea9311679",
+          "md5": "a6653b7050aa83697844e5db938a675a"
+        }
+      ]
+    },
+    {
+      "name": "jvmSourcesElements-published",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.jvm.environment": "standard-jvm",
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime",
+        "org.jetbrains.kotlin.platform.type": "jvm"
+      },
+      "files": [
+        {
+          "name": "luak-core-jvm-26.11-sources.jar",
+          "url": "luak-core-jvm-26.11-sources.jar",
+          "size": 306695,
+          "sha512": "cff5aae83593e99d599c1d8a356d7e9906a851c0643b09bea14f50d09d04ff96c4acc488071c34b5cb48936ed619d5316618eb06b48daf3dac1fae3f9c27c7ed",
+          "sha256": "59c0d7113168f21b9601a39d30b7a2a5bff5c01b4ca9fbf9d44d8d9abaf08f5c",
+          "sha1": "a1fbf4862dba4fe274a07c1ebb92f87912140a59",
+          "md5": "e82c4c34db44bdb75bde1bcfeb676c72"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+    "id": 20,
+    "name": "Whitefin",
+    "description": "A small pale fish that likes the milky water. Good grilled.",
+    "type": "MATERIAL",
+    "iconId": 9,
+    "stackable": true,
+    "maxStack": 999,
+    "price": 5,
+    "levelReq": 1,
+    "schemaVersion": 2
+}

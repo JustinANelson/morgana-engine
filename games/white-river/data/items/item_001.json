@@ -1,0 +1,12 @@
+{
+    "id": 1,
+    "name": "Ford Silver",
+    "description": "Stamped at Calder's Ford. Good on every bank of the White River.",
+    "type": "CURRENCY",
+    "iconId": 1,
+    "stackable": true,
+    "maxStack": 999999,
+    "price": 1,
+    "levelReq": 1,
+    "schemaVersion": 2
+}

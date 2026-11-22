@@ -1,0 +1,10 @@
+{
+    "id": 13,
+    "name": "Mire",
+    "spriteSheetId": 13,
+    "frameCount": 4,
+    "frameDurationMs": 80,
+    "soundId": "",
+    "renderAboveEntities": true,
+    "schemaVersion": 2
+}

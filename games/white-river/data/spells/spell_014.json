@@ -1,0 +1,33 @@
+{
+    "id": 14,
+    "name": "Veil of Dusk",
+    "description": "Wrap yourself in shadow that soaks damage.",
+    "iconId": 80,
+    "targetType": "SELF",
+    "levelReq": 12,
+    "classReqIds": [
+        3
+    ],
+    "costs": {
+        "mp": 26
+    },
+    "scales": true,
+    "castTimeTicks": 0,
+    "cooldownTicks": 200,
+    "rangeTiles": 1,
+    "aoeRadiusTiles": 0,
+    "basePower": 0,
+    "isHealing": false,
+    "projectileSpriteId": 0,
+    "animationId": 14,
+    "statusEffectType": "SHIELD",
+    "statusMagnitude": 60,
+    "statusDurationTicks": 160,
+    "warpMapId": 0,
+    "warpX": 0,
+    "warpY": 0,
+    "powerPercentPerLevel": 8,
+    "maxSpellLevel": 5,
+    "castsPerLevel": 60,
+    "schemaVersion": 2
+}

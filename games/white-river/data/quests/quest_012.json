@@ -1,0 +1,39 @@
+{
+    "id": 12,
+    "name": "Stone and Iron",
+    "summary": "Bring worked planks and ingots for the Ford's repairs.",
+    "levelReq": 14,
+    "prerequisiteQuestIds": [
+        11
+    ],
+    "startText": "The bridge wants planks and the smithy wants iron. Saw six planks at Pim's bench and smelt four ingots at Bex's anvil. The seams are up in Chalk Hollow.",
+    "inProgressText": "Six ash planks and four iron ingots.",
+    "completionText": "The Ford runs on people like you. Take this: the glacier grinds one out now and then, and smiths prize them.",
+    "objectives": [
+        {
+            "type": "COLLECT_ITEM",
+            "targetId": 16,
+            "requiredCount": 6,
+            "description": "Ash Planks"
+        },
+        {
+            "type": "COLLECT_ITEM",
+            "targetId": 19,
+            "requiredCount": 4,
+            "description": "Iron Ingots"
+        }
+    ],
+    "reward": {
+        "xp": 4200,
+        "currencyAmount": 600,
+        "items": [
+            {
+                "itemId": 29,
+                "amount": 1
+            }
+        ],
+        "teachSpellId": 0
+    },
+    "repeatable": false,
+    "schemaVersion": 2
+}

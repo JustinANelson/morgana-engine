@@ -1,0 +1,32 @@
+{
+  "name": "wr_mediah_canyon",
+  "seed": 2006,
+  "tileSize": 16,
+  "columns": 8,
+  "style": "TIME_FANTASY",
+  "materials": [
+    { "name": "mc_earth", "pattern": "OBSIDIAN_CRAG", "palette": "wr_valencia_amber", "scale": 1.2, "detail": 0.35 },
+    { "name": "mc_stone", "pattern": "HERRINGBONE_COBBLE", "palette": "wr_serendia_iron", "scale": 1.0, "detail": 0.35 },
+    { "name": "mc_brick", "pattern": "OBSIDIAN_CRAG", "palette": "wr_abyssal_obsidian", "scale": 1.0, "detail": 0.25 },
+    { "name": "mc_lava", "pattern": "WATER_CAUSTICS", "palette": "wr_black_spirit", "frames": 4 }
+  ],
+  "cliffs": [
+    { "name": "mc_canyon_wall", "topMaterial": "mc_earth", "faceMaterial": "mc_stone", "trimColor": "#7c1422", "a4Layout": true }
+  ],
+  "props": [
+    { "name": "mc_excavation", "kind": "ANCIENT_EXCAVATION", "primaryPalette": "wr_abyssal_obsidian", "secondaryPalette": "wr_valencia_amber" },
+    { "name": "mc_ballista", "kind": "SIEGE_BALLISTA", "primaryPalette": "wr_serendia_iron", "secondaryPalette": "wr_valencia_amber" },
+    { "name": "mc_wagon", "kind": "TRADE_WAGON", "primaryPalette": "wr_valencia_amber", "secondaryPalette": "wr_serendia_iron" },
+    { "name": "mc_rift", "kind": "BLACK_SPIRIT_RIFT", "primaryPalette": "wr_abyssal_obsidian", "secondaryPalette": "wr_black_spirit" }
+  ],
+  "autotiles": [
+    {
+      "name": "mc_stone_on_earth",
+      "mode": "BLOB_47",
+      "columns": 8,
+      "foregroundMaterial": "mc_stone",
+      "backgroundMaterial": "mc_earth",
+      "style": { "margin": 3.0, "rimWidth": 1.0, "wobbleAmplitude": 1.4, "rimColor": "#2a2c36" }
+    }
+  ]
+}

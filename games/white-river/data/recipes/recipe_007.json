@@ -1,0 +1,24 @@
+{
+    "id": 7,
+    "name": "Brew Greater Tonic",
+    "stationType": "ALCHEMY_TABLE",
+    "levelReq": 18,
+    "ingredients": [
+        {
+            "itemId": 3,
+            "amount": 2
+        },
+        {
+            "itemId": 23,
+            "amount": 2
+        },
+        {
+            "itemId": 26,
+            "amount": 1
+        }
+    ],
+    "outputItemId": 4,
+    "outputAmount": 1,
+    "xpReward": 40,
+    "schemaVersion": 2
+}

@@ -1,0 +1,33 @@
+{
+    "id": 3,
+    "name": "Undertow Sweep",
+    "description": "A low sweep that hits everything around you and slows it.",
+    "iconId": 68,
+    "targetType": "AOE_SELF_CENTERED",
+    "levelReq": 8,
+    "classReqIds": [
+        1
+    ],
+    "costs": {
+        "sp": 22
+    },
+    "scales": true,
+    "castTimeTicks": 0,
+    "cooldownTicks": 60,
+    "rangeTiles": 1,
+    "aoeRadiusTiles": 2,
+    "basePower": 30,
+    "isHealing": false,
+    "projectileSpriteId": 0,
+    "animationId": 2,
+    "statusEffectType": "SLOW",
+    "statusMagnitude": 30,
+    "statusDurationTicks": 60,
+    "warpMapId": 0,
+    "warpX": 0,
+    "warpY": 0,
+    "powerPercentPerLevel": 8,
+    "maxSpellLevel": 5,
+    "castsPerLevel": 60,
+    "schemaVersion": 2
+}

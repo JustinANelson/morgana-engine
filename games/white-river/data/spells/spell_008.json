@@ -1,0 +1,36 @@
+{
+    "id": 8,
+    "name": "Scatterflight",
+    "description": "A fan of arrows at up to five targets around your mark.",
+    "iconId": 74,
+    "targetType": "AOE_TARGET_CENTERED",
+    "levelReq": 8,
+    "classReqIds": [
+        2
+    ],
+    "costs": {
+        "sp": 24
+    },
+    "scales": true,
+    "castTimeTicks": 0,
+    "cooldownTicks": 60,
+    "rangeTiles": 8,
+    "aoeRadiusTiles": 3,
+    "basePower": 0,
+    "isHealing": false,
+    "projectileSpriteId": 1,
+    "animationId": 8,
+    "statusEffectType": null,
+    "statusMagnitude": 0,
+    "statusDurationTicks": 0,
+    "warpMapId": 0,
+    "warpX": 0,
+    "warpY": 0,
+    "powerPercentPerLevel": 8,
+    "maxSpellLevel": 5,
+    "castsPerLevel": 60,
+    "schemaVersion": 2,
+    "maxTargets": 5,
+    "baseDamagePercent": 60,
+    "baseDamagePercentPerLevel": 6
+}

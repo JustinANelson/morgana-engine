@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Morgana Admin</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/admin.css">
+</head>
+<body>
+  <header class="bar">
+    <h1>Morgana Admin</h1>
+    <nav id="tabs" class="tabs" hidden>
+      <button data-tab="overview" class="tab active">Overview</button>
+      <button data-tab="players" class="tab">Players <span id="count-players" class="badge" hidden></span></button>
+      <button data-tab="reports" class="tab">Reports <span id="count-reports" class="badge alert" hidden></span></button>
+      <button data-tab="sanctions" class="tab">Bans and mutes</button>
+      <button data-tab="audit" class="tab">Audit log</button>
+      <button data-tab="tools" class="tab">Tools</button>
+    </nav>
+    <button id="signout" class="ghost" hidden>Sign out</button>
+  </header>
+
+  <main>
+    <p id="banner" class="banner" role="status" hidden></p>
+
+    <section id="login" class="card login">
+      <h2>Sign in</h2>
+      <p class="muted">Paste the admin token. It is in <code>admin-token.txt</code> in the server's data folder.</p>
+      <form id="login-form">
+        <label for="token">Token</label>
+        <input id="token" type="password" autocomplete="off" spellcheck="false" required>
+        <button type="submit" class="primary">Sign in</button>
+      </form>
+    </section>
+
+    <section id="view" hidden></section>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>

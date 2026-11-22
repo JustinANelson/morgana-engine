@@ -1,0 +1,13 @@
+{
+    "id": 4,
+    "name": "Forgemaster Torin",
+    "title": "Weapons & Armor",
+    "spriteId": 13,
+    "behavior": "SHOPKEEPER",
+    "level": 10,
+    "shopId": 2,
+    "vitals": {
+        "hp": 300
+    },
+    "schemaVersion": 1
+}

@@ -1,0 +1,12 @@
+{
+    "id": 27,
+    "name": "Reaver Token",
+    "description": "Every reaver carries one. The Marshal pays for them.",
+    "type": "MATERIAL",
+    "iconId": 27,
+    "stackable": true,
+    "maxStack": 999,
+    "price": 30,
+    "levelReq": 1,
+    "schemaVersion": 2
+}

@@ -1,0 +1,16 @@
+{
+    "id": 63,
+    "name": "Palestone Ring",
+    "description": "A sliver of palestone set in iron.",
+    "type": "RING",
+    "iconId": 63,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 1800,
+    "levelReq": 26,
+    "schemaVersion": 2,
+    "attributeBonuses": {
+        "str": 3,
+        "vit": 3
+    }
+}

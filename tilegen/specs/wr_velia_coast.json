@@ -1,0 +1,42 @@
+{
+  "name": "wr_velia_coast",
+  "seed": 2002,
+  "tileSize": 16,
+  "columns": 8,
+  "style": "TIME_FANTASY",
+  "materials": [
+    { "name": "vc_grass", "pattern": "ORGANIC_FBM", "palette": "wr_kamasylve_leaf", "scale": 1.3, "detail": 0.3, "decal": "GRASS_BLADES" },
+    { "name": "vc_sand", "pattern": "HERRINGBONE_COBBLE", "palette": "wr_valencia_amber", "scale": 1.2, "detail": 0.2 },
+    { "name": "vc_wood", "pattern": "WOOD_PLANKS", "palette": "wr_valencia_amber", "scale": 1.0, "detail": 0.25 },
+    { "name": "vc_ocean", "pattern": "WATER_CAUSTICS", "palette": "ocean_water", "frames": 4 }
+  ],
+  "cliffs": [
+    { "name": "vc_cliff", "topMaterial": "vc_grass", "faceMaterial": "vc_sand", "trimColor": "#284830", "a4Layout": false }
+  ],
+  "props": [
+    { "name": "vc_wagon", "kind": "TRADE_WAGON", "primaryPalette": "wr_valencia_amber", "secondaryPalette": "wr_serendia_iron" },
+    { "name": "vc_tent", "kind": "MEDIEVAL_TENT", "primaryPalette": "wr_serendia_iron", "secondaryPalette": "wr_valencia_amber" },
+    { "name": "vc_bridge", "kind": "WOOD_BRIDGE", "secondaryPalette": "wr_valencia_amber" },
+    { "name": "vc_barrel", "kind": "BARREL", "secondaryPalette": "wr_valencia_amber" },
+    { "name": "vc_crate", "kind": "CRATE", "secondaryPalette": "wr_valencia_amber" },
+    { "name": "vc_ballista", "kind": "SIEGE_BALLISTA", "primaryPalette": "wr_serendia_iron", "secondaryPalette": "wr_valencia_amber" }
+  ],
+  "autotiles": [
+    {
+      "name": "vc_grass_on_sand",
+      "mode": "BLOB_47",
+      "columns": 8,
+      "foregroundMaterial": "vc_grass",
+      "backgroundMaterial": "vc_sand",
+      "style": { "margin": 3.0, "rimWidth": 1.0, "wobbleAmplitude": 1.6, "rimColor": "#194024" }
+    },
+    {
+      "name": "vc_sand_on_ocean",
+      "mode": "BLOB_47",
+      "columns": 8,
+      "foregroundMaterial": "vc_sand",
+      "backgroundMaterial": "vc_ocean",
+      "style": { "margin": 3.0, "rimWidth": 1.0, "wobbleAmplitude": 1.8, "rimColor": "#9c7a44" }
+    }
+  ]
+}

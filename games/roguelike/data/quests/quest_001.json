@@ -1,0 +1,28 @@
+{
+    "id": 1,
+    "name": "Clear the Threshold",
+    "summary": "Step into the Sunken Crypt and defeat 4 Crypt Gnashers.",
+    "levelReq": 1,
+    "startText": "Crypt Gnashers have overrun the upper halls. Clear four of them and report back.",
+    "inProgressText": "Four Crypt Gnashers in the Sunken Crypt \u2014 step through the northern archway to find them.",
+    "completionText": "Clean work. Take this coin and restock at Lyra's Apothecary.",
+    "objectives": [
+        {
+            "type": "KILL_NPC",
+            "targetId": 10,
+            "requiredCount": 4,
+            "description": "Defeat Crypt Gnashers"
+        }
+    ],
+    "reward": {
+        "xp": 120,
+        "currencyAmount": 60,
+        "items": [
+            {
+                "itemId": 32,
+                "amount": 2
+            }
+        ]
+    },
+    "schemaVersion": 1
+}

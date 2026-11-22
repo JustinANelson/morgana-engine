@@ -1,0 +1,40 @@
+{
+    "id": 4,
+    "name": "Soren's Apothecary",
+    "buyRatePercent": 100,
+    "sellRatePercent": 50,
+    "currencyItemId": 1,
+    "entries": [
+        {
+            "itemId": 2,
+            "amount": 1,
+            "currencyItemId": 1,
+            "priceOverride": 0
+        },
+        {
+            "itemId": 3,
+            "amount": 1,
+            "currencyItemId": 1,
+            "priceOverride": 0
+        },
+        {
+            "itemId": 4,
+            "amount": 1,
+            "currencyItemId": 1,
+            "priceOverride": 0
+        },
+        {
+            "itemId": 5,
+            "amount": 1,
+            "currencyItemId": 1,
+            "priceOverride": 0
+        },
+        {
+            "itemId": 6,
+            "amount": 1,
+            "currencyItemId": 1,
+            "priceOverride": 0
+        }
+    ],
+    "schemaVersion": 2
+}

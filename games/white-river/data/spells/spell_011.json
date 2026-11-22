@@ -1,0 +1,33 @@
+{
+    "id": 11,
+    "name": "Duskbolt",
+    "description": "A bolt of twilight.",
+    "iconId": 77,
+    "targetType": "SINGLE_TARGET",
+    "levelReq": 1,
+    "classReqIds": [
+        3
+    ],
+    "costs": {
+        "mp": 8
+    },
+    "scales": true,
+    "castTimeTicks": 0,
+    "cooldownTicks": 16,
+    "rangeTiles": 7,
+    "aoeRadiusTiles": 0,
+    "basePower": 22,
+    "isHealing": false,
+    "projectileSpriteId": 2,
+    "animationId": 11,
+    "statusEffectType": null,
+    "statusMagnitude": 0,
+    "statusDurationTicks": 0,
+    "warpMapId": 0,
+    "warpX": 0,
+    "warpY": 0,
+    "powerPercentPerLevel": 8,
+    "maxSpellLevel": 5,
+    "castsPerLevel": 60,
+    "schemaVersion": 2
+}

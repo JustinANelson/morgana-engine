@@ -1,0 +1,10 @@
+{
+    "id": 10,
+    "name": "Gale",
+    "spriteSheetId": 10,
+    "frameCount": 4,
+    "frameDurationMs": 80,
+    "soundId": "",
+    "renderAboveEntities": true,
+    "schemaVersion": 2
+}

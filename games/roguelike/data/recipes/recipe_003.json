@@ -1,0 +1,20 @@
+{
+    "id": 3,
+    "name": "Warden's Scepter",
+    "stationType": "ANYWHERE",
+    "levelReq": 2,
+    "ingredients": [
+        {
+            "itemId": 39,
+            "amount": 3
+        },
+        {
+            "itemId": 40,
+            "amount": 2
+        }
+    ],
+    "outputItemId": 11,
+    "outputAmount": 1,
+    "xpReward": 65,
+    "schemaVersion": 1
+}

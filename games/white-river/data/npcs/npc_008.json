@@ -1,0 +1,31 @@
+{
+    "id": 8,
+    "name": "Skillmaster Ilya",
+    "title": "Combat manuals",
+    "spriteId": 17,
+    "behavior": "SHOPKEEPER",
+    "level": 1,
+    "attributes": {
+        "str": 10,
+        "agi": 10,
+        "int": 10,
+        "vit": 10
+    },
+    "vitals": {
+        "hp": 400,
+        "mp": 100
+    },
+    "attackDamage": 5,
+    "attackSpeedTicks": 16,
+    "moveSpeedTicks": 10,
+    "aggroRangeTiles": 6,
+    "leashRangeTiles": 12,
+    "xpReward": 0,
+    "drops": [],
+    "spellIds": [],
+    "shopId": 5,
+    "eventId": 0,
+    "chatGreeting": "A manual for every warden, runner and weaver, when you are ready for it.",
+    "animationId": 0,
+    "schemaVersion": 2
+}

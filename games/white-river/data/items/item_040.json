@@ -1,0 +1,19 @@
+{
+    "id": 40,
+    "name": "Chalkbreaker",
+    "description": "A heavy blade with a chalkstone pommel.",
+    "type": "WEAPON",
+    "iconId": 36,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 1100,
+    "levelReq": 20,
+    "schemaVersion": 2,
+    "attackDamage": 31,
+    "attackSpeedTicks": 11,
+    "rangeTiles": 1,
+    "weaponStyle": "MELEE",
+    "classReqIds": [
+        1
+    ]
+}

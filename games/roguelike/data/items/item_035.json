@@ -1,0 +1,10 @@
+{
+    "id": 35,
+    "name": "Scroll of Fireball",
+    "description": "Teaches the Fireball spell.",
+    "type": "SPELL_SCROLL",
+    "iconId": 35,
+    "price": 90,
+    "schemaVersion": 1,
+    "teachSpellId": 1
+}

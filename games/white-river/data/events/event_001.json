@@ -1,0 +1,800 @@
+{
+    "id": 1,
+    "name": "The Marshal's work",
+    "mapId": 0,
+    "tileX": 0,
+    "tileY": 0,
+    "schemaVersion": 2,
+    "pages": [
+        {
+            "pageIndex": 0,
+            "condition": {},
+            "trigger": "ACTION_INTERACT",
+            "spriteId": 0,
+            "commands": [
+                {
+                    "_type": "dialogue",
+                    "speakerName": "Marshal Renna Vale",
+                    "text": "Calder's Ford stands because somebody keeps the road open. Lately that is you.",
+                    "portraitId": 0,
+                    "choices": [
+                        {
+                            "label": "What needs doing?",
+                            "commands": [
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 1,
+                                        "quest": "READY_TO_COMPLETE"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Marshal Renna Vale",
+                                            "text": "The millers will sleep tonight. Your pay, and something for the road.",
+                                            "portraitId": 0,
+                                            "choices": []
+                                        },
+                                        {
+                                            "_type": "complete_quest",
+                                            "questId": 1
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": []
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 1,
+                                        "quest": "IN_PROGRESS"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Marshal Renna Vale",
+                                            "text": "Six millrace rats and four reed hens, east of the Ford.",
+                                            "portraitId": 0,
+                                            "choices": []
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": []
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 1,
+                                        "quest": "NOT_STARTED"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Marshal Renna Vale",
+                                            "text": "The millers say they cannot open a sack without a rat in it. Take the east road into Millrace Fields and thin them out: six rats, four reed hens.",
+                                            "portraitId": 0,
+                                            "choices": [
+                                                {
+                                                    "label": "I will do it.",
+                                                    "commands": [
+                                                        {
+                                                            "_type": "start_quest",
+                                                            "questId": 1
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "label": "Not now.",
+                                                    "commands": []
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": []
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 2,
+                                        "quest": "READY_TO_COMPLETE"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Marshal Renna Vale",
+                                            "text": "That will hold them. Take these boots; you have walked far enough in the old ones.",
+                                            "portraitId": 0,
+                                            "choices": []
+                                        },
+                                        {
+                                            "_type": "complete_quest",
+                                            "questId": 2
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": []
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 2,
+                                        "quest": "IN_PROGRESS"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Marshal Renna Vale",
+                                            "text": "Three meadow aurochs, in the south-east of the fields.",
+                                            "portraitId": 0,
+                                            "choices": []
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": []
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 2,
+                                        "quest": "NOT_STARTED"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Marshal Renna Vale",
+                                            "text": "A herd of aurochs has taken the southern fields and gored two farmhands. Put down three and the rest will move on. Mind the bramblecaps on the way.",
+                                            "portraitId": 0,
+                                            "choices": [
+                                                {
+                                                    "label": "I will do it.",
+                                                    "commands": [
+                                                        {
+                                                            "_type": "start_quest",
+                                                            "questId": 2
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "label": "Not now.",
+                                                    "commands": []
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": [],
+                                    "extraConditions": [
+                                        {
+                                            "type": "QUEST",
+                                            "targetId": 1,
+                                            "quest": "COMPLETED"
+                                        },
+                                        {
+                                            "type": "LEVEL",
+                                            "comparison": "AT_LEAST",
+                                            "value": 4
+                                        }
+                                    ],
+                                    "matchMode": "ALL"
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 3,
+                                        "quest": "READY_TO_COMPLETE"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Marshal Renna Vale",
+                                            "text": "So the road can be opened. Good. Here is your pay.",
+                                            "portraitId": 0,
+                                            "choices": []
+                                        },
+                                        {
+                                            "_type": "complete_quest",
+                                            "questId": 3
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": []
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 3,
+                                        "quest": "IN_PROGRESS"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Marshal Renna Vale",
+                                            "text": "Eight marsh vipers and six mire bats in Heronreach.",
+                                            "portraitId": 0,
+                                            "choices": []
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": []
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 3,
+                                        "quest": "NOT_STARTED"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Marshal Renna Vale",
+                                            "text": "East of the fields the road runs into Heronreach Marsh, and nothing has come down it in a month. Clear eight vipers and six mire bats off the road.",
+                                            "portraitId": 0,
+                                            "choices": [
+                                                {
+                                                    "label": "I will do it.",
+                                                    "commands": [
+                                                        {
+                                                            "_type": "start_quest",
+                                                            "questId": 3
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "label": "Not now.",
+                                                    "commands": []
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": [],
+                                    "extraConditions": [
+                                        {
+                                            "type": "QUEST",
+                                            "targetId": 2,
+                                            "quest": "COMPLETED"
+                                        },
+                                        {
+                                            "type": "LEVEL",
+                                            "comparison": "AT_LEAST",
+                                            "value": 8
+                                        }
+                                    ],
+                                    "matchMode": "ALL"
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 4,
+                                        "quest": "READY_TO_COMPLETE"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Marshal Renna Vale",
+                                            "text": "The marsh is ours again, for now. Wear this.",
+                                            "portraitId": 0,
+                                            "choices": []
+                                        },
+                                        {
+                                            "_type": "complete_quest",
+                                            "questId": 4
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": []
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 4,
+                                        "quest": "IN_PROGRESS"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Marshal Renna Vale",
+                                            "text": "Eight reedfolk stalkers, and six viper fangs.",
+                                            "portraitId": 0,
+                                            "choices": []
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": []
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 4,
+                                        "quest": "NOT_STARTED"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Marshal Renna Vale",
+                                            "text": "The reedfolk are what closed the road. Kill eight stalkers and bring me six viper fangs for the smiths while you are in there.",
+                                            "portraitId": 0,
+                                            "choices": [
+                                                {
+                                                    "label": "I will do it.",
+                                                    "commands": [
+                                                        {
+                                                            "_type": "start_quest",
+                                                            "questId": 4
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "label": "Not now.",
+                                                    "commands": []
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": [],
+                                    "extraConditions": [
+                                        {
+                                            "type": "QUEST",
+                                            "targetId": 3,
+                                            "quest": "COMPLETED"
+                                        },
+                                        {
+                                            "type": "LEVEL",
+                                            "comparison": "AT_LEAST",
+                                            "value": 12
+                                        }
+                                    ],
+                                    "matchMode": "ALL"
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 5,
+                                        "quest": "READY_TO_COMPLETE"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Marshal Renna Vale",
+                                            "text": "They will feel that. Tonics, and the Ford's thanks.",
+                                            "portraitId": 0,
+                                            "choices": []
+                                        },
+                                        {
+                                            "_type": "complete_quest",
+                                            "questId": 5
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": []
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 5,
+                                        "quest": "IN_PROGRESS"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Marshal Renna Vale",
+                                            "text": "Eight chalk cutters, and eight reaver tokens.",
+                                            "portraitId": 0,
+                                            "choices": []
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": []
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 5,
+                                        "quest": "NOT_STARTED"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Marshal Renna Vale",
+                                            "text": "North of the marsh is Chalk Hollow, where our stone came from before the reavers took the quarry. Kill eight cutters and bring me eight of their tokens.",
+                                            "portraitId": 0,
+                                            "choices": [
+                                                {
+                                                    "label": "I will do it.",
+                                                    "commands": [
+                                                        {
+                                                            "_type": "start_quest",
+                                                            "questId": 5
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "label": "Not now.",
+                                                    "commands": []
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": [],
+                                    "extraConditions": [
+                                        {
+                                            "type": "QUEST",
+                                            "targetId": 4,
+                                            "quest": "COMPLETED"
+                                        },
+                                        {
+                                            "type": "LEVEL",
+                                            "comparison": "AT_LEAST",
+                                            "value": 17
+                                        }
+                                    ],
+                                    "matchMode": "ALL"
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 6,
+                                        "quest": "READY_TO_COMPLETE"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Marshal Renna Vale",
+                                            "text": "Then the quarry is open. This ring was meant for the next Marshal. You have earned it more.",
+                                            "portraitId": 0,
+                                            "choices": []
+                                        },
+                                        {
+                                            "_type": "complete_quest",
+                                            "questId": 6
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": []
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 6,
+                                        "quest": "IN_PROGRESS"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Marshal Renna Vale",
+                                            "text": "Marrow Jack still holds the redoubt. Bring me his seal.",
+                                            "portraitId": 0,
+                                            "choices": []
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": []
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 6,
+                                        "quest": "NOT_STARTED"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Marshal Renna Vale",
+                                            "text": "Their captain is a man called Marrow Jack. He sits in the redoubt on the east side of the Hollow. Bring me his seal.",
+                                            "portraitId": 0,
+                                            "choices": [
+                                                {
+                                                    "label": "I will do it.",
+                                                    "commands": [
+                                                        {
+                                                            "_type": "start_quest",
+                                                            "questId": 6
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "label": "Not now.",
+                                                    "commands": []
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": [],
+                                    "extraConditions": [
+                                        {
+                                            "type": "QUEST",
+                                            "targetId": 5,
+                                            "quest": "COMPLETED"
+                                        },
+                                        {
+                                            "type": "LEVEL",
+                                            "comparison": "AT_LEAST",
+                                            "value": 22
+                                        }
+                                    ],
+                                    "matchMode": "ALL"
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 7,
+                                        "quest": "READY_TO_COMPLETE"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Marshal Renna Vale",
+                                            "text": "A court of ice, and something keeping it. I was afraid of that.",
+                                            "portraitId": 0,
+                                            "choices": []
+                                        },
+                                        {
+                                            "_type": "complete_quest",
+                                            "questId": 7
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": []
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 7,
+                                        "quest": "IN_PROGRESS"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Marshal Renna Vale",
+                                            "text": "Eight rime yetis and six glacier shades at the headwaters.",
+                                            "portraitId": 0,
+                                            "choices": []
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": []
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 7,
+                                        "quest": "NOT_STARTED"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Marshal Renna Vale",
+                                            "text": "The river runs white because of what the glacier grinds out of the Paleback. Follow it up past the Hollow. Kill eight yetis and six shades, and tell me what you see.",
+                                            "portraitId": 0,
+                                            "choices": [
+                                                {
+                                                    "label": "I will do it.",
+                                                    "commands": [
+                                                        {
+                                                            "_type": "start_quest",
+                                                            "questId": 7
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "label": "Not now.",
+                                                    "commands": []
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": [],
+                                    "extraConditions": [
+                                        {
+                                            "type": "QUEST",
+                                            "targetId": 6,
+                                            "quest": "COMPLETED"
+                                        },
+                                        {
+                                            "type": "LEVEL",
+                                            "comparison": "AT_LEAST",
+                                            "value": 28
+                                        }
+                                    ],
+                                    "matchMode": "ALL"
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 8,
+                                        "quest": "READY_TO_COMPLETE"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Marshal Renna Vale",
+                                            "text": "The river will settle. The Ford will remember your name.",
+                                            "portraitId": 0,
+                                            "choices": []
+                                        },
+                                        {
+                                            "_type": "complete_quest",
+                                            "questId": 8
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": []
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 8,
+                                        "quest": "IN_PROGRESS"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Marshal Renna Vale",
+                                            "text": "The Pale Warden still keeps the headwaters. Bring me its core.",
+                                            "portraitId": 0,
+                                            "choices": []
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": []
+                                },
+                                {
+                                    "_type": "if",
+                                    "condition": {
+                                        "type": "QUEST",
+                                        "targetId": 8,
+                                        "quest": "NOT_STARTED"
+                                    },
+                                    "then": [
+                                        {
+                                            "_type": "dialogue",
+                                            "speakerName": "Marshal Renna Vale",
+                                            "text": "Whatever keeps the headwaters, it is why the river has been rising. End it and bring me its core.",
+                                            "portraitId": 0,
+                                            "choices": [
+                                                {
+                                                    "label": "I will do it.",
+                                                    "commands": [
+                                                        {
+                                                            "_type": "start_quest",
+                                                            "questId": 8
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "label": "Not now.",
+                                                    "commands": []
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "_type": "stop"
+                                        }
+                                    ],
+                                    "otherwise": [],
+                                    "extraConditions": [
+                                        {
+                                            "type": "QUEST",
+                                            "targetId": 7,
+                                            "quest": "COMPLETED"
+                                        },
+                                        {
+                                            "type": "LEVEL",
+                                            "comparison": "AT_LEAST",
+                                            "value": 34
+                                        }
+                                    ],
+                                    "matchMode": "ALL"
+                                },
+                                {
+                                    "_type": "dialogue",
+                                    "speakerName": "Marshal Renna Vale",
+                                    "text": "Nothing I can ask of you yet. Get stronger out east and come back.",
+                                    "portraitId": 0,
+                                    "choices": []
+                                }
+                            ]
+                        },
+                        {
+                            "label": "Tell me about the valley.",
+                            "commands": [
+                                {
+                                    "_type": "dialogue",
+                                    "speakerName": "Marshal Renna Vale",
+                                    "text": "The road runs east from the Ford through Millrace Fields into Heronreach Marsh. Nobody fights each other there; the Ford's peace holds that far.",
+                                    "portraitId": 0,
+                                    "choices": []
+                                },
+                                {
+                                    "_type": "dialogue",
+                                    "speakerName": "Marshal Renna Vale",
+                                    "text": "North of the marsh is Chalk Hollow and above it the Paleback headwaters. That is contested ground: no peace, and what you carry stays where you fall.",
+                                    "portraitId": 0,
+                                    "choices": []
+                                }
+                            ]
+                        },
+                        {
+                            "label": "Goodbye.",
+                            "commands": []
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

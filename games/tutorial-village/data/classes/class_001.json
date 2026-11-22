@@ -1,0 +1,27 @@
+{
+    "id": 1,
+    "name": "Adventurer",
+    "description": "A versatile wanderer equipped to explore the realm of Tutorial Village.",
+    "spriteIds": [
+        1
+    ],
+    "baseAttributes": {
+        "str": 10,
+        "agi": 10,
+        "int": 10,
+        "vit": 10
+    },
+    "statPointsPerLevel": 3,
+    "startMapId": 1,
+    "startX": 10,
+    "startY": 14,
+    "startingItems": [
+        {
+            "itemId": 1,
+            "amount": 1,
+            "durability": 100
+        }
+    ],
+    "startingSpellIds": [],
+    "schemaVersion": 2
+}

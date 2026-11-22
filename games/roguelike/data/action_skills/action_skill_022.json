@@ -1,0 +1,37 @@
+{
+    "id": 22,
+    "name": "Ember Burst",
+    "description": "Ignite a wider bolt that burns targets.",
+    "iconId": 10,
+    "startupTicks": 3,
+    "activeTicks": 2,
+    "recoveryTicks": 6,
+    "costs": {
+        "mp": 5
+    },
+    "animationId": 1,
+    "soundId": "spell_fire",
+    "schemaVersion": 2,
+    "hitboxes": [
+        {
+            "fromTick": 3,
+            "toTick": 3,
+            "shape": "CIRCLE",
+            "forwardPixels": 18,
+            "radiusPixels": 22,
+            "hit": {
+                "damageKind": "SPELL",
+                "damagePercent": 130,
+                "statusEffectType": "DOT_BURN",
+                "statusMagnitude": 4,
+                "statusDurationTicks": 60
+            },
+            "projectile": {
+                "spriteId": 2,
+                "speedPixelsPerTick": 17,
+                "rangePixels": 230,
+                "pierce": false
+            }
+        }
+    ]
+}

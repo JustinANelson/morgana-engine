@@ -1,0 +1,37 @@
+{
+    "id": 11,
+    "name": "Marsh Stew",
+    "summary": "Cook marsh stew at the kitchen fire.",
+    "levelReq": 8,
+    "prerequisiteQuestIds": [
+        10
+    ],
+    "startText": "A proper marsh stew is pike, riverleaf and sunroot, cooked on my fire. Pike and sunroot both come from Heronreach. Cook three and bring them to me.",
+    "inProgressText": "Three marsh stews, cooked at the fire beside me.",
+    "completionText": "Now that is a stew. Keep two; I only wanted to taste it.",
+    "objectives": [
+        {
+            "type": "COLLECT_ITEM",
+            "targetId": 10,
+            "requiredCount": 3,
+            "description": "Marsh Stew"
+        }
+    ],
+    "reward": {
+        "xp": 1600,
+        "currencyAmount": 260,
+        "items": [
+            {
+                "itemId": 10,
+                "amount": 2
+            },
+            {
+                "itemId": 64,
+                "amount": 1
+            }
+        ],
+        "teachSpellId": 0
+    },
+    "repeatable": false,
+    "schemaVersion": 2
+}

@@ -1,0 +1,10 @@
+{
+    "id": 17,
+    "name": "Wail",
+    "spriteSheetId": 17,
+    "frameCount": 4,
+    "frameDurationMs": 80,
+    "soundId": "",
+    "renderAboveEntities": true,
+    "schemaVersion": 2
+}

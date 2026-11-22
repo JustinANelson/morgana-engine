@@ -1,0 +1,16 @@
+{
+    "id": 60,
+    "name": "Rimestriders",
+    "description": "They leave frost in their footprints.",
+    "type": "BOOTS",
+    "iconId": 60,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 2200,
+    "levelReq": 30,
+    "schemaVersion": 2,
+    "armorDefense": 10,
+    "attributeBonuses": {
+        "agi": 4
+    }
+}

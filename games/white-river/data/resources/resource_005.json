@@ -1,0 +1,18 @@
+{
+    "id": 5,
+    "name": "Pike Run",
+    "category": "FISHING_SPOT",
+    "intactSpriteId": 1,
+    "depletedSpriteId": 2,
+    "requiredTool": "FISHING_ROD",
+    "rewardItemId": 21,
+    "minYield": 1,
+    "maxYield": 1,
+    "maxHealth": 4,
+    "respawnTicks": 360,
+    "xpReward": 16,
+    "emptyMessage": "Nothing left here for now. Give it a little while.",
+    "successMessage": "You land a silverscale pike.",
+    "animationId": 0,
+    "schemaVersion": 2
+}

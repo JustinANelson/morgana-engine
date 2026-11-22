@@ -1,0 +1,98 @@
+{
+    "id": 30,
+    "name": "Chalk Golem",
+    "title": "",
+    "spriteId": 112,
+    "behavior": "ATTACK_ON_SIGHT",
+    "level": 22,
+    "attributes": {
+        "str": 28,
+        "agi": 17,
+        "int": 28,
+        "vit": 31
+    },
+    "vitals": {
+        "hp": 611,
+        "mp": 100
+    },
+    "attackDamage": 41,
+    "attackSpeedTicks": 20,
+    "moveSpeedTicks": 22,
+    "aggroRangeTiles": 6,
+    "leashRangeTiles": 12,
+    "xpReward": 829,
+    "drops": [
+        {
+            "itemId": 1,
+            "minAmount": 22,
+            "maxAmount": 88,
+            "chanceBasisPoints": 7500
+        },
+        {
+            "itemId": 4,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 600
+        },
+        {
+            "itemId": 17,
+            "minAmount": 1,
+            "maxAmount": 2,
+            "chanceBasisPoints": 4000
+        },
+        {
+            "itemId": 40,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 41,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 42,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 48,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 52,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 59,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 63,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 120
+        },
+        {
+            "itemId": 29,
+            "minAmount": 1,
+            "maxAmount": 1,
+            "chanceBasisPoints": 15
+        }
+    ],
+    "spellIds": [],
+    "shopId": 0,
+    "eventId": 0,
+    "chatGreeting": "",
+    "animationId": 0,
+    "schemaVersion": 2
+}

@@ -1,0 +1,32 @@
+{
+    "id": 5,
+    "name": "Shieldbreaker",
+    "description": "A slow pommel strike that stuns.",
+    "iconId": 70,
+    "levelReq": 14,
+    "startupTicks": 5,
+    "activeTicks": 2,
+    "recoveryTicks": 10,
+    "animationId": 4,
+    "schemaVersion": 2,
+    "costs": {
+        "sp": 25
+    },
+    "cooldownTicks": 120,
+    "hitboxes": [
+        {
+            "fromTick": 5,
+            "toTick": 6,
+            "shape": "RECT",
+            "lengthPixels": 40,
+            "widthPixels": 32,
+            "hit": {
+                "damagePercent": 60,
+                "statusEffectType": "STUN",
+                "statusMagnitude": 1,
+                "statusDurationTicks": 30,
+                "hitStopTicks": 2
+            }
+        }
+    ]
+}

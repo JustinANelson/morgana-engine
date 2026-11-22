@@ -1,0 +1,13 @@
+{
+    "id": 14,
+    "name": "Willow Rod",
+    "description": "For whitefin shoals and pike runs. Keep it in your bag.",
+    "type": "TOOL",
+    "iconId": 16,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 30,
+    "levelReq": 1,
+    "schemaVersion": 2,
+    "toolType": "FISHING_ROD"
+}

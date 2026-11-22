@@ -1,0 +1,16 @@
+{
+    "id": 62,
+    "name": "Heron Signet",
+    "description": "The signet of the old marsh wardens.",
+    "type": "RING",
+    "iconId": 62,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 420,
+    "levelReq": 12,
+    "schemaVersion": 2,
+    "attributeBonuses": {
+        "agi": 2,
+        "int": 2
+    }
+}

@@ -1,0 +1,13 @@
+{
+    "id": 12,
+    "name": "Iron Arrow",
+    "description": "Standard steel-tipped arrows.",
+    "type": "AMMO",
+    "iconId": 12,
+    "price": 2,
+    "schemaVersion": 1,
+    "stackable": true,
+    "maxStack": 200,
+    "attackDamage": 2,
+    "projectileSpriteId": 1
+}

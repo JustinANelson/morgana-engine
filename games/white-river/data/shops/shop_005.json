@@ -1,0 +1,76 @@
+{
+    "id": 5,
+    "name": "Ilya's Manuals",
+    "buyRatePercent": 100,
+    "sellRatePercent": 50,
+    "currencyItemId": 1,
+    "entries": [
+        {
+            "itemId": 66,
+            "amount": 1,
+            "currencyItemId": 1,
+            "priceOverride": 0
+        },
+        {
+            "itemId": 67,
+            "amount": 1,
+            "currencyItemId": 1,
+            "priceOverride": 0
+        },
+        {
+            "itemId": 68,
+            "amount": 1,
+            "currencyItemId": 1,
+            "priceOverride": 0
+        },
+        {
+            "itemId": 69,
+            "amount": 1,
+            "currencyItemId": 1,
+            "priceOverride": 0
+        },
+        {
+            "itemId": 70,
+            "amount": 1,
+            "currencyItemId": 1,
+            "priceOverride": 0
+        },
+        {
+            "itemId": 71,
+            "amount": 1,
+            "currencyItemId": 1,
+            "priceOverride": 0
+        },
+        {
+            "itemId": 72,
+            "amount": 1,
+            "currencyItemId": 1,
+            "priceOverride": 0
+        },
+        {
+            "itemId": 73,
+            "amount": 1,
+            "currencyItemId": 1,
+            "priceOverride": 0
+        },
+        {
+            "itemId": 74,
+            "amount": 1,
+            "currencyItemId": 1,
+            "priceOverride": 0
+        },
+        {
+            "itemId": 75,
+            "amount": 1,
+            "currencyItemId": 1,
+            "priceOverride": 0
+        },
+        {
+            "itemId": 76,
+            "amount": 1,
+            "currencyItemId": 1,
+            "priceOverride": 0
+        }
+    ],
+    "schemaVersion": 2
+}

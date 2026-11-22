@@ -1,0 +1,17 @@
+{
+    "id": 17,
+    "name": "Leather Cap",
+    "description": "Simple boiled-leather cap.",
+    "type": "HELMET",
+    "iconId": 17,
+    "price": 25,
+    "schemaVersion": 1,
+    "armorDefense": 2,
+    "paperdollSpriteId": 9,
+    "paperdollSlot": "HEAD",
+    "paperdollClassTints": {
+        "1": "#c95046",
+        "2": "#4f8a5b",
+        "3": "#d97736"
+    }
+}

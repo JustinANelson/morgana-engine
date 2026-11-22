@@ -1,0 +1,36 @@
+{
+    "id": 6,
+    "name": "Quickdraw",
+    "description": "Two arrows before the first one lands.",
+    "iconId": 72,
+    "targetType": "SINGLE_TARGET",
+    "levelReq": 1,
+    "classReqIds": [
+        2
+    ],
+    "costs": {
+        "sp": 8
+    },
+    "scales": true,
+    "castTimeTicks": 0,
+    "cooldownTicks": 18,
+    "rangeTiles": 8,
+    "aoeRadiusTiles": 0,
+    "basePower": 0,
+    "isHealing": false,
+    "projectileSpriteId": 1,
+    "animationId": 6,
+    "statusEffectType": null,
+    "statusMagnitude": 0,
+    "statusDurationTicks": 0,
+    "warpMapId": 0,
+    "warpX": 0,
+    "warpY": 0,
+    "powerPercentPerLevel": 8,
+    "maxSpellLevel": 5,
+    "castsPerLevel": 60,
+    "schemaVersion": 2,
+    "hitCount": 2,
+    "baseDamagePercent": 70,
+    "baseDamagePercentPerLevel": 5
+}

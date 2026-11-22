@@ -1,0 +1,12 @@
+{
+    "id": 28,
+    "name": "Rime Shard",
+    "description": "Ice from the Paleback glacier that does not melt in the hand.",
+    "type": "MATERIAL",
+    "iconId": 28,
+    "stackable": true,
+    "maxStack": 999,
+    "price": 45,
+    "levelReq": 1,
+    "schemaVersion": 2
+}

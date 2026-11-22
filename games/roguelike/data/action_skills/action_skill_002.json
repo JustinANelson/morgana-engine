@@ -1,0 +1,29 @@
+{
+    "id": 2,
+    "name": "Cross Cut",
+    "description": "Reverse slash. Chains into Ashen Cleave.",
+    "iconId": 3,
+    "startupTicks": 2,
+    "activeTicks": 3,
+    "recoveryTicks": 5,
+    "cancelFromTick": 4,
+    "animationId": 6,
+    "soundId": "combat_swing",
+    "schemaVersion": 2,
+    "hitboxes": [
+        {
+            "fromTick": 2,
+            "toTick": 4,
+            "shape": "ARC",
+            "radiusPixels": 48,
+            "arcDegrees": 125,
+            "hit": {
+                "damageKind": "MELEE",
+                "damagePercent": 110,
+                "reaction": "STAGGER",
+                "reactionTicks": 5,
+                "hitStopTicks": 1
+            }
+        }
+    ]
+}

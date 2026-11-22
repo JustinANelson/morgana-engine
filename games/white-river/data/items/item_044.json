@@ -1,0 +1,22 @@
+{
+    "id": 44,
+    "name": "Glacier Bow",
+    "description": "Rime never leaves the string.",
+    "type": "WEAPON",
+    "iconId": 41,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 3200,
+    "levelReq": 30,
+    "schemaVersion": 2,
+    "attackDamage": 38,
+    "attackSpeedTicks": 12,
+    "rangeTiles": 10,
+    "weaponStyle": "RANGED_BOW",
+    "twoHanded": true,
+    "projectileSpriteId": 1,
+    "requiredAmmoItemId": 32,
+    "classReqIds": [
+        2
+    ]
+}

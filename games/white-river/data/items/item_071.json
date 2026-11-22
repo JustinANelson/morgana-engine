@@ -1,0 +1,16 @@
+{
+    "id": 71,
+    "name": "Manual: Scatterflight",
+    "description": "Teaches a Windrunner Scatterflight (level 8).",
+    "type": "SPELL_SCROLL",
+    "iconId": 66,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 480,
+    "levelReq": 8,
+    "schemaVersion": 2,
+    "teachSpellId": 8,
+    "classReqIds": [
+        2
+    ]
+}

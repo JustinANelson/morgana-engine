@@ -1,0 +1,317 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Morgana action_skills document",
+    "$ref": "#/$defs/com.morgana.domain.content.ActionSkillDefinition",
+    "$defs": {
+        "com.morgana.domain.content.ActionSkillDefinition": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "iconId": {
+                    "type": "integer"
+                },
+                "levelReq": {
+                    "type": "integer"
+                },
+                "startupTicks": {
+                    "type": "integer"
+                },
+                "activeTicks": {
+                    "type": "integer"
+                },
+                "recoveryTicks": {
+                    "type": "integer"
+                },
+                "cancelFromTick": {
+                    "anyOf": [
+                        {
+                            "type": "integer"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "costs": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "cooldownTicks": {
+                    "type": "integer"
+                },
+                "aimLock": {
+                    "type": "boolean"
+                },
+                "hitboxes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.content.SkillHitbox"
+                    }
+                },
+                "armor": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.content.SkillArmorWindow"
+                    }
+                },
+                "moves": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.content.SkillMove"
+                    }
+                },
+                "guard": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.content.SkillGuard"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "animationId": {
+                    "type": "integer"
+                },
+                "soundId": {
+                    "type": "string"
+                },
+                "schemaVersion": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "id",
+                "name"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.content.SkillHitbox": {
+            "type": "object",
+            "properties": {
+                "fromTick": {
+                    "type": "integer"
+                },
+                "toTick": {
+                    "type": "integer"
+                },
+                "shape": {
+                    "type": "string",
+                    "enum": [
+                        "CIRCLE",
+                        "RECT",
+                        "ARC"
+                    ]
+                },
+                "forwardPixels": {
+                    "type": "integer"
+                },
+                "sidePixels": {
+                    "type": "integer"
+                },
+                "radiusPixels": {
+                    "type": "integer"
+                },
+                "arcDegrees": {
+                    "type": "integer"
+                },
+                "lengthPixels": {
+                    "type": "integer"
+                },
+                "widthPixels": {
+                    "type": "integer"
+                },
+                "hitGroup": {
+                    "type": "integer"
+                },
+                "maxTargets": {
+                    "type": "integer"
+                },
+                "hit": {
+                    "$ref": "#/$defs/com.morgana.domain.content.SkillHit"
+                },
+                "projectile": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.content.SkillProjectile"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                }
+            },
+            "required": [
+                "fromTick",
+                "toTick"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.content.SkillHit": {
+            "type": "object",
+            "properties": {
+                "damageKind": {
+                    "type": "string",
+                    "enum": [
+                        "MELEE",
+                        "RANGED",
+                        "SPELL"
+                    ]
+                },
+                "damagePercent": {
+                    "type": "integer"
+                },
+                "reaction": {
+                    "type": "string",
+                    "enum": [
+                        "NONE",
+                        "STAGGER",
+                        "KNOCKDOWN",
+                        "AIRBORNE",
+                        "GRAB"
+                    ]
+                },
+                "reactionTicks": {
+                    "type": "integer"
+                },
+                "knockbackPixels": {
+                    "type": "integer"
+                },
+                "hitStopTicks": {
+                    "type": "integer"
+                },
+                "statusEffectType": {
+                    "anyOf": [
+                        {
+                            "type": "string",
+                            "enum": [
+                                "DOT_POISON",
+                                "DOT_BURN",
+                                "DOT_BLEED",
+                                "HOT_REGEN",
+                                "STUN",
+                                "ROOT",
+                                "SLOW",
+                                "HASTE",
+                                "SHIELD",
+                                "STAT_BUFF",
+                                "STAT_DEBUFF",
+                                "FLY",
+                                "REFLECT",
+                                "TAUNT"
+                            ]
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "statusMagnitude": {
+                    "type": "integer"
+                },
+                "statusDurationTicks": {
+                    "type": "integer"
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.content.SkillProjectile": {
+            "type": "object",
+            "properties": {
+                "spriteId": {
+                    "type": "integer"
+                },
+                "speedPixelsPerTick": {
+                    "type": "integer"
+                },
+                "rangePixels": {
+                    "type": "integer"
+                },
+                "pierce": {
+                    "type": "boolean"
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.content.SkillArmorWindow": {
+            "type": "object",
+            "properties": {
+                "fromTick": {
+                    "type": "integer"
+                },
+                "toTick": {
+                    "type": "integer"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "SUPER_ARMOR",
+                        "INVULNERABLE"
+                    ]
+                }
+            },
+            "required": [
+                "fromTick",
+                "toTick"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.content.SkillMove": {
+            "type": "object",
+            "properties": {
+                "fromTick": {
+                    "type": "integer"
+                },
+                "toTick": {
+                    "type": "integer"
+                },
+                "forwardPixels": {
+                    "type": "integer"
+                },
+                "sidePixels": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "fromTick",
+                "toTick",
+                "forwardPixels"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.content.SkillGuard": {
+            "type": "object",
+            "properties": {
+                "arcDegrees": {
+                    "type": "integer"
+                },
+                "maxHoldTicks": {
+                    "type": "integer"
+                },
+                "blockCosts": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "damageReductionPercent": {
+                    "type": "integer"
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        }
+    }
+}

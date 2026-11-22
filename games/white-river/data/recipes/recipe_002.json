@@ -1,0 +1,16 @@
+{
+    "id": 2,
+    "name": "Smelt Iron Ingot",
+    "stationType": "ANVIL",
+    "levelReq": 1,
+    "ingredients": [
+        {
+            "itemId": 18,
+            "amount": 2
+        }
+    ],
+    "outputItemId": 19,
+    "outputAmount": 1,
+    "xpReward": 14,
+    "schemaVersion": 2
+}

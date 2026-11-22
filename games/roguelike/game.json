@@ -1,0 +1,479 @@
+{
+    "schemaVersion": 1,
+    "engineApi": "1",
+    "id": "roguelike",
+    "name": "Ashen Keep",
+    "description": "A co-op dungeon crawler & roguelike reference realm: gather in the multiplayer hub of Ashen Keep, gear up with visible paperdoll equipment, choose your difficulty, and delve into the procedurally generated Sunken Crypt to face Malakor, the Ashen Warden.",
+    "tags": [
+        "roguelike",
+        "dungeon-crawler",
+        "co-op",
+        "action",
+        "reference"
+    ],
+    "capabilities": [
+        "damage",
+        "heal",
+        "inventory",
+        "teleport",
+        "status",
+        "message",
+        "visual",
+        "projectile",
+        "progression",
+        "vital"
+    ],
+    "attributes": [
+        {
+            "id": "str",
+            "name": "Strength",
+            "short": "STR",
+            "base": 10,
+            "floor": 1,
+            "cap": null,
+            "allocatable": true
+        },
+        {
+            "id": "agi",
+            "name": "Agility",
+            "short": "AGI",
+            "base": 10,
+            "floor": 1,
+            "cap": null,
+            "allocatable": true
+        },
+        {
+            "id": "int",
+            "name": "Intelligence",
+            "short": "INT",
+            "base": 10,
+            "floor": 1,
+            "cap": null,
+            "allocatable": true
+        },
+        {
+            "id": "vit",
+            "name": "Vitality",
+            "short": "VIT",
+            "base": 10,
+            "floor": 1,
+            "cap": null,
+            "allocatable": true
+        }
+    ],
+    "vitals": [
+        {
+            "id": "hp",
+            "name": "Health",
+            "short": "HP",
+            "color": "#dc2626",
+            "role": "life",
+            "max": "max(10, 85 + level * 16 + vit * 10 + str * 2 + bonus)",
+            "regen": {
+                "everyTicks": 40,
+                "amount": "max(1, vit / 4)"
+            }
+        },
+        {
+            "id": "mp",
+            "name": "Mana",
+            "short": "MP",
+            "color": "#2563eb",
+            "role": null,
+            "max": "max(0, 25 + level * 8 + int * 8 + bonus)",
+            "regen": {
+                "everyTicks": 40,
+                "amount": "max(1, int / 4)"
+            }
+        },
+        {
+            "id": "stamina",
+            "name": "Stamina",
+            "short": "STM",
+            "color": "#eab308",
+            "role": null,
+            "max": "85 + agi * 2 + bonus",
+            "regen": {
+                "everyTicks": 20,
+                "amount": "6"
+            }
+        }
+    ],
+    "progression": {
+        "maxLevel": 50,
+        "xpTable": null,
+        "xpExpr": "90 * level * level"
+    },
+    "combat": {
+        "melee": "max(1, a.str * 2 + weapon - d.vit)",
+        "ranged": "max(1, a.agi * 2 + weapon + ammo - d.agi)",
+        "spell": "raw = max(1, basePower + (scales ? a.int * 2 : 0)); heals ? raw : max(1, raw - d.int / 2)",
+        "critChanceBp": "clamp(a.agi * 50, 500, 5000)",
+        "dodgeChanceBp": "clamp(d.agi * 50, 0, 4000)",
+        "module": "action",
+        "npcs": {
+            "maxAttackersPerTarget": 3,
+            "firstStrikeDelayTicks": 10,
+            "spellWindUpTicks": 12,
+            "casterKeepsDistance": true,
+            "threatSwitchPercent": 115,
+            "tauntThreatPercent": 125,
+            "healThreatPercent": 50
+        },
+        "enemyVariants": [
+            {
+                "id": "frenzied",
+                "label": "Frenzied",
+                "spawnBasisPoints": 500,
+                "forceAggro": true,
+                "hpPercent": 125,
+                "attackPercent": 125,
+                "moveSpeedPercent": 75,
+                "xpPercent": 150,
+                "dropRatePercent": 180,
+                "bonusDropRolls": 0,
+                "levelBonus": 1,
+                "colorHex": "F97316"
+            },
+            {
+                "id": "champion",
+                "label": "Champion",
+                "spawnBasisPoints": 250,
+                "forceAggro": true,
+                "hpPercent": 210,
+                "attackPercent": 140,
+                "moveSpeedPercent": 90,
+                "xpPercent": 300,
+                "dropRatePercent": 450,
+                "bonusDropRolls": 2,
+                "levelBonus": 3,
+                "colorHex": "C084FC"
+            },
+            {
+                "id": "ashen",
+                "label": "Ashen",
+                "spawnBasisPoints": 75,
+                "forceAggro": true,
+                "hpPercent": 320,
+                "attackPercent": 160,
+                "moveSpeedPercent": 85,
+                "xpPercent": 500,
+                "dropRatePercent": 900,
+                "bonusDropRolls": 4,
+                "levelBonus": 5,
+                "colorHex": "FBBF24"
+            }
+        ]
+    },
+    "clock": null,
+    "weather": null,
+    "ui": {
+        "xpOrbs": true
+    },
+    "sprites": {
+        "cellWidth": 32,
+        "cellHeight": 48,
+        "stateFrames": {
+            "idle": 2,
+            "walk": 4,
+            "attack": 4,
+            "cast": 4,
+            "harvest": 4,
+            "jump": 3,
+            "hurt": 2
+        },
+        "anchor": "bottom_center",
+        "paperdollingV2": true,
+        "uiHeights": {
+            "1": 40,
+            "2": 39,
+            "3": 39,
+            "10": 39,
+            "11": 40,
+            "12": 39,
+            "13": 39,
+            "14": 39,
+            "15": 39,
+            "16": 41,
+            "17": 39,
+            "101": 29,
+            "102": 34,
+            "103": 41,
+            "104": 39,
+            "105": 37,
+            "106": 42
+        }
+    },
+    "inventorySlots": 40,
+    "loot": {
+        "rarities": [
+            {
+                "id": "common",
+                "name": "Common",
+                "color": "#d1d5db",
+                "weight": 580
+            },
+            {
+                "id": "magic",
+                "name": "Magic",
+                "color": "#60a5fa",
+                "weight": 300,
+                "affixesMin": 1,
+                "affixesMax": 2,
+                "priceMultiplierPercent": 250
+            },
+            {
+                "id": "rare",
+                "name": "Rare",
+                "color": "#facc15",
+                "weight": 100,
+                "minItemLevel": 2,
+                "affixesMin": 3,
+                "affixesMax": 4,
+                "priceMultiplierPercent": 600
+            },
+            {
+                "id": "relic",
+                "name": "Ashen Relic",
+                "color": "#fb923c",
+                "weight": 20,
+                "minItemLevel": 4,
+                "affixesMin": 5,
+                "affixesMax": 6,
+                "priceMultiplierPercent": 1500
+            }
+        ],
+        "affixes": [
+            {
+                "id": "sharp",
+                "name": "Sharp",
+                "position": "PREFIX",
+                "stat": "ATTACK_DAMAGE",
+                "min": 1,
+                "max": 3,
+                "maxItemLevel": 3,
+                "slots": [
+                    "WEAPON"
+                ]
+            },
+            {
+                "id": "cruel",
+                "name": "Cruel",
+                "position": "PREFIX",
+                "stat": "ATTACK_DAMAGE",
+                "min": 4,
+                "max": 8,
+                "minItemLevel": 4,
+                "slots": [
+                    "WEAPON"
+                ]
+            },
+            {
+                "id": "sturdy",
+                "name": "Sturdy",
+                "position": "PREFIX",
+                "stat": "ARMOR_DEFENSE",
+                "min": 1,
+                "max": 2,
+                "maxItemLevel": 3,
+                "slots": [
+                    "ARMOR",
+                    "HELMET",
+                    "SHIELD",
+                    "BOOTS"
+                ]
+            },
+            {
+                "id": "warded",
+                "name": "Warded",
+                "position": "PREFIX",
+                "stat": "ARMOR_DEFENSE",
+                "min": 3,
+                "max": 5,
+                "minItemLevel": 4,
+                "slots": [
+                    "ARMOR",
+                    "HELMET",
+                    "SHIELD",
+                    "BOOTS"
+                ]
+            },
+            {
+                "id": "hale",
+                "name": "Hale",
+                "position": "PREFIX",
+                "stat": "VITAL_MAX",
+                "statId": "hp",
+                "min": 10,
+                "max": 22,
+                "maxItemLevel": 3
+            },
+            {
+                "id": "vigorous",
+                "name": "Vigorous",
+                "position": "PREFIX",
+                "stat": "VITAL_MAX",
+                "statId": "hp",
+                "min": 24,
+                "max": 48,
+                "minItemLevel": 4
+            },
+            {
+                "id": "glowing",
+                "name": "Glowing",
+                "position": "PREFIX",
+                "stat": "VITAL_MAX",
+                "statId": "mp",
+                "min": 6,
+                "max": 15,
+                "maxItemLevel": 3
+            },
+            {
+                "id": "radiant",
+                "name": "Radiant",
+                "position": "PREFIX",
+                "stat": "VITAL_MAX",
+                "statId": "mp",
+                "min": 16,
+                "max": 32,
+                "minItemLevel": 4
+            },
+            {
+                "id": "of_strength",
+                "name": "of Strength",
+                "position": "SUFFIX",
+                "stat": "ATTRIBUTE",
+                "statId": "str",
+                "min": 1,
+                "max": 2,
+                "maxItemLevel": 3
+            },
+            {
+                "id": "of_might",
+                "name": "of Might",
+                "position": "SUFFIX",
+                "stat": "ATTRIBUTE",
+                "statId": "str",
+                "min": 3,
+                "max": 5,
+                "minItemLevel": 4
+            },
+            {
+                "id": "of_agility",
+                "name": "of Agility",
+                "position": "SUFFIX",
+                "stat": "ATTRIBUTE",
+                "statId": "agi",
+                "min": 1,
+                "max": 2,
+                "maxItemLevel": 3
+            },
+            {
+                "id": "of_the_fox",
+                "name": "of the Fox",
+                "position": "SUFFIX",
+                "stat": "ATTRIBUTE",
+                "statId": "agi",
+                "min": 3,
+                "max": 5,
+                "minItemLevel": 4
+            },
+            {
+                "id": "of_intellect",
+                "name": "of Intellect",
+                "position": "SUFFIX",
+                "stat": "ATTRIBUTE",
+                "statId": "int",
+                "min": 1,
+                "max": 2,
+                "maxItemLevel": 3
+            },
+            {
+                "id": "of_sorcery",
+                "name": "of Sorcery",
+                "position": "SUFFIX",
+                "stat": "ATTRIBUTE",
+                "statId": "int",
+                "min": 3,
+                "max": 5,
+                "minItemLevel": 4
+            },
+            {
+                "id": "of_vitality",
+                "name": "of Vitality",
+                "position": "SUFFIX",
+                "stat": "ATTRIBUTE",
+                "statId": "vit",
+                "min": 1,
+                "max": 2,
+                "maxItemLevel": 3
+            },
+            {
+                "id": "of_the_bear",
+                "name": "of the Bear",
+                "position": "SUFFIX",
+                "stat": "ATTRIBUTE",
+                "statId": "vit",
+                "min": 3,
+                "max": 5,
+                "minItemLevel": 4
+            }
+        ]
+    },
+    "sprint": {
+        "enabled": true,
+        "speedPercent": 140,
+        "staminaVitalId": "stamina",
+        "stepsPerStamina": 2
+    },
+    "ghost": {
+        "enabled": true,
+        "autoReleaseTicks": 2400,
+        "deathWearPoints": 0,
+        "selfReviveAfterTicks": 600,
+        "selfRevivePercent": 40,
+        "wipeEndsRun": true
+    },
+    "bestiary": {
+        "enabled": true,
+        "statsAfterKills": 3,
+        "dropsAfterKills": 6
+    },
+    "paragon": {
+        "enabled": true,
+        "variable": "paragon",
+        "xpBase": 20000,
+        "xpStep": 2000,
+        "statPointsPerLevel": 1,
+        "maxLevels": 100
+    },
+    "onboarding": {
+        "tips": [
+            {
+                "id": "welcome",
+                "trigger": "WELCOME",
+                "title": "Welcome to Ashen Keep",
+                "text": "Open your bag ({key:INVENTORY}) to check your gear, or talk to the Keep residents with {key:INTERACT}: Commander Vael has contracts for the crypt, and Delve Warden Orin sets the dungeon difficulty. Step through the northern stone archway portal to begin a run!"
+            },
+            {
+                "id": "combat",
+                "trigger": "EQUIPMENT_FOUND",
+                "title": "Action Combat",
+                "text": "Left click attacks toward your cursor and chains into combos. Right click unleashes your heavy class skill, Space dodges with invulnerability frames, and holding Q guards. Watch for red ground telegraphs during Malakor's boss fight!"
+            },
+            {
+                "id": "death",
+                "trigger": "DEATH",
+                "title": "Fallen in the Crypt",
+                "text": "You are a ghost: you can move but not fight. A party mate can cast Rekindle on you to revive you on the spot. After 30 seconds you can type /revive to rise with 40% HP. If your whole party falls, the run ends and you wake in Ashen Keep."
+            },
+            {
+                "id": "paragon",
+                "trigger": "LEVEL",
+                "level": 50,
+                "title": "Paragon Levels",
+                "text": "You reached the level cap! Experience now earns Paragon levels, each granting an attribute point."
+            }
+        ]
+    }
+}

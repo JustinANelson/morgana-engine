@@ -1,0 +1,19 @@
+{
+    "id": 4,
+    "name": "Rekindle",
+    "description": "Revive a fallen party ghost where they fell with 60% health.",
+    "iconId": 34,
+    "targetType": "SELF",
+    "levelReq": 1,
+    "costs": {
+        "mp": 12
+    },
+    "scales": false,
+    "cooldownTicks": 60,
+    "rangeTiles": 5,
+    "basePower": 0,
+    "isHealing": false,
+    "revivePercent": 60,
+    "animationId": 4,
+    "schemaVersion": 1
+}

@@ -1,0 +1,16 @@
+{
+    "id": 11,
+    "name": "Ash Buckler",
+    "stationType": "WORKBENCH",
+    "levelReq": 1,
+    "ingredients": [
+        {
+            "itemId": 16,
+            "amount": 4
+        }
+    ],
+    "outputItemId": 54,
+    "outputAmount": 1,
+    "xpReward": 20,
+    "schemaVersion": 2
+}

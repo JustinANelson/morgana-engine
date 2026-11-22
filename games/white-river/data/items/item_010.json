@@ -1,0 +1,16 @@
+{
+    "id": 10,
+    "name": "Marsh Stew",
+    "description": "Pike, riverleaf and sunroot. Restores 220 health and 60 mana.",
+    "type": "CONSUMABLE",
+    "iconId": 12,
+    "stackable": true,
+    "maxStack": 999,
+    "price": 70,
+    "levelReq": 8,
+    "schemaVersion": 2,
+    "restore": {
+        "hp": 220,
+        "mp": 60
+    }
+}

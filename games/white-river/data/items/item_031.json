@@ -1,0 +1,13 @@
+{
+    "id": 31,
+    "name": "Reaver Captain's Seal",
+    "description": "Marrow Jack's own seal. The Marshal will want to see it.",
+    "type": "QUEST",
+    "iconId": 31,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 0,
+    "levelReq": 1,
+    "schemaVersion": 2,
+    "boundOnPickup": true
+}

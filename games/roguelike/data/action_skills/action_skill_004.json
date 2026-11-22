@@ -1,0 +1,50 @@
+{
+    "id": 4,
+    "name": "Shield Bash",
+    "description": "Armored charge that stuns foes in front.",
+    "iconId": 15,
+    "startupTicks": 3,
+    "activeTicks": 4,
+    "recoveryTicks": 7,
+    "costs": {
+        "stamina": 16
+    },
+    "cooldownTicks": 40,
+    "animationId": 6,
+    "soundId": "combat_hit",
+    "schemaVersion": 2,
+    "armor": [
+        {
+            "fromTick": 1,
+            "toTick": 7,
+            "type": "SUPER_ARMOR"
+        }
+    ],
+    "moves": [
+        {
+            "fromTick": 2,
+            "toTick": 6,
+            "forwardPixels": 26
+        }
+    ],
+    "hitboxes": [
+        {
+            "fromTick": 3,
+            "toTick": 6,
+            "shape": "RECT",
+            "forwardPixels": 24,
+            "lengthPixels": 40,
+            "widthPixels": 34,
+            "hit": {
+                "damageKind": "MELEE",
+                "damagePercent": 125,
+                "reaction": "STAGGER",
+                "reactionTicks": 12,
+                "knockbackPixels": 18,
+                "statusEffectType": "STUN",
+                "statusMagnitude": 1,
+                "statusDurationTicks": 30
+            }
+        }
+    ]
+}

@@ -1,0 +1,26 @@
+{
+    "id": 9,
+    "name": "Ember Rod",
+    "description": "A charred oak staff capped with a glowing coal.",
+    "type": "WEAPON",
+    "iconId": 9,
+    "price": 30,
+    "schemaVersion": 1,
+    "attackDamage": 5,
+    "attackSpeedTicks": 12,
+    "rangeTiles": 5,
+    "weaponStyle": "MAGIC_STAFF",
+    "weaponType": "staff",
+    "twoHanded": true,
+    "attributeBonuses": {
+        "int": 2
+    },
+    "projectileSpriteId": 2,
+    "paperdollSpriteId": 6,
+    "paperdollSlot": "MAIN_HAND",
+    "paperdollClassTints": {
+        "1": "#c95046",
+        "2": "#4f8a5b",
+        "3": "#d97736"
+    }
+}

@@ -1,0 +1,20 @@
+{
+    "id": 8,
+    "name": "Brew Deepwater Draught",
+    "stationType": "ALCHEMY_TABLE",
+    "levelReq": 12,
+    "ingredients": [
+        {
+            "itemId": 5,
+            "amount": 2
+        },
+        {
+            "itemId": 23,
+            "amount": 1
+        }
+    ],
+    "outputItemId": 6,
+    "outputAmount": 1,
+    "xpReward": 24,
+    "schemaVersion": 2
+}

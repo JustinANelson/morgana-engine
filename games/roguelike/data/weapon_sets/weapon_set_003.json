@@ -1,0 +1,39 @@
+{
+    "id": 3,
+    "name": "Pyromancer Arsenal",
+    "description": "Flame Lash, Ember Burst, Fire Wave, and Ember Blink.",
+    "slot": "MAIN",
+    "classIds": [
+        3
+    ],
+    "inputBufferTicks": 6,
+    "skillIds": [
+        21,
+        22,
+        23,
+        24
+    ],
+    "entries": [
+        {
+            "input": "LMB",
+            "skillId": 21
+        },
+        {
+            "input": "RMB",
+            "skillId": 23
+        },
+        {
+            "input": "SPACE",
+            "skillId": 24
+        }
+    ],
+    "edges": [
+        {
+            "fromSkillId": 21,
+            "input": "LMB",
+            "toSkillId": 22,
+            "windowTicks": 12
+        }
+    ],
+    "schemaVersion": 2
+}

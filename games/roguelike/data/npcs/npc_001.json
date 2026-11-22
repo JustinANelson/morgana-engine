@@ -1,0 +1,13 @@
+{
+    "id": 1,
+    "name": "Commander Vael",
+    "title": "Keep Commander",
+    "spriteId": 10,
+    "behavior": "QUEST_GIVER",
+    "level": 20,
+    "eventId": 1,
+    "vitals": {
+        "hp": 500
+    },
+    "schemaVersion": 1
+}

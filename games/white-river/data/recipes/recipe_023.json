@@ -1,0 +1,24 @@
+{
+    "id": 23,
+    "name": "Mirewood Staff",
+    "stationType": "ALCHEMY_TABLE",
+    "levelReq": 10,
+    "ingredients": [
+        {
+            "itemId": 36,
+            "amount": 1
+        },
+        {
+            "itemId": 16,
+            "amount": 4
+        },
+        {
+            "itemId": 26,
+            "amount": 4
+        }
+    ],
+    "outputItemId": 39,
+    "outputAmount": 1,
+    "xpReward": 90,
+    "schemaVersion": 2
+}

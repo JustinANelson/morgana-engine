@@ -1,0 +1,16 @@
+{
+    "id": 4,
+    "name": "Herb Broth",
+    "stationType": "COOKING_FIRE",
+    "levelReq": 1,
+    "ingredients": [
+        {
+            "itemId": 22,
+            "amount": 2
+        }
+    ],
+    "outputItemId": 11,
+    "outputAmount": 1,
+    "xpReward": 8,
+    "schemaVersion": 2
+}

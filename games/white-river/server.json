@@ -1,0 +1,19 @@
+{
+    "schemaVersion": 1,
+    "modules": {
+        "parties": true,
+        "guilds": true,
+        "trading": true,
+        "crafting": true,
+        "projectiles": true,
+        "subTileMovement": true,
+        "softSeams": true,
+        "instancing": false,
+        "rolePlayChat": true,
+        "friends": true,
+        "exploration": true,
+        "ignore": true,
+        "market": true,
+        "mail": true
+    }
+}

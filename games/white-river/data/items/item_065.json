@@ -1,0 +1,22 @@
+{
+    "id": 65,
+    "name": "Warden's Heart",
+    "description": "It beats once a minute, slow as the glacier.",
+    "type": "AMULET",
+    "iconId": 65,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 4000,
+    "levelReq": 32,
+    "schemaVersion": 2,
+    "attributeBonuses": {
+        "str": 4,
+        "agi": 4,
+        "int": 4,
+        "vit": 4
+    },
+    "vitalMaxBonuses": {
+        "hp": 120
+    },
+    "rollAffixes": false
+}

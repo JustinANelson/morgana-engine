@@ -1,0 +1,24 @@
+{
+    "id": 12,
+    "name": "Heron Recurve",
+    "stationType": "WORKBENCH",
+    "levelReq": 10,
+    "ingredients": [
+        {
+            "itemId": 35,
+            "amount": 1
+        },
+        {
+            "itemId": 16,
+            "amount": 6
+        },
+        {
+            "itemId": 25,
+            "amount": 4
+        }
+    ],
+    "outputItemId": 38,
+    "outputAmount": 1,
+    "xpReward": 90,
+    "schemaVersion": 2
+}

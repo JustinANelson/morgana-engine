@@ -1,0 +1,29 @@
+{
+    "id": 5,
+    "name": "Dodge Roll",
+    "description": "Tumble forward with brief invulnerability.",
+    "iconId": 25,
+    "startupTicks": 1,
+    "activeTicks": 6,
+    "recoveryTicks": 4,
+    "costs": {
+        "stamina": 18
+    },
+    "cooldownTicks": 16,
+    "soundId": "ui_click",
+    "schemaVersion": 2,
+    "armor": [
+        {
+            "fromTick": 1,
+            "toTick": 6,
+            "type": "INVULNERABLE"
+        }
+    ],
+    "moves": [
+        {
+            "fromTick": 1,
+            "toTick": 6,
+            "forwardPixels": 52
+        }
+    ]
+}

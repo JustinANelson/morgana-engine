@@ -1,0 +1,21 @@
+{
+    "id": 2,
+    "name": "Tarnished Blade",
+    "description": "A worn iron sword issued to Keep Vanguards.",
+    "type": "WEAPON",
+    "iconId": 2,
+    "price": 25,
+    "schemaVersion": 1,
+    "attackDamage": 6,
+    "attackSpeedTicks": 10,
+    "rangeTiles": 1,
+    "weaponStyle": "MELEE",
+    "weaponType": "sword",
+    "paperdollSpriteId": 3,
+    "paperdollSlot": "MAIN_HAND",
+    "paperdollClassTints": {
+        "1": "#c95046",
+        "2": "#4f8a5b",
+        "3": "#d97736"
+    }
+}

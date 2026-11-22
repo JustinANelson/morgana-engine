@@ -1,0 +1,58 @@
+{
+    "id": 1,
+    "name": "Vanguard Arsenal",
+    "description": "Blade combo, Shield Bash, Roll, and Iron Guard.",
+    "slot": "MAIN",
+    "classIds": [
+        1
+    ],
+    "inputBufferTicks": 6,
+    "skillIds": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+    ],
+    "entries": [
+        {
+            "input": "LMB",
+            "skillId": 1
+        },
+        {
+            "input": "RMB",
+            "skillId": 4
+        },
+        {
+            "input": "SPACE",
+            "skillId": 5
+        },
+        {
+            "input": "Q",
+            "skillId": 6
+        }
+    ],
+    "edges": [
+        {
+            "fromSkillId": 1,
+            "input": "LMB",
+            "toSkillId": 2,
+            "windowTicks": 12
+        },
+        {
+            "fromSkillId": 2,
+            "input": "LMB",
+            "toSkillId": 3,
+            "windowTicks": 12
+        },
+        {
+            "fromSkillId": 6,
+            "input": "LMB",
+            "toSkillId": 7,
+            "windowTicks": 16
+        }
+    ],
+    "schemaVersion": 2
+}

@@ -1,0 +1,45 @@
+{
+    "id": 3,
+    "name": "Riverbreak",
+    "description": "A stepping two-handed finisher that puts the target on the ground. Cannot be staggered out of.",
+    "iconId": 68,
+    "levelReq": 1,
+    "startupTicks": 4,
+    "activeTicks": 3,
+    "recoveryTicks": 9,
+    "animationId": 2,
+    "schemaVersion": 2,
+    "costs": {
+        "sp": 10
+    },
+    "moves": [
+        {
+            "fromTick": 2,
+            "toTick": 4,
+            "forwardPixels": 20
+        }
+    ],
+    "armor": [
+        {
+            "fromTick": 0,
+            "toTick": 6,
+            "type": "SUPER_ARMOR"
+        }
+    ],
+    "hitboxes": [
+        {
+            "fromTick": 4,
+            "toTick": 6,
+            "shape": "RECT",
+            "lengthPixels": 64,
+            "widthPixels": 40,
+            "hit": {
+                "damagePercent": 160,
+                "reaction": "KNOCKDOWN",
+                "reactionTicks": 30,
+                "knockbackPixels": 24,
+                "hitStopTicks": 3
+            }
+        }
+    ]
+}

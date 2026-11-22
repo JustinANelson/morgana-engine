@@ -1,0 +1,73 @@
+{
+    "id": 3,
+    "name": "Ferryman Dob's directions",
+    "mapId": 0,
+    "tileX": 0,
+    "tileY": 0,
+    "schemaVersion": 2,
+    "pages": [
+        {
+            "pageIndex": 0,
+            "condition": {},
+            "trigger": "ACTION_INTERACT",
+            "spriteId": 0,
+            "commands": [
+                {
+                    "_type": "dialogue",
+                    "speakerName": "Ferryman Dob",
+                    "text": "Where are you trying to get to?",
+                    "portraitId": 0,
+                    "choices": [
+                        {
+                            "label": "Where do I gather things?",
+                            "commands": [
+                                {
+                                    "_type": "dialogue",
+                                    "speakerName": "Ferryman Dob",
+                                    "text": "Whitefin off the banks right here, south of the bridge. Ash trees and riverleaf in Millrace Fields. Pike and sunroot in Heronreach.",
+                                    "portraitId": 0,
+                                    "choices": []
+                                },
+                                {
+                                    "_type": "dialogue",
+                                    "speakerName": "Ferryman Dob",
+                                    "text": "Chalk and iron are up in Chalk Hollow, if the reavers let you dig. Pim sells the tools; riverleaf and sunroot you pick by hand.",
+                                    "portraitId": 0,
+                                    "choices": []
+                                }
+                            ]
+                        },
+                        {
+                            "label": "Where do I make things?",
+                            "commands": [
+                                {
+                                    "_type": "dialogue",
+                                    "speakerName": "Ferryman Dob",
+                                    "text": "Bex's anvil for ingots and steel, Pim's bench for planks, bows and arrows, Soren's table for tonics and staves, Hesper's fire for food. All on the square.",
+                                    "portraitId": 0,
+                                    "choices": []
+                                }
+                            ]
+                        },
+                        {
+                            "label": "Where should I be fighting?",
+                            "commands": [
+                                {
+                                    "_type": "dialogue",
+                                    "speakerName": "Ferryman Dob",
+                                    "text": "Fields until you are about eight, marsh until sixteen, the Hollow into your twenties, and the headwaters after that. The Marshal pays for all of it.",
+                                    "portraitId": 0,
+                                    "choices": []
+                                }
+                            ]
+                        },
+                        {
+                            "label": "Never mind.",
+                            "commands": []
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

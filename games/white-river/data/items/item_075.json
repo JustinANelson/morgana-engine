@@ -1,0 +1,16 @@
+{
+    "id": 75,
+    "name": "Manual: Veil of Dusk",
+    "description": "Teaches a Duskweaver Veil of Dusk (level 12).",
+    "type": "SPELL_SCROLL",
+    "iconId": 66,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 720,
+    "levelReq": 12,
+    "schemaVersion": 2,
+    "teachSpellId": 14,
+    "classReqIds": [
+        3
+    ]
+}

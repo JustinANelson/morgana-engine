@@ -1,0 +1,31 @@
+{
+    "id": 11,
+    "name": "Quick Shot",
+    "description": "Loose a crisp arrow toward the cursor.",
+    "iconId": 6,
+    "startupTicks": 2,
+    "activeTicks": 2,
+    "recoveryTicks": 5,
+    "cancelFromTick": 4,
+    "soundId": "combat_swing",
+    "schemaVersion": 2,
+    "hitboxes": [
+        {
+            "fromTick": 2,
+            "toTick": 2,
+            "shape": "CIRCLE",
+            "forwardPixels": 16,
+            "radiusPixels": 16,
+            "hit": {
+                "damageKind": "RANGED",
+                "damagePercent": 90
+            },
+            "projectile": {
+                "spriteId": 1,
+                "speedPixelsPerTick": 18,
+                "rangePixels": 220,
+                "pierce": false
+            }
+        }
+    ]
+}

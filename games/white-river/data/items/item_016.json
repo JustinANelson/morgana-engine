@@ -1,0 +1,12 @@
+{
+    "id": 16,
+    "name": "Ash Plank",
+    "description": "Sawn and dried. Bows, shields and arrows start here.",
+    "type": "MATERIAL",
+    "iconId": 18,
+    "stackable": true,
+    "maxStack": 999,
+    "price": 12,
+    "levelReq": 1,
+    "schemaVersion": 2
+}

@@ -1,0 +1,16 @@
+{
+    "id": 53,
+    "name": "Paleback Plate",
+    "description": "Full plate, tempered in glacier melt.",
+    "type": "ARMOR",
+    "iconId": 53,
+    "stackable": false,
+    "maxStack": 1,
+    "price": 3000,
+    "levelReq": 30,
+    "schemaVersion": 2,
+    "armorDefense": 26,
+    "vitalMaxBonuses": {
+        "hp": 130
+    }
+}

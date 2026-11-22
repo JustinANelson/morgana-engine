@@ -1,0 +1,21 @@
+{
+    "id": 1,
+    "name": "Fireball",
+    "description": "Hurl a blazing bolt of fire that scorches enemies.",
+    "iconId": 35,
+    "targetType": "DIRECTIONAL_PROJECTILE",
+    "levelReq": 1,
+    "costs": {
+        "mp": 8
+    },
+    "scales": true,
+    "cooldownTicks": 20,
+    "rangeTiles": 7,
+    "basePower": 18,
+    "projectileSpriteId": 2,
+    "animationId": 1,
+    "statusEffectType": "DOT_BURN",
+    "statusMagnitude": 4,
+    "statusDurationTicks": 60,
+    "schemaVersion": 1
+}
