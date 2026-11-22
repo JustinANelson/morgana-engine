@@ -9,7 +9,8 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$Tag,
     [switch]$Prerelease,
-    [switch]$SkipCheck
+    [switch]$SkipCheck,
+    [switch]$SkipBuild
 )
 
 $ErrorActionPreference = 'Stop'
@@ -20,10 +21,16 @@ if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
     exit 1
 }
 
-$tasks = if ($SkipCheck) { @('distributables') } else { @('check', 'distributables') }
-Write-Host "Building distributables ($($tasks -join ' '))..." -ForegroundColor Cyan
-& .\morgana.bat @tasks
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+if (-not $SkipBuild) {
+    if ($SkipCheck) {
+        Write-Host "Building distributables..." -ForegroundColor Cyan
+        & .\morgana.bat distributables
+    } else {
+        Write-Host "Running check and building distributables..." -ForegroundColor Cyan
+        & .\morgana.bat check distributables
+    }
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+}
 
 $files = Get-ChildItem -Path 'build\distributables' -File
 if ($files.Count -eq 0) {
