@@ -15,18 +15,18 @@ import java.nio.file.Path
 import kotlin.io.path.exists
 
 /**
- * An economy model for Halcyon Reach, computed from the game's own data (monster drops, the upgrade rules, item prices, the
+ * An economy model for Trevana Realms, computed from the game's own data (monster drops, the upgrade rules, item prices, the
  * XP curve) under stated play assumptions, with design targets as assertions. It writes the table it computes to
- * `build/economy/halcyon_reach_economy.md`; the same table is kept in `games/halcyon-reach/RETHEME.md` (section 9).
+ * `build/economy/trevana_realms_economy.md`; the same table is kept in `games/trevana-realms/RETHEME.md` (section 9).
  *
  * The question it answers: does a hero earn Marks, Starshards and Pearls at a pace that makes the upgrade ladder, repairs, potions
  * and the long-term sinks (skill books, nobility) worth doing at every level?
  */
-class HalcyonEconomyModelTest {
-    private val gameOrNull: Path? = listOf(Path.of("games/halcyon-reach"), Path.of("../games/halcyon-reach")).firstOrNull { it.exists() }
+class TrevanaEconomyModelTest {
+    private val gameOrNull: Path? = listOf(Path.of("games/trevana-realms"), Path.of("../games/trevana-realms")).firstOrNull { it.exists() }
     private val game: Path
         get() {
-            org.junit.jupiter.api.Assumptions.assumeTrue(gameOrNull != null, "Developer game games/halcyon-reach is not present in this checkout")
+            org.junit.jupiter.api.Assumptions.assumeTrue(gameOrNull != null, "Developer game games/trevana-realms is not present in this checkout")
             return gameOrNull!!
         }
 
@@ -35,7 +35,7 @@ class HalcyonEconomyModelTest {
         /** Kills per hour of steady hunting, including walking and recovering (about one every ten seconds). */
         const val KILLS_PER_HOUR = 360.0
         /**
-         * Kills per hour for the pace (hours to a level) only. The headless sim (`HalcyonKillRateSimTest`, 2026-11-22) measured
+         * Kills per hour for the pace (hours to a level) only. The headless sim (`TrevanaKillRateSimTest`, 2026-11-22) measured
          * about 1,800 for a hunter with human reaction times; income and upkeep below still use the older, lower
          * [KILLS_PER_HOUR] until the economy is re-tuned for the new pace (MODERNIZATION.md, order of work step 5).
          */
@@ -162,7 +162,7 @@ class HalcyonEconomyModelTest {
     fun `the model runs and writes its table`() {
         val (m, rows) = model()
         val text = report(m, rows)
-        val out = Path.of("build/economy").also { Files.createDirectories(it) }.resolve("halcyon_reach_economy.md")
+        val out = Path.of("build/economy").also { Files.createDirectories(it) }.resolve("trevana_realms_economy.md")
         Files.writeString(out, text)
         println(text)
         assertTrue(rows.size >= 20, "the model covers the regular creatures (${rows.size})")
@@ -215,7 +215,7 @@ class HalcyonEconomyModelTest {
         val (m, rows) = model()
         val hours = m.hoursToMaxLevel(rows)
         // 2026-11-22: the XP table (game.json) targets about 40 hours to level 60 (10 hours each for 1-30, 30-45, 45-55, 55-60, checked
-        // by HalcyonKillRateSimTest); levels 60 and up are a placeholder. Under 8 hours would be too fast.
+        // by TrevanaKillRateSimTest); levels 60 and up are a placeholder. Under 8 hours would be too fast.
         assertTrue(hours in 8.0..400.0, "hours to the top level: $hours")
     }
 }

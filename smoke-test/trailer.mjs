@@ -1,4 +1,4 @@
-// Records the Halcyon Reach trailer: a throwaway realm, a made-up level 66 Emberweaver, and a scripted tour of the world.
+// Records the Trevana Realms trailer: a throwaway realm, a made-up level 66 Emberweaver, and a scripted tour of the world.
 // Usage (from smoke-test/): node trailer.mjs [scene,scene,...]   (no argument = every scene). Output: build/trailer/raw/*.webm and build/trailer/shots/*.png
 // Needs the built web client and server (:client-web:gdx_teavm_web_js_build, :server-app:installDist).
 import fs from 'node:fs'; import path from 'node:path';

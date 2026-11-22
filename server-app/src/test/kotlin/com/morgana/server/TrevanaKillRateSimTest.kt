@@ -34,10 +34,10 @@ import kotlin.math.abs
 import kotlin.math.max
 
 /**
- * A headless kill-rate simulation for Halcyon Reach (design draft: `games/halcyon-reach/MODERNIZATION.md`, section 3.3).
+ * A headless kill-rate simulation for Trevana Realms (design draft: `games/trevana-realms/MODERNIZATION.md`, section 3.3).
  *
  * It answers one question with data instead of an assumption: how many kills an hour does a solo hunter get, and how fast does
- * that turn into levels? The economy model assumes 360 (`HalcyonEconomyModelTest.Play.KILLS_PER_HOUR`); this measures it.
+ * that turn into levels? The economy model assumes 360 (`TrevanaEconomyModelTest.Play.KILLS_PER_HOUR`); this measures it.
  *
  * A bot hunter runs in the real, seeded [WorldSimulation] on the game's own maps, classes, spells and monsters (20 ticks a second,
  * so an hour is 72,000 ticks and a run takes seconds). Each class is set to a chosen level with its attributes spent on its main
@@ -51,10 +51,10 @@ import kotlin.math.max
  * points and skill levels are not modelled, and no other players share the camps. It is a measuring stick, not a prediction.
  *
  * The full matrix (5 classes x 6 levels x 2 profiles, a few minutes) runs only when `KILL_RATE_MATRIX=1` is set; a quick smoke run
- * is always on. Output: `build/kill-rate/halcyon_kill_rate.md`.
+ * is always on. Output: `build/kill-rate/trevana_kill_rate.md`.
  */
-class HalcyonKillRateSimTest {
-    private val gameDir: Path? = listOf(Path.of("games/halcyon-reach"), Path.of("../games/halcyon-reach")).firstOrNull { it.exists() }
+class TrevanaKillRateSimTest {
+    private val gameDir: Path? = listOf(Path.of("games/trevana-realms"), Path.of("../games/trevana-realms")).firstOrNull { it.exists() }
 
     private companion object {
         const val DEATH_PENALTY_TICKS = 1200
@@ -407,7 +407,7 @@ class HalcyonKillRateSimTest {
     }
 
     private fun write(text: String) {
-        val out = Path.of("build/kill-rate").also { Files.createDirectories(it) }.resolve("halcyon_kill_rate.md")
+        val out = Path.of("build/kill-rate").also { Files.createDirectories(it) }.resolve("trevana_kill_rate.md")
         Files.writeString(out, text)
         println(text)
     }
@@ -420,11 +420,11 @@ class HalcyonKillRateSimTest {
 
     @Test
     fun `progression - each class plays from level 1 to 60, picking the best zone as it goes, and the four time buckets are measured`() {
-        assumeTrue(gameDir != null, "Developer game games/halcyon-reach is not present in this checkout")
+        assumeTrue(gameDir != null, "Developer game games/trevana-realms is not present in this checkout")
         assumeTrue(System.getenv("KILL_RATE_PROGRESSION") == "1", "set KILL_RATE_PROGRESSION=1 (and optionally KILL_RATE_CLASSES) to play through; it takes minutes per class")
         val boundaries = listOf(30, 45, 55, 60)
         val text = StringBuilder()
-        text.appendLine("# Halcyon Reach progression to level 60 (Human profile)")
+        text.appendLine("# Trevana Realms progression to level 60 (Human profile)")
         text.appendLine()
         text.appendLine("| Class | 1 to 30 | 30 to 45 | 45 to 55 | 55 to 60 | Total |")
         text.appendLine("|-------|---------|----------|----------|----------|-------|")
@@ -453,27 +453,27 @@ class HalcyonKillRateSimTest {
         text.appendLine("## Level by level")
         text.appendLine()
         text.append(detail)
-        Files.writeString(Path.of("build/kill-rate/halcyon_progression.md"), text.toString())
+        Files.writeString(Path.of("build/kill-rate/trevana_progression.md"), text.toString())
         println(text)
     }
 
     @Test
     fun `smoke - a level 1 Duelist and a level 1 Emberweaver both kill in Wrenfall Wood`() {
-        assumeTrue(gameDir != null, "Developer game games/halcyon-reach is not present in this checkout")
+        assumeTrue(gameDir != null, "Developer game games/trevana-realms is not present in this checkout")
         assumeTrue(System.getenv("KILL_RATE_MATRIX") != "1", "the full matrix runs instead")
         val runs = listOf(hunt(1, 1, 4, human, 0.1), hunt(5, 1, 4, human, 0.1))
-        write("# Halcyon Reach kill-rate smoke run\n\n" + table(runs))
+        write("# Trevana Realms kill-rate smoke run\n\n" + table(runs))
         runs.forEach { assertTrue(it.kills > 0, "${it.className} killed nothing") }
     }
 
     @Test
     fun `matrix - every class at six levels with an ideal and a human hunter`() {
-        assumeTrue(gameDir != null, "Developer game games/halcyon-reach is not present in this checkout")
+        assumeTrue(gameDir != null, "Developer game games/trevana-realms is not present in this checkout")
         assumeTrue(System.getenv("KILL_RATE_MATRIX") == "1", "set KILL_RATE_MATRIX=1 to run the full matrix")
         val runs = ArrayList<Run>()
         for (classId in classIds) for ((level, map) in samples) for (p in profiles) runs += hunt(classId, level, map, p, runHours)
         val text = buildString {
-            appendLine("# Halcyon Reach kill-rate simulation (matrix)")
+            appendLine("# Trevana Realms kill-rate simulation (matrix)")
             appendLine()
             appendLine("Each row is 15 simulated minutes (0.25 h) of one hunter. XP min / level is how long the next level would take at that rate; Kills / level likewise.")
             appendLine()

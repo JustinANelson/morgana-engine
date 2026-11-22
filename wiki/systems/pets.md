@@ -23,4 +23,4 @@ A pet is an ordinary [NPC](/systems/combat.md) with a `pet` section (`PetTraits`
 
 **Growing** (`grantPetXp`, called when the owner kills something): the active pet earns `xpSharePercent` of the XP the kill gave the owner; going from level L to L + 1 needs `L * xpPerLevel`, up to `maxLevel`. Level-ups are announced.
 
-Halcyon Reach's pets (a Tame Finch, Lantern Sprite, Mistfur Cub and Ember Whelp, items 118 to 121) are sold by the Pet Handler in Harrow Cross. The client has a Pets window (`PetsWindow`, `PetsModel`; menu entry "Pets" when the game has any pet NPC) that lists each pet with its level and XP and sends the `/pet summon`, `/pet dismiss` and `/pet name` commands. Pet art of their own and mount sprites are still open.
+Trevana Realms's pets (a Tame Finch, Lantern Sprite, Mistfur Cub and Ember Whelp, items 118 to 121) are sold by the Pet Handler in Harrow Cross. The client has a Pets window (`PetsWindow`, `PetsModel`; menu entry "Pets" when the game has any pet NPC) that lists each pet with its level and XP and sends the `/pet summon`, `/pet dismiss` and `/pet name` commands. Pet art of their own and mount sprites are still open.

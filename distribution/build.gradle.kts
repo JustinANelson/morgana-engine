@@ -60,7 +60,7 @@ val sdk by tasks.registering(Sync::class) {
     // Ship only the public reference games (exclude developer games and any local tools/ folders).
     into("games") {
         from(rootProject.file("games")) {
-            exclude("**/tools/**", "halcyon-reach/**")
+            exclude("**/tools/**", "trevana-realms/**")
         }
     }
     into("docs") {

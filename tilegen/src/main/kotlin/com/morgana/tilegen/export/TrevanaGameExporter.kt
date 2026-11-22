@@ -7,9 +7,9 @@ import com.morgana.tilegen.sprite.AttachmentKind
 import com.morgana.tilegen.sprite.Direction8
 import com.morgana.tilegen.sprite.FeetStyle
 import com.morgana.tilegen.sprite.HairStyle
-import com.morgana.tilegen.sprite.HalcyonEnemyKind
-import com.morgana.tilegen.sprite.HalcyonNpcKind
-import com.morgana.tilegen.sprite.HalcyonSpriteGenerator
+import com.morgana.tilegen.sprite.TrevanaEnemyKind
+import com.morgana.tilegen.sprite.TrevanaNpcKind
+import com.morgana.tilegen.sprite.TrevanaSpriteGenerator
 import com.morgana.tilegen.sprite.HeadgearKind
 import com.morgana.tilegen.sprite.PaperDollAction
 import com.morgana.tilegen.sprite.PaperDollJob
@@ -25,7 +25,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 /**
- * Draws Halcyon Reach's characters and worn gear straight into a game's `assets/` folder in the engine's sprite layout.
+ * Draws Trevana Realms's characters and worn gear straight into a game's `assets/` folder in the engine's sprite layout.
  *
  * It replaces the old Python converter that re-laid TilesetGen's sheets: everything is drawn in memory in the game's own
  * cell grid, so there is no intermediate sheet, no PIL dependency and no second copy of the layout rules.
@@ -38,7 +38,7 @@ import java.nio.file.Path
  * (NPCs), `sprites/101..122` (monsters) and `paperdolls/1..21` (worn gear, see [GEAR]). It touches nothing else - no item
  * data, no `game.json`, no other sprite - so hand-drawn art in other ids is safe. Output is deterministic.
  */
-object HalcyonGameExporter {
+object TrevanaGameExporter {
     const val CELL_W = 32
     const val CELL_H = 48
 
@@ -108,7 +108,7 @@ object HalcyonGameExporter {
     class Result(val written: List<Path>, val uiHeights: Map<Int, Int>)
 
     /**
-     * Draws [parts] into `[gameDir]/assets`, reading the class specs from [specDir] (`halcyon_<class>.json`).
+     * Draws [parts] into `[gameDir]/assets`, reading the class specs from [specDir] (`trevana_<class>.json`).
      * [uiHeights] in the result is the visible height of each written sprite (top edge of its tallest frame to the cell
      * bottom), for `game.json` `sprites.uiHeights`, so name plates sit on heads; compare it with what the file has.
      */
@@ -129,18 +129,18 @@ object HalcyonGameExporter {
 
         if (Part.BODIES in parts) {
             for ((id, stem, shoot) in CLASS_BODIES) {
-                writeSprite(id, classBody(specDir.resolve("halcyon_$stem.json"), shoot))
+                writeSprite(id, classBody(specDir.resolve("trevana_$stem.json"), shoot))
             }
         }
         if (Part.NPCS in parts) {
-            val gen = HalcyonSpriteGenerator(seed = seed, cellWidth = CELL_W, cellHeight = CELL_H)
-            for (npc in HalcyonNpcKind.entries) {
+            val gen = TrevanaSpriteGenerator(seed = seed, cellWidth = CELL_W, cellHeight = CELL_H)
+            for (npc in TrevanaNpcKind.entries) {
                 writeSprite(npc.spriteId, sheet(shoot = false) { dir, action, f -> gen.generateNpcFrame(npc, dir, action, f) })
             }
         }
         if (Part.ENEMIES in parts) {
-            val gen = HalcyonSpriteGenerator(seed = seed, cellWidth = CELL_W, cellHeight = CELL_H)
-            for (enemy in HalcyonEnemyKind.entries) {
+            val gen = TrevanaSpriteGenerator(seed = seed, cellWidth = CELL_W, cellHeight = CELL_H)
+            for (enemy in TrevanaEnemyKind.entries) {
                 writeSprite(enemy.spriteId, sheet(shoot = false) { dir, action, f -> gen.generateEnemyFrame(enemy, dir, action, f) })
             }
         }
@@ -160,14 +160,14 @@ object HalcyonGameExporter {
         return Result(written, heights)
     }
 
-    /** The bare doll every gear overlay is drawn on: the Halcyon neutral theme at the game's cell size, in the house style. */
+    /** The bare doll every gear overlay is drawn on: the Trevana neutral theme at the game's cell size, in the house style. */
     private fun neutralLoadout(): PaperDollLoadout = PaperDollLoadout(
         job = PaperDollJob.RUNE_HERO,
         hairStyle = HairStyle.SPIKY_HERO,
         headgear = HeadgearKind.NONE,
         weapon = WeaponKind.NONE,
         shield = ShieldKind.NONE,
-        theme = PaperDollThemes.HALCYON_NEUTRAL.copy(style = PixelStyle.MORGANA, proportions = PaperDollProportions.RMXP_32X48),
+        theme = PaperDollThemes.TREVANA_NEUTRAL.copy(style = PixelStyle.MORGANA, proportions = PaperDollProportions.RMXP_32X48),
         attachments = emptyList(),
         includeCape = false
     )

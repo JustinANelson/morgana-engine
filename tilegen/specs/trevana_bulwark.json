@@ -1,5 +1,5 @@
 {
-  "name": "halcyon_bulwark",
+  "name": "trevana_bulwark",
   "job": "lord_knight",
   "tileSize": 32,
   "seed": 3002,
@@ -27,7 +27,7 @@
     "knight_pauldrons",
     "utility_belt"
   ],
-  "actions": ["halcyon"],
+  "actions": ["trevana"],
   "directions8": false,
   "exportLayers": true,
   "includeShadow": true

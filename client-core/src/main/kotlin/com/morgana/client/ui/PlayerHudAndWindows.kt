@@ -469,7 +469,7 @@ class PlayerHudAndWindows(
         guildTopButton?.isVisible = worldState.isModuleEnabled("guilds")
         refreshPkModeButton()
         // Staff open the editors from this button; players still have the F1 key but no button to clutter the bar.
-        // The Stall button shows only where this game allows stalls (Halcyon Reach: the Bazaar).
+        // The Stall button shows only where this game allows stalls (Trevana Realms: the Bazaar).
         stallTopButton?.isVisible = StallCommands.availableOn(worldState.gameDefinition?.stall, worldState.localCharacter?.position?.mapId ?: -1)
         f1AdminTopButton?.isVisible = (worldState.localCharacter?.accessLevel?.rank ?: 0) > 0
         minimapTopButton?.isVisible = worldState.showMinimapUi()

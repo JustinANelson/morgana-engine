@@ -234,7 +234,7 @@ class PaperDollUniversalTest {
     }
 
     @Test
-    fun `halcyon action set, harvest swing, and neutral equipment pack include torsos, legs, feet, and offhand blades`() {
+    fun `trevana action set, harvest swing, and neutral equipment pack include torsos, legs, feet, and offhand blades`() {
         val gen = PaperDollSpriteGenerator(seed = 3001L, tileSize = 32)
         val miner = PaperDollLoadout(
             job = PaperDollJob.BLACKSMITH_MERCHANT,
@@ -246,8 +246,8 @@ class PaperDollUniversalTest {
         assertFalse(h0.pixels.contentEquals(h1.pixels))
 
         val pack = gen.generateEquipmentPack(
-            theme = PaperDollThemes.HALCYON_NEUTRAL,
-            actions = PaperDollAction.HALCYON,
+            theme = PaperDollThemes.TREVANA_NEUTRAL,
+            actions = PaperDollAction.TREVANA,
             directions = listOf(Direction8.S, Direction8.W, Direction8.E, Direction8.N)
         )
         assertTrue("torso_traveler" in pack)
@@ -268,8 +268,8 @@ class PaperDollUniversalTest {
         assertTrue("attachment_silk_garment" in pack)
 
         // Every pack sheet's tile list is grid-aligned to (actions * directions) rows x maxFrames columns
-        val expectedRows = PaperDollAction.HALCYON.size * 4
-        val expectedCols = PaperDollAction.HALCYON.maxOf { it.defaultFrames }
+        val expectedRows = PaperDollAction.TREVANA.size * 4
+        val expectedCols = PaperDollAction.TREVANA.maxOf { it.defaultFrames }
         val (swordSheet, swordTiles) = pack.getValue("weapon_knight_sword")
         assertEquals(expectedCols * 32, swordSheet.width)
         assertEquals(expectedRows * 32, swordSheet.height)
@@ -280,7 +280,7 @@ class PaperDollUniversalTest {
         // Chunky proportions fill ~22-26px wide x 28-30px tall inside 32x32 with feet landing at y=28..29
         val chunkyLoadout = PaperDollLoadout(
             job = PaperDollJob.LORD_KNIGHT,
-            theme = PaperDollThemes.HALCYON_NEUTRAL,
+            theme = PaperDollThemes.TREVANA_NEUTRAL,
             attachments = listOf(AttachmentKind.KNIGHT_PAULDRONS)
         )
         val chunkyFrame = gen.generateCharacterFrame(chunkyLoadout, Direction8.S, PaperDollAction.IDLE, frameIndex = 0)
@@ -304,7 +304,7 @@ class PaperDollUniversalTest {
         val rmxpLoadout = PaperDollLoadout(
             job = PaperDollJob.HIGH_WIZARD,
             headgear = HeadgearKind.WIZARD_HAT,
-            theme = PaperDollThemes.HALCYON_NEUTRAL.copy(proportions = PaperDollProportions.RMXP_32X48)
+            theme = PaperDollThemes.TREVANA_NEUTRAL.copy(proportions = PaperDollProportions.RMXP_32X48)
         )
         val rmxpSheet = rmxpGen.generateUniversalSheet(
             name = "rmxp_mage",
@@ -341,17 +341,17 @@ class PaperDollUniversalTest {
             }
         }
 
-        // Halcyon Reach 32x48 RMXP NPCs (12) and Enemies (22)
-        val halcyonGen = HalcyonSpriteGenerator(seed = 1337L, cellWidth = 32, cellHeight = 48)
-        assertEquals(12, HalcyonNpcKind.entries.size)
-        assertEquals(22, HalcyonEnemyKind.entries.size)
-        val (npcSheet, npcTiles) = halcyonGen.generateNpcSheet(HalcyonNpcKind.CAPTAIN)
+        // Trevana Realms 32x48 RMXP NPCs (12) and Enemies (22)
+        val trevanaGen = TrevanaSpriteGenerator(seed = 1337L, cellWidth = 32, cellHeight = 48)
+        assertEquals(12, TrevanaNpcKind.entries.size)
+        assertEquals(22, TrevanaEnemyKind.entries.size)
+        val (npcSheet, npcTiles) = trevanaGen.generateNpcSheet(TrevanaNpcKind.CAPTAIN)
         assertEquals(4 * 32, npcSheet.width)
         assertEquals(36 * 48, npcSheet.height)
         assertEquals(36 * 4, npcTiles.size)
 
-        for (enemy in HalcyonEnemyKind.entries) {
-            val frame = halcyonGen.generateEnemyFrame(enemy, Direction8.S, PaperDollAction.IDLE, 0)
+        for (enemy in TrevanaEnemyKind.entries) {
+            val frame = trevanaGen.generateEnemyFrame(enemy, Direction8.S, PaperDollAction.IDLE, 0)
             assertEquals(32, frame.width)
             assertEquals(48, frame.height)
             assertTrue(frame.pixels.any { (it and 0xFF) != 0 }, "Expected visible pixels for ${enemy.key}")

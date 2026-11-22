@@ -171,7 +171,7 @@ enum class PaperDollAction(
 
     companion object {
         val LPC_STANDARD: List<PaperDollAction> = listOf(CAST, THRUST, WALK, SLASH, SHOOT, HURT)
-        val HALCYON: List<PaperDollAction> = listOf(IDLE, WALK, SLASH, THRUST, SHOOT, CAST, HARVEST, JUMP, HURT)
+        val TREVANA: List<PaperDollAction> = listOf(IDLE, WALK, SLASH, THRUST, SHOOT, CAST, HARVEST, JUMP, HURT)
         val ALL: List<PaperDollAction> = entries.toList()
 
         fun fromSpriteAnimationClip(clip: SpriteAnimationClip): PaperDollAction = when (clip) {
@@ -498,8 +498,8 @@ object PaperDollThemes {
         style = PixelStyle.RAGNAROK_25D
     )
 
-    val HALCYON_NEUTRAL = PaperDollTheme(
-        name = "halcyon_neutral",
+    val TREVANA_NEUTRAL = PaperDollTheme(
+        name = "trevana_neutral",
         ancestry = BodyAncestry.HUMAN,
         outfitPalette = PalettePresets.RO_PRONTERA_MARBLE,
         accentPalette = PalettePresets.SK_MUSE_LIMESTONE,
@@ -521,7 +521,7 @@ object PaperDollThemes {
         CYBER_SENTINEL,
         SHRINE_PRIESTESS,
         DESERT_NOMAD,
-        HALCYON_NEUTRAL
+        TREVANA_NEUTRAL
     ).associateBy { it.name }
 
     fun resolve(name: String): PaperDollTheme? = presets[name.lowercase().trim()]

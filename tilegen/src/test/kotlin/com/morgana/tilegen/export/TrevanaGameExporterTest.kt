@@ -12,7 +12,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import javax.imageio.ImageIO
 
-class HalcyonGameExporterTest {
+class TrevanaGameExporterTest {
     private val specs: Path = Path.of("specs")
 
     @Test
@@ -51,13 +51,13 @@ class HalcyonGameExporterTest {
         val handDrawn = sprites.resolve("40.png")
         Files.write(handDrawn, byteArrayOf(1, 2, 3))
 
-        val first = HalcyonGameExporter.export(game, specs)
+        val first = TrevanaGameExporter.export(game, specs)
         assertEquals(5 + 12 + 22 + 21, first.written.size)
         assertTrue(Files.readAllBytes(handDrawn).contentEquals(byteArrayOf(1, 2, 3)))
         assertFalse(first.written.any { it.fileName.toString() == "40.png" })
 
         val body = ImageIO.read(sprites.resolve("1.png").toFile())
-        assertEquals(32 * HalcyonGameExporter.COLUMNS, body.width)
+        assertEquals(32 * TrevanaGameExporter.COLUMNS, body.width)
         assertEquals(736, body.width)
         assertEquals(192, body.height)
         val gear = ImageIO.read(game.resolve("assets/paperdolls/17.png").toFile())
@@ -65,15 +65,15 @@ class HalcyonGameExporterTest {
         assertEquals(192, gear.height)
 
         val before = Files.readAllBytes(sprites.resolve("101.png"))
-        HalcyonGameExporter.export(game, specs)
+        TrevanaGameExporter.export(game, specs)
         assertTrue(before.contentEquals(Files.readAllBytes(sprites.resolve("101.png"))), "same input, same bytes")
         assertTrue(first.uiHeights.getValue(1) in 38..48, "class bodies are about a cell tall")
     }
 
     @Test
     fun `a part can be exported alone`(@TempDir dir: Path) {
-        val result = HalcyonGameExporter.export(dir, specs, setOf(HalcyonGameExporter.Part.GEAR))
-        assertEquals(HalcyonGameExporter.GEAR.size, result.written.size)
+        val result = TrevanaGameExporter.export(dir, specs, setOf(TrevanaGameExporter.Part.GEAR))
+        assertEquals(TrevanaGameExporter.GEAR.size, result.written.size)
         assertFalse(Files.exists(dir.resolve("assets/sprites/1.png")))
     }
 }

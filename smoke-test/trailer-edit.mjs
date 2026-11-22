@@ -1,4 +1,4 @@
-// Turns the raw recording from trailer.mjs into build/trailer/halcyon-reach-trailer.mp4: trims the login, captions each scene, adds title and end cards.
+// Turns the raw recording from trailer.mjs into build/trailer/trevana-realms-trailer.mp4: trims the login, captions each scene, adds title and end cards.
 // Usage (from smoke-test/): node trailer-edit.mjs      Needs ffmpeg on PATH.
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs'; import path from 'node:path';
@@ -34,11 +34,11 @@ const card = (file, title, sub, secs) => run(['-f', 'lavfi', '-i', `color=c=0x0b
   [`drawtext=fontfile='${FONT_B}':text='${title}':fontsize=96:fontcolor=0xf2c46b:x=(w-text_w)/2:y=(h-text_h)/2-40`,
     `drawtext=fontfile='${FONT}':text='${sub}':fontsize=34:fontcolor=0xd8d2c4:x=(w-text_w)/2:y=(h/2)+50`,
     `fade=t=in:d=0.8`, `fade=t=out:st=${secs - 0.8}:d=0.8`].join(','), '-c:v', 'libx264', '-crf', '17', '-pix_fmt', 'yuv420p', path.join(outDir, file)]);
-card('intro.mp4', 'HALCYON REACH', 'An online RPG on the Morgana engine', 4);
-card('outro.mp4', 'HALCYON REACH', 'Built with Morgana ORPG  -  runs in your browser', 4);
+card('intro.mp4', 'TREVANA REALMS', 'An online RPG on the Morgana engine', 4);
+card('outro.mp4', 'TREVANA REALMS', 'Built with Morgana ORPG  -  runs in your browser', 4);
 
 // 3. join
 const list = path.join(outDir, 'concat.txt');
 fs.writeFileSync(list, ['intro.mp4', 'main.mp4', 'outro.mp4'].map((f) => `file '${f}'`).join('\n'));
-run(['-f', 'concat', '-safe', '0', '-i', list, '-c', 'copy', path.join(outDir, 'halcyon-reach-trailer.mp4')]);
-console.log('wrote', path.join(outDir, 'halcyon-reach-trailer.mp4'));
+run(['-f', 'concat', '-safe', '0', '-i', list, '-c', 'copy', path.join(outDir, 'trevana-realms-trailer.mp4')]);
+console.log('wrote', path.join(outDir, 'trevana-realms-trailer.mp4'));

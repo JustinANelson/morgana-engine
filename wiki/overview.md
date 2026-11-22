@@ -37,7 +37,7 @@ plus sandboxed Lua scripts ([game definition](/domain/game_definition.md)). It w
 | `:client-net-netty` | Netty (TCP) transport for the desktop and Android clients | [client core](/architecture/client_core.md) |
 | `:client-web` | Browser client: client-core compiled to JavaScript | [client web](/architecture/client_web.md) |
 | `:plugin-example` | Example server plugin | [PLUGIN_ARCHITECTURE](../docs/PLUGIN_ARCHITECTURE.md) |
-| `games/` | Game folders (`blank`, `roguelike`, `halcyon-reach`, `white-river`, `tutorial-village`): `game.json`, content, scripts, assets. Not engine code | [blank game](/content/blank_game.md) |
+| `games/` | Game folders (`blank`, `roguelike`, `trevana-realms`, `white-river`, `tutorial-village`): `game.json`, content, scripts, assets. Not engine code | [blank game](/content/blank_game.md) |
 | `:tilegen` | Creator tool: pixel-art generator (tiles, props, paper dolls) and CLI | [tilegen](/architecture/tilegen.md) |
 | `:client-desktop` / `:client-android` | Platform launchers | [desktop](/architecture/client_desktop.md), [android](/architecture/client_android.md) |
 | `:dev-tools` | Repository tooling (this wiki's lint/index) | [dev tools](/architecture/dev_tools.md) |

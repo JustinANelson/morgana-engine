@@ -1,7 +1,7 @@
 ---
 type: Reference
 title: "Ashen Keep: the Reference Co-op Dungeon Crawler & Roguelike"
-description: "games/roguelike, the reference dungeon crawler and roguelike realm: Ashen Keep multiplayer hub and Floor 1 (The Sunken Crypt) built with the Halcyon Reach tileset and paperdoll workflow."
+description: "games/roguelike, the reference dungeon crawler and roguelike realm: Ashen Keep multiplayer hub and Floor 1 (The Sunken Crypt) built with the Trevana Realms tileset and paperdoll workflow."
 tags: [content, roguelike, reference, instancing, assets]
 code: ["games/roguelike/game.json", "games/roguelike/server.json", "games/roguelike/data/maps", "games/roguelike/README.md", "tilegen/src/main/kotlin/com/morgana/tilegen/export/RoguelikeGameExporter.kt", "server-app/src/test/kotlin/com/morgana/server/RoguelikeReferenceGameTest.kt", "distribution/build.gradle.kts"]
 symbols: ["RoguelikeReferenceGameTest", "RoguelikeGameExporter", "RoguelikeIconArt"]
@@ -11,7 +11,7 @@ stale_after: 2027-05-21T00:00:00Z
 
 # Ashen Keep: the Reference Co-op Dungeon Crawler & Roguelike (`games/roguelike`)
 
-Replaced the earlier *Lanternfall* template on 2026-11-21. **Ashen Keep** (`games/roguelike`, id `roguelike`) is the reference co-op dungeon crawler and roguelike shipped with Morgana ORPG and the SDK. It starts cleanly with a **multiplayer fortress hub** and **1 instanced procedural dungeon floor**, built using the `:tilegen` Halcyon Reach art pipeline (`PavingGenerator`, `BuildingGenerator`, `PlazaGenerator`, `GroundDetailGenerator`, `PropGenerator`, and `PixelStyle.MORGANA` 32×48 paperdoll sprites).
+Replaced the earlier *Lanternfall* template on 2026-11-21. **Ashen Keep** (`games/roguelike`, id `roguelike`) is the reference co-op dungeon crawler and roguelike shipped with Morgana ORPG and the SDK. It starts cleanly with a **multiplayer fortress hub** and **1 instanced procedural dungeon floor**, built using the `:tilegen` Trevana Realms art pipeline (`PavingGenerator`, `BuildingGenerator`, `PlazaGenerator`, `GroundDetailGenerator`, `PropGenerator`, and `PixelStyle.MORGANA` 32×48 paperdoll sprites).
 
 ## World & Content
 

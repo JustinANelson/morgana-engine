@@ -14,7 +14,7 @@ stale_after: 2027-05-16T00:00:00Z
 Not to be confused with this repository's own `wiki/` (the developer knowledge base). The **game wiki** is for a game's content: what every item does, what every monster is worth, where everything is. It is built from `game.json` and the content JSON by `GameWiki`, so nothing is typed by hand and it cannot drift from the game. Developers use it to balance and fine tune; players can read it too.
 
 ## Two ways to get it
-- **Static files**: `.\gradlew.bat :server-app:gameWiki "-PcontentArgs=--game games/halcyon-reach"` writes `build/game-wiki/<game id>/` (about 300 files for Halcyon Reach; add `--out <folder>` to choose). Open `index.html`, or put the folder on any web host. Links are relative, so it works from disk.
+- **Static files**: `.\gradlew.bat :server-app:gameWiki "-PcontentArgs=--game games/trevana-realms"` writes `build/game-wiki/<game id>/` (about 300 files for Trevana Realms; add `--out <folder>` to choose). Open `index.html`, or put the folder on any web host. Links are relative, so it works from disk.
 - **Served live**: the server answers `http://<server>:<web port>/wiki/` on the same port as the browser client (the WebSocket port, so it needs `--web` or a `webSocketPort`). It is built from the content in memory, so F1 edits and file reloads show up (cached for 10 s, `gameWikiPages`). Switch it off with `"wiki": { "enabled": false }` in `server.json` (`WikiConfig`); the pages are then 404.
 
 ## What is in it
@@ -31,7 +31,7 @@ Everything is computed from the data (`monsterStats`, `flagsFor`):
 The numbers compare content with other content; they do not predict play. Item "value" is the base `price`, not what a shop pays.
 
 ## Notes
-- Pure and tested (`GameWikiTest`): `GameWiki(game, catalog).pages()` returns file name to bytes, so the tool and the server share one code path; a test builds the real Halcyon Reach wiki and checks every link and image resolves. All text from the data is HTML-escaped, and the search index escapes angle brackets.
+- Pure and tested (`GameWikiTest`): `GameWiki(game, catalog).pages()` returns file name to bytes, so the tool and the server share one code path; a test builds the real Trevana Realms wiki and checks every link and image resolves. All text from the data is HTML-escaped, and the search index escapes angle brackets.
 - No external files or scripts: one `wiki.css`, one `wiki.js`, and a generated `search-index.js`; it follows the browser's light or dark setting.
 - Not built yet: per-level character stat tables (vitals from the max formulas), damage-versus-armour calculators, diffing two versions of a game, and a quest giver and hand-in column (the data does not say who offers a quest).
 - Related: [world map](/systems/exploration.md) (same terrain reading), [web client serving](/server/server_runtime.md), [content validation](/server/persistence_layout.md).

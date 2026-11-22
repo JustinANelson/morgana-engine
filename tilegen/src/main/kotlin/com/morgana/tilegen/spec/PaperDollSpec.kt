@@ -230,7 +230,7 @@ object PaperDollSpecJson {
                 when (raw.lowercase().trim()) {
                     "all" -> PaperDollAction.ALL
                     "lpc", "lpc_standard" -> PaperDollAction.LPC_STANDARD
-                    "halcyon" -> PaperDollAction.HALCYON
+                    "trevana" -> PaperDollAction.TREVANA
                     else -> listOf(parseEnumValue<PaperDollAction>(raw, "$path.actions"))
                 }
             }.distinct()

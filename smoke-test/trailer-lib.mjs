@@ -1,4 +1,4 @@
-// Shared helpers for the Halcyon Reach trailer: a throwaway realm with a made-up mid/end-game hero, a web client and a recording browser.
+// Shared helpers for the Trevana Realms trailer: a throwaway realm with a made-up mid/end-game hero, a web client and a recording browser.
 import { chromium } from 'playwright-core';
 import { spawn, spawnSync } from 'node:child_process';
 import crypto from 'node:crypto';
@@ -26,7 +26,7 @@ const HOTBAR = [['SPELL', 10], ['SPELL', 11], ['SPELL', 12], ['SPELL', 13], ['SP
 export function seedRealm() {
   const realm = path.join(outDir, 'realm');
   fs.rmSync(realm, { recursive: true, force: true });
-  fs.cpSync(path.join(root, 'games', 'halcyon-reach'), path.join(realm, 'game'), { recursive: true });
+  fs.cpSync(path.join(root, 'games', 'trevana-realms'), path.join(realm, 'game'), { recursive: true });
   fs.mkdirSync(path.join(realm, 'data'), { recursive: true });
   // The client pings every 2 s, exactly the server's 30 per minute ping budget, so a hitching frame trips the limiter: loosen it for the recording.
   const sj = path.join(realm, 'game', 'server.json'); const cfg = JSON.parse(fs.readFileSync(sj, 'utf8')); cfg.limits = { enabled: true, scale: 5.0 };

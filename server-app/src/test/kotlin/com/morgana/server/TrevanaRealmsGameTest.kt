@@ -25,15 +25,15 @@ import java.nio.file.Path
 import kotlin.io.path.exists
 
 /**
- * Integration tests for the Halcyon Reach (`games/halcyon-reach`): validates content, art, ORPG module
+ * Integration tests for the Trevana Realms (`games/trevana-realms`): validates content, art, ORPG module
  * configuration, all 5 classes, all 9 interconnected maps/warps, shops, quests, and crafting on a temp copy.
  */
-class HalcyonReachGameTest {
+class TrevanaRealmsGameTest {
 
-    private val gameOrNull: Path? = listOf(Path.of("games/halcyon-reach"), Path.of("../games/halcyon-reach")).firstOrNull { it.exists() }
+    private val gameOrNull: Path? = listOf(Path.of("games/trevana-realms"), Path.of("../games/trevana-realms")).firstOrNull { it.exists() }
     private val game: Path
         get() {
-            org.junit.jupiter.api.Assumptions.assumeTrue(gameOrNull != null, "Developer game games/halcyon-reach is not present in this checkout")
+            org.junit.jupiter.api.Assumptions.assumeTrue(gameOrNull != null, "Developer game games/trevana-realms is not present in this checkout")
             return gameOrNull!!
         }
 
@@ -79,7 +79,7 @@ class HalcyonReachGameTest {
     @Test
     fun `content, art, and ORPG modules are valid with zero issues`() {
         val def = GameDefinitionLoader.load(game).game.definition
-        assertEquals("halcyon-reach", def.id)
+        assertEquals("trevana-realms", def.id)
         assertEquals("realtime", def.combat.module)
 
         val serverCfg = ServerConfig.load(game)
@@ -472,7 +472,7 @@ class HalcyonReachGameTest {
     }
 
     @Test
-    fun `all halcyon reach aoe spells hit nearby enemies without duplicate animations`(@TempDir tmp: Path) {
+    fun `all trevana realms aoe spells hit nearby enemies without duplicate animations`(@TempDir tmp: Path) {
         val c = coordinator(tmp)
         val s = join(c, "aoe_caster", 5) // Emberweaver
         val sim = c.simulation
@@ -1625,7 +1625,7 @@ class HalcyonReachGameTest {
     fun `ascension envoy ascends a level 60 hero without a reset and the paragon track then fills`(@TempDir tmp: Path) {
         val c = coordinator(tmp)
         val sim = c.simulation
-        assertNull(sim.game.definition.rebirth, "Halcyon Reach has no rebirth any more")
+        assertNull(sim.game.definition.rebirth, "Trevana Realms has no rebirth any more")
         val cid = join(c, "ascended_hero", 2).characterId!!
         val (mapId, envoy) = sim.mapNpcs.entries.flatMap { (m, l) -> l.map { m to it } }.first { it.second.npcId == 10 }
         val hero = sim.players.getValue(cid)
@@ -1815,7 +1815,7 @@ class HalcyonReachGameTest {
         val c = coordinator(tmp)
         val sim = c.simulation
         val enh = sim.game.definition.gearUpgrade?.enhancement
-        assertTrue(enh != null && enh.tiers.size == 12, "Halcyon Reach uses a 12-step material enhancement ladder")
+        assertTrue(enh != null && enh.tiers.size == 12, "Trevana Realms uses a 12-step material enhancement ladder")
         assertEquals(0, enh!!.dropPlusOnFailFrom, "failed tempers never drop + level")
         val cid = join(c, "temper_hero", 1).characterId!!
         val gm = sim.mapNpcs.getValue(1).first { it.npcId == 64 }
@@ -2142,7 +2142,7 @@ class HalcyonReachGameTest {
     }
 
     @Test
-    fun `new players get Halcyon Reach's own tips for repairs, skills, ghosts and the level milestones`() {
+    fun `new players get Trevana Realms's own tips for repairs, skills, ghosts and the level milestones`() {
         val def = GameDefinitionLoader.load(game).game.definition
         val tips = com.morgana.domain.onboarding.OnboardingRules.tips(def).associateBy { it.id }
         assertTrue(tips.keys.containsAll(listOf("welcome", "skills", "gear_worn", "gear_broken", "death", "promotion", "ascension", "gear", "stat_points")), tips.keys.toString())

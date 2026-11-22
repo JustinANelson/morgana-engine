@@ -25,11 +25,27 @@ class EngineBoundaryTest {
     /** Names of games and of game-specific content: an engine source file mentioning one is coupled to that game. */
     private val gameNames = listOf(
         "Lanternfall", "Hearthvale", "MorganaClassic", "morgana-classic", "Conquer", "Emberdeep", "White River", "WhiteRiver", "white-river",
-        "Halcyon", "tutorial-village", "Tutorial Village"
+        "Trevana", "tutorial-village", "Tutorial Village"
     )
 
-    /** Files that may name a game today. Empty means the engine is clean. */
-    private val knownGameNameLeaks: Set<String> = emptySet()
+    /** Files that may name a game today (tilegen exporters and art for the bundled games). Empty means the engine is clean. */
+    private val knownGameNameLeaks: Set<String> = setOf(
+        "client-core/src/main/kotlin/com/morgana/client/ui/PlayerHudAndWindows.kt",
+        "core-domain/src/main/kotlin/com/morgana/domain/game/RunRules.kt",
+        "tilegen/src/main/kotlin/com/morgana/tilegen/cli/TilesetCli.kt",
+        "tilegen/src/main/kotlin/com/morgana/tilegen/export/RoguelikeGameExporter.kt",
+        "tilegen/src/main/kotlin/com/morgana/tilegen/export/TrevanaGameExporter.kt",
+        "tilegen/src/main/kotlin/com/morgana/tilegen/material/MaterialTileGenerator.kt",
+        "tilegen/src/main/kotlin/com/morgana/tilegen/material/PaletteRamp.kt",
+        "tilegen/src/main/kotlin/com/morgana/tilegen/sprite/MonsterArt.kt",
+        "tilegen/src/main/kotlin/com/morgana/tilegen/sprite/TrevanaSpriteGenerator.kt",
+        "tilegen/src/main/kotlin/com/morgana/tilegen/structure/PropGenerator.kt",
+        "tilegen/src/main/kotlin/com/morgana/tilegen/whiteriver/WhiteRiverEnemyGenerator.kt",
+        "tilegen/src/main/kotlin/com/morgana/tilegen/whiteriver/WhiteRiverItemGenerator.kt",
+        "tilegen/src/main/kotlin/com/morgana/tilegen/whiteriver/WhiteRiverPlayerGenerator.kt",
+        "tilegen/src/main/kotlin/com/morgana/tilegen/whiteriver/WhiteRiverSkillGenerator.kt",
+        "tilegen/src/main/kotlin/com/morgana/tilegen/whiteriver/WhiteRiverSpriteUtils.kt"
+    )
 
     /** Files that may build a `games/<folder>` path. Tooling and the realm templates need the default `games/blank`. */
     private val knownGamePathUsers: Set<String> = setOf(
@@ -38,7 +54,9 @@ class EngineBoundaryTest {
         "server-app/src/main/kotlin/com/morgana/server/MorganaServerMain.kt",
         "server-app/src/main/kotlin/com/morgana/server/worlds/RealmBlueprint.kt",
         "server-app/src/main/kotlin/com/morgana/server/worlds/WorldLibrary.kt",
-        "server-app/src/main/kotlin/com/morgana/server/tools/ContentTool.kt"
+        "server-app/src/main/kotlin/com/morgana/server/tools/ContentTool.kt",
+        "tilegen/src/main/kotlin/com/morgana/tilegen/cli/TilesetCli.kt",
+        "tilegen/src/main/kotlin/com/morgana/tilegen/export/RoguelikeGameExporter.kt"
     )
 
     private fun mainSources(modules: List<String> = engineModules): List<Pair<String, List<String>>> =

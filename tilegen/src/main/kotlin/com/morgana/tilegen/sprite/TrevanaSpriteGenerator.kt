@@ -11,9 +11,9 @@ import kotlin.math.abs
 import kotlin.math.hypot
 
 /**
- * Halcyon Reach town NPC definitions mapped to their Morgana Engine sprite IDs (`10..21`).
+ * Trevana Realms town NPC definitions mapped to their Morgana Engine sprite IDs (`10..21`).
  */
-enum class HalcyonNpcKind(val spriteId: Int, val displayName: String) {
+enum class TrevanaNpcKind(val spriteId: Int, val displayName: String) {
     CAPTAIN(10, "General / Captain"),
     PHARMACIST(11, "Pharmacist"),
     BLACKSMITH(12, "Blacksmith / Armorer"),
@@ -29,9 +29,9 @@ enum class HalcyonNpcKind(val spriteId: Int, val displayName: String) {
 }
 
 /**
- * Halcyon Reach monster & boss definitions mapped to their Morgana Engine sprite IDs (`101..122`).
+ * Trevana Realms monster & boss definitions mapped to their Morgana Engine sprite IDs (`101..122`).
  */
-enum class HalcyonEnemyKind(val spriteId: Int, val key: String, val displayName: String, val isBoss: Boolean = false) {
+enum class TrevanaEnemyKind(val spriteId: Int, val key: String, val displayName: String, val isBoss: Boolean = false) {
     PHEASANT(101, "pheasant", "Stubblehen"),
     TURTLEDOVE(102, "turtledove", "Gleaning Dove"),
     ROBIN(103, "robin", "Thistlefinch"),
@@ -57,10 +57,10 @@ enum class HalcyonEnemyKind(val spriteId: Int, val key: String, val displayName:
 }
 
 /**
- * Generates composited 32x48 RMXP-style NPC and enemy sprite sheets for Halcyon Reach
- * matching the `4 cols x 36 rows` (`HALCYON` 9-action x 4-direction) layout and selective-outline style.
+ * Generates composited 32x48 RMXP-style NPC and enemy sprite sheets for Trevana Realms
+ * matching the `4 cols x 36 rows` (`TREVANA` 9-action x 4-direction) layout and selective-outline style.
  */
-class HalcyonSpriteGenerator(
+class TrevanaSpriteGenerator(
     val seed: Long = 1337L,
     val cellWidth: Int = 32,
     val cellHeight: Int = 48
@@ -68,26 +68,26 @@ class HalcyonSpriteGenerator(
     private val dollGen = PaperDollSpriteGenerator(seed = seed, tileSize = cellWidth, tileHeight = cellHeight)
 
     /** [npcBaseLoadout] with its own hair and skin, so a town does not look like one person in twelve coats. */
-    fun npcLoadout(kind: HalcyonNpcKind): PaperDollLoadout {
+    fun npcLoadout(kind: TrevanaNpcKind): PaperDollLoadout {
         val base = npcBaseLoadout(kind)
         val (hair, skin) = when (kind) {
-            HalcyonNpcKind.CAPTAIN -> natural(122, 82, 48) to natural(226, 176, 140)
-            HalcyonNpcKind.PHARMACIST -> natural(196, 166, 96) to natural(240, 200, 168)
-            HalcyonNpcKind.BLACKSMITH -> natural(74, 48, 34) to natural(206, 150, 112)
-            HalcyonNpcKind.GEMWRIGHT -> natural(168, 170, 188) to natural(232, 190, 158)
-            HalcyonNpcKind.WAREHOUSEMAN -> natural(110, 70, 44) to natural(214, 160, 120)
-            HalcyonNpcKind.WAYMASTER -> natural(206, 206, 210) to natural(222, 172, 138)
-            HalcyonNpcKind.GUILD_DIRECTOR -> natural(40, 34, 44) to natural(196, 140, 106)
-            HalcyonNpcKind.ASHGATE_WARDEN -> natural(150, 62, 44) to natural(228, 180, 146)
-            HalcyonNpcKind.SALTMERE_ENVOY -> natural(60, 78, 112) to natural(176, 124, 94)
-            HalcyonNpcKind.CLASS_MASTER -> natural(228, 222, 206) to natural(238, 196, 162)
-            HalcyonNpcKind.SKERRY_SCOUT -> natural(172, 120, 64) to natural(204, 150, 112)
-            HalcyonNpcKind.TOWN_GUARD -> natural(96, 82, 70) to natural(222, 172, 136)
+            TrevanaNpcKind.CAPTAIN -> natural(122, 82, 48) to natural(226, 176, 140)
+            TrevanaNpcKind.PHARMACIST -> natural(196, 166, 96) to natural(240, 200, 168)
+            TrevanaNpcKind.BLACKSMITH -> natural(74, 48, 34) to natural(206, 150, 112)
+            TrevanaNpcKind.GEMWRIGHT -> natural(168, 170, 188) to natural(232, 190, 158)
+            TrevanaNpcKind.WAREHOUSEMAN -> natural(110, 70, 44) to natural(214, 160, 120)
+            TrevanaNpcKind.WAYMASTER -> natural(206, 206, 210) to natural(222, 172, 138)
+            TrevanaNpcKind.GUILD_DIRECTOR -> natural(40, 34, 44) to natural(196, 140, 106)
+            TrevanaNpcKind.ASHGATE_WARDEN -> natural(150, 62, 44) to natural(228, 180, 146)
+            TrevanaNpcKind.SALTMERE_ENVOY -> natural(60, 78, 112) to natural(176, 124, 94)
+            TrevanaNpcKind.CLASS_MASTER -> natural(228, 222, 206) to natural(238, 196, 162)
+            TrevanaNpcKind.SKERRY_SCOUT -> natural(172, 120, 64) to natural(204, 150, 112)
+            TrevanaNpcKind.TOWN_GUARD -> natural(96, 82, 70) to natural(222, 172, 136)
         }
         return base.copy(hairPalette = hair, theme = base.theme.copy(hairPalette = hair, skinPalette = skin))
     }
 
-    private fun npcBaseLoadout(kind: HalcyonNpcKind): PaperDollLoadout {
+    private fun npcBaseLoadout(kind: TrevanaNpcKind): PaperDollLoadout {
         val baseTheme = PaperDollTheme(
             name = kind.name.lowercase(),
             ancestry = BodyAncestry.HUMAN,
@@ -95,7 +95,7 @@ class HalcyonSpriteGenerator(
             proportions = PaperDollProportions.RMXP_32X48
         )
         return when (kind) {
-            HalcyonNpcKind.CAPTAIN -> PaperDollLoadout(
+            TrevanaNpcKind.CAPTAIN -> PaperDollLoadout(
                 job = PaperDollJob.LORD_KNIGHT,
                 hairStyle = HairStyle.NOBLE_PARTED,
                 headgear = HeadgearKind.STEEL_HELMET,
@@ -112,7 +112,7 @@ class HalcyonSpriteGenerator(
                     secondaryPalette = PalettePresets.WR_SERENDIA_IRON
                 )
             )
-            HalcyonNpcKind.PHARMACIST -> PaperDollLoadout(
+            TrevanaNpcKind.PHARMACIST -> PaperDollLoadout(
                 job = PaperDollJob.HIGH_PRIEST,
                 hairStyle = HairStyle.LONG_FLOWING,
                 headgear = HeadgearKind.NONE,
@@ -129,7 +129,7 @@ class HalcyonSpriteGenerator(
                     secondaryPalette = PalettePresets.SK_KYARO_TIMBER
                 )
             )
-            HalcyonNpcKind.BLACKSMITH -> PaperDollLoadout(
+            TrevanaNpcKind.BLACKSMITH -> PaperDollLoadout(
                 job = PaperDollJob.BLACKSMITH_MERCHANT,
                 hairStyle = HairStyle.SHORT_BOB,
                 headgear = HeadgearKind.GOGGLES,
@@ -146,7 +146,7 @@ class HalcyonSpriteGenerator(
                     secondaryPalette = PalettePresets.CO_DRAGON_BRONZE
                 )
             )
-            HalcyonNpcKind.GEMWRIGHT -> PaperDollLoadout(
+            TrevanaNpcKind.GEMWRIGHT -> PaperDollLoadout(
                 job = PaperDollJob.HIGH_WIZARD,
                 hairStyle = HairStyle.NOBLE_PARTED,
                 headgear = HeadgearKind.NONE,
@@ -163,7 +163,7 @@ class HalcyonSpriteGenerator(
                     secondaryPalette = boneRamp
                 )
             )
-            HalcyonNpcKind.WAREHOUSEMAN -> PaperDollLoadout(
+            TrevanaNpcKind.WAREHOUSEMAN -> PaperDollLoadout(
                 job = PaperDollJob.BLACKSMITH_MERCHANT,
                 hairStyle = HairStyle.SHORT_BOB,
                 headgear = HeadgearKind.BANDANA,
@@ -180,7 +180,7 @@ class HalcyonSpriteGenerator(
                     secondaryPalette = PalettePresets.SK_KYARO_TIMBER
                 )
             )
-            HalcyonNpcKind.WAYMASTER -> PaperDollLoadout(
+            TrevanaNpcKind.WAYMASTER -> PaperDollLoadout(
                 job = PaperDollJob.HIGH_PRIEST,
                 hairStyle = HairStyle.BRAIDED_CROWN,
                 headgear = HeadgearKind.PRIEST_MITRE,
@@ -197,7 +197,7 @@ class HalcyonSpriteGenerator(
                     secondaryPalette = PalettePresets.CO_IMPERIAL_JADE
                 )
             )
-            HalcyonNpcKind.GUILD_DIRECTOR -> PaperDollLoadout(
+            TrevanaNpcKind.GUILD_DIRECTOR -> PaperDollLoadout(
                 job = PaperDollJob.HIGHLAND_PRINCE,
                 hairStyle = HairStyle.NOBLE_PARTED,
                 headgear = HeadgearKind.NONE,
@@ -214,7 +214,7 @@ class HalcyonSpriteGenerator(
                     secondaryPalette = PalettePresets.CO_DYNASTY_LACQUER
                 )
             )
-            HalcyonNpcKind.ASHGATE_WARDEN -> PaperDollLoadout(
+            TrevanaNpcKind.ASHGATE_WARDEN -> PaperDollLoadout(
                 job = PaperDollJob.PALADIN_CRUSADER,
                 hairStyle = HairStyle.SPIKY_HERO,
                 headgear = HeadgearKind.BANDANA,
@@ -231,7 +231,7 @@ class HalcyonSpriteGenerator(
                     secondaryPalette = PalettePresets.SK_KYARO_TIMBER
                 )
             )
-            HalcyonNpcKind.SALTMERE_ENVOY -> PaperDollLoadout(
+            TrevanaNpcKind.SALTMERE_ENVOY -> PaperDollLoadout(
                 job = PaperDollJob.SHRINE_MAIDEN,
                 hairStyle = HairStyle.TWIN_TAILS,
                 headgear = HeadgearKind.SHRINE_RIBBON,
@@ -248,7 +248,7 @@ class HalcyonSpriteGenerator(
                     secondaryPalette = PalettePresets.RO_PRONTERA_MARBLE
                 )
             )
-            HalcyonNpcKind.CLASS_MASTER -> PaperDollLoadout(
+            TrevanaNpcKind.CLASS_MASTER -> PaperDollLoadout(
                 job = PaperDollJob.RUNE_HERO,
                 hairStyle = HairStyle.SPIKY_HERO,
                 headgear = HeadgearKind.SKYRENDER_HELM,
@@ -265,7 +265,7 @@ class HalcyonSpriteGenerator(
                     secondaryPalette = PalettePresets.WR_ABYSSAL_OBSIDIAN
                 )
             )
-            HalcyonNpcKind.SKERRY_SCOUT -> PaperDollLoadout(
+            TrevanaNpcKind.SKERRY_SCOUT -> PaperDollLoadout(
                 job = PaperDollJob.SNIPER_HUNTER,
                 hairStyle = HairStyle.SHORT_BOB,
                 headgear = HeadgearKind.FEATHER_CAP,
@@ -282,7 +282,7 @@ class HalcyonSpriteGenerator(
                     secondaryPalette = PalettePresets.CO_DRAGON_BRONZE
                 )
             )
-            HalcyonNpcKind.TOWN_GUARD -> PaperDollLoadout(
+            TrevanaNpcKind.TOWN_GUARD -> PaperDollLoadout(
                 job = PaperDollJob.LORD_KNIGHT,
                 hairStyle = HairStyle.SHORT_BOB,
                 headgear = HeadgearKind.IRON_HELMET,
@@ -306,8 +306,8 @@ class HalcyonSpriteGenerator(
      * Generates a composited `4 cols x 36 rows` (`128x1728`) RMXP sprite sheet for [kind].
      */
     fun generateNpcSheet(
-        kind: HalcyonNpcKind,
-        actions: List<PaperDollAction> = PaperDollAction.HALCYON,
+        kind: TrevanaNpcKind,
+        actions: List<PaperDollAction> = PaperDollAction.TREVANA,
         directions: List<Direction8> = listOf(Direction8.S, Direction8.W, Direction8.E, Direction8.N)
     ): Pair<TileImage, List<NamedTile>> {
         val loadout = npcLoadout(kind)
@@ -327,8 +327,8 @@ class HalcyonSpriteGenerator(
      * Generates a composited `4 cols x 36 rows` (`128x1728`) RMXP sprite sheet for [kind].
      */
     fun generateEnemySheet(
-        kind: HalcyonEnemyKind,
-        actions: List<PaperDollAction> = PaperDollAction.HALCYON,
+        kind: TrevanaEnemyKind,
+        actions: List<PaperDollAction> = PaperDollAction.TREVANA,
         directions: List<Direction8> = listOf(Direction8.S, Direction8.W, Direction8.E, Direction8.N)
     ): Pair<TileImage, List<NamedTile>> {
         val cols = actions.maxOf { it.defaultFrames }
@@ -354,7 +354,7 @@ class HalcyonSpriteGenerator(
 
     /** One composited NPC frame (with its ground shadow) in the house style, for sheets laid out by the caller. */
     fun generateNpcFrame(
-        kind: HalcyonNpcKind,
+        kind: TrevanaNpcKind,
         direction: Direction8 = Direction8.S,
         action: PaperDollAction = PaperDollAction.IDLE,
         frameIndex: Int = 0
@@ -363,7 +363,7 @@ class HalcyonSpriteGenerator(
     )
 
     fun generateEnemyFrame(
-        kind: HalcyonEnemyKind,
+        kind: TrevanaEnemyKind,
         direction: Direction8 = Direction8.S,
         action: PaperDollAction = PaperDollAction.IDLE,
         frameIndex: Int = 0
@@ -416,33 +416,33 @@ class HalcyonSpriteGenerator(
     private val beakRamp = natural(214, 164, 62)
     private val boneRamp = natural(214, 206, 188)
 
-    private fun enemyPalette(kind: HalcyonEnemyKind): PaletteRamp = when (kind) {
-        HalcyonEnemyKind.PHEASANT -> natural(158, 106, 62)
-        HalcyonEnemyKind.TURTLEDOVE -> natural(196, 196, 204)
-        HalcyonEnemyKind.ROBIN -> natural(186, 96, 72)
-        HalcyonEnemyKind.APPARITION -> natural(136, 126, 196)
-        HalcyonEnemyKind.POLTERGEIST -> natural(210, 160, 66)
-        HalcyonEnemyKind.WINGED_SNAKE -> natural(92, 156, 108)
-        HalcyonEnemyKind.BANDIT -> natural(78, 70, 104)
-        HalcyonEnemyKind.RATLING -> natural(124, 116, 120)
-        HalcyonEnemyKind.FIRE_SPIRIT -> natural(204, 92, 56)
-        HalcyonEnemyKind.MACAQUE -> natural(136, 94, 60)
-        HalcyonEnemyKind.GIANT_APE -> natural(150, 142, 132)
-        HalcyonEnemyKind.THUNDER_APE -> natural(196, 164, 74)
-        HalcyonEnemyKind.ELF_APE -> natural(108, 156, 112)
-        HalcyonEnemyKind.SAND_MONSTER -> natural(194, 166, 118)
-        HalcyonEnemyKind.HILL_MONSTER -> natural(152, 106, 70)
-        HalcyonEnemyKind.SCORPION -> natural(150, 54, 62)
-        HalcyonEnemyKind.BLADE_GHOST -> natural(122, 142, 202)
-        HalcyonEnemyKind.BIRDMAN -> natural(132, 160, 92)
-        HalcyonEnemyKind.HAWKING -> natural(76, 150, 140)
-        HalcyonEnemyKind.TERATO_DRAGON -> natural(188, 66, 52)
-        HalcyonEnemyKind.SNOW_BANSHEE -> natural(204, 222, 238)
-        HalcyonEnemyKind.SWORD_MASTER -> natural(62, 62, 88)
+    private fun enemyPalette(kind: TrevanaEnemyKind): PaletteRamp = when (kind) {
+        TrevanaEnemyKind.PHEASANT -> natural(158, 106, 62)
+        TrevanaEnemyKind.TURTLEDOVE -> natural(196, 196, 204)
+        TrevanaEnemyKind.ROBIN -> natural(186, 96, 72)
+        TrevanaEnemyKind.APPARITION -> natural(136, 126, 196)
+        TrevanaEnemyKind.POLTERGEIST -> natural(210, 160, 66)
+        TrevanaEnemyKind.WINGED_SNAKE -> natural(92, 156, 108)
+        TrevanaEnemyKind.BANDIT -> natural(78, 70, 104)
+        TrevanaEnemyKind.RATLING -> natural(124, 116, 120)
+        TrevanaEnemyKind.FIRE_SPIRIT -> natural(204, 92, 56)
+        TrevanaEnemyKind.MACAQUE -> natural(136, 94, 60)
+        TrevanaEnemyKind.GIANT_APE -> natural(150, 142, 132)
+        TrevanaEnemyKind.THUNDER_APE -> natural(196, 164, 74)
+        TrevanaEnemyKind.ELF_APE -> natural(108, 156, 112)
+        TrevanaEnemyKind.SAND_MONSTER -> natural(194, 166, 118)
+        TrevanaEnemyKind.HILL_MONSTER -> natural(152, 106, 70)
+        TrevanaEnemyKind.SCORPION -> natural(150, 54, 62)
+        TrevanaEnemyKind.BLADE_GHOST -> natural(122, 142, 202)
+        TrevanaEnemyKind.BIRDMAN -> natural(132, 160, 92)
+        TrevanaEnemyKind.HAWKING -> natural(76, 150, 140)
+        TrevanaEnemyKind.TERATO_DRAGON -> natural(188, 66, 52)
+        TrevanaEnemyKind.SNOW_BANSHEE -> natural(204, 222, 238)
+        TrevanaEnemyKind.SWORD_MASTER -> natural(62, 62, 88)
     }
 
     private fun renderEnemy32x48(
-        kind: HalcyonEnemyKind,
+        kind: TrevanaEnemyKind,
         dir: Direction8,
         action: PaperDollAction,
         frameIndex: Int,
@@ -474,7 +474,7 @@ class HalcyonSpriteGenerator(
 
         when (if (handled) null else kind) {
             null -> Unit
-            HalcyonEnemyKind.PHEASANT, HalcyonEnemyKind.TURTLEDOVE, HalcyonEnemyKind.ROBIN -> {
+            TrevanaEnemyKind.PHEASANT, TrevanaEnemyKind.TURTLEDOVE, TrevanaEnemyKind.ROBIN -> {
                 // Plump avian body + beak + crest + flapping wings
                 val cy = 36f + bobY
                 fillEllipse(img, cx.toFloat(), cy, 6.5f, 5.5f, pal)
@@ -491,14 +491,14 @@ class HalcyonSpriteGenerator(
                     img.setPixel(cx - 2, cy.toInt() - 7, eyeCol)
                 }
             }
-            HalcyonEnemyKind.APPARITION, HalcyonEnemyKind.POLTERGEIST, HalcyonEnemyKind.FIRE_SPIRIT -> {
+            TrevanaEnemyKind.APPARITION, TrevanaEnemyKind.POLTERGEIST, TrevanaEnemyKind.FIRE_SPIRIT -> {
                 // Floating spectral/elemental body with wisps & glowing eyes
                 val cy = 28f + bobY
                 fillEllipse(img, cx.toFloat(), cy, 7.5f, 9.0f, pal)
                 for (dx in -5..5 step 3) {
                     fillRect(img, cx + dx, cy.toInt() + 8, 2, 4 + ((phase + abs(dx)) % 3), pal, 0.45f)
                 }
-                if (kind == HalcyonEnemyKind.POLTERGEIST) {
+                if (kind == TrevanaEnemyKind.POLTERGEIST) {
                     fillRect(img, cx - 3, cy.toInt() - 11, 6, 3, natural(120, 118, 130), 0.8f)
                 }
                 if (!dir.isBack) {
@@ -506,7 +506,7 @@ class HalcyonSpriteGenerator(
                     if (dir != Direction8.W) img.setPixel(cx + 3, cy.toInt() - 1, eyeCol)
                 }
             }
-            HalcyonEnemyKind.WINGED_SNAKE -> {
+            TrevanaEnemyKind.WINGED_SNAKE -> {
                 val cy = 32f + bobY
                 for (i in 0..8) {
                     val sx = cx + (if (i % 2 == 0) -1 else 1) * 2
@@ -517,7 +517,7 @@ class HalcyonSpriteGenerator(
                 fillRect(img, cx + 5, cy.toInt() - 4 + flap, 5, 4, boneRamp, 0.65f)
                 if (!dir.isBack) img.setPixel(cx - 2, cy.toInt() - 6, eyeCol)
             }
-            HalcyonEnemyKind.BANDIT -> {
+            TrevanaEnemyKind.BANDIT -> {
                 // Humanoid brigand with bandana, blade, and boots
                 val body = dollGen.generateCharacterFrame(
                     PaperDollLoadout(
@@ -537,7 +537,7 @@ class HalcyonSpriteGenerator(
                 )
                 return body
             }
-            HalcyonEnemyKind.RATLING -> {
+            TrevanaEnemyKind.RATLING -> {
                 val cy = 34f + bobY
                 fillEllipse(img, cx.toFloat(), cy, 6.5f, 7.0f, pal)
                 fillEllipse(img, cx.toFloat(), cy - 8f, 4.5f, 4.0f, pal)
@@ -549,8 +549,8 @@ class HalcyonSpriteGenerator(
                 fillRect(img, cx + 1, 41, 3, 5, pal, 0.4f)
                 if (!dir.isBack) img.setPixel(cx - 2, cy.toInt() - 8, PaletteRamp.rgba(255, 80, 80))
             }
-            HalcyonEnemyKind.MACAQUE, HalcyonEnemyKind.GIANT_APE, HalcyonEnemyKind.THUNDER_APE, HalcyonEnemyKind.ELF_APE -> {
-                val isLarge = kind != HalcyonEnemyKind.MACAQUE
+            TrevanaEnemyKind.MACAQUE, TrevanaEnemyKind.GIANT_APE, TrevanaEnemyKind.THUNDER_APE, TrevanaEnemyKind.ELF_APE -> {
+                val isLarge = kind != TrevanaEnemyKind.MACAQUE
                 val rw = if (isLarge) 9.5f else 7.0f
                 val rh = if (isLarge) 10.5f else 8.0f
                 val cy = (if (isLarge) 30f else 33f) + bobY
@@ -566,7 +566,7 @@ class HalcyonSpriteGenerator(
                     if (dir != Direction8.W) img.setPixel(cx + 3, (cy - rh).toInt(), eyeCol)
                 }
             }
-            HalcyonEnemyKind.SAND_MONSTER, HalcyonEnemyKind.HILL_MONSTER -> {
+            TrevanaEnemyKind.SAND_MONSTER, TrevanaEnemyKind.HILL_MONSTER -> {
                 val cy = 32f + bobY
                 fillEllipse(img, cx.toFloat(), cy, 10.0f, 11.0f, pal)
                 // Rocky crag shoulders
@@ -579,7 +579,7 @@ class HalcyonSpriteGenerator(
                     if (dir != Direction8.W) img.setPixel(cx + 3, cy.toInt() - 5, eyeCol)
                 }
             }
-            HalcyonEnemyKind.SCORPION -> {
+            TrevanaEnemyKind.SCORPION -> {
                 val cy = 36f + bobY
                 fillEllipse(img, cx.toFloat(), cy, 8.5f, 5.5f, pal)
                 // Claws + curved stinger tail
@@ -591,7 +591,7 @@ class HalcyonSpriteGenerator(
                 fillRect(img, cx - 7, 42, 3, 4, pal, 0.5f)
                 fillRect(img, cx + 4, 42, 3, 4, pal, 0.4f)
             }
-            HalcyonEnemyKind.BLADE_GHOST -> {
+            TrevanaEnemyKind.BLADE_GHOST -> {
                 val cy = 29f + bobY
                 fillEllipse(img, cx.toFloat(), cy, 6.5f, 10.0f, pal)
                 // Twin spectral blades
@@ -602,7 +602,7 @@ class HalcyonSpriteGenerator(
                     if (dir != Direction8.W) img.setPixel(cx + 2, cy.toInt() - 4, PaletteRamp.rgba(140, 240, 255))
                 }
             }
-            HalcyonEnemyKind.BIRDMAN, HalcyonEnemyKind.HAWKING -> {
+            TrevanaEnemyKind.BIRDMAN, TrevanaEnemyKind.HAWKING -> {
                 val cy = 30f + bobY
                 fillEllipse(img, cx.toFloat(), cy, 6.5f, 9.0f, pal)
                 fillEllipse(img, cx.toFloat(), cy - 9f, 4.5f, 4.5f, pal)
@@ -613,7 +613,7 @@ class HalcyonSpriteGenerator(
                 fillRect(img, cx + 1, 39, 3, 7, beakRamp, 0.55f)
                 if (!dir.isBack) img.setPixel(cx - 2, cy.toInt() - 10, eyeCol)
             }
-            HalcyonEnemyKind.TERATO_DRAGON -> {
+            TrevanaEnemyKind.TERATO_DRAGON -> {
                 // Towering boss dragon with horns, wide wings, and armored chest
                 val cy = 28f + bobY
                 fillEllipse(img, cx.toFloat(), cy, 9.5f, 11.5f, pal)
@@ -632,7 +632,7 @@ class HalcyonSpriteGenerator(
                     if (dir != Direction8.W) img.setPixel(cx + 3, cy.toInt() - 13, eyeCol)
                 }
             }
-            HalcyonEnemyKind.SNOW_BANSHEE -> {
+            TrevanaEnemyKind.SNOW_BANSHEE -> {
                 val cy = 27f + bobY
                 fillEllipse(img, cx.toFloat(), cy, 7.0f, 12.0f, pal)
                 fillEllipse(img, cx.toFloat(), cy - 12f, 5.0f, 5.0f, pal)
@@ -645,7 +645,7 @@ class HalcyonSpriteGenerator(
                     if (dir != Direction8.W) img.setPixel(cx + 2, cy.toInt() - 12, PaletteRamp.rgba(120, 232, 255))
                 }
             }
-            HalcyonEnemyKind.SWORD_MASTER -> {
+            TrevanaEnemyKind.SWORD_MASTER -> {
                 // Boss Hollow Knight: dark plate, horned greathelm, crimson cloak, greatsword
                 val body = dollGen.generateCharacterFrame(
                     PaperDollLoadout(

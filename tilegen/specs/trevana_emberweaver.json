@@ -1,5 +1,5 @@
 {
-  "name": "halcyon_emberweaver",
+  "name": "trevana_emberweaver",
   "job": "high_wizard",
   "tileSize": 32,
   "seed": 3005,
@@ -28,7 +28,7 @@
     "silk_sash",
     "flame_aura"
   ],
-  "actions": ["halcyon"],
+  "actions": ["trevana"],
   "directions8": false,
   "exportLayers": true,
   "includeShadow": true

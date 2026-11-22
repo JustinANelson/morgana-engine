@@ -1,5 +1,5 @@
 {
-  "name": "halcyon_duelist",
+  "name": "trevana_duelist",
   "job": "rune_hero",
   "tileSize": 32,
   "seed": 3001,
@@ -26,7 +26,7 @@
     "silk_sash",
     "utility_belt"
   ],
-  "actions": ["halcyon"],
+  "actions": ["trevana"],
   "directions8": false,
   "exportLayers": true,
   "includeShadow": true

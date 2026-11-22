@@ -7,7 +7,7 @@ import com.morgana.tilegen.autotile.AutotileGenerator
 import com.morgana.tilegen.autotile.AutotileMode
 import com.morgana.tilegen.autotile.TerrainPair
 import com.morgana.tilegen.export.ExportResult
-import com.morgana.tilegen.export.HalcyonGameExporter
+import com.morgana.tilegen.export.TrevanaGameExporter
 import com.morgana.tilegen.export.PaperDollExporter
 import com.morgana.tilegen.export.PngEncoder
 import com.morgana.tilegen.export.RoguelikeGameExporter
@@ -25,9 +25,9 @@ import com.morgana.tilegen.sprite.BodyAncestry
 import com.morgana.tilegen.sprite.Direction8
 import com.morgana.tilegen.sprite.EnemyKind
 import com.morgana.tilegen.sprite.FacingDirection
-import com.morgana.tilegen.sprite.HalcyonEnemyKind
-import com.morgana.tilegen.sprite.HalcyonNpcKind
-import com.morgana.tilegen.sprite.HalcyonSpriteGenerator
+import com.morgana.tilegen.sprite.TrevanaEnemyKind
+import com.morgana.tilegen.sprite.TrevanaNpcKind
+import com.morgana.tilegen.sprite.TrevanaSpriteGenerator
 import com.morgana.tilegen.sprite.JrpgMonsterKind
 import com.morgana.tilegen.sprite.PaperDollAction
 import com.morgana.tilegen.sprite.PaperDollJob
@@ -638,14 +638,14 @@ object TilesetCli {
                     out.println("sprites.uiHeights: " + result.uiHeights.entries.joinToString(", ") { "\"${it.key}\": ${it.value}" })
                     0
                 }
-                "halcyon" -> {
+                "trevana" -> {
                     val target = (args.getOrNull(1)?.takeIf { !it.startsWith("--") } ?: "all").lowercase()
                     if (target == "export") {
-                        // halcyon export --game games/halcyon-reach [--specs tilegen/specs] [--only bodies,gear,npcs,enemies]
-                        val game = flags["game"] ?: error("Missing --game <game folder> for 'halcyon export'")
-                        val parts = flags["only"]?.split(',')?.map { HalcyonGameExporter.Part.valueOf(it.trim().uppercase()) }?.toSet()
-                            ?: HalcyonGameExporter.Part.entries.toSet()
-                        val result = HalcyonGameExporter.export(
+                        // trevana export --game games/trevana-realms [--specs tilegen/specs] [--only bodies,gear,npcs,enemies]
+                        val game = flags["game"] ?: error("Missing --game <game folder> for 'trevana export'")
+                        val parts = flags["only"]?.split(',')?.map { TrevanaGameExporter.Part.valueOf(it.trim().uppercase()) }?.toSet()
+                            ?: TrevanaGameExporter.Part.entries.toSet()
+                        val result = TrevanaGameExporter.export(
                             Paths.get(game),
                             Paths.get(flags["specs"] ?: "tilegen/specs"),
                             parts,
@@ -658,14 +658,14 @@ object TilesetCli {
                     val size = flags["size"]?.toInt() ?: 32
                     val height = flags["height"]?.toInt() ?: 48
                     val seed = flags["seed"]?.toLong() ?: 1337L
-                    val outRoot = Paths.get(flags["out"] ?: "build/tilesets/halcyon_reach_rmxp")
+                    val outRoot = Paths.get(flags["out"] ?: "build/tilesets/trevana_realms_rmxp")
                     val split = "split" in flags
-                    val gen = HalcyonSpriteGenerator(seed = seed, cellWidth = size, cellHeight = height)
-                    val actions = parsePaperDollActions(flags["actions"]) ?: PaperDollAction.HALCYON
+                    val gen = TrevanaSpriteGenerator(seed = seed, cellWidth = size, cellHeight = height)
+                    val actions = parsePaperDollActions(flags["actions"]) ?: PaperDollAction.TREVANA
                     val cols = actions.maxOf { it.defaultFrames }
 
                     if (target == "npcs" || target == "all") {
-                        for (npc in HalcyonNpcKind.entries) {
+                        for (npc in TrevanaNpcKind.entries) {
                             val (sheet, tiles) = gen.generateNpcSheet(npc, actions)
                             val res = TilesetExporter.exportNamedSheet(
                                 name = "${npc.spriteId}",
@@ -683,7 +683,7 @@ object TilesetCli {
                         }
                     }
                     if (target == "enemies" || target == "all") {
-                        for (enemy in HalcyonEnemyKind.entries) {
+                        for (enemy in TrevanaEnemyKind.entries) {
                             val (sheet, tiles) = gen.generateEnemySheet(enemy, actions)
                             val res = TilesetExporter.exportNamedSheet(
                                 name = "${enemy.spriteId}",
@@ -769,7 +769,7 @@ object TilesetCli {
                 when (token) {
                     "all" -> PaperDollAction.ALL
                     "lpc", "lpc_standard" -> PaperDollAction.LPC_STANDARD
-                    "halcyon" -> PaperDollAction.HALCYON
+                    "trevana" -> PaperDollAction.TREVANA
                     else -> listOf(PaperDollAction.valueOf(token.uppercase()))
                 }
             }.distinct()

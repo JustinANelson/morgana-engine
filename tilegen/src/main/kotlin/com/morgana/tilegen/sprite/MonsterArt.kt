@@ -10,7 +10,7 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 /**
- * Silhouettes for the non-humanoid Halcyon Reach monsters, each with a front, a side (facing left; the exporter mirrors it
+ * Silhouettes for the non-humanoid Trevana Realms monsters, each with a front, a side (facing left; the exporter mirrors it
  * for right) and a back view.
  *
  * Everything is built from a few shaded primitives drawn in painter's order (back to front): [capsule] (a tapered limb or
@@ -136,29 +136,29 @@ internal class MonsterArt(private val img: TileImage) {
     // ---- dispatch ---------------------------------------------------------------------------------------------------
 
     /** Draws [kind]; returns false for the humanoid monsters, which are drawn from the paper-doll generator instead. */
-    fun draw(kind: HalcyonEnemyKind, pal: PaletteRamp, view: View, cx: Int, pose: Pose, eyeCol: Int): Boolean {
+    fun draw(kind: TrevanaEnemyKind, pal: PaletteRamp, view: View, cx: Int, pose: Pose, eyeCol: Int): Boolean {
         when (kind) {
-            HalcyonEnemyKind.PHEASANT -> bird(pal, view, cx, pose, eyeCol, tail = 5, crest = true, breast = null, size = 1.1f)
-            HalcyonEnemyKind.TURTLEDOVE -> bird(pal, view, cx, pose, eyeCol, tail = 2, crest = false, breast = bone, size = 1.0f)
-            HalcyonEnemyKind.ROBIN -> bird(pal, view, cx, pose, eyeCol, tail = 1, crest = false, breast = natural(232, 122, 70), size = 0.9f)
-            HalcyonEnemyKind.APPARITION -> ghost(pal, view, cx, pose, eyeCol)
-            HalcyonEnemyKind.POLTERGEIST -> imp(pal, view, cx, pose, eyeCol)
-            HalcyonEnemyKind.FIRE_SPIRIT -> flame(pal, view, cx, pose)
-            HalcyonEnemyKind.WINGED_SNAKE -> snake(pal, view, cx, pose, eyeCol)
-            HalcyonEnemyKind.RATLING -> rat(pal, view, cx, pose)
-            HalcyonEnemyKind.MACAQUE -> ape(pal, view, cx, pose, eyeCol, 0.78f, Ape.MACAQUE)
-            HalcyonEnemyKind.GIANT_APE -> ape(pal, view, cx, pose, eyeCol, 1f, Ape.GIANT)
-            HalcyonEnemyKind.THUNDER_APE -> ape(pal, view, cx, pose, eyeCol, 1f, Ape.THUNDER)
-            HalcyonEnemyKind.ELF_APE -> ape(pal, view, cx, pose, eyeCol, 0.92f, Ape.ELF)
-            HalcyonEnemyKind.SAND_MONSTER -> beetle(pal, view, cx, pose, eyeCol)
-            HalcyonEnemyKind.HILL_MONSTER -> golem(pal, view, cx, pose, eyeCol)
-            HalcyonEnemyKind.SCORPION -> scorpion(pal, view, cx, pose, eyeCol)
-            HalcyonEnemyKind.BLADE_GHOST -> reaper(pal, view, cx, pose)
-            HalcyonEnemyKind.BIRDMAN -> harpy(pal, view, cx, pose, eyeCol, raptor = false)
-            HalcyonEnemyKind.HAWKING -> harpy(pal, view, cx, pose, eyeCol, raptor = true)
-            HalcyonEnemyKind.TERATO_DRAGON -> dragon(pal, view, cx, pose, eyeCol)
-            HalcyonEnemyKind.SNOW_BANSHEE -> banshee(pal, view, cx, pose)
-            HalcyonEnemyKind.BANDIT, HalcyonEnemyKind.SWORD_MASTER -> return false
+            TrevanaEnemyKind.PHEASANT -> bird(pal, view, cx, pose, eyeCol, tail = 5, crest = true, breast = null, size = 1.1f)
+            TrevanaEnemyKind.TURTLEDOVE -> bird(pal, view, cx, pose, eyeCol, tail = 2, crest = false, breast = bone, size = 1.0f)
+            TrevanaEnemyKind.ROBIN -> bird(pal, view, cx, pose, eyeCol, tail = 1, crest = false, breast = natural(232, 122, 70), size = 0.9f)
+            TrevanaEnemyKind.APPARITION -> ghost(pal, view, cx, pose, eyeCol)
+            TrevanaEnemyKind.POLTERGEIST -> imp(pal, view, cx, pose, eyeCol)
+            TrevanaEnemyKind.FIRE_SPIRIT -> flame(pal, view, cx, pose)
+            TrevanaEnemyKind.WINGED_SNAKE -> snake(pal, view, cx, pose, eyeCol)
+            TrevanaEnemyKind.RATLING -> rat(pal, view, cx, pose)
+            TrevanaEnemyKind.MACAQUE -> ape(pal, view, cx, pose, eyeCol, 0.78f, Ape.MACAQUE)
+            TrevanaEnemyKind.GIANT_APE -> ape(pal, view, cx, pose, eyeCol, 1f, Ape.GIANT)
+            TrevanaEnemyKind.THUNDER_APE -> ape(pal, view, cx, pose, eyeCol, 1f, Ape.THUNDER)
+            TrevanaEnemyKind.ELF_APE -> ape(pal, view, cx, pose, eyeCol, 0.92f, Ape.ELF)
+            TrevanaEnemyKind.SAND_MONSTER -> beetle(pal, view, cx, pose, eyeCol)
+            TrevanaEnemyKind.HILL_MONSTER -> golem(pal, view, cx, pose, eyeCol)
+            TrevanaEnemyKind.SCORPION -> scorpion(pal, view, cx, pose, eyeCol)
+            TrevanaEnemyKind.BLADE_GHOST -> reaper(pal, view, cx, pose)
+            TrevanaEnemyKind.BIRDMAN -> harpy(pal, view, cx, pose, eyeCol, raptor = false)
+            TrevanaEnemyKind.HAWKING -> harpy(pal, view, cx, pose, eyeCol, raptor = true)
+            TrevanaEnemyKind.TERATO_DRAGON -> dragon(pal, view, cx, pose, eyeCol)
+            TrevanaEnemyKind.SNOW_BANSHEE -> banshee(pal, view, cx, pose)
+            TrevanaEnemyKind.BANDIT, TrevanaEnemyKind.SWORD_MASTER -> return false
         }
         return true
     }

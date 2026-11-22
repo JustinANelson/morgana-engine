@@ -80,7 +80,7 @@ class RoguelikeReferenceGameTest {
         val report = com.morgana.domain.validation.ContentValidator.validate(loaded.catalog, definition)
         assertTrue(report.issues.isEmpty(), "issues: ${report.issues}")
         assertEquals("Ashen Keep", definition.name)
-        assertTrue(definition.sprites?.paperdollingV2 == true, "uses the Halcyon 32x48 paperdoll workflow")
+        assertTrue(definition.sprites?.paperdollingV2 == true, "uses the Trevana 32x48 paperdoll workflow")
         assertEquals(32 to 48, definition.sprites!!.cellWidth to definition.sprites!!.cellHeight)
 
         val cat = loaded.catalog

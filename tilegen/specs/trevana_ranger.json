@@ -1,5 +1,5 @@
 {
-  "name": "halcyon_ranger",
+  "name": "trevana_ranger",
   "job": "sniper_hunter",
   "tileSize": 32,
   "seed": 3003,
@@ -43,7 +43,7 @@
       "hideWhenFacingFront": false
     }
   ],
-  "actions": ["halcyon"],
+  "actions": ["trevana"],
   "directions8": false,
   "exportLayers": true,
   "includeShadow": true

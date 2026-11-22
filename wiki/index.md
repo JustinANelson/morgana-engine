@@ -109,10 +109,10 @@ Maintenance knowledge base for Morgana ORPG, written for human and AI contributo
 * [Blank Game and the Seeded World](/content/blank_game.md) - The games/blank scaffold, which is also what an empty server data directory is seeded with (the repository also ships the reference roguelike).
 * [Content Collections](/content/content_collections.md) - All fourteen content types: directory, file name, model class, JSON Schema, and reference rules.
 * [Content Pipeline](/content/content_pipeline.md) - The single validate, persist, hot-reload, broadcast path that GUI edits, file edits, and agents all share.
-* [Halcyon Reach](/content/halcyon_reach_game.md) - games/halcyon-reach, an original online RPG built on Morgana's ORPG module using the Time Fantasy pixel art: 30 maps across nine tilesets, 5 classes, 50 skills, 32 monsters and bosses, and 125 items.
 * [Hot Reload](/content/hot_reload.md) - How file edits and /reload update a running server, and what is deliberately not applied.
-* [Ashen Keep: the Reference Co-op Dungeon Crawler & Roguelike](/content/roguelike_game.md) - games/roguelike, the reference dungeon crawler and roguelike realm: Ashen Keep multiplayer hub and Floor 1 (The Sunken Crypt) built with the Halcyon Reach tileset and paperdoll workflow.
+* [Ashen Keep: the Reference Co-op Dungeon Crawler & Roguelike](/content/roguelike_game.md) - games/roguelike, the reference dungeon crawler and roguelike realm: Ashen Keep multiplayer hub and Floor 1 (The Sunken Crypt) built with the Trevana Realms tileset and paperdoll workflow.
 * [Tiled Map Conversion](/content/tiled_conversion.md) - Round-tripping maps through Tiled .tmj with full fidelity for attributes, NPC spawns, and event ids.
+* [Trevana Realms](/content/trevana_realms_game.md) - games/trevana-realms, an original online RPG built on Morgana's ORPG module using the Time Fantasy pixel art: 30 maps across nine tilesets, 5 classes, 50 skills, 32 monsters and bosses, and 125 items.
 * [Tutorial Village: the Getting-Started Game](/content/tutorial_village.md) - games/tutorial-village, the finished game of docs/GETTING_STARTED.md (a village, a gardener, a kill quest and its reward), kept playable by TutorialVillageGameTest.
 * [Validation Rules and Issue Codes](/content/validation_rules.md) - Every check the content validator performs and the issue codes it emits.
 * [White River Online](/content/white_river_game.md) - games/white-river, an original sandbox ORPG: a town and four zones joined by open seams, 3 classes, life skills at four stations, and the first action-combat weapon set.
@@ -153,7 +153,7 @@ Maintenance knowledge base for Morgana ORPG, written for human and AI contributo
 * [Debug a Determinism Problem](/playbooks/debug_determinism.md) - Checklist when two runs with the same seed and inputs diverge.
 * [Make Your Game's Art](/playbooks/make_game_art.md) - A creator's guide to giving a game its own tilesets, characters, icons, worn gear, projectiles and effects: file layout, sizes, the export, the art check and the F1 Art panel.
 * [Play on a Phone (Browser, Tailscale)](/playbooks/play_on_a_phone.md) - Serve the browser client from the game server with --web and play from a phone's browser over Tailscale or a home network: what makes it work and what to check when it does not.
-* [Record the Halcyon Reach Trailer](/playbooks/record_trailer.md) - Regenerate the gameplay trailer: a throwaway realm, a made-up level 66 Emberweaver, a scripted tour of the maps recorded from the web client, and an ffmpeg edit.
+* [Record the Trevana Realms Trailer](/playbooks/record_trailer.md) - Regenerate the gameplay trailer: a throwaway realm, a made-up level 66 Emberweaver, a scripted tour of the maps recorded from the web client, and an ffmpeg edit.
 * [Large Rename or Package Refactor](/playbooks/refactor_rename.md) - A proven procedure for renaming packages and types across all modules without breaking determinism.
 * [Run Locally](/playbooks/run_local_dev.md) - Start the server and clients, seed data, and find the right ports and directories.
 * [Update the Wiki](/playbooks/update_wiki.md) - Ingest, query, and lint workflows for keeping the OKF wiki accurate as the code changes.

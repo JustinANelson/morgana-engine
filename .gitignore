@@ -47,5 +47,5 @@ __pycache__/
 games/*/source-audio/
 
 # Private / developer games kept locally outside the public engine repo
-games/halcyon-reach/
-HALCYON_REACH_DESIGN_AND_CONTENT.md
+games/trevana-realms/
+TREVANA_REALMS_DESIGN_AND_CONTENT.md

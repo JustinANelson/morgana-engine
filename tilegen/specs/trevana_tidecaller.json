@@ -1,5 +1,5 @@
 {
-  "name": "halcyon_tidecaller",
+  "name": "trevana_tidecaller",
   "job": "high_priest",
   "tileSize": 32,
   "seed": 3004,
@@ -27,7 +27,7 @@
     "silk_sash",
     "holy_glow"
   ],
-  "actions": ["halcyon"],
+  "actions": ["trevana"],
   "directions8": false,
   "exportLayers": true,
   "includeShadow": true
