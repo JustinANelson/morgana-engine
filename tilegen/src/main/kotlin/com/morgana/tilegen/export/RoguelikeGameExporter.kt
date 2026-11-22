@@ -36,6 +36,8 @@ import com.morgana.tilegen.structure.BuildingGenerator
 import com.morgana.tilegen.structure.BuildingKind
 import com.morgana.tilegen.structure.BuildingRoof
 import com.morgana.tilegen.structure.BuildingTheme
+import com.morgana.tilegen.structure.DungeonTheme
+import com.morgana.tilegen.structure.DungeonTilesetGenerator
 import com.morgana.tilegen.structure.GroundDetailGenerator
 import com.morgana.tilegen.structure.PavingGenerator
 import com.morgana.tilegen.structure.PavingKind
@@ -237,71 +239,81 @@ object RoguelikeGameExporter {
         propsSheet.drawImage(keepWall, 0, 0, 32, 32, 7 * 32, 3 * 32)
         out[6] = propsSheet
 
-        // 7.png: Sunken Crypt Dungeon Tileset (8x2 = 256x64)
+        // 7.png: Sunken Crypt 2.5D Dungeon Tileset (8x8 = 256x256, rows 0..1 match Map 2 generator slots)
         out[7] = buildCryptTileset(seed + 10)
         return out
     }
 
     private fun buildCryptTileset(seed: Long): TileImage {
-        val sheet = TileImage(8 * 32, 2 * 32)
-        val mat = MaterialTileGenerator(seed = seed, tileSize = 32)
-        val prop = PropGenerator(seed = seed + 1, tileSize = 32)
-
-        val cryptSlate = PaletteRamp.fromBaseColor(PaletteRamp.rgba(72, 78, 92), steps = 6, hueShift = 0.05f, valueSpread = 0.30f)
-        val cryptWallTop = PaletteRamp.fromBaseColor(PaletteRamp.rgba(34, 36, 46), steps = 6, hueShift = 0.04f, valueSpread = 0.24f)
-        val cryptBrick = PaletteRamp.fromBaseColor(PaletteRamp.rgba(88, 92, 108), steps = 6, hueShift = 0.05f, valueSpread = 0.32f)
+        val sheet = TileImage(8 * 32, 8 * 32)
+        val bundle = DungeonTilesetGenerator(seed = seed, theme = DungeonTheme.CRYPT).generateBundle()
+        val tiles = bundle.tiles.associate { it.name to it.image }
 
         fun put(col: Int, row: Int, img: TileImage) {
-            sheet.drawImage(img, 0, 0, 32, 32, col * 32, row * 32)
+            sheet.drawImage(img, 0, 0, img.width, img.height, col * 32, row * 32)
         }
+        fun putTile(col: Int, row: Int, name: String) = put(col, row, tiles.getValue(name))
 
-        // Row 0: floor, mossy floor, wall top, wall front face, stairs/exit, skulls, urn, pillar
-        val baseFloor = mat.generateTile(MaterialSpec("crypt_floor", MaterialPattern.DIAGONAL_PAVER, cryptSlate, detail = 0.28f, style = PixelStyle.MORGANA))
-        put(0, 0, baseFloor)
-        val mossyFloor = mat.generateTile(MaterialSpec("crypt_floor_moss", MaterialPattern.DIAGONAL_PAVER, cryptSlate, detail = 0.32f, style = PixelStyle.MORGANA))
-        TileDecals.applyDecal(mossyFloor, DecalKind.VINES, seed + 21)
-        put(1, 0, mossyFloor)
-        put(2, 0, mat.generateTile(MaterialSpec("crypt_wall_top", MaterialPattern.COBBLESTONE, cryptWallTop, detail = 0.20f, style = PixelStyle.MORGANA)))
-        put(3, 0, mat.generateTile(MaterialSpec("crypt_wall_face", MaterialPattern.BRICK_MASONRY, cryptBrick, detail = 0.32f, style = PixelStyle.MORGANA)))
-        put(4, 0, prop.generateProp("stairs_down", PropKind.STAIRS_DOWN, style = PixelStyle.MORGANA).fullImage)
-        put(5, 0, prop.generateProp("skulls", PropKind.SKULL_PILE, style = PixelStyle.MORGANA).fullImage)
-        put(6, 0, prop.generateProp("urn", PropKind.URN, style = PixelStyle.MORGANA).fullImage)
-        put(7, 0, prop.generateProp("pillar", PropKind.PILLAR, style = PixelStyle.MORGANA).fullImage)
+        // Row 0 (Map 2 BSP_DUNGEON core slots: floor, cracked floor, wall cap, cobble wall face, stairs, skulls, candles, pillar)
+        putTile(0, 0, "floor_clean")
+        putTile(1, 0, "floor_cracked")
+        putTile(2, 0, "wall_cap_bottom")
+        putTile(3, 0, "wall_face_lower")
+        putTile(4, 0, "stairs_down")
+        putTile(5, 0, "skull_pile")
+        putTile(6, 0, "candle_cluster")
+        putTile(7, 0, "wall_pillar")
 
-        // Row 1: bone floor, blood floor, glowing brazier/rune, wall chains, sarcophagus, shrine, dark void, boss floor
-        val boneFloor = mat.generateTile(MaterialSpec("crypt_bones", MaterialPattern.DIAGONAL_PAVER, cryptSlate, style = PixelStyle.MORGANA))
-        TileDecals.applyDecal(boneFloor, DecalKind.BONES, seed + 22)
-        put(0, 1, boneFloor)
-        val bloodFloor = mat.generateTile(MaterialSpec("crypt_blood", MaterialPattern.COBBLESTONE, cryptSlate, style = PixelStyle.MORGANA))
-        TileDecals.applyDecal(bloodFloor, DecalKind.BLOOD_SPLATTER, seed + 23)
-        put(1, 1, bloodFloor)
-        put(2, 1, drawGlowingRuneTile(cryptSlate))
-        put(3, 1, prop.generateProp("chains", PropKind.WALL_CHAINS, style = PixelStyle.MORGANA).fullImage)
-        put(4, 1, prop.generateProp("sarcophagus", PropKind.SARCOPHAGUS, style = PixelStyle.MORGANA).fullImage)
-        put(5, 1, prop.generateProp("shrine", PropKind.SHRINE, style = PixelStyle.MORGANA).fullImage)
-        val voidTile = TileImage(32, 32).also { img ->
-            val dark = PaletteRamp.rgba(16, 15, 22)
-            for (y in 0 until 32) for (x in 0 until 32) img.setPixel(x, y, dark)
+        // Row 1 (Map 2 decorations & interactive props)
+        putTile(0, 1, "skull_single")
+        putTile(1, 1, "gold_pile")
+        putTile(2, 1, "brazier_compact")
+        putTile(3, 1, "chest_open")
+        putTile(4, 1, "chest_closed")
+        putTile(5, 1, "spikes_extended")
+        putTile(6, 1, "wall_cap_void")
+        putTile(7, 1, "iron_grate")
+
+        // Row 2 (Floor variants, wall-cast AO, upper cobble walls, arch & gargoyle reliefs)
+        putTile(0, 2, "floor_worn")
+        putTile(1, 2, "floor_double")
+        putTile(2, 2, "floor_ao_top")
+        putTile(3, 2, "floor_ao_left")
+        putTile(4, 2, "wall_face_upper")
+        putTile(5, 2, "wall_face_arch")
+        putTile(6, 2, "wall_face_gargoyle")
+        putTile(7, 2, "wall_skull_medallion")
+
+        // Row 3 (Teal water, overhanging floor-to-water ledges, horizontal bridge)
+        putTile(0, 3, "water_calm")
+        putTile(1, 3, "water_ripple")
+        putTile(2, 3, "water_deep_ao")
+        putTile(3, 3, "ledge_south")
+        putTile(4, 3, "ledge_north")
+        putTile(5, 3, "ledge_west")
+        putTile(6, 3, "ledge_east")
+        putTile(7, 3, "bridge_h")
+
+        // Row 4 (Vertical bridge, stair curbs, retracted spikes, key altar, caps & corner AO)
+        putTile(0, 4, "bridge_v")
+        putTile(1, 4, "stairs_left")
+        putTile(2, 4, "stairs_right")
+        putTile(3, 4, "spikes_retracted")
+        putTile(4, 4, "key_altar")
+        putTile(5, 4, "wall_cap_top")
+        putTile(6, 4, "floor_ao_corner")
+        putTile(7, 4, "floor_ao_bottom")
+
+        // Rows 5..7 (Sculpted multi-tile centerpieces for F1 map authoring)
+        bundle.props["lich_statue"]?.let { put(0, 5, it) }         // 2x3 (cols 0..1, rows 5..7)
+        bundle.props["sarcophagus_effigy"]?.let { put(2, 5, it) }  // 2x2 (cols 2..3, rows 5..6)
+        bundle.props["knight_statue"]?.let { put(4, 5, it) }       // 1x2 (col 4, rows 5..6)
+        bundle.props["open_tomb_skeleton"]?.let { put(5, 5, it) }  // 2x1 (cols 5..6, row 5)
+        bundle.props["spectral_brazier"]?.let {
+            sheet.drawImage(it, 0, 0, it.width, it.height, 5 * 32 + 8, 6 * 32)
         }
-        put(6, 1, voidTile)
-        put(7, 1, mat.generateTile(MaterialSpec("boss_floor", MaterialPattern.DIAGONAL_PAVER, PalettePresets.CO_DYNASTY_LACQUER, detail = 0.25f, style = PixelStyle.MORGANA)))
+        bundle.props["hanging_skeleton"]?.let { put(7, 5, it) }    // 1x1.5 (col 7, rows 5..6)
         return sheet
-    }
-
-    private fun drawGlowingRuneTile(basePal: PaletteRamp): TileImage {
-        val img = TileImage(32, 32)
-        val ember = PaletteRamp.fromBaseColor(PaletteRamp.rgba(240, 146, 62), steps = 6, hueShift = 0.06f, valueSpread = 0.34f)
-        for (y in 6..25) for (x in 6..25) {
-            val dx = x - 15.5f
-            val dy = y - 15.5f
-            val d = kotlin.math.hypot(dx, dy)
-            if (d in 6.5f..9.2f || d <= 2.4f) {
-                img.setPixel(x, y, PixelDither.sampleDithered(ember, (0.85f - d * 0.04f).coerceIn(0.2f, 0.96f), x, y, 4, 0.1f))
-            } else if (d < 6.5f) {
-                img.setPixel(x, y, PixelDither.sampleDithered(basePal, 0.25f, x, y, 4, 0.1f))
-            }
-        }
-        return img
     }
 
     private fun classBodies(): List<Triple<Int, Boolean, PaperDollLoadout>> {

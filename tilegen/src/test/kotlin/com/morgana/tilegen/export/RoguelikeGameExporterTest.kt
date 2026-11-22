@@ -30,7 +30,7 @@ class RoguelikeGameExporterTest {
 
         val cryptSheet = ImageIO.read(game.resolve("assets/tilesets/7.png").toFile())
         assertEquals(256, cryptSheet.width)
-        assertEquals(64, cryptSheet.height)
+        assertEquals(256, cryptSheet.height)
 
         val anim = ImageIO.read(game.resolve("assets/animations/1.png").toFile())
         assertEquals(160, anim.width)
