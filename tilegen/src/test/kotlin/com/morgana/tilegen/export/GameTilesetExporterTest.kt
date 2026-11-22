@@ -76,4 +76,24 @@ class GameTilesetExporterTest {
         assertEquals(1, r.removed.size)
         assertFalse(Files.exists(gameDir.resolve("assets/tilesets/101.png")))
     }
+
+    @Test
+    fun `animated frames sit side by side and never wrap onto the next row`(@TempDir dir: Path) {
+        val specs = dir.resolve("specs")
+        Files.createDirectories(specs)
+        val file = specs.resolve("anim.json")
+        Files.writeString(file, """
+            { "name": "anim", "seed": 1, "tileSize": 16, "columns": 4, "style": "CLASSIC_RPG",
+              "materials": [
+                { "name": "a", "pattern": "ORGANIC_FBM", "palette": "earth_dirt" },
+                { "name": "b", "pattern": "ORGANIC_FBM", "palette": "earth_dirt" },
+                { "name": "sea", "pattern": "WATER_CAUSTICS", "palette": "ocean_water", "frames": 4 }
+              ] }
+        """.trimIndent())
+        val r = GameTilesetExporter.export(dir.resolve("game"), listOf(file), firstId = 100)
+        val frames = (0..3).map { r.tiles.getValue("sea_f$it") }
+        assertEquals(listOf(0, 1, 2, 3), frames.map { it.x })
+        assertTrue(frames.all { it.y == frames.first().y }, "all four frames on one row")
+        assertEquals(1, frames.first().y, "the group moved to the next row instead of wrapping")
+    }
 }

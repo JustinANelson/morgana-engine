@@ -33,7 +33,7 @@
   {
    "name": "hub_cobble",
    "pattern": "COBBLESTONE",
-   "palette": "slate_stone",
+   "palette": "pale_limestone",
    "scale": 1.0,
    "detail": 0.25,
    "variants": 3
@@ -41,7 +41,7 @@
   {
    "name": "hub_paver",
    "pattern": "DIAGONAL_PAVER",
-   "palette": "cream_marble",
+   "palette": "dune_sandstone",
    "scale": 1.0,
    "detail": 0.2,
    "variants": 2

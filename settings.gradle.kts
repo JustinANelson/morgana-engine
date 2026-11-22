@@ -29,6 +29,7 @@ include(
     ":tilegen",
     ":game-art",
     ":game-tests",
+    ":map-builder",
     ":client-core",
     ":client-net-netty",
     ":script-luak",

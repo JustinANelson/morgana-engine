@@ -20,6 +20,7 @@ Maintenance knowledge base for Morgana ORPG, written for human and AI contributo
 * [Module: core-domain](/architecture/core_domain.md) - The pure Kotlin rules engine: models, the 20 TPS simulation, and content validation.
 * [Module: dev-tools](/architecture/dev_tools.md) - Repository tooling that keeps the wiki healthy: lint, index generation, and change-impact lookup.
 * [Module: game-art](/architecture/game_art.md) - Tooling, not engine: the per-game sprite kits, art specs and exporters that draw the bundled games' art on top of the generic :tilegen generators.
+* [Module: map-builder](/architecture/map_builder.md) - Tooling, not engine: compiles map recipes (JSON terrain, paths, walls, props, warps and enemy camps) into map documents using the tile index a tileset export wrote.
 * [Module Graph and Dependency Rules](/architecture/module_graph.md) - The Gradle module layout, who may depend on whom, and why the boundaries exist.
 * [Module: server-app](/architecture/server_app.md) - The dedicated authoritative server: Netty transport, coordinator, tick loop, owner policy, hot reload, and CLI tools.
 * [Module: server-persistence](/architecture/server_persistence.md) - JSON document collections, repositories, content loader, schema exporter, Tiled converter, and the game scaffolder.

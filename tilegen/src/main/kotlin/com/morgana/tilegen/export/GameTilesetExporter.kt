@@ -70,7 +70,22 @@ object GameTilesetExporter {
             val isSliceOfMulti = { name: String -> multi.keys.any { Regex("^" + Regex.escape(it) + "_\\d+_\\d+$").matches(name) } }
             val units = rendered.tiles.filterNot { isSliceOfMulti(it.name) }
 
-            val unitRows = if (units.isEmpty()) 0 else (units.size + columns - 1) / columns
+            // Single tiles in reading order. An animated tile's frames (`name_f0`, `name_f1`, ...) must sit side by side, so a
+            // group that would run past the end of a row starts on the next one.
+            val unitCells = ArrayList<Pair<Int, Int>>()
+            var uc = 0
+            var ur = 0
+            var i0 = 0
+            while (i0 < units.size) {
+                val m = Regex("^(.*)_f0$").matchEntire(units[i0].name)
+                var group = 1
+                if (m != null) while (i0 + group < units.size && units[i0 + group].name == "${m.groupValues[1]}_f$group") group++
+                if (uc + group > columns) { uc = 0; ur++ }
+                repeat(group) { unitCells += uc++ to ur }
+                if (uc >= columns) { uc = 0; ur++ }
+                i0 += group
+            }
+            val unitRows = if (units.isEmpty()) 0 else (unitCells.last().second + 1)
             var curCol = 0
             var curRow = unitRows
             var band = 0
@@ -84,14 +99,14 @@ object GameTilesetExporter {
             val rows = (curRow + band).coerceAtLeast(1)
             if (units.isNotEmpty() || packed.isNotEmpty()) {
                 val sheet = TileImage(columns * tileSize, rows * tileSize)
-                units.forEachIndexed { i, t -> sheet.drawImage(t.image, 0, 0, tileSize, tileSize, (i % columns) * tileSize, (i / columns) * tileSize) }
+                units.forEachIndexed { i, t -> sheet.drawImage(t.image, 0, 0, tileSize, tileSize, unitCells[i].first * tileSize, unitCells[i].second * tileSize) }
                 for ((p, c, r) in packed) sheet.drawImage(p.fullImage, 0, 0, p.fullImage.width, p.fullImage.height, c * tileSize, r * tileSize)
                 val id = write(sheet)
-                units.forEachIndexed { i, t -> tiles[t.name] = Placement(id, i % columns, i / columns) }
+                units.forEachIndexed { i, t -> tiles[t.name] = Placement(id, unitCells[i].first, unitCells[i].second) }
                 for ((p, c, r) in packed) props[p.name] = Placement(id, c, r, p.widthTiles, p.heightTiles)
                 for ((name, p) in rendered.props) if (name !in multi) {
                     units.indexOfFirst { it.name == p.slicedTiles.first().name }.takeIf { it >= 0 }?.let { i ->
-                        props[name] = Placement(id, i % columns, i / columns)
+                        props[name] = Placement(id, unitCells[i].first, unitCells[i].second)
                     }
                 }
             }

@@ -15,6 +15,7 @@ stale_after: 2027-05-06T00:00:00Z
 client-desktop --> client-core --> shared-protocol --> core-domain
 client-core --> tilegen  (pure Kotlin, no project or library dependencies)
 game-art --> tilegen    (tooling for the bundled games; no engine module depends on it)
+map-builder --> core-domain, server-persistence, tilegen  (tooling; no engine module depends on it)
 client-android --> client-core
 client-desktop --> client-net-netty --> client-core
 client-android --> client-net-netty
@@ -32,6 +33,7 @@ dev-tools  (standalone: snakeyaml only)
 | `shared-protocol` | core-domain (`api`), serialization json + cbor |
 | `server-persistence` | core-domain (`api`), serialization json |
 | `server-app` | core-domain, shared-protocol, server-persistence, Netty, coroutines, SLF4J, Logback (runtime) |
+| `map-builder` | core-domain + server-persistence + tilegen; compiles map recipes into map files ([map-builder](/architecture/map_builder.md)) |
 | `game-tests` | Tests of the bundled games' content (test-only module; engine tests never depend on a game) |
 | `tilegen` | Kotlin stdlib only; procedural 32x32 tile generation ([tilegen](/architecture/tilegen.md)) |
 | `game-art` | tilegen; per-game sprite kits and exporters ([game-art](/architecture/game_art.md)) |
