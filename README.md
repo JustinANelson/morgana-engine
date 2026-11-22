@@ -1,6 +1,6 @@
-# Morgana ORPG
+# Morgana Engine
 
-**Morgana ORPG** is a cross-platform 2D game engine built on Kotlin and LibGDX (desktop, Android, and browser from one client core). Geared toward online RPGs and co-op dungeon crawlers in the spirit of Mirage Source and Player Worlds, the engine is genre-neutral and deterministic: a game is plain JSON data (`game.json` + `data/`), game-owned art/audio (`assets/`), and sandboxed Lua scripts (`scripts/`).
+**Morgana Engine** is a cross-platform 2D game engine built on Kotlin and LibGDX (desktop, Android, and browser from one client core). Geared toward online RPGs and co-op dungeon crawlers in the spirit of Mirage Source and Player Worlds, the engine is genre-neutral and deterministic: a game is plain JSON data (`game.json` + `data/`), game-owned art/audio (`assets/`), and sandboxed Lua scripts (`scripts/`).
 
 ## Highlights
 - **Engine and game are separate**: the engine knows no particular game. Attributes, vitals, formulas, combat rules, loot tables, run rules, boons, skill trees, and content live in a game folder under `games/` (`games/blank`, `games/tutorial-village`, `games/roguelike`, `games/white-river`), customized with sandboxed Lua scripts. `EngineBoundaryTest` enforces the split.
