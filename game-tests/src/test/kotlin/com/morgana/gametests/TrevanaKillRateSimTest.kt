@@ -1,4 +1,6 @@
-package com.morgana.server
+package com.morgana.gametests
+
+import com.morgana.server.*
 
 import com.morgana.domain.content.ClassDefinition
 import com.morgana.domain.content.SpellDefinition

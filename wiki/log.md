@@ -2,6 +2,8 @@
 
 ## 2026-11-22
 
+* **Refactor** - **Game-specific tests moved from `:server-app` to the new test-only `:game-tests` module** ([Module graph](/architecture/module_graph.md)): `TrevanaRealmsGameTest`, `TrevanaKillRateSimTest`, `TrevanaEconomyModelTest`, `WhiteRiverGameTest`, `WhiteRiverActionCombatTest`, `TutorialVillageGameTest` and `RoguelikeReferenceGameTest` now live in `game-tests/src/test/kotlin/com/morgana/gametests` so engine modules hold no test of one particular game. Run them with `.\gradlew.bat :game-tests:test`.
+
 * **Refactor** - **`:tilegen` is game-neutral; per-game art moved to the new `:game-art` module** ([tilegen](/architecture/tilegen.md), [game-art](/architecture/game_art.md)): the Trevana, Roguelike and White River sprite kits, exporters, specs, tests and CLI commands left `:tilegen` for `:game-art` (run `:game-art:run`). Palettes, pixel styles, material patterns, paper-doll jobs, JRPG monsters and props named after commercial games were renamed to neutral names (for example `RAGNAROK_25D` is `PAINTED_25D`, `SK_TRUE_RUNE_GOLD` is `RUNE_GOLD`, spec `tf_*` is `classic_*`), and game names were removed from comments. `EngineBoundaryTest` no longer lists any known leaks; the SDK ships the games named in `sdkGames` in `gradle.properties`.
 
 * **Rename** - **Halcyon Reach renamed to Trevana Realms** ([Trevana Realms](/content/trevana_realms_game.md)): game id `trevana-realms`, folder `games/trevana-realms`, local data dir `server-data-trevana`, `Halcyon*` Kotlin classes and tilegen specs renamed to `Trevana*`, wiki page moved to `content/trevana_realms_game.md`. Older entries below keep the old name as history. A map rebuild around the Crossroads of Trevena hub follows.

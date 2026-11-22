@@ -1,4 +1,6 @@
-package com.morgana.server
+package com.morgana.gametests
+
+import com.morgana.server.*
 
 import com.morgana.domain.content.NpcBehavior
 import com.morgana.domain.entity.MapNpcInstance

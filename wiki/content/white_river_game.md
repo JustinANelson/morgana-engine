@@ -3,7 +3,7 @@ type: Reference
 title: "White River Online"
 description: "games/white-river, an original sandbox ORPG: a town and four zones joined by open seams, 3 classes, life skills at four stations, and the first action-combat weapon set."
 tags: [content, orpg, white-river, life-skills, assets]
-code: ["games/white-river/game.json", "games/white-river/server.json", "games/white-river/README.md", "games/white-river/ROADMAP.md", "server-app/src/test/kotlin/com/morgana/server/WhiteRiverGameTest.kt", "distribution/build.gradle.kts"]
+code: ["games/white-river/game.json", "games/white-river/server.json", "games/white-river/README.md", "games/white-river/ROADMAP.md", "game-tests/src/test/kotlin/com/morgana/gametests/WhiteRiverGameTest.kt", "distribution/build.gradle.kts"]
 symbols: ["WhiteRiverGameTest", "Zone"]
 generated: { by: claude-code/claude-fable-5-2, at: 2026-11-15T20:00:00Z }
 stale_after: 2027-05-14T00:00:00Z

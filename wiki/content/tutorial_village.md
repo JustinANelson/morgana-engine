@@ -3,7 +3,7 @@ type: Reference
 title: "Tutorial Village: the Getting-Started Game"
 description: "games/tutorial-village, the finished game of docs/GETTING_STARTED.md (a village, a gardener, a kill quest and its reward), kept playable by TutorialVillageGameTest."
 tags: [content, tutorial, onboarding, reference]
-code: ["games/tutorial-village/game.json", "games/tutorial-village/data", "docs/GETTING_STARTED.md", "server-app/src/test/kotlin/com/morgana/server/TutorialVillageGameTest.kt", "distribution/build.gradle.kts"]
+code: ["games/tutorial-village/game.json", "games/tutorial-village/data", "docs/GETTING_STARTED.md", "game-tests/src/test/kotlin/com/morgana/gametests/TutorialVillageGameTest.kt", "distribution/build.gradle.kts"]
 symbols: ["TutorialVillageGameTest"]
 generated: { by: claude-code/claude-opus-5-5, at: 2026-11-14T22:30:00Z }
 stale_after: 2027-05-13T00:00:00Z

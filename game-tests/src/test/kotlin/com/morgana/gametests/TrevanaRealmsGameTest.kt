@@ -1,4 +1,6 @@
-package com.morgana.server
+package com.morgana.gametests
+
+import com.morgana.server.*
 
 import com.morgana.domain.map.MapMoral
 import com.morgana.domain.map.TileAttribute

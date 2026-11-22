@@ -20,9 +20,15 @@ class GameRulesFormTest {
         return json.decodeFromString(GameDefinition.serializer(), Files.readString(file))
     }
 
+    /** Every game folder in the repository, whichever games a checkout has. */
+    private fun gameIds(): List<String> {
+        val root = listOf(Path.of("games"), Path.of("../games")).first { it.exists() }
+        return Files.list(root).use { dirs -> dirs.filter { it.resolve("game.json").exists() }.map { it.fileName.toString() }.toList().sorted() }
+    }
+
     @Test
     fun `every shipped game opens in the form and an unedited apply changes nothing`() {
-        for (game in listOf("roguelike", "blank", "tutorial-village", "white-river")) {
+        for (game in gameIds()) {
             val def = load(game)
             assertEquals(def, GameRulesForm.apply(def, GameRulesForm.valuesOf(def)), "$game round trips")
             assertEquals(emptyList<String>(), GameRulesForm.problems(def, GameRulesForm.valuesOf(def)), "$game has no complaints")

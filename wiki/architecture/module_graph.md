@@ -32,6 +32,7 @@ dev-tools  (standalone: snakeyaml only)
 | `shared-protocol` | core-domain (`api`), serialization json + cbor |
 | `server-persistence` | core-domain (`api`), serialization json |
 | `server-app` | core-domain, shared-protocol, server-persistence, Netty, coroutines, SLF4J, Logback (runtime) |
+| `game-tests` | Tests of the bundled games' content (test-only module; engine tests never depend on a game) |
 | `tilegen` | Kotlin stdlib only; procedural 32x32 tile generation ([tilegen](/architecture/tilegen.md)) |
 | `game-art` | tilegen; per-game sprite kits and exporters ([game-art](/architecture/game_art.md)) |
 | `client-core` | core-domain + shared-protocol + tilegen (`api`), LibGDX, KTX, VisUI, coroutines (no networking library) |

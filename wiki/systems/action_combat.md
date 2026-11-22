@@ -3,7 +3,7 @@ type: Simulation System
 title: "Action Combat Module"
 description: "The Kotlin action combat module (combat.module action): combo graphs of timed skills, aimed hitboxes, dodge frames and guards, with client input tokens."
 tags: [combat, action-combat, roguelike, input]
-code: ["core-domain/src/main/kotlin/com/morgana/domain/combat/ActionCombatModule.kt", "core-domain/src/main/kotlin/com/morgana/domain/combat/ActionCombatRules.kt", "core-domain/src/main/kotlin/com/morgana/domain/combat/CombatModule.kt", "core-domain/src/main/kotlin/com/morgana/domain/sim/NpcAiSystem.kt", "core-domain/src/main/kotlin/com/morgana/domain/systems/BossEncounterSystem.kt", "client-core/src/main/kotlin/com/morgana/client/input/ActionCombatInput.kt", "core-domain/src/test/kotlin/com/morgana/domain/ActionCombatModuleTest.kt", "server-app/src/test/kotlin/com/morgana/server/RoguelikeReferenceGameTest.kt"]
+code: ["core-domain/src/main/kotlin/com/morgana/domain/combat/ActionCombatModule.kt", "core-domain/src/main/kotlin/com/morgana/domain/combat/ActionCombatRules.kt", "core-domain/src/main/kotlin/com/morgana/domain/combat/CombatModule.kt", "core-domain/src/main/kotlin/com/morgana/domain/sim/NpcAiSystem.kt", "core-domain/src/main/kotlin/com/morgana/domain/systems/BossEncounterSystem.kt", "client-core/src/main/kotlin/com/morgana/client/input/ActionCombatInput.kt", "core-domain/src/test/kotlin/com/morgana/domain/ActionCombatModuleTest.kt", "game-tests/src/test/kotlin/com/morgana/gametests/RoguelikeReferenceGameTest.kt"]
 symbols: ["ActionCombatModule", "ActionState", "ActionCombatRules", "ActionCombatInput", "actionDefence", "actionStates", "incomingDamage"]
 generated: { by: claude-code/claude-sonnet-5-5, at: 2026-11-21T18:00:00Z }
 stale_after: 2027-05-20T00:00:00Z

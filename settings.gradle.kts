@@ -28,6 +28,7 @@ include(
     ":server-app",
     ":tilegen",
     ":game-art",
+    ":game-tests",
     ":client-core",
     ":client-net-netty",
     ":script-luak",

@@ -3,7 +3,7 @@ type: Decision
 title: "ADR 0017: White River Online and Its Action-Combat Path"
 description: "White River Online is an original sandbox ORPG built as a game folder; action combat arrives as a new CombatModule, prototyped in Lua, and the tick rate stays at 20 TPS."
 tags: [adr, white-river, combat, roadmap, content]
-code: ["games/white-river/game.json", "games/white-river/ROADMAP.md", "core-domain/src/main/kotlin/com/morgana/domain/combat/CombatModule.kt", "server-app/src/test/kotlin/com/morgana/server/WhiteRiverGameTest.kt"]
+code: ["games/white-river/game.json", "games/white-river/ROADMAP.md", "core-domain/src/main/kotlin/com/morgana/domain/combat/CombatModule.kt", "game-tests/src/test/kotlin/com/morgana/gametests/WhiteRiverGameTest.kt"]
 symbols: ["CombatModule", "LuaCombatModule", "WhiteRiverGameTest"]
 generated: { by: claude-code/claude-fable-5-2, at: 2026-11-15T20:00:00Z }
 stale_after: 2027-05-14T00:00:00Z

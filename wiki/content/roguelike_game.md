@@ -3,7 +3,7 @@ type: Reference
 title: "Ashen Keep: the Reference Co-op Dungeon Crawler & Roguelike"
 description: "games/roguelike, the reference dungeon crawler and roguelike realm: Ashen Keep multiplayer hub and Floor 1 (The Sunken Crypt) built with the Trevana Realms tileset and paperdoll workflow."
 tags: [content, roguelike, reference, instancing, assets]
-code: ["games/roguelike/game.json", "games/roguelike/server.json", "games/roguelike/data/maps", "games/roguelike/README.md", "game-art/src/main/kotlin/com/morgana/gameart/export/RoguelikeGameExporter.kt", "server-app/src/test/kotlin/com/morgana/server/RoguelikeReferenceGameTest.kt", "distribution/build.gradle.kts"]
+code: ["games/roguelike/game.json", "games/roguelike/server.json", "games/roguelike/data/maps", "games/roguelike/README.md", "game-art/src/main/kotlin/com/morgana/gameart/export/RoguelikeGameExporter.kt", "game-tests/src/test/kotlin/com/morgana/gametests/RoguelikeReferenceGameTest.kt", "distribution/build.gradle.kts"]
 symbols: ["RoguelikeReferenceGameTest", "RoguelikeGameExporter", "RoguelikeIconArt"]
 generated: { by: antigravity/gemini-4-neon, at: 2026-11-21T20:00:00Z }
 stale_after: 2027-05-21T00:00:00Z
@@ -28,4 +28,4 @@ Replaced the earlier *Lanternfall* template on 2026-11-21. **Ashen Keep** (`game
 `.\gradlew.bat :game-art:run "--args=roguelike export --game games/roguelike"` runs `RoguelikeGameExporter` (`:game-art`) to write the 91 owned art files (`tilesets/1..7`, `sprites/1..3, 10..17, 101..106`, `paperdolls/1..16`, `icons/1..41`, `projectiles/1..4`, `animations/1..6`). Content JSON in `data/` and `game.json` are edited directly or in the F1 editors.
 
 ## Tests
-`RoguelikeReferenceGameTest` (`:server-app`, on a temp copy) and `RoguelikeGameExporterTest` (`:game-art`, on a temp dir). `.\gradlew.bat check` validates content, scripts, and art.
+`RoguelikeReferenceGameTest` (`:game-tests`, on a temp copy) and `RoguelikeGameExporterTest` (`:game-art`, on a temp dir). `.\gradlew.bat check` validates content, scripts, and art.
