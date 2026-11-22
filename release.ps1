@@ -48,8 +48,11 @@ $notes = @"
 "@
 
 $exists = $false
-& gh release view $Tag *> $null
+$prevEap = $ErrorActionPreference
+$ErrorActionPreference = 'Continue'
+& gh release view $Tag 2>&1 | Out-Null
 if ($LASTEXITCODE -eq 0) { $exists = $true }
+$ErrorActionPreference = $prevEap
 
 $paths = $files | ForEach-Object { $_.FullName }
 if ($exists) {
