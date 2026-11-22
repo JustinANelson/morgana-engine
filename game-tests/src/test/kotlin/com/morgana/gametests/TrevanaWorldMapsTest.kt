@@ -138,7 +138,8 @@ class TrevanaWorldMapsTest {
     fun `each zone's enemies sit in its level band and camps are dense`() {
         for ((id, z) in zones) {
             val m = maps.getValue(id)
-            val npcs = m.npcSpawns.map { loaded.catalog.npcs.getValue(it.npcId) }
+            val monsterSpawns = m.npcSpawns.filter { loaded.catalog.npcs.getValue(it.npcId).behavior in setOf(NpcBehavior.PASSIVE, NpcBehavior.ATTACK_ON_SIGHT) }
+            val npcs = monsterSpawns.map { loaded.catalog.npcs.getValue(it.npcId) }
             assertTrue(npcs.isNotEmpty(), "${z.first} has enemies")
             val band = z.second
             for (n in npcs.toSet()) {
@@ -146,10 +147,10 @@ class TrevanaWorldMapsTest {
                 assertTrue(n.behavior in setOf(NpcBehavior.PASSIVE, NpcBehavior.ATTACK_ON_SIGHT), "${n.name} is not a monster")
             }
             val walkable = m.cells.count { it.attribute !is TileAttribute.Blocked }
-            val perEnemy = walkable.toFloat() / m.npcSpawns.size
+            val perEnemy = walkable.toFloat() / monsterSpawns.size
             assertTrue(perEnemy in 25f..70f, "${z.first}: one enemy per $perEnemy walkable tiles (want about one per 30 to 50)")
             // Camps of 8 to 10: nearest-neighbour clustering means most enemies have 4 or more others within 4 tiles.
-            val pts = m.npcSpawns.map { it.spawnX to it.spawnY }
+            val pts = monsterSpawns.map { it.spawnX to it.spawnY }
             val clustered = pts.count { p -> pts.count { q -> q != p && kotlin.math.abs(q.first - p.first) <= 4 && kotlin.math.abs(q.second - p.second) <= 4 } >= 4 }
             assertTrue(clustered > pts.size * 0.6, "${z.first}: enemies are in camps")
         }
@@ -163,5 +164,25 @@ class TrevanaWorldMapsTest {
         }
         val fork = maps.getValue(2)
         assertTrue(fork.npcSpawns.all { loaded.catalog.npcs.getValue(it.npcId).behavior == NpcBehavior.GUARD })
+    }
+
+    @Test
+    fun `each zone has a quest giver and a pharmacist near its entrance, and the chain of quests can be taken in order`() {
+        for ((id, z) in zones) {
+            val m = maps.getValue(id)
+            val givers = m.npcSpawns.map { loaded.catalog.npcs.getValue(it.npcId) }.filter { it.behavior == NpcBehavior.QUEST_GIVER }
+            assertEquals(1, givers.size, "${z.first} has one quest giver")
+            val g = givers.single()
+            val event = loaded.catalog.events[g.eventId]
+            assertTrue(event != null, "${g.name} has an event")
+            val quests = loaded.catalog.quests.values.filter { it.objectives.any { o -> loaded.catalog.npcs[o.targetId]?.level in z.second.first - 2..z.second.last + 2 } && it.id / 10 == 10 + zones.keys.indexOf(id) + 1 }
+            assertEquals(3, quests.size, "${z.first} has three quests")
+            for (q in quests) {
+                assertTrue(q.reward.xp > 0 && q.objectives.all { o -> m.npcSpawns.any { it.npcId == o.targetId } }, "${q.name}: its targets live in ${z.first}")
+            }
+            assertTrue(m.npcSpawns.any { loaded.catalog.npcs.getValue(it.npcId).behavior == NpcBehavior.SHOPKEEPER }, "${z.first} has a pharmacist")
+        }
+        assertTrue(maps.getValue(1).npcSpawns.any { it.npcId == 6 }, "the Waymaster stands in Trevena")
+        assertEquals(setOf(3), loaded.catalog.quests.getValue(100).objectives.map { it.targetId }.toSet())
     }
 }
