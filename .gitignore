@@ -49,3 +49,4 @@ games/*/source-audio/
 # Private / developer games kept locally outside the public engine repo
 games/trevana-realms/
 TREVANA_REALMS_DESIGN_AND_CONTENT.md
+TREVANA_OPS.md
