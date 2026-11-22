@@ -55,13 +55,31 @@ class StructureAndPropTest {
         for (tileSize in listOf(16, 32)) {
             val propGen = PropGenerator(seed = 42L, tileSize = tileSize)
             for (kind in PropKind.entries) {
-                assertTrue(kind.widthTiles == 1 || kind.widthTiles == 3, "Prop $kind must be 1 or 3 tiles wide")
+                assertTrue(kind.widthTiles >= 1 && kind.heightTiles >= 1, "Prop $kind must be at least 1 x 1 tiles")
                 val prop = propGen.generateProp("test_${kind.name.lowercase()}", kind, style = PixelStyle.CLASSIC_RPG)
                 assertEquals(kind.widthTiles * tileSize, prop.fullImage.width)
                 assertEquals(kind.heightTiles * tileSize, prop.fullImage.height)
                 assertEquals(kind.widthTiles * kind.heightTiles, prop.slicedTiles.size)
                 assertTrue(prop.fullImage.pixels.any { (it and 0xFF) != 0 }, "Prop $kind should have visible pixels")
             }
+        }
+    }
+
+    @Test
+    fun `overworld scenery props are deterministic, take palettes and fill their footprint`() {
+        val world = listOf(
+            PropKind.SIGNPOST, PropKind.OBELISK, PropKind.REED_CLUMP, PropKind.WHEAT_SHEAF, PropKind.ROPE_BRIDGE, PropKind.PIER,
+            PropKind.SAILING_SHIP, PropKind.WATCH_TOWER, PropKind.GATEHOUSE, PropKind.MINE_CART, PropKind.DEAD_TREE
+        )
+        val gen = PropGenerator(seed = 7L, tileSize = 32)
+        for (kind in world) {
+            val a = gen.generateProp("w_${kind.name}", kind, style = PixelStyle.MORGANA)
+            val b = gen.generateProp("w_${kind.name}", kind, style = PixelStyle.MORGANA)
+            assertArrayEquals(a.fullImage.pixels, b.fullImage.pixels, "$kind is deterministic")
+            val opaque = a.fullImage.pixels.count { (it and 0xFF) > 0 }
+            assertTrue(opaque > 60, "$kind draws something ($opaque opaque pixels)")
+            val tinted = gen.generateProp("w_${kind.name}", kind, style = PixelStyle.MORGANA, primaryPalette = PalettePresets.RUINS_GOLD, secondaryPalette = PalettePresets.WARM_TIMBER)
+            assertTrue(!tinted.fullImage.pixels.contentEquals(a.fullImage.pixels), "$kind responds to palettes")
         }
     }
 

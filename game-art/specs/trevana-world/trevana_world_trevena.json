@@ -1,0 +1,286 @@
+{
+ "name": "world_trevena",
+ "seed": 9101,
+ "tileSize": 32,
+ "columns": 8,
+ "style": "CLASSIC_RPG",
+ "palettes": {},
+ "materials": [
+  {
+   "name": "hub_grass",
+   "pattern": "ORGANIC_FBM",
+   "palette": "meadow_grass",
+   "scale": 1.3,
+   "detail": 0.3,
+   "variants": 4
+  },
+  {
+   "name": "hub_dirt",
+   "pattern": "ORGANIC_FBM",
+   "palette": "earth_dirt",
+   "scale": 1.2,
+   "detail": 0.3,
+   "variants": 3
+  },
+  {
+   "name": "hub_sand",
+   "pattern": "ORGANIC_FBM",
+   "palette": "desert_sand",
+   "scale": 1.2,
+   "detail": 0.3,
+   "variants": 2
+  },
+  {
+   "name": "hub_cobble",
+   "pattern": "COBBLESTONE",
+   "palette": "slate_stone",
+   "scale": 1.0,
+   "detail": 0.25,
+   "variants": 3
+  },
+  {
+   "name": "hub_paver",
+   "pattern": "DIAGONAL_PAVER",
+   "palette": "cream_marble",
+   "scale": 1.0,
+   "detail": 0.2,
+   "variants": 2
+  },
+  {
+   "name": "hub_royal_paver",
+   "pattern": "DIAGONAL_PAVER",
+   "palette": "ruins_gold",
+   "scale": 1.0,
+   "detail": 0.2
+  },
+  {
+   "name": "hub_brick",
+   "pattern": "BRICK_MASONRY",
+   "palette": "terracotta_brick",
+   "scale": 1.0,
+   "detail": 0.2
+  },
+  {
+   "name": "hub_planks",
+   "pattern": "WOOD_PLANKS",
+   "palette": "timber_wood",
+   "scale": 1.0,
+   "detail": 0.25,
+   "variants": 2
+  },
+  {
+   "name": "hub_sea",
+   "pattern": "WATER_CAUSTICS",
+   "palette": "ocean_water",
+   "scale": 1.0,
+   "detail": 0.3,
+   "frames": 4
+  },
+  {
+   "name": "hub_harbor_stone",
+   "pattern": "COBBLESTONE",
+   "palette": "dark_iron",
+   "scale": 1.0,
+   "detail": 0.25
+  }
+ ],
+ "cliffs": [
+  {
+   "name": "citadel_wall",
+   "topMaterial": "hub_paver",
+   "faceMaterial": "hub_cobble",
+   "trimColor": "#e0b248",
+   "a4Layout": true
+  },
+  {
+   "name": "keep_wall",
+   "topMaterial": "hub_royal_paver",
+   "faceMaterial": "hub_brick",
+   "trimColor": "#e0b248",
+   "a4Layout": true
+  },
+  {
+   "name": "sea_wall",
+   "topMaterial": "hub_cobble",
+   "faceMaterial": "hub_harbor_stone",
+   "trimColor": "#4a5260",
+   "a4Layout": true
+  }
+ ],
+ "props": [
+  {
+   "name": "hub_gatehouse",
+   "kind": "GATEHOUSE",
+   "primaryPalette": "slate_stone",
+   "secondaryPalette": "timber_wood"
+  },
+  {
+   "name": "hub_tower",
+   "kind": "WATCH_TOWER",
+   "primaryPalette": "slate_stone",
+   "secondaryPalette": "timber_wood"
+  },
+  {
+   "name": "hub_ship",
+   "kind": "SAILING_SHIP",
+   "primaryPalette": "cream_marble",
+   "secondaryPalette": "timber_wood"
+  },
+  {
+   "name": "hub_pier",
+   "kind": "PIER",
+   "secondaryPalette": "timber_wood"
+  },
+  {
+   "name": "hub_sign",
+   "kind": "SIGNPOST",
+   "secondaryPalette": "timber_wood"
+  },
+  {
+   "name": "hub_stall",
+   "kind": "MARKET_STALL",
+   "primaryPalette": "scarlet_roof",
+   "secondaryPalette": "warm_timber"
+  },
+  {
+   "name": "hub_banner",
+   "kind": "WALL_BANNER",
+   "primaryPalette": "scarlet_roof",
+   "secondaryPalette": "slate_stone"
+  },
+  {
+   "name": "hub_cottage",
+   "kind": "COTTAGE",
+   "primaryPalette": "terracotta_brick",
+   "secondaryPalette": "timber_wood"
+  },
+  {
+   "name": "hub_house",
+   "kind": "HALF_TIMBER_HOUSE",
+   "primaryPalette": "scarlet_roof",
+   "secondaryPalette": "warm_timber"
+  },
+  {
+   "name": "hub_fountain",
+   "kind": "RUNE_CRYSTAL_FOUNTAIN",
+   "primaryPalette": "cream_marble",
+   "secondaryPalette": "ocean_water"
+  },
+  {
+   "name": "hub_oak",
+   "kind": "OAK_TREE",
+   "primaryPalette": "meadow_grass",
+   "secondaryPalette": "timber_wood"
+  },
+  {
+   "name": "hub_pine",
+   "kind": "PINE_TREE",
+   "primaryPalette": "meadow_grass",
+   "secondaryPalette": "timber_wood"
+  },
+  {
+   "name": "hub_fence",
+   "kind": "WOOD_FENCE",
+   "secondaryPalette": "timber_wood"
+  },
+  {
+   "name": "hub_barrel",
+   "kind": "BARREL",
+   "secondaryPalette": "timber_wood"
+  },
+  {
+   "name": "hub_crate",
+   "kind": "CRATE",
+   "secondaryPalette": "timber_wood"
+  },
+  {
+   "name": "hub_rack",
+   "kind": "WEAPON_RACK",
+   "primaryPalette": "slate_stone",
+   "secondaryPalette": "timber_wood"
+  },
+  {
+   "name": "hub_tent",
+   "kind": "MEDIEVAL_TENT",
+   "primaryPalette": "scarlet_roof",
+   "secondaryPalette": "timber_wood"
+  },
+  {
+   "name": "hub_wagon",
+   "kind": "TRADE_WAGON",
+   "primaryPalette": "scarlet_roof",
+   "secondaryPalette": "timber_wood"
+  },
+  {
+   "name": "hub_urn",
+   "kind": "URN",
+   "primaryPalette": "terracotta_brick",
+   "secondaryPalette": "slate_stone"
+  },
+  {
+   "name": "hub_lamp",
+   "kind": "TORCH_SCONCE",
+   "primaryPalette": "slate_stone"
+  },
+  {
+   "name": "hub_chest",
+   "kind": "CHEST_CLOSED",
+   "primaryPalette": "slate_stone",
+   "secondaryPalette": "timber_wood"
+  }
+ ],
+ "autotiles": [
+  {
+   "name": "sea_on_sand",
+   "mode": "BLOB_47",
+   "columns": 8,
+   "foregroundMaterial": "hub_sea",
+   "backgroundMaterial": "hub_sand",
+   "style": {
+    "margin": 4.0,
+    "rimWidth": 1.0,
+    "wobbleAmplitude": 2.4,
+    "rimColor": "#d8c486"
+   }
+  },
+  {
+   "name": "cobble_on_grass",
+   "mode": "BLOB_47",
+   "columns": 8,
+   "foregroundMaterial": "hub_cobble",
+   "backgroundMaterial": "hub_grass",
+   "style": {
+    "margin": 3.0,
+    "rimWidth": 1.0,
+    "wobbleAmplitude": 1.8,
+    "rimColor": "#3a5c3e"
+   }
+  },
+  {
+   "name": "dirt_on_grass",
+   "mode": "BLOB_47",
+   "columns": 8,
+   "foregroundMaterial": "hub_dirt",
+   "backgroundMaterial": "hub_grass",
+   "style": {
+    "margin": 3.0,
+    "rimWidth": 1.0,
+    "wobbleAmplitude": 1.8,
+    "rimColor": "#3a5c3e"
+   }
+  },
+  {
+   "name": "paver_on_cobble",
+   "mode": "BLOB_47",
+   "columns": 8,
+   "foregroundMaterial": "hub_paver",
+   "backgroundMaterial": "hub_cobble",
+   "style": {
+    "margin": 3.0,
+    "rimWidth": 1.0,
+    "wobbleAmplitude": 1.8,
+    "rimColor": "#7b817a"
+   }
+  }
+ ]
+}

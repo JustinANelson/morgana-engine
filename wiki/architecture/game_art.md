@@ -20,4 +20,6 @@ stale_after: 2027-05-21T00:00:00Z
 | `whiteriver` | Player, enemy, item and skill generators for the action RPG. |
 | `cli` | `GameArtCli`; run `.\gradlew.bat :game-art:run "--args=<command> ..."` from the repository root. Commands: `trevana`, `trevana export --game <folder>`, `roguelike export --game <folder>`, `whiteriver <players|enemies|items|skills|all>`. |
 
+`game-art/specs/trevana-world/` holds the open-world RPG's biome tileset specs (hub, golden grassland, autumn forest, red canyon, scorched desert, swamp, volcanic highlands). They are exported by tilegen's `gametilesets` command; see [tilegen](/architecture/tilegen.md).
+
 Tests never write into `games/`: they export into a temp directory. A new game with its own art kit adds its generator and exporter here (or ships its own art as plain files).

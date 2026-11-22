@@ -1,0 +1,239 @@
+{
+ "name": "world_dinas",
+ "seed": 9104,
+ "tileSize": 32,
+ "columns": 8,
+ "style": "CLASSIC_RPG",
+ "palettes": {
+  "red_rock": {
+   "colors": [
+    "#3a1c1c",
+    "#6a2e24",
+    "#984638",
+    "#c06a4c",
+    "#e09470"
+   ]
+  },
+  "red_face": {
+   "colors": [
+    "#2a1212",
+    "#4a2018",
+    "#6e3226",
+    "#964a38",
+    "#b8684c"
+   ]
+  },
+  "quarry_stone": {
+   "colors": [
+    "#3a3436",
+    "#5a5254",
+    "#7a7274",
+    "#9c9496",
+    "#c0babc"
+   ]
+  },
+  "dry_scrub": {
+   "colors": [
+    "#3a3220",
+    "#5e5230",
+    "#847444",
+    "#a8985a",
+    "#ccbc7c"
+   ]
+  }
+ },
+ "materials": [
+  {
+   "name": "din_rock",
+   "pattern": "ORGANIC_FBM",
+   "palette": "red_rock",
+   "scale": 1.5,
+   "detail": 0.45,
+   "variants": 4
+  },
+  {
+   "name": "din_scrub",
+   "pattern": "ORGANIC_FBM",
+   "palette": "dry_scrub",
+   "scale": 1.3,
+   "detail": 0.3,
+   "variants": 3
+  },
+  {
+   "name": "din_dirt",
+   "pattern": "ORGANIC_FBM",
+   "palette": "earth_dirt",
+   "scale": 1.2,
+   "detail": 0.3,
+   "variants": 2
+  },
+  {
+   "name": "din_face",
+   "pattern": "COBBLESTONE",
+   "palette": "red_face",
+   "scale": 1.4,
+   "detail": 0.3,
+   "variants": 2
+  },
+  {
+   "name": "din_quarry",
+   "pattern": "BRICK_MASONRY",
+   "palette": "quarry_stone",
+   "scale": 1.0,
+   "detail": 0.2
+  },
+  {
+   "name": "din_plank",
+   "pattern": "WOOD_PLANKS",
+   "palette": "timber_wood",
+   "scale": 1.0,
+   "detail": 0.25
+  }
+ ],
+ "cliffs": [
+  {
+   "name": "terrace_cliff",
+   "topMaterial": "din_rock",
+   "faceMaterial": "din_face",
+   "trimColor": "#c8704a",
+   "a4Layout": true
+  },
+  {
+   "name": "canyon_wall",
+   "topMaterial": "din_scrub",
+   "faceMaterial": "din_face",
+   "trimColor": "#e09470",
+   "a4Layout": true
+  },
+  {
+   "name": "quarry_wall",
+   "topMaterial": "din_quarry",
+   "faceMaterial": "din_face",
+   "trimColor": "#9c9496",
+   "a4Layout": true
+  }
+ ],
+ "props": [
+  {
+   "name": "din_bridge",
+   "kind": "ROPE_BRIDGE",
+   "secondaryPalette": "timber_wood"
+  },
+  {
+   "name": "din_cart",
+   "kind": "MINE_CART",
+   "primaryPalette": "quarry_stone",
+   "secondaryPalette": "timber_wood"
+  },
+  {
+   "name": "din_tower",
+   "kind": "WATCH_TOWER",
+   "primaryPalette": "red_face",
+   "secondaryPalette": "timber_wood"
+  },
+  {
+   "name": "din_dead",
+   "kind": "DEAD_TREE",
+   "secondaryPalette": "timber_wood"
+  },
+  {
+   "name": "din_pine",
+   "kind": "PINE_TREE",
+   "primaryPalette": "dry_scrub",
+   "secondaryPalette": "timber_wood"
+  },
+  {
+   "name": "din_bush",
+   "kind": "BUSH",
+   "primaryPalette": "dry_scrub"
+  },
+  {
+   "name": "din_tuft",
+   "kind": "GRASS_TUFT",
+   "primaryPalette": "dry_scrub"
+  },
+  {
+   "name": "din_crate",
+   "kind": "CRATE",
+   "secondaryPalette": "timber_wood"
+  },
+  {
+   "name": "din_barrel",
+   "kind": "BARREL",
+   "secondaryPalette": "timber_wood"
+  },
+  {
+   "name": "din_sign",
+   "kind": "SIGNPOST",
+   "secondaryPalette": "timber_wood"
+  },
+  {
+   "name": "din_ruin_arch",
+   "kind": "STONE_ARCHWAY",
+   "primaryPalette": "red_face"
+  },
+  {
+   "name": "din_pillar",
+   "kind": "PILLAR",
+   "primaryPalette": "red_face"
+  },
+  {
+   "name": "din_camp",
+   "kind": "CAMPFIRE",
+   "primaryPalette": "quarry_stone"
+  },
+  {
+   "name": "din_tent",
+   "kind": "MEDIEVAL_TENT",
+   "primaryPalette": "scarlet_roof",
+   "secondaryPalette": "timber_wood"
+  },
+  {
+   "name": "din_chest",
+   "kind": "CHEST_CLOSED",
+   "primaryPalette": "quarry_stone",
+   "secondaryPalette": "timber_wood"
+  }
+ ],
+ "autotiles": [
+  {
+   "name": "dirt_on_rock",
+   "mode": "BLOB_47",
+   "columns": 8,
+   "foregroundMaterial": "din_dirt",
+   "backgroundMaterial": "din_rock",
+   "style": {
+    "margin": 3.0,
+    "rimWidth": 1.0,
+    "wobbleAmplitude": 1.8,
+    "rimColor": "#7a4a28"
+   }
+  },
+  {
+   "name": "scrub_on_rock",
+   "mode": "BLOB_47",
+   "columns": 8,
+   "foregroundMaterial": "din_scrub",
+   "backgroundMaterial": "din_rock",
+   "style": {
+    "margin": 3.0,
+    "rimWidth": 1.0,
+    "wobbleAmplitude": 1.8,
+    "rimColor": "#6a5a30"
+   }
+  },
+  {
+   "name": "quarry_on_rock",
+   "mode": "BLOB_47",
+   "columns": 8,
+   "foregroundMaterial": "din_quarry",
+   "backgroundMaterial": "din_rock",
+   "style": {
+    "margin": 3.0,
+    "rimWidth": 1.0,
+    "wobbleAmplitude": 1.8,
+    "rimColor": "#7a7274"
+   }
+  }
+ ]
+}

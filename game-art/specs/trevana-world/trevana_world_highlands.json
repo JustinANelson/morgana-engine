@@ -1,0 +1,278 @@
+{
+ "name": "world_highlands",
+ "seed": 9107,
+ "tileSize": 32,
+ "columns": 8,
+ "style": "CLASSIC_RPG",
+ "palettes": {
+  "ash_ground": {
+   "colors": [
+    "#26262a",
+    "#3a3a40",
+    "#52525a",
+    "#70707a",
+    "#9a9aa4"
+   ]
+  },
+  "basalt_rock": {
+   "colors": [
+    "#121218",
+    "#20202a",
+    "#30303c",
+    "#444452",
+    "#5e5e70"
+   ]
+  },
+  "ember_crust": {
+   "colors": [
+    "#2a1410",
+    "#4a1e14",
+    "#7a2c18",
+    "#a8421e",
+    "#d46a2a"
+   ]
+  },
+  "scorch_face": {
+   "colors": [
+    "#1a1618",
+    "#2e262a",
+    "#463a3c",
+    "#625050",
+    "#847068"
+   ]
+  },
+  "ash_wood": {
+   "colors": [
+    "#1c1a1a",
+    "#302c2a",
+    "#4a4440",
+    "#686058",
+    "#8a8278"
+   ]
+  }
+ },
+ "materials": [
+  {
+   "name": "high_ash",
+   "pattern": "ORGANIC_FBM",
+   "palette": "ash_ground",
+   "scale": 1.5,
+   "detail": 0.4,
+   "variants": 4
+  },
+  {
+   "name": "high_basalt",
+   "pattern": "COBBLESTONE",
+   "palette": "basalt_rock",
+   "scale": 1.0,
+   "detail": 0.35,
+   "variants": 3
+  },
+  {
+   "name": "high_obsidian",
+   "pattern": "OBSIDIAN_CRAG",
+   "palette": "abyssal_obsidian",
+   "scale": 1.0,
+   "detail": 0.3
+  },
+  {
+   "name": "high_lava",
+   "pattern": "WATER_CAUSTICS",
+   "palette": "lava_magma",
+   "scale": 1.0,
+   "detail": 0.35,
+   "frames": 4
+  },
+  {
+   "name": "high_crust",
+   "pattern": "ORGANIC_FBM",
+   "palette": "ember_crust",
+   "scale": 1.3,
+   "detail": 0.45,
+   "variants": 3
+  },
+  {
+   "name": "high_face",
+   "pattern": "COBBLESTONE",
+   "palette": "scorch_face",
+   "scale": 1.4,
+   "detail": 0.3,
+   "variants": 2
+  },
+  {
+   "name": "high_iron",
+   "pattern": "METAL_PLATING",
+   "palette": "dark_iron",
+   "scale": 1.0,
+   "detail": 0.2
+  },
+  {
+   "name": "high_brick",
+   "pattern": "BRICK_MASONRY",
+   "palette": "gunmetal_steel",
+   "scale": 1.0,
+   "detail": 0.2
+  }
+ ],
+ "cliffs": [
+  {
+   "name": "volcano_cliff",
+   "topMaterial": "high_ash",
+   "faceMaterial": "high_face",
+   "trimColor": "#d46a2a",
+   "a4Layout": true
+  },
+  {
+   "name": "basalt_wall",
+   "topMaterial": "high_basalt",
+   "faceMaterial": "high_face",
+   "trimColor": "#444452",
+   "a4Layout": true
+  },
+  {
+   "name": "keep_wall",
+   "topMaterial": "high_iron",
+   "faceMaterial": "high_brick",
+   "trimColor": "#d46a2a",
+   "a4Layout": true
+  }
+ ],
+ "props": [
+  {
+   "name": "high_dead",
+   "kind": "DEAD_TREE",
+   "secondaryPalette": "ash_wood"
+  },
+  {
+   "name": "high_tower",
+   "kind": "WATCH_TOWER",
+   "primaryPalette": "gunmetal_steel",
+   "secondaryPalette": "ash_wood"
+  },
+  {
+   "name": "high_gate",
+   "kind": "GATEHOUSE",
+   "primaryPalette": "gunmetal_steel",
+   "secondaryPalette": "ash_wood"
+  },
+  {
+   "name": "high_obelisk",
+   "kind": "OBELISK",
+   "primaryPalette": "basalt_rock",
+   "secondaryPalette": "lava_magma"
+  },
+  {
+   "name": "high_pillar",
+   "kind": "PILLAR",
+   "primaryPalette": "basalt_rock"
+  },
+  {
+   "name": "high_altar",
+   "kind": "DARK_RIFT_ALTAR",
+   "primaryPalette": "basalt_rock",
+   "secondaryPalette": "rift_crimson"
+  },
+  {
+   "name": "high_brazier",
+   "kind": "CAMPFIRE",
+   "primaryPalette": "basalt_rock"
+  },
+  {
+   "name": "high_skulls",
+   "kind": "SKULL_PILE",
+   "primaryPalette": "basalt_rock"
+  },
+  {
+   "name": "high_cart",
+   "kind": "MINE_CART",
+   "primaryPalette": "basalt_rock",
+   "secondaryPalette": "ash_wood"
+  },
+  {
+   "name": "high_sign",
+   "kind": "SIGNPOST",
+   "secondaryPalette": "ash_wood"
+  },
+  {
+   "name": "high_banner",
+   "kind": "WALL_BANNER",
+   "primaryPalette": "rift_crimson",
+   "secondaryPalette": "gunmetal_steel"
+  },
+  {
+   "name": "high_portal",
+   "kind": "PORTAL",
+   "primaryPalette": "basalt_rock"
+  },
+  {
+   "name": "high_spire",
+   "kind": "GARGOYLE_SPIRE",
+   "primaryPalette": "basalt_rock"
+  },
+  {
+   "name": "high_arch",
+   "kind": "STONE_ARCHWAY",
+   "primaryPalette": "basalt_rock"
+  },
+  {
+   "name": "high_chest",
+   "kind": "CHEST_CLOSED",
+   "primaryPalette": "gunmetal_steel",
+   "secondaryPalette": "ash_wood"
+  }
+ ],
+ "autotiles": [
+  {
+   "name": "lava_on_ash",
+   "mode": "BLOB_47",
+   "columns": 8,
+   "foregroundMaterial": "high_lava",
+   "backgroundMaterial": "high_ash",
+   "style": {
+    "margin": 4.0,
+    "rimWidth": 1.0,
+    "wobbleAmplitude": 2.6,
+    "rimColor": "#d46a2a"
+   }
+  },
+  {
+   "name": "basalt_on_ash",
+   "mode": "BLOB_47",
+   "columns": 8,
+   "foregroundMaterial": "high_basalt",
+   "backgroundMaterial": "high_ash",
+   "style": {
+    "margin": 3.0,
+    "rimWidth": 1.0,
+    "wobbleAmplitude": 1.8,
+    "rimColor": "#30303c"
+   }
+  },
+  {
+   "name": "crust_on_ash",
+   "mode": "BLOB_47",
+   "columns": 8,
+   "foregroundMaterial": "high_crust",
+   "backgroundMaterial": "high_ash",
+   "style": {
+    "margin": 3.0,
+    "rimWidth": 1.0,
+    "wobbleAmplitude": 1.8,
+    "rimColor": "#7a2c18"
+   }
+  },
+  {
+   "name": "obsidian_on_basalt",
+   "mode": "BLOB_47",
+   "columns": 8,
+   "foregroundMaterial": "high_obsidian",
+   "backgroundMaterial": "high_basalt",
+   "style": {
+    "margin": 3.0,
+    "rimWidth": 1.0,
+    "wobbleAmplitude": 1.8,
+    "rimColor": "#20202a"
+   }
+  }
+ ]
+}

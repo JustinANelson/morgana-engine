@@ -1,0 +1,269 @@
+{
+ "name": "world_camlan",
+ "seed": 9105,
+ "tileSize": 32,
+ "columns": 8,
+ "style": "CLASSIC_RPG",
+ "palettes": {
+  "scorched_sand": {
+   "colors": [
+    "#6a4a2a",
+    "#946a38",
+    "#bc9250",
+    "#dcb472",
+    "#f0d498"
+   ]
+  },
+  "salt_flat": {
+   "colors": [
+    "#aaa496",
+    "#c4beae",
+    "#dad6c8",
+    "#ece8dc",
+    "#f8f4ea"
+   ]
+  },
+  "cracked_earth": {
+   "colors": [
+    "#3a2a22",
+    "#5a4232",
+    "#7a5c44",
+    "#9c7a58",
+    "#bc9a74"
+   ]
+  },
+  "ruin_stone": {
+   "colors": [
+    "#4a4036",
+    "#6a5e50",
+    "#8a7c6a",
+    "#aa9c88",
+    "#ccbea8"
+   ]
+  },
+  "black_stone": {
+   "colors": [
+    "#101014",
+    "#1c1c24",
+    "#2a2a34",
+    "#3c3c48",
+    "#545462"
+   ]
+  }
+ },
+ "materials": [
+  {
+   "name": "cam_sand",
+   "pattern": "ORGANIC_FBM",
+   "palette": "scorched_sand",
+   "scale": 1.4,
+   "detail": 0.35,
+   "variants": 4
+  },
+  {
+   "name": "cam_salt",
+   "pattern": "ORGANIC_FBM",
+   "palette": "salt_flat",
+   "scale": 1.6,
+   "detail": 0.2,
+   "variants": 3
+  },
+  {
+   "name": "cam_cracked",
+   "pattern": "ORGANIC_FBM",
+   "palette": "cracked_earth",
+   "scale": 1.2,
+   "detail": 0.5,
+   "variants": 3
+  },
+  {
+   "name": "cam_ruin",
+   "pattern": "BRICK_MASONRY",
+   "palette": "ruin_stone",
+   "scale": 1.0,
+   "detail": 0.3,
+   "variants": 2
+  },
+  {
+   "name": "cam_flag",
+   "pattern": "COBBLESTONE",
+   "palette": "ruin_stone",
+   "scale": 1.0,
+   "detail": 0.3
+  },
+  {
+   "name": "cam_black",
+   "pattern": "OBSIDIAN_CRAG",
+   "palette": "black_stone",
+   "scale": 1.0,
+   "detail": 0.3
+  },
+  {
+   "name": "cam_oasis",
+   "pattern": "WATER_CAUSTICS",
+   "palette": "calm_water",
+   "scale": 1.0,
+   "detail": 0.3,
+   "frames": 4
+  }
+ ],
+ "cliffs": [
+  {
+   "name": "mesa_wall",
+   "topMaterial": "cam_sand",
+   "faceMaterial": "cam_cracked",
+   "trimColor": "#dcb472",
+   "a4Layout": true
+  },
+  {
+   "name": "ruin_wall",
+   "topMaterial": "cam_flag",
+   "faceMaterial": "cam_ruin",
+   "trimColor": "#aa9c88",
+   "a4Layout": true
+  }
+ ],
+ "props": [
+  {
+   "name": "cam_obelisk",
+   "kind": "OBELISK",
+   "primaryPalette": "black_stone",
+   "secondaryPalette": "arcane_violet"
+  },
+  {
+   "name": "cam_obelisk_sand",
+   "kind": "OBELISK",
+   "primaryPalette": "ruin_stone",
+   "secondaryPalette": "relic_amber"
+  },
+  {
+   "name": "cam_pillar",
+   "kind": "PILLAR",
+   "primaryPalette": "ruin_stone"
+  },
+  {
+   "name": "cam_arch",
+   "kind": "STONE_ARCHWAY",
+   "primaryPalette": "ruin_stone"
+  },
+  {
+   "name": "cam_dead",
+   "kind": "DEAD_TREE",
+   "secondaryPalette": "timber_wood"
+  },
+  {
+   "name": "cam_bush",
+   "kind": "BUSH",
+   "primaryPalette": "scorched_sand"
+  },
+  {
+   "name": "cam_tuft",
+   "kind": "GRASS_TUFT",
+   "primaryPalette": "scorched_sand"
+  },
+  {
+   "name": "cam_skulls",
+   "kind": "SKULL_PILE",
+   "primaryPalette": "ruin_stone"
+  },
+  {
+   "name": "cam_sarcophagus",
+   "kind": "SARCOPHAGUS",
+   "primaryPalette": "ruin_stone"
+  },
+  {
+   "name": "cam_urn",
+   "kind": "URN",
+   "primaryPalette": "scorched_sand",
+   "secondaryPalette": "ruin_stone"
+  },
+  {
+   "name": "cam_sign",
+   "kind": "SIGNPOST",
+   "secondaryPalette": "timber_wood"
+  },
+  {
+   "name": "cam_tent",
+   "kind": "MEDIEVAL_TENT",
+   "primaryPalette": "scarlet_roof",
+   "secondaryPalette": "timber_wood"
+  },
+  {
+   "name": "cam_camp",
+   "kind": "CAMPFIRE",
+   "primaryPalette": "ruin_stone"
+  },
+  {
+   "name": "cam_wagon",
+   "kind": "TRADE_WAGON",
+   "primaryPalette": "scorched_sand",
+   "secondaryPalette": "timber_wood"
+  },
+  {
+   "name": "cam_shrine",
+   "kind": "SHRINE",
+   "primaryPalette": "ruin_stone",
+   "secondaryPalette": "relic_amber"
+  },
+  {
+   "name": "cam_excavation",
+   "kind": "ANCIENT_EXCAVATION",
+   "primaryPalette": "ruin_stone",
+   "secondaryPalette": "relic_amber"
+  }
+ ],
+ "autotiles": [
+  {
+   "name": "salt_on_sand",
+   "mode": "BLOB_47",
+   "columns": 8,
+   "foregroundMaterial": "cam_salt",
+   "backgroundMaterial": "cam_sand",
+   "style": {
+    "margin": 3.0,
+    "rimWidth": 1.0,
+    "wobbleAmplitude": 1.8,
+    "rimColor": "#d8d2c0"
+   }
+  },
+  {
+   "name": "cracked_on_sand",
+   "mode": "BLOB_47",
+   "columns": 8,
+   "foregroundMaterial": "cam_cracked",
+   "backgroundMaterial": "cam_sand",
+   "style": {
+    "margin": 3.0,
+    "rimWidth": 1.0,
+    "wobbleAmplitude": 1.8,
+    "rimColor": "#7a5c44"
+   }
+  },
+  {
+   "name": "oasis_on_sand",
+   "mode": "BLOB_47",
+   "columns": 8,
+   "foregroundMaterial": "cam_oasis",
+   "backgroundMaterial": "cam_sand",
+   "style": {
+    "margin": 4.0,
+    "rimWidth": 1.0,
+    "wobbleAmplitude": 2.4,
+    "rimColor": "#c8a860"
+   }
+  },
+  {
+   "name": "flag_on_sand",
+   "mode": "BLOB_47",
+   "columns": 8,
+   "foregroundMaterial": "cam_flag",
+   "backgroundMaterial": "cam_sand",
+   "style": {
+    "margin": 3.0,
+    "rimWidth": 1.0,
+    "wobbleAmplitude": 1.8,
+    "rimColor": "#7a7060"
+   }
+  }
+ ]
+}

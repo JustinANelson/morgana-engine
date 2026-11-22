@@ -7,6 +7,7 @@ import com.morgana.tilegen.autotile.AutotileGenerator
 import com.morgana.tilegen.autotile.AutotileMode
 import com.morgana.tilegen.autotile.TerrainPair
 import com.morgana.tilegen.export.ExportResult
+import com.morgana.tilegen.export.GameTilesetExporter
 import com.morgana.tilegen.export.PaperDollExporter
 import com.morgana.tilegen.export.PngEncoder
 import com.morgana.tilegen.export.TilesetExporter
@@ -305,6 +306,20 @@ object TilesetCli {
                     val split = "split" in flags
                     val results = TilesetExporter.exportRenderedSpec(rendered, outDir, splitTiles = split)
                     results.forEach { reportResult(out, it) }
+                    0
+                }
+                "gametilesets" -> {
+                    // gametilesets --game <folder> --specs <dir|a.json,b.json> [--first-id 100]
+                    val game = flags["game"] ?: error("Missing --game <game folder> for 'gametilesets'")
+                    val specArg = flags["specs"] ?: error("Missing --specs <folder or comma-separated spec files> for 'gametilesets'")
+                    val files = specArg.split(',').map { Paths.get(it.trim()) }.flatMap { p ->
+                        if (Files.isDirectory(p)) Files.list(p).use { st -> st.filter { it.toString().endsWith(".json") }.sorted().toList() } else listOf(p)
+                    }
+                    require(files.isNotEmpty()) { "No spec files found in '$specArg'" }
+                    val result = GameTilesetExporter.export(Paths.get(game), files, flags["first-id"]?.toInt() ?: 100)
+                    out.println("Wrote ${result.written.size} tilesets (ids ${result.written.firstOrNull()?.fileName ?: "-"} ..) into $game/assets/tilesets and $game/tilesets.index.json")
+                    if (result.removed.isNotEmpty()) out.println("Removed ${result.removed.size} stale owned tilesets")
+                    out.println("${result.tiles.size} tiles, ${result.props.size} props, ${result.autotiles.size} autotiles indexed; next free id ${result.nextFreeId}")
                     0
                 }
                 "paperdoll" -> {
@@ -652,6 +667,7 @@ object TilesetCli {
               dungeon [crypt|ember_forge|mossy_ruins] [--seed 1337] [--out <dir>] [--split]   (high-craft 2.5D dungeon tileset, sculpted props & showcase room)
               paperdoll <jobs|monsters|all|pack|spec|jobName> [--size 32] [--frames 2] [--directions] [--layers] [--theme <name>] [--ancestry <name>] [--actions <list|all|lpc>] [--attachments <list>] [--style painted_25d|jrpg_32bit] [--seed 1337] [--out <dir>] [--split]
               spec <file.json> [--out <dir>] [--split]
+              gametilesets --game <game folder> --specs <folder|a.json,b.json> [--first-id 100]   (writes owned tilesets from the id up, plus tilesets.index.json)
               schema
             """.trimIndent()
         )

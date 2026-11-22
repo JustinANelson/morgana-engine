@@ -208,7 +208,42 @@ enum class PropKind(val widthTiles: Int, val heightTiles: Int) {
     STREET_BARRICADE(3, 1),
 
     /** 1x2 Urban streetlamp and traffic signal post. */
-    TRAFFIC_LIGHT(1, 2)
+    TRAFFIC_LIGHT(1, 2),
+
+    // ---- Overworld scenery (WorldProps) ----
+
+    /** 1x2 wooden signpost with two plank boards pointing opposite ways. */
+    SIGNPOST(1, 2),
+
+    /** 1x3 tapering stone monolith with glowing rune bands. */
+    OBELISK(1, 3),
+
+    /** 1x1 clump of swamp reeds with cattail heads. */
+    REED_CLUMP(1, 1),
+
+    /** 1x1 bound sheaf of golden wheat (use a golden foliage palette). */
+    WHEAT_SHEAF(1, 1),
+
+    /** 3x1 rope bridge with planks between two sagging ropes. */
+    ROPE_BRIDGE(3, 1),
+
+    /** 3x1 wooden pier or quay deck with posts. */
+    PIER(3, 1),
+
+    /** 4x3 sailing ship in side view with a square sail. */
+    SAILING_SHIP(4, 3),
+
+    /** 2x3 crenellated stone watchtower. */
+    WATCH_TOWER(2, 3),
+
+    /** 4x3 gatehouse: two towers, an arched portcullis gate and a banner. */
+    GATEHOUSE(4, 3),
+
+    /** 1x1 ore cart on iron wheels. */
+    MINE_CART(1, 1),
+
+    /** 2x2 leafless dead tree. */
+    DEAD_TREE(2, 2)
 }
 
 /**
@@ -400,6 +435,17 @@ class PropGenerator(
                 primaryPalette ?: PalettePresets.URBAN_ASPHALT,
                 secondaryPalette ?: PalettePresets.HAZARD_AMBER
             )
+            PropKind.SIGNPOST -> WorldProps.signpost(canvas, w, h, wood)
+            PropKind.OBELISK -> WorldProps.obelisk(canvas, w, h, stone, secondaryPalette ?: PalettePresets.OCEAN_WATER)
+            PropKind.REED_CLUMP -> WorldProps.reeds(canvas, w, h, foliage, wood, s)
+            PropKind.WHEAT_SHEAF -> WorldProps.wheatSheaf(canvas, w, h, primaryPalette ?: PalettePresets.DESERT_SAND, wood)
+            PropKind.ROPE_BRIDGE -> WorldProps.ropeBridge(canvas, w, h, wood)
+            PropKind.PIER -> WorldProps.pier(canvas, w, h, wood)
+            PropKind.SAILING_SHIP -> WorldProps.sailingShip(canvas, w, h, primaryPalette ?: PalettePresets.CREAM_MARBLE, wood)
+            PropKind.WATCH_TOWER -> WorldProps.watchTower(canvas, w, h, stone, wood)
+            PropKind.GATEHOUSE -> WorldProps.gatehouse(canvas, w, h, stone, wood, PalettePresets.SCARLET_ROOF)
+            PropKind.MINE_CART -> WorldProps.mineCart(canvas, w, h, stone, wood)
+            PropKind.DEAD_TREE -> WorldProps.deadTree(canvas, w, h, wood, s)
             }
         }
 
