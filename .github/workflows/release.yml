@@ -1,0 +1,81 @@
+name: Release SDK & Distributables
+
+on:
+  # Run only when explicitly directed: either push a version tag (e.g. v0.1.0)
+  # or click "Run workflow" in the GitHub Actions tab.
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag name (e.g. v0.1.0)'
+        required: true
+        default: 'v0.1.0'
+        type: string
+      prerelease:
+        description: 'Mark as pre-release'
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build & Publish Morgana Engine SDK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Verify project and build distributables
+        run: |
+          chmod +x gradlew
+          ./gradlew check distributables --no-daemon
+
+      - name: Resolve release metadata
+        id: meta
+        shell: bash
+        run: |
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            TAG="${{ inputs.tag }}"
+            PRERELEASE="${{ inputs.prerelease }}"
+          else
+            TAG="${GITHUB_REF_NAME}"
+            if [[ "$TAG" == *-* ]]; then
+              PRERELEASE="true"
+            else
+              PRERELEASE="false"
+            fi
+          fi
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "prerelease=${PRERELEASE}" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.tag }}
+          name: Morgana Engine ${{ steps.meta.outputs.tag }}
+          prerelease: ${{ steps.meta.outputs.prerelease }}
+          generate_release_notes: true
+          body: |
+            ## Morgana Engine ${{ steps.meta.outputs.tag }}
+
+            ### Downloads
+            - **`morgana-sdk-*.zip`** — Standalone cross-platform SDK (Windows, macOS, Linux). Unzip and run `bin\morgana-client.bat` (Windows) or `bin/morgana-client` (macOS/Linux). Java 17 is downloaded automatically if not installed.
+            - **`client-android-debug.apk`** — Android client APK.
+            - **`morgana-realms-client-html.zip`** — Standalone TeaVM browser client for static hosting or itch.io.
+          files: |
+            build/distributables/*

@@ -21,7 +21,7 @@ Run this from the **repository root** (the folder containing `morgana.bat` and `
 ```
 *(Or call `.\gradlew.bat :client-desktop:run` directly if you already have Java 17+.)*
 
-If you downloaded or built the standalone **Morgana SDK zip** (built with `.\morgana.bat distributables` into `build/distributables/morgana-sdk-<version>.zip`), unzip it and run `bin\morgana-client.bat` (macOS/Linux: `bin/morgana-client`) inside the extracted SDK folder—it also auto-downloads a local JRE 17 if Java 17+ isn't installed.
+If you want to build games **without cloning the source**, download `morgana-sdk-*.zip` from the repository's **[Releases](https://github.com/JustinANelson/morgana-engine/releases)** page (or build it yourself with `.\morgana.bat distributables` into `build/distributables/`), unzip it, and run `bin\morgana-client.bat` (macOS/Linux: `bin/morgana-client`) inside the extracted SDK folder—it also auto-downloads a local JRE 17 if Java 17+ isn't installed.
 
 The first account created on the machine running the server automatically becomes **Owner (rank 4)** so you can press `F1` and build immediately.
 
