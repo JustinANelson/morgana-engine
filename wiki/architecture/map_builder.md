@@ -22,10 +22,11 @@ A recipe (`MapRecipe`) names the map (`id`, size up to 256 x 256, `moral`, `bgm`
 | `wall` | A block from a 9-tile wall set (`<set>_void_*`, `_top_*`, `_bot_*`): flat top rows, then cornice and plinth facing south; blocked except `passableCols`. |
 | `prop` | A multi-tile prop from the index: bottom row blocked on `MASK_1`, upper rows on `FRINGE_1` (drawn over characters); `passableCols` leaves a gate open, `walkable` makes it decoration. |
 | `scatter` | Props over cells of a terrain with a `density`, keeping a `gap` and staying off blocked cells and other props. |
+| `reserve` | Keeps a rectangle clear of later scatter and camps (a road mouth at a seam, a landing); paints nothing. |
 | `tile`, `warp`, `spawn` | One tile on a layer, a warp area, one NPC spawn. |
 | `camps` | Enemy camps on open cells of chosen terrains: `sizeMin`..`sizeMax` per camp, `spacing` apart, count from `camps` or from one enemy per `tilesPerEnemy` tiles. |
 
-A `terrain` names a tile from the index (variants `name_v1...` are picked per cell by a position hash), whether it blocks, and optionally an `autotile` that rounds its edges by an 8-neighbour mask against terrains it does not `join`, with `animatedFrames` for the fully surrounded cells (water).
+A recipe may name an `anchor` tile; enemy camp spawns that cannot be walked to from it are dropped (an island, a pocket behind a lake), while a service NPC that cannot be reached is an error. A `terrain` names a tile from the index (variants `name_v1...` are picked per cell by a position hash), whether it blocks, and optionally an `autotile` that rounds its edges by an 8-neighbour mask against terrains it does not `join`, with `animatedFrames` for the fully surrounded cells (water).
 
 ## Running it
 `.\gradlew.bat :map-builder:installDist`, then run `com.morgana.mapbuilder.MapBuilderCliKt build --game games/<id> --recipes <folder|a.json,b.json> [--index <file>] [--only <id,id>] [--force true]` with the install's `lib/*` on the classpath (`:map-builder:run` does the same through Gradle). It writes `data/maps/map_<id>.json` for the ids its recipes name and nothing else. A map that has been edited since (revision above 1; every `F1` edit raises it) is not overwritten unless `--force true`, so hand edits survive a re-run. The compiler rejects an unknown name, a prop that leaves the map, and an NPC spawn on a blocked tile.

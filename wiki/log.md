@@ -2,6 +2,8 @@
 
 ## 2026-11-22
 
+* **Add** - **Trevana Realms zones 2-8 and the `reserve` and `anchor` recipe features** ([map-builder](/architecture/map_builder.md), [Trevana Realms](/content/trevana_realms_game.md)): the North Fork, Gelli Gwyon, Forest of Celidon, Crags of Dinas Bran, Waste of Camlan, Mere of Avallon and Highlands of an Badon built from recipes with raised enemy density; `TrevanaWorldMapsTest` covers seams, connectivity, the hub-crossroads rule, the one-way drop and level bands.
+
 * **Add** - **`:map-builder` module and the rebuilt Trevena hub** ([map-builder](/architecture/map_builder.md), [Trevana Realms](/content/trevana_realms_game.md)): map recipes (terrain ops, walls, props, scatter, warps, spawn camps) compile into map files from the tile index; it never overwrites a hand-edited map. The animated-tile frame layout in `GameTilesetExporter` no longer wraps a frame group across a row. Trevana Realms map 1 is a 200 x 200 walled hub built from a recipe, with `TrevenaMapTest` checking shape, spawns and reachability. Tilesets 33-52 removed.
 
 * **Remove** - **Trevana Realms old world deleted for the map rebuild** ([Trevana Realms](/content/trevana_realms_game.md)): 30 maps, 26 quests and 17 quest or travel events removed, a placeholder Trevena map added, map-bound settings (town gate, jail, stalls, jump and gate disable lists) pointed at it, and the Holdfast guild war and arena switched off. 37 map-dependent tests in `:game-tests` are disabled until the new maps land; the content test tolerates quest-giver NPCs without events. Game data is gitignored, so a zip backup was made outside the repository.

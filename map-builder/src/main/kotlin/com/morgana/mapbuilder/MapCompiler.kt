@@ -40,6 +40,7 @@ object MapCompiler {
         fun at(x: Int, y: Int) = grid[y * w + x]
         fun inb(x: Int, y: Int) = x in 0 until w && y in 0 until h
         val spawns = ArrayList<MapNpcSpawnSlot>()
+        val campSlots = HashSet<Int>()
 
         fun paint(t: Int, x: Int, y: Int) {
             if (inb(x, y)) at(x, y).terrain = t
@@ -139,6 +140,7 @@ object MapCompiler {
                     if (c in op.passableCols && r >= op.h - 2) cell.open = true else cell.blocked = true
                 }
             }
+            is ReserveOp -> for (y in op.y until op.y + op.h) for (x in op.x until op.x + op.w) if (inb(x, y)) at(x, y).occupied = true
             is PropOp -> placeProp(op.prop, op.x, op.y, op.passableCols, op.walkable)
             is ScatterOp -> {
                 val t = terrain(op.terrain)
@@ -180,8 +182,13 @@ object MapCompiler {
             is SpawnOp -> {
                 if (!inb(op.x, op.y)) throw RecipeException("Map ${recipe.id}: spawn at (${op.x},${op.y}) leaves the map")
                 spawns += MapNpcSpawnSlot(spawns.size, op.npcId, op.x, op.y, op.respawnTicks)
+                at(op.x, op.y).occupied = true
             }
-            is CampsOp -> compileCamps(recipe, op, w, h, ::at, ::inb, ids, recipe.terrains, names, spawns)
+            is CampsOp -> {
+                val before = spawns.size
+                compileCamps(recipe, op, w, h, ::at, ::inb, ids, recipe.terrains, names, spawns)
+                for (i in before until spawns.size) campSlots += i
+            }
         }
 
         val terrainIds = grid.map { it.terrain }
@@ -200,9 +207,32 @@ object MapCompiler {
             val a = cells[sp.spawnY * w + sp.spawnX].attribute
             if (a == TileAttribute.Blocked) throw RecipeException("Map ${recipe.id}: npc ${sp.npcId} spawns on a blocked tile (${sp.spawnX},${sp.spawnY})")
         }
+        var finalSpawns: List<MapNpcSpawnSlot> = spawns
+        recipe.anchor?.let { a ->
+            val seen = BooleanArray(w * h)
+            val queue = ArrayDeque<Int>()
+            if (!inb(a[0], a[1]) || cells[a[1] * w + a[0]].attribute == TileAttribute.Blocked) throw RecipeException("Map ${recipe.id}: anchor (${a[0]},${a[1]}) is not walkable")
+            seen[a[1] * w + a[0]] = true
+            queue.add(a[1] * w + a[0])
+            while (queue.isNotEmpty()) {
+                val i = queue.removeFirst()
+                for ((dx, dy) in listOf(1 to 0, -1 to 0, 0 to 1, 0 to -1)) {
+                    val nx = i % w + dx
+                    val ny = i / w + dy
+                    if (!inb(nx, ny) || seen[ny * w + nx] || cells[ny * w + nx].attribute == TileAttribute.Blocked) continue
+                    seen[ny * w + nx] = true
+                    queue.add(ny * w + nx)
+                }
+            }
+            for ((i, sp) in spawns.withIndex()) if (i !in campSlots && !seen[sp.spawnY * w + sp.spawnX]) {
+                throw RecipeException("Map ${recipe.id}: npc ${sp.npcId} at (${sp.spawnX},${sp.spawnY}) cannot be reached from the anchor")
+            }
+            finalSpawns = spawns.filterIndexed { i, sp -> i !in campSlots || seen[sp.spawnY * w + sp.spawnX] }
+                .mapIndexed { n, sp -> sp.copy(slotIndex = n) }
+        }
         return MapDefinition(
             id = recipe.id, name = recipe.name, width = w, height = h, moral = recipe.moral, bgmTrackId = recipe.bgm,
-            isIndoors = recipe.indoors, zoneId = recipe.zoneId, neighbors = recipe.neighbors, cells = cells, npcSpawns = spawns
+            isIndoors = recipe.indoors, zoneId = recipe.zoneId, neighbors = recipe.neighbors, cells = cells, npcSpawns = finalSpawns
         )
     }
 

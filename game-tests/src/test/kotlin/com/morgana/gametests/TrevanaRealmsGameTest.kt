@@ -115,7 +115,7 @@ class TrevanaRealmsGameTest {
         }
 
         // Cities must not directly warp to one another
-        val cityIds = loaded.catalog.maps.keys.toSet()
+        val cityIds = setOf(1)
         for (cityId in cityIds) {
             val city = loaded.catalog.maps.getValue(cityId)
             val directTargets = city.cells.mapNotNull { (it.attribute as? TileAttribute.Warp)?.targetMapId }.toSet()

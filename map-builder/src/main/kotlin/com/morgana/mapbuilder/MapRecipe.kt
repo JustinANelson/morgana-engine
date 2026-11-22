@@ -23,6 +23,12 @@ data class MapRecipe(
     val indoors: Boolean = false,
     val zoneId: Int = 0,
     val neighbors: MapNeighborLinks = MapNeighborLinks(),
+    /**
+     * A tile (`[x, y]`) the player can stand on. When given, enemy camp spawns that cannot be walked to from it (an island, a pocket
+     * behind a lake) are dropped, so no enemy is wasted where nobody can reach it. Service NPCs from `spawn` are never dropped:
+     * the compiler reports them if they are unreachable.
+     */
+    val anchor: List<Int>? = null,
     /** The terrain every cell starts as. */
     val base: String,
     val terrains: Map<String, TerrainDef>,
@@ -111,6 +117,10 @@ data class TileOp(val tile: String, val x: Int, val y: Int, val layer: MapLayer 
 /** A warp tile area: stepping on any cell of the [w] x [h] area at ([x], [y]) moves the player to ([toX], [toY]) on map [toMap]. */
 @Serializable @SerialName("warp")
 data class WarpOp(val x: Int, val y: Int, val toMap: Int, val toX: Int, val toY: Int, val w: Int = 1, val h: Int = 1) : MapOp
+
+/** Reserves a rectangle: later scatter and camps leave it alone (a road mouth at a seam, a landing). Paints nothing. */
+@Serializable @SerialName("reserve")
+data class ReserveOp(val x: Int, val y: Int, val w: Int, val h: Int) : MapOp
 
 /** One NPC (a spawn slot) at a cell. */
 @Serializable @SerialName("spawn")
