@@ -150,12 +150,13 @@ class TrevanaRealmsGameTest {
         assertTrue(meteorDrop.chanceBasisPoints in 1..100, "Starshard drop should be tiny")
         assertTrue(dbDrop.chanceBasisPoints in 1 until meteorDrop.chanceBasisPoints, "Wyrm Pearl drop should be even smaller than Starshard")
 
-        // Ranger Volley auto-targets up to 5 enemies within 3 tiles with 40% (+5%/lv) base damage (rebalanced 2026-11-22: was 10 enemies in 8 tiles)
+        // Ranger Volley is centred on the Ranger and hits every enemy within 10 tiles (most of the screen) with 40% (+5%/lv) base damage: a farming skill
         val scatter = loaded.catalog.spells.getValue(7)
         assertEquals("Volley", scatter.name)
         assertEquals(15, scatter.levelReq)
-        assertEquals(3, scatter.aoeRadiusTiles)
-        assertEquals(5, scatter.maxTargets)
+        assertEquals(com.morgana.domain.content.SpellTargetType.AOE_SELF_CENTERED, scatter.targetType)
+        assertEquals(10, scatter.aoeRadiusTiles)
+        assertEquals(0, scatter.maxTargets, "no limit on targets")
         assertEquals(40, scatter.baseDamagePercent)
         assertEquals(5, scatter.baseDamagePercentPerLevel)
         assertTrue(scatter.costs.isEmpty(), "Volley should not cost mana")
@@ -283,7 +284,7 @@ class TrevanaRealmsGameTest {
         // Cast Volley with no explicit target (hotbar cast)
         sim.playerCastSpell(charId, 7, null, 0, 0)
         val damagedCount = sim.mapNpcs.getValue(5).count { (it.vitals["hp"]?.cur ?: 50000) < 50000 }
-        assertEquals(5, damagedCount, "Volley should auto-target and hit at most 5 enemies")
+        assertEquals(12, damagedCount, "Volley should hit every enemy around the Ranger")
 
         // Cast enough times to level up Volley from Lv 1 -> Lv 2 (castsPerLevel = 80)
         repeat(79) {
@@ -405,7 +406,7 @@ class TrevanaRealmsGameTest {
         assertEquals(setOf(10, 11, 12, 13, 29, 30, 31, 49, 50), kit(5), "Emberweaver: bolts, areas, slow, burn and a barrier")
         assertEquals(setOf(1), sim.game.definition.dualWield!!.classIds, "only the Duelist dual-wields")
         assertEquals(com.morgana.domain.stats.StatusEffectType.FLY, sim.spells.getValue(9).statusEffectType, "the archer keeps Fly")
-        assertEquals(com.morgana.domain.content.SpellTargetType.AOE_TARGET_CENTERED, sim.spells.getValue(7).targetType, "the archer keeps Scatter")
+        assertEquals(com.morgana.domain.content.SpellTargetType.AOE_SELF_CENTERED, sim.spells.getValue(7).targetType, "the archer keeps Volley, centred on the archer")
         // Every class has a way to learn each of its spells: a book, or the Ascension Envoy (spells 19 and 20).
         for (sp in sim.spells.values) {
             if (sp.id == 19 || sp.id == 20 || sp.id in 36..38 || sp.id in 41..50) continue // 36 to 38 are boss-only; 41 to 50 come with a promotion

@@ -2,6 +2,8 @@
 
 ## 2026-11-22
 
+* **Change** - **Trevana Realms Volley is a self-centred farming skill** ([Trevana Realms](/content/trevana_realms_game.md)): it was cursor-centred (`AOE_TARGET_CENTERED` takes the tile under the mouse from hotbar casts, with no range check), so it hit whatever was near the cursor and shifted as the world scrolled. It is now `AOE_SELF_CENTERED`, radius 10, no target limit.
+
 * **Add** - **Trevana Realms dungeons and raids** ([Trevana Realms](/content/trevana_realms_game.md)): maps 9-16 built from `map-builder` recipes (rooms and corridors, boss room, Lv 60 camps), doors from each zone, new Lv 60+ monsters, bosses and core materials, boss-hunt and weekly raid quests; `TrevanaSubzonesTest` checks doors, ways back, reachability, levels and drops.
 
 * **Add** - **Trevana Realms zone quests and NPC retheme** ([Trevana Realms](/content/trevana_realms_game.md)): old town names reworded to Trevena places, a quest giver and Pharmacist at each zone entrance, the Waymaster in Trevena, 19 quests (intro plus three kill quests per zone) with chained events; `TrevanaWorldMapsTest` checks givers, quests and pharmacists. Subzones, raids, bounty/guild quests and the disabled tests remain.
