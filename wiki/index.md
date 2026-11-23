@@ -19,7 +19,7 @@ Maintenance knowledge base for Morgana ORPG, written for human and AI contributo
 * [Module: client-web](/architecture/client_web.md) - The browser client: client-core compiled to JavaScript by gdx-teavm, talking to the server over WebSocket.
 * [Module: core-domain](/architecture/core_domain.md) - The pure Kotlin rules engine: models, the 20 TPS simulation, and content validation.
 * [Module: dev-tools](/architecture/dev_tools.md) - Repository tooling that keeps the wiki healthy: lint, index generation, and change-impact lookup.
-* [Module: game-art](/architecture/game_art.md) - Tooling, not engine: the per-game sprite kits, art specs and exporters that draw the bundled games' art on top of the generic :tilegen generators.
+* [Module: game-art](/architecture/game_art.md) - Tooling, not engine: the shared 32 x 48 sprite kit, the public games' art exporters and the command line, on top of the generic :tilegen generators.
 * [Module: map-builder](/architecture/map_builder.md) - Tooling, not engine: compiles map recipes (JSON terrain, paths, walls, props, warps and enemy camps) into map documents using the tile index a tileset export wrote.
 * [Module Graph and Dependency Rules](/architecture/module_graph.md) - The Gradle module layout, who may depend on whom, and why the boundaries exist.
 * [Module: server-app](/architecture/server_app.md) - The dedicated authoritative server: Netty transport, coordinator, tick loop, owner policy, hot reload, and CLI tools.
@@ -114,7 +114,6 @@ Maintenance knowledge base for Morgana ORPG, written for human and AI contributo
 * [Hot Reload](/content/hot_reload.md) - How file edits and /reload update a running server, and what is deliberately not applied.
 * [Ashen Keep: the Reference Co-op Dungeon Crawler & Roguelike](/content/roguelike_game.md) - games/roguelike, the reference dungeon crawler and roguelike realm: Ashen Keep multiplayer hub and Floor 1 (The Sunken Crypt) built with the Trevana Realms tileset and paperdoll workflow.
 * [Tiled Map Conversion](/content/tiled_conversion.md) - Round-tripping maps through Tiled .tmj with full fidelity for attributes, NPC spawns, and event ids.
-* [Trevana Realms](/content/trevana_realms_game.md) - games/trevana-realms, an original online RPG built on Morgana's ORPG module using the Time Fantasy pixel art: 30 maps across nine tilesets, 5 classes, 50 skills, 32 monsters and bosses, and 125 items.
 * [Tutorial Village: the Getting-Started Game](/content/tutorial_village.md) - games/tutorial-village, the finished game of docs/GETTING_STARTED.md (a village, a gardener, a kill quest and its reward), kept playable by TutorialVillageGameTest.
 * [Validation Rules and Issue Codes](/content/validation_rules.md) - Every check the content validator performs and the issue codes it emits.
 * [White River Online](/content/white_river_game.md) - games/white-river, an original sandbox ORPG: a town and four zones joined by open seams, 3 classes, life skills at four stations, and the first action-combat weapon set.
@@ -155,7 +154,6 @@ Maintenance knowledge base for Morgana ORPG, written for human and AI contributo
 * [Debug a Determinism Problem](/playbooks/debug_determinism.md) - Checklist when two runs with the same seed and inputs diverge.
 * [Make Your Game's Art](/playbooks/make_game_art.md) - A creator's guide to giving a game its own tilesets, characters, icons, worn gear, projectiles and effects: file layout, sizes, the export, the art check and the F1 Art panel.
 * [Play on a Phone (Browser, Tailscale)](/playbooks/play_on_a_phone.md) - Serve the browser client from the game server with --web and play from a phone's browser over Tailscale or a home network: what makes it work and what to check when it does not.
-* [Record the Trevana Realms Trailer](/playbooks/record_trailer.md) - Regenerate the gameplay trailer: a throwaway realm, a made-up level 66 Emberweaver, a scripted tour of the maps recorded from the web client, and an ffmpeg edit.
 * [Large Rename or Package Refactor](/playbooks/refactor_rename.md) - A proven procedure for renaming packages and types across all modules without breaking determinism.
 * [Run Locally](/playbooks/run_local_dev.md) - Start the server and clients, seed data, and find the right ports and directories.
 * [Update the Wiki](/playbooks/update_wiki.md) - Ingest, query, and lint workflows for keeping the OKF wiki accurate as the code changes.

@@ -26,9 +26,9 @@ import com.morgana.tilegen.sprite.BodyAncestry
 import com.morgana.tilegen.sprite.Direction8
 import com.morgana.tilegen.sprite.FeetStyle
 import com.morgana.tilegen.sprite.HairStyle
-import com.morgana.gameart.sprite.TrevanaEnemyKind
-import com.morgana.gameart.sprite.TrevanaNpcKind
-import com.morgana.gameart.sprite.TrevanaSpriteGenerator
+import com.morgana.gameart.sprite.RpgEnemyKind
+import com.morgana.gameart.sprite.RpgNpcKind
+import com.morgana.gameart.sprite.RpgSpriteGenerator
 import com.morgana.tilegen.sprite.HeadgearKind
 import com.morgana.tilegen.sprite.LegsStyle
 import com.morgana.tilegen.sprite.PaperDollAction
@@ -59,7 +59,7 @@ import java.nio.file.Path
 
 /**
  * Exports all game-owned art for the reference dungeon crawler / roguelike (*Ashen Keep*, `games/roguelike`)
- * using the Trevana Realms `:tilegen` workflow:
+ * using the shared `:tilegen` paper-doll workflow:
  * - **Tilesets (`tilesets/1..7.png`)**: `PavingGenerator`, `BuildingGenerator`, `PlazaGenerator`, `GroundDetailGenerator`,
  *   `PropGenerator`, and a soft-shaded `MORGANA` Sunken Crypt dungeon sheet.
  * - **Sprites (`sprites/1..3, 10..17, 101..106.png`)**: 32x48 RMXP-proportioned, 23-column x 4-direction sheets in
@@ -114,26 +114,26 @@ object RoguelikeGameExporter {
         Gear(16, PaperDollSlot.FEET) { it.copy(feetStyle = FeetStyle.SABATONS) }
     )
 
-    /** Hub & feature NPC sprite ID -> TrevanaNpcKind preset. */
-    private val NPC_MAP: List<Pair<Int, TrevanaNpcKind>> = listOf(
-        10 to TrevanaNpcKind.CAPTAIN,        // Commander Vael (Quest Giver)
-        11 to TrevanaNpcKind.ASHGATE_WARDEN, // Delve Warden Orin (Difficulty)
-        12 to TrevanaNpcKind.PHARMACIST,     // Apothecary Lyra (Supplies)
-        13 to TrevanaNpcKind.BLACKSMITH,     // Forgemaster Torin (Armory)
-        14 to TrevanaNpcKind.GEMWRIGHT,      // Relic Broker Vex (Curios)
-        15 to TrevanaNpcKind.WAREHOUSEMAN,   // Vaultkeeper Maren (Banker)
-        16 to TrevanaNpcKind.CLASS_MASTER,   // Wayside Shrine Keeper (Room Feature)
-        17 to TrevanaNpcKind.SALTMERE_ENVOY  // Wandering Peddler (Room Feature)
+    /** Hub & feature NPC sprite ID -> RpgNpcKind preset. */
+    private val NPC_MAP: List<Pair<Int, RpgNpcKind>> = listOf(
+        10 to RpgNpcKind.CAPTAIN,        // Commander Vael (Quest Giver)
+        11 to RpgNpcKind.ASHGATE_WARDEN, // Delve Warden Orin (Difficulty)
+        12 to RpgNpcKind.PHARMACIST,     // Apothecary Lyra (Supplies)
+        13 to RpgNpcKind.BLACKSMITH,     // Forgemaster Torin (Armory)
+        14 to RpgNpcKind.GEMWRIGHT,      // Relic Broker Vex (Curios)
+        15 to RpgNpcKind.WAREHOUSEMAN,   // Vaultkeeper Maren (Banker)
+        16 to RpgNpcKind.CLASS_MASTER,   // Wayside Shrine Keeper (Room Feature)
+        17 to RpgNpcKind.SALTMERE_ENVOY  // Wandering Peddler (Room Feature)
     )
 
-    /** Dungeon enemy & boss sprite ID -> TrevanaEnemyKind preset. */
-    private val ENEMY_MAP: List<Pair<Int, TrevanaEnemyKind>> = listOf(
-        101 to TrevanaEnemyKind.RATLING,       // Crypt Gnasher
-        102 to TrevanaEnemyKind.APPARITION,    // Crypt Wisp
-        103 to TrevanaEnemyKind.BANDIT,        // Risen Marauder
-        104 to TrevanaEnemyKind.BLADE_GHOST,   // Hollow Reaver
-        105 to TrevanaEnemyKind.HILL_MONSTER,  // Grave Golem
-        106 to TrevanaEnemyKind.SWORD_MASTER   // Malakor, the Ashen Warden (Floor 1 Boss)
+    /** Dungeon enemy & boss sprite ID -> RpgEnemyKind preset. */
+    private val ENEMY_MAP: List<Pair<Int, RpgEnemyKind>> = listOf(
+        101 to RpgEnemyKind.RATLING,       // Crypt Gnasher
+        102 to RpgEnemyKind.APPARITION,    // Crypt Wisp
+        103 to RpgEnemyKind.BANDIT,        // Risen Marauder
+        104 to RpgEnemyKind.BLADE_GHOST,   // Hollow Reaver
+        105 to RpgEnemyKind.HILL_MONSTER,  // Grave Golem
+        106 to RpgEnemyKind.SWORD_MASTER   // Malakor, the Ashen Warden (Floor 1 Boss)
     )
 
     enum class Part { TILESETS, BODIES, GEAR, NPCS, ENEMIES, ICONS }
@@ -174,14 +174,14 @@ object RoguelikeGameExporter {
         }
 
         if (Part.NPCS in parts) {
-            val gen = TrevanaSpriteGenerator(seed = seed, cellWidth = CELL_W, cellHeight = CELL_H)
+            val gen = RpgSpriteGenerator(seed = seed, cellWidth = CELL_W, cellHeight = CELL_H)
             for ((id, kind) in NPC_MAP) {
                 writeSprite(id, sheet(shoot = false) { dir, action, f -> gen.generateNpcFrame(kind, dir, action, f) })
             }
         }
 
         if (Part.ENEMIES in parts) {
-            val gen = TrevanaSpriteGenerator(seed = seed, cellWidth = CELL_W, cellHeight = CELL_H)
+            val gen = RpgSpriteGenerator(seed = seed, cellWidth = CELL_W, cellHeight = CELL_H)
             for ((id, kind) in ENEMY_MAP) {
                 writeSprite(id, sheet(shoot = false) { dir, action, f -> gen.generateEnemyFrame(kind, dir, action, f) })
             }

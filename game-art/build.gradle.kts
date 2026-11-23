@@ -21,3 +21,14 @@ dependencies {
 tasks.named<JavaExec>("run") {
     workingDir = rootProject.projectDir
 }
+
+// Runs any main class on this module's classpath, so a private game's local-only exporter (a gitignored file next to the
+// public ones) can be run without a hook in the public command line:
+//   .\gradlew.bat :game-art:runLocal -PmainClass=com.morgana.gameart.export.MyGameExportKt --args="export --game games/my-game"
+tasks.register<JavaExec>("runLocal") {
+    group = "application"
+    description = "Runs the class named by -PmainClass on the game-art classpath (for local-only exporters)."
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set(providers.gradleProperty("mainClass"))
+    workingDir = rootProject.projectDir
+}

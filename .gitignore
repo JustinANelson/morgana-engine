@@ -51,5 +51,11 @@ games/trevana-realms/
 # Tests of the private game stay beside it, local only (the other games' tests in game-tests are public)
 game-tests/src/test/kotlin/com/morgana/gametests/Trevana*.kt
 game-tests/src/test/kotlin/com/morgana/gametests/Trevena*.kt
+# The same for its art exporter, specs and trailer scripts
+game-art/src/main/kotlin/com/morgana/gameart/export/Trevana*.kt
+game-art/src/test/kotlin/com/morgana/gameart/export/Trevana*.kt
+game-art/specs/trevana-world/
+game-art/specs/trevana_*.json
+smoke-test/trailer*.mjs
 TREVANA_REALMS_DESIGN_AND_CONTENT.md
 TREVANA_OPS.md

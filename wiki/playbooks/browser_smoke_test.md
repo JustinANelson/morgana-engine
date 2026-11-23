@@ -57,5 +57,4 @@ The game draws everything on one canvas, so the client describes itself: `GamePr
 ## Related scripts
 - `smoke-test/ui-audit.mjs` (`.\gradlew.bat :client-web:uiAudit`) screenshots the Realm Browser, Local Worlds, all three steps of the New Realm Wizard, in-game HUD/Inventory, and all 19 F1 editor panels into `build/ui-audit/`, checking `GameProbe.overflows` on every view.
 - `smoke-test/tour.mjs` screenshots every editor panel against a manually started server for design reviews.
-- `smoke-test/trailer.mjs` records the Trevana Realms gameplay trailer (see [Record the Trevana Realms Trailer](/playbooks/record_trailer.md)).
 - The Hearthvale showcase page script (`smoke-test/showcase.mjs`) was deleted with Hearthvale on 2026-11-13.

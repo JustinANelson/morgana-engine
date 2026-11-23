@@ -1,10 +1,9 @@
 package com.morgana.gameart.cli
 
 import com.morgana.gameart.export.RoguelikeGameExporter
-import com.morgana.gameart.export.TrevanaGameExporter
-import com.morgana.gameart.sprite.TrevanaEnemyKind
-import com.morgana.gameart.sprite.TrevanaNpcKind
-import com.morgana.gameart.sprite.TrevanaSpriteGenerator
+import com.morgana.gameart.sprite.RpgEnemyKind
+import com.morgana.gameart.sprite.RpgNpcKind
+import com.morgana.gameart.sprite.RpgSpriteGenerator
 import com.morgana.gameart.whiteriver.WhiteRiverEnemyGenerator
 import com.morgana.gameart.whiteriver.WhiteRiverItemGenerator
 import com.morgana.gameart.whiteriver.WhiteRiverPlayerGenerator
@@ -105,34 +104,19 @@ object GameArtCli {
                     out.println("sprites.uiHeights: " + result.uiHeights.entries.joinToString(", ") { "\"${it.key}\": ${it.value}" })
                     0
                 }
-                "trevana" -> {
+                "sprites" -> {
                     val target = (args.getOrNull(1)?.takeIf { !it.startsWith("--") } ?: "all").lowercase()
-                    if (target == "export") {
-                        // trevana export --game games/trevana-realms [--specs game-art/specs] [--only bodies,gear,npcs,enemies]
-                        val game = flags["game"] ?: error("Missing --game <game folder> for 'trevana export'")
-                        val parts = flags["only"]?.split(',')?.map { TrevanaGameExporter.Part.valueOf(it.trim().uppercase()) }?.toSet()
-                            ?: TrevanaGameExporter.Part.entries.toSet()
-                        val result = TrevanaGameExporter.export(
-                            Paths.get(game),
-                            Paths.get(flags["specs"] ?: "game-art/specs"),
-                            parts,
-                            flags["seed"]?.toLong() ?: 1337L
-                        )
-                        out.println("Wrote ${result.written.size} files into $game/assets (sprites 1-5, 10-21, 101-122 and paperdolls 1-21 only)")
-                        out.println("sprites.uiHeights for those sprites: " + result.uiHeights.entries.joinToString(", ") { "\"${it.key}\": ${it.value}" })
-                        return 0
-                    }
                     val size = flags["size"]?.toInt() ?: 32
                     val height = flags["height"]?.toInt() ?: 48
                     val seed = flags["seed"]?.toLong() ?: 1337L
-                    val outRoot = Paths.get(flags["out"] ?: "build/tilesets/trevana_realms_rmxp")
+                    val outRoot = Paths.get(flags["out"] ?: "build/tilesets/rpg_sprites")
                     val split = "split" in flags
-                    val gen = TrevanaSpriteGenerator(seed = seed, cellWidth = size, cellHeight = height)
+                    val gen = RpgSpriteGenerator(seed = seed, cellWidth = size, cellHeight = height)
                     val actions = parsePaperDollActions(flags["actions"]) ?: PaperDollAction.EXTENDED
                     val cols = actions.maxOf { it.defaultFrames }
 
                     if (target == "npcs" || target == "all") {
-                        for (npc in TrevanaNpcKind.entries) {
+                        for (npc in RpgNpcKind.entries) {
                             val (sheet, tiles) = gen.generateNpcSheet(npc, actions)
                             val res = TilesetExporter.exportNamedSheet(
                                 name = "${npc.spriteId}",
@@ -150,7 +134,7 @@ object GameArtCli {
                         }
                     }
                     if (target == "enemies" || target == "all") {
-                        for (enemy in TrevanaEnemyKind.entries) {
+                        for (enemy in RpgEnemyKind.entries) {
                             val (sheet, tiles) = gen.generateEnemySheet(enemy, actions)
                             val res = TilesetExporter.exportNamedSheet(
                                 name = "${enemy.spriteId}",
@@ -239,8 +223,7 @@ object GameArtCli {
             Usage:
               whiteriver <players|enemies|items|skills|all> [--size 16] [--frames 2] [--directions] [--style classic_rpg] [--seed 1337] [--out <dir>] [--split]
               roguelike export --game <game folder> [--only tilesets,bodies,gear,npcs,enemies,icons] [--seed 4040]
-              trevana <npcs|enemies|all> [--size 32] [--height 48] [--actions <list>] [--out <dir>] [--split]
-              trevana export --game <game folder> [--specs game-art/specs] [--only bodies,gear,npcs,enemies] [--seed 1337]
+              sprites <npcs|enemies|all> [--size 32] [--height 48] [--actions <list>] [--out <dir>] [--split]
             """.trimIndent()
         )
     }

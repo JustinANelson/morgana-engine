@@ -38,4 +38,4 @@ The generator scripts (`tools/build.py`, `tools/art.py`) that wrote `data/` and 
 ## Tests
 `WhiteRiverGameTest` (server-app, on a temp copy): content, art and modules valid; class skill sets; monster levels rising zone by zone; seams reciprocal and open at the same cells; everything reachable on foot; every item obtainable and every recipe makeable; no recipe made from shop goods sells for more than it cost (this caught planks sawn from shop-bought logs); tools and manuals on sale; class starts; and a first hour: buy a rod, take the Marshal's quest, catch a whitefin, grill it at the fire (refused away from it), walk across the seam into the fields and kill a rat for experience and quest credit. It also checks the shipped weapon set: the left-click chain, the launcher branch, armor on the finisher and dodges, and that the running server holds the definitions.
 
-Related: [Trevana Realms](/content/trevana_realms_game.md) (the structural template), [combat](/systems/combat.md), [economy](/systems/economy.md).
+Related: Trevana Realms (the structural template), [combat](/systems/combat.md), [economy](/systems/economy.md).
