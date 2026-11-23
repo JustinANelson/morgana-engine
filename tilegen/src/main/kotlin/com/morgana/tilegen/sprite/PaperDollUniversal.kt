@@ -679,8 +679,8 @@ data class PaperDollPose(
             }
 
             val cx = 16 + lungeX
-            val headCy = (if (isRmxp) 17 else if (proportions == PaperDollProportions.CHUNKY) 9 else 10) + bobY
-            val torsoTop = (if (isRmxp) 23 else 14) + bobY
+            val headCy = (if (isRmxp) 15 else if (proportions == PaperDollProportions.CHUNKY) 9 else 10) + bobY
+            val torsoTop = (if (isRmxp) 21 else 14) + bobY
             val handReach = if (isWide) 8 else 5
             val mainHandX = when (baseDir) {
                 Direction8.W, Direction8.SW, Direction8.NW -> cx - handReach + if (action == PaperDollAction.THRUST && phase == 1) -3 else 0

@@ -728,9 +728,9 @@ class PaperDollSpriteGenerator(
         val chunky = isRmxp || theme.proportions == PaperDollProportions.CHUNKY
         val (pose, sockets) = PaperDollPose.compute(baseDir, action, frameIndex, theme.proportions, nativeH)
         val cx = 16 + pose.lungeX
-        val headCy = (if (isRmxp) 17 else if (chunky) 9 else 10) + pose.bobY + (if (action == PaperDollAction.HARVEST && pose.phase in 1..2) 1 else 0)
-        val torsoTop = (if (isRmxp) 23 else 14) + pose.bobY
-        val legTop = (if (isRmxp) (if (pose.isSeated) 34 else 36) else (if (pose.isSeated) 21 else 22)) + pose.bobY
+        val headCy = (if (isRmxp) 15 else if (chunky) 9 else 10) + pose.bobY + (if (action == PaperDollAction.HARVEST && pose.phase in 1..2) 1 else 0)
+        val torsoTop = (if (isRmxp) 21 else 14) + pose.bobY
+        val legTop = (if (isRmxp) (if (pose.isSeated) 32 else 34) else (if (pose.isSeated) 21 else 22)) + pose.bobY
         val stride = pose.stride
         val phase = pose.phase
 
@@ -1125,7 +1125,7 @@ class PaperDollSpriteGenerator(
 
         val chunky = legsImg.height == 48 || theme.proportions == PaperDollProportions.CHUNKY
         if (loadout.legsStyle == LegsStyle.ROBE_SKIRT && !pose.isSeated && legsImg.height == 48) {
-            val h = (leftFootY - legTop).coerceIn(4, 8)
+            val h = (leftFootY - legTop).coerceIn(4, 10)
             val trim = theme.accentPalette
             val sway = stride / 2
             for (yy in 0 until h) {
@@ -1169,7 +1169,7 @@ class PaperDollSpriteGenerator(
         if (dir == Direction8.W) {
             val leg1X = cx - 1 + stride
             val leg2X = cx - 1 - stride
-            val legH = if (pose.isSeated) 2 else (if (legsImg.height == 48) 6 else 3)
+            val legH = if (pose.isSeated) 2 else (if (legsImg.height == 48) 8 else 3)
             fillRectShaded(legsImg, leg2X, legTop, legW, legH, legsPal, 0.42f)
             fillRectShaded(feetImg, leg2X - (if (pose.isSeated) 1 else 0), (legTop + legH).coerceAtMost(standFootY), legW, 2, feetPal, 0.38f)
             fillRectShaded(legsImg, leg1X, legTop, legW, legH, legsPal, 0.72f)
@@ -1214,7 +1214,7 @@ class PaperDollSpriteGenerator(
         val torsoW = when {
             rmxp && dir == Direction8.W -> if (loadout.torsoStyle == TorsoStyle.SKYRENDER) 10 else 9
             rmxp && dir.isDiagonal -> 11
-            rmxp -> if (loadout.torsoStyle == TorsoStyle.SKYRENDER) 13 else 12
+            rmxp -> if (loadout.torsoStyle == TorsoStyle.SKYRENDER) 14 else 13
             chunky && dir == Direction8.W -> if (loadout.torsoStyle == TorsoStyle.SKYRENDER) 11 else 10
             chunky && dir.isDiagonal -> 13
             chunky -> if (loadout.torsoStyle == TorsoStyle.SKYRENDER) 15 else 14
