@@ -188,6 +188,42 @@
    "kind": "URN",
    "primaryPalette": "autumn_red",
    "secondaryPalette": "slate_stone"
+  },
+  {
+   "name": "cel_broadleaf",
+   "kind": "LEAFY_TREE",
+   "primaryPalette": "autumn_grass",
+   "secondaryPalette": "warm_timber"
+  },
+  {
+   "name": "cel_apple_tree",
+   "kind": "FRUIT_TREE",
+   "primaryPalette": "meadow_grass",
+   "secondaryPalette": "scarlet_roof"
+  },
+  {
+   "name": "cel_bloom_bush",
+   "kind": "FLOWER_BUSH",
+   "primaryPalette": "meadow_grass",
+   "secondaryPalette": "hazard_amber"
+  },
+  {
+   "name": "cel_mound",
+   "kind": "MOSS_MOUND",
+   "primaryPalette": "autumn_grass",
+   "secondaryPalette": "earth_dirt"
+  },
+  {
+   "name": "cel_boulders",
+   "kind": "BOULDER",
+   "primaryPalette": "dune_sandstone",
+   "secondaryPalette": "meadow_grass"
+  },
+  {
+   "name": "cel_ruin_wall",
+   "kind": "RUIN_WALL",
+   "primaryPalette": "dune_sandstone",
+   "secondaryPalette": "ancient_leaf"
   }
  ],
  "autotiles": [

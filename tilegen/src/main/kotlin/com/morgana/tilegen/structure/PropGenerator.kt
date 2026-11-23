@@ -243,7 +243,15 @@ enum class PropKind(val widthTiles: Int, val heightTiles: Int) {
     MINE_CART(1, 1),
 
     /** 2x2 leafless dead tree. */
-    DEAD_TREE(2, 2)
+    DEAD_TREE(2, 2),
+
+    /** Hand-pixelled nature props (see `NatureProps`): primary palette is the foliage or stone, secondary the trunk, bloom, fruit or dirt. */
+    LEAFY_TREE(3, 3),
+    FRUIT_TREE(3, 3),
+    FLOWER_BUSH(2, 2),
+    MOSS_MOUND(2, 2),
+    BOULDER(2, 2),
+    RUIN_WALL(3, 2)
 }
 
 /**
@@ -446,6 +454,12 @@ class PropGenerator(
             PropKind.GATEHOUSE -> WorldProps.gatehouse(canvas, w, h, stone, wood, PalettePresets.SCARLET_ROOF)
             PropKind.MINE_CART -> WorldProps.mineCart(canvas, w, h, stone, wood)
             PropKind.DEAD_TREE -> WorldProps.deadTree(canvas, w, h, wood, s)
+            PropKind.LEAFY_TREE -> NatureProps.leafyTree(canvas, w, h, foliage, secondaryPalette ?: PalettePresets.WARM_TIMBER, s)
+            PropKind.FRUIT_TREE -> NatureProps.leafyTree(canvas, w, h, foliage, PalettePresets.WARM_TIMBER, s, secondaryPalette ?: PalettePresets.SCARLET_ROOF)
+            PropKind.FLOWER_BUSH -> NatureProps.bloomBush(canvas, w, h, foliage, secondaryPalette ?: PalettePresets.HAZARD_AMBER, s)
+            PropKind.MOSS_MOUND -> NatureProps.mossMound(canvas, w, h, foliage, secondaryPalette ?: PalettePresets.EARTH_DIRT, s)
+            PropKind.BOULDER -> NatureProps.boulder(canvas, w, h, primaryPalette ?: PalettePresets.DUNE_SANDSTONE, secondaryPalette ?: PalettePresets.MEADOW_GRASS, s)
+            PropKind.RUIN_WALL -> NatureProps.ruinWall(canvas, w, h, primaryPalette ?: PalettePresets.DUNE_SANDSTONE, secondaryPalette ?: PalettePresets.ANCIENT_LEAF, s)
             }
         }
 

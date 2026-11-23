@@ -210,6 +210,18 @@
    "kind": "ANCIENT_EXCAVATION",
    "primaryPalette": "ruin_stone",
    "secondaryPalette": "relic_amber"
+  },
+  {
+   "name": "cam_boulders",
+   "kind": "BOULDER",
+   "primaryPalette": "dune_sandstone",
+   "secondaryPalette": "highland_grass"
+  },
+  {
+   "name": "cam_ruin_wall",
+   "kind": "RUIN_WALL",
+   "primaryPalette": "dune_sandstone",
+   "secondaryPalette": "ancient_leaf"
   }
  ],
  "autotiles": [

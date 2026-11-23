@@ -227,6 +227,36 @@
    "kind": "CHEST_CLOSED",
    "primaryPalette": "slate_stone",
    "secondaryPalette": "timber_wood"
+  },
+  {
+   "name": "hub_broadleaf",
+   "kind": "LEAFY_TREE",
+   "primaryPalette": "meadow_grass",
+   "secondaryPalette": "warm_timber"
+  },
+  {
+   "name": "hub_apple_tree",
+   "kind": "FRUIT_TREE",
+   "primaryPalette": "meadow_grass",
+   "secondaryPalette": "scarlet_roof"
+  },
+  {
+   "name": "hub_bloom_bush",
+   "kind": "FLOWER_BUSH",
+   "primaryPalette": "meadow_grass",
+   "secondaryPalette": "hazard_amber"
+  },
+  {
+   "name": "hub_boulders",
+   "kind": "BOULDER",
+   "primaryPalette": "pale_limestone",
+   "secondaryPalette": "meadow_grass"
+  },
+  {
+   "name": "hub_ruin_wall",
+   "kind": "RUIN_WALL",
+   "primaryPalette": "pale_limestone",
+   "secondaryPalette": "meadow_grass"
   }
  ],
  "autotiles": [

@@ -203,6 +203,36 @@
    "name": "mere_barrel",
    "kind": "BARREL",
    "secondaryPalette": "swamp_wood"
+  },
+  {
+   "name": "mere_broadleaf",
+   "kind": "LEAFY_TREE",
+   "primaryPalette": "ancient_leaf",
+   "secondaryPalette": "warm_timber"
+  },
+  {
+   "name": "mere_bloom_bush",
+   "kind": "FLOWER_BUSH",
+   "primaryPalette": "ancient_leaf",
+   "secondaryPalette": "arcane_violet"
+  },
+  {
+   "name": "mere_mound",
+   "kind": "MOSS_MOUND",
+   "primaryPalette": "ancient_leaf",
+   "secondaryPalette": "earth_dirt"
+  },
+  {
+   "name": "mere_boulders",
+   "kind": "BOULDER",
+   "primaryPalette": "pale_limestone",
+   "secondaryPalette": "ancient_leaf"
+  },
+  {
+   "name": "mere_ruin_wall",
+   "kind": "RUIN_WALL",
+   "primaryPalette": "pale_limestone",
+   "secondaryPalette": "ancient_leaf"
   }
  ],
  "autotiles": [

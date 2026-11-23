@@ -219,6 +219,12 @@
    "kind": "CHEST_CLOSED",
    "primaryPalette": "gunmetal_steel",
    "secondaryPalette": "ash_wood"
+  },
+  {
+   "name": "high_boulders",
+   "kind": "BOULDER",
+   "primaryPalette": "dark_iron",
+   "secondaryPalette": "highland_grass"
   }
  ],
  "autotiles": [

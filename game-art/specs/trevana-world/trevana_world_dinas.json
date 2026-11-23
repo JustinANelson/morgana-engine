@@ -193,6 +193,24 @@
    "kind": "CHEST_CLOSED",
    "primaryPalette": "quarry_stone",
    "secondaryPalette": "timber_wood"
+  },
+  {
+   "name": "din_mound",
+   "kind": "MOSS_MOUND",
+   "primaryPalette": "highland_grass",
+   "secondaryPalette": "earth_dirt"
+  },
+  {
+   "name": "din_boulders",
+   "kind": "BOULDER",
+   "primaryPalette": "dune_sandstone",
+   "secondaryPalette": "highland_grass"
+  },
+  {
+   "name": "din_ruin_wall",
+   "kind": "RUIN_WALL",
+   "primaryPalette": "dune_sandstone",
+   "secondaryPalette": "ancient_leaf"
   }
  ],
  "autotiles": [

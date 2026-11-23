@@ -177,6 +177,42 @@
    "name": "gelli_mound_door",
    "kind": "STONE_ARCHWAY",
    "primaryPalette": "slate_stone"
+  },
+  {
+   "name": "gelli_broadleaf",
+   "kind": "LEAFY_TREE",
+   "primaryPalette": "highland_grass",
+   "secondaryPalette": "warm_timber"
+  },
+  {
+   "name": "gelli_apple_tree",
+   "kind": "FRUIT_TREE",
+   "primaryPalette": "highland_grass",
+   "secondaryPalette": "scarlet_roof"
+  },
+  {
+   "name": "gelli_bloom_bush",
+   "kind": "FLOWER_BUSH",
+   "primaryPalette": "highland_grass",
+   "secondaryPalette": "hazard_amber"
+  },
+  {
+   "name": "gelli_mound",
+   "kind": "MOSS_MOUND",
+   "primaryPalette": "highland_grass",
+   "secondaryPalette": "earth_dirt"
+  },
+  {
+   "name": "gelli_boulders",
+   "kind": "BOULDER",
+   "primaryPalette": "dune_sandstone",
+   "secondaryPalette": "highland_grass"
+  },
+  {
+   "name": "gelli_ruin_wall",
+   "kind": "RUIN_WALL",
+   "primaryPalette": "dune_sandstone",
+   "secondaryPalette": "ancient_leaf"
   }
  ],
  "autotiles": [
