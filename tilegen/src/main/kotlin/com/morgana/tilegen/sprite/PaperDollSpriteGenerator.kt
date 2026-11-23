@@ -121,6 +121,12 @@ enum class JrpgMonsterKind {
  * Composable equipment and appearance loadout for [PaperDollSpriteGenerator].
  */
 /** How a robe skirt ends: a straight hem, a row of rounded scallops (water) or pointed tongues (flame). */
+/** Blue-grey plate steel for armor and helmets: a mid-bright steel, not the near-white marble. */
+internal val STEEL_ARMOR = PaletteRamp(intArrayOf(
+    PaletteRamp.rgba(34, 42, 62), PaletteRamp.rgba(62, 76, 104), PaletteRamp.rgba(98, 116, 148),
+    PaletteRamp.rgba(144, 162, 190), PaletteRamp.rgba(192, 206, 226), PaletteRamp.rgba(232, 240, 250)
+))
+
 enum class RobeHem { STRAIGHT, SCALLOPED, JAGGED }
 
 data class PaperDollLoadout(
@@ -240,7 +246,7 @@ data class PaperDollLoadout(
         fun defaultOutfitPalette(job: PaperDollJob): PaletteRamp = when (job) {
             PaperDollJob.HERO -> PalettePresets.SCARLET_ROOF
             PaperDollJob.PRINCE -> PalettePresets.CREAM_MARBLE
-            PaperDollJob.KNIGHT -> PalettePresets.CREAM_MARBLE
+            PaperDollJob.KNIGHT -> STEEL_ARMOR
             PaperDollJob.PRIEST -> PalettePresets.CREAM_MARBLE
             PaperDollJob.WIZARD -> PalettePresets.ARCANE_VIOLET
             PaperDollJob.ASSASSIN -> PalettePresets.ABYSSAL_OBSIDIAN
@@ -945,23 +951,15 @@ class PaperDollSpriteGenerator(
             else -> 5.2f
         }
         val ry = if (rmxp) 5.6f else if (chunky) 5.4f else 4.6f
-        val scanHalf = if (chunky) 8 else 6
-        for (y in (headCy - 6)..(headCy + 5)) {
-            for (x in (cx - scanHalf)..(cx + scanHalf)) {
-                if (x !in 1..30 || y !in 1..30) continue
-                val dx = (x - cx) / rx
-                val dy = (y - headCy) / ry
-                if (dx * dx + dy * dy <= 1f) {
-                    val col = when {
-                        dir.isBack -> skinShadow
-                        theme.ancestry == BodyAncestry.CONSTRUCT && y == headCy + 2 && abs(x - cx) <= 3 -> skinShadow
-                        dx < -0.15f && dy < 0.25f -> skinLight
-                        dx > 0.35f || dy > 0.45f -> skinShadow
-                        else -> skinMid
-                    }
-                    bodyImg.setPixel(x, y, col)
-                }
-            }
+        PixelForm.dome(bodyImg, cx + 0.0f, headCy + 0.5f, rx + 0.4f, ry + 0.5f, skin, bias = if (dir.isBack) -0.32f else 0.02f)
+        if (theme.ancestry == BodyAncestry.CONSTRUCT && !dir.isBack) {
+            for (x in (cx - 3)..(cx + 3)) bodyImg.setPixel(x.coerceIn(1, 30), headCy + 2, skinShadow)
+        }
+        if (!dir.isBack && dir != Direction8.W) {
+            // Ear nubs on the lit and shaded sides so the head is not a bare ball.
+            val earY = headCy + 1
+            bodyImg.setPixel((cx - rx.toInt() - 1).coerceIn(1, 30), earY, skinMid)
+            bodyImg.setPixel((cx + rx.toInt() + 1).coerceIn(1, 30), earY, skinShadow)
         }
 
         // Ancestry-specific ears / tusks / horns / construct seams on BODY layer
@@ -1164,22 +1162,18 @@ class PaperDollSpriteGenerator(
         } else {
             val lx = if (chunky) cx - 5 else cx - 4
             val rx = if (chunky) cx + 2 else if (dir.isDiagonal) cx + 1 else cx + 2
-            for (y in legTop..leftFootY) {
-                val isFoot = y >= leftFootY - 2
-                val target = if (isFoot) feetImg else legsImg
-                val pal = if (isFoot) feetPal else legsPal
-                val tone = if (isFoot) 0.58f else 0.68f
-                if (!isFoot && loadout.legsStyle == LegsStyle.SHORTS && y > legTop + 2) continue
-                for (x in lx until lx + legW) target.setPixel(x.coerceIn(1, 30), y.coerceIn(1, legsImg.height - 2), pal.sample(tone))
+            fun leg(x0: Int, footY: Int, near: Boolean) {
+                val shorts = loadout.legsStyle == LegsStyle.SHORTS
+                val footTop = (footY - 2).coerceAtLeast(legTop)
+                val legBottom = if (shorts) (legTop + 3).coerceAtMost(footTop) else footTop
+                val legH = (legBottom - legTop).coerceAtLeast(1)
+                PixelForm.column(legsImg, x0.coerceIn(1, 30), legTop, legW, legH, legsPal, if (near) 0.56f else 0.42f, round = false)
+                // Boot: darker cuff line, then a column that is one pixel wider toward the toe.
+                PixelForm.column(feetImg, x0.coerceIn(1, 30), footTop, legW, (footY - footTop + 1).coerceAtLeast(2), feetPal, if (near) 0.58f else 0.44f)
+                feetImg.setPixel(x0.coerceIn(1, 30), (footY).coerceIn(1, 30), feetPal.sample(if (near) 0.25f else 0.18f))
             }
-            for (y in legTop..rightFootY) {
-                val isFoot = y >= rightFootY - 2
-                val target = if (isFoot) feetImg else legsImg
-                val pal = if (isFoot) feetPal else legsPal
-                val tone = if (isFoot) 0.45f else 0.52f
-                if (!isFoot && loadout.legsStyle == LegsStyle.SHORTS && y > legTop + 2) continue
-                for (x in rx until rx + legW) target.setPixel(x.coerceIn(1, 30), y.coerceIn(1, legsImg.height - 2), pal.sample(tone))
-            }
+            leg(rx, rightFootY, near = false)
+            leg(lx, leftFootY, near = true)
         }
     }
 
@@ -1224,7 +1218,6 @@ class PaperDollSpriteGenerator(
                     val waist = vy > 0.5f && (x == tx0 || x == tx1)
                     if (corner || waist) continue
                 }
-                val vx = (x - tx0).toFloat() / torsoW.coerceAtLeast(1)
                 val isCollar = y <= torsoTop + 1 && abs(x - cx) <= 2
                 val isBelt = y == legTop - 2
                 val isBuckle = isBelt && abs(x - cx) <= 1 && !dir.isBack
@@ -1234,11 +1227,11 @@ class PaperDollSpriteGenerator(
                 val col = when {
                     isBuckle -> PalettePresets.RUNE_GOLD.highlight
                     isBelt -> boots.shadow
-                    isCollar -> accent.highlight
-                    isChestTrim -> accent.highlight
+                    isCollar -> accent.sample(0.80f)
+                    isChestTrim -> accent.sample(if (x < cx) 0.70f else 0.46f)
                     isStud -> accent.mid
-                    isTabard -> accent.sample((0.78f - vy * 0.25f).coerceIn(0.3f, 0.95f))
-                    else -> outfit.sample((0.82f - vx * 0.28f - vy * 0.25f).coerceIn(0.22f, 0.95f))
+                    isTabard -> accent.sample(PixelForm.band(0.42f - vy * 0.22f - (if (x == cx + 1) 0.3f else 0f)))
+                    else -> outfit.sample(PixelForm.band(PixelForm.boxLight(x - tx0, y - torsoTop, torsoW, legTop - torsoTop + 1)))
                 }
                 img.setPixel(x.coerceIn(1, 30), y.coerceIn(1, img.height - 2), col)
             }
@@ -1301,22 +1294,22 @@ class PaperDollSpriteGenerator(
         val hwPad = if (rmxp) 1 else if (chunky) 2 else 0
         val rx = if (rmxp) 6.5f else if (chunky) 7.4f else 5.8f
         val ry = if (rmxp) 5.9f else if (chunky) 5.8f else 5.2f
-        // Crown & bangs on front hair layer
-        for (y in topY..(headCy + 1)) {
-            for (x in (cx - 6 - hwPad)..(cx + 6 + hwPad)) {
-                if (x !in 1..30 || y !in 1..30) continue
-                val dx = (x - cx) / rx
-                val dy = (y - (headCy - 1)) / ry
-                val inCrown = dx * dx + dy * dy <= 1f && (dir.isBack || y <= headCy - 2 || abs(x - cx) >= 4 + hwPad)
-                if (inCrown) {
-                    val isBangTip = y == headCy - 2 && (x + cx) % 2 == 0
-                    if (!dir.isBack && isBangTip && abs(x - cx) <= 2 && style == HairStyle.NOBLE_PARTED) continue
-                    val light = (0.78f - dx * 0.25f - dy * 0.30f).coerceIn(0.18f, 0.96f)
-                    // Specular anime hair halo band near crown
-                    val isHalo = y == headCy - 4 && abs(x - cx) <= 3
-                    frontImg.setPixel(x, y, if (isHalo) pal.highlight else pal.sample(light))
-                }
+        // Crown & bangs on front hair layer: one shaded dome, with the face left open below the fringe.
+        PixelForm.dome(
+            frontImg, cx.toFloat(), headCy - 1.2f, rx + 0.3f, ry + 0.2f, pal,
+            clip = { x, y ->
+                x in 1..30 && y in 1..30 && (dir.isBack || y <= headCy - 2 ||
+                    (abs(x - cx) >= 5 + hwPad && y <= headCy + 1) || (style == HairStyle.NOBLE_PARTED && y == headCy - 1 && abs(x - cx) in 2..3))
             }
+        )
+        if (!dir.isBack) {
+            // Fringe: a few darker strands hanging into the forehead break the straight hairline.
+            val strand = pal.sample(0.30f)
+            for (sx in listOf(-2, 0, 2)) {
+                if (style == HairStyle.NOBLE_PARTED && sx == 0) continue
+                frontImg.setPixel((cx + sx).coerceIn(1, 30), headCy - 1, pal.sample(0.46f))
+            }
+            frontImg.setPixel((cx - 1).coerceIn(1, 30), headCy - 1, strand)
         }
 
         // Style-specific silhouettes (spikes, long locks, twin tails)
@@ -1367,74 +1360,78 @@ class PaperDollSpriteGenerator(
         when (kind) {
             HeadgearKind.NONE -> Unit
             HeadgearKind.BANDANA -> {
+                // A cloth band across the brow with a knot and two trailing tails.
                 val by = headCy - 3
-                for (x in (cx - 5 - hwPad)..(cx + 5 + hwPad)) {
-                    img.setPixel(x.coerceIn(1, 30), by, primary.highlight)
-                    img.setPixel(x.coerceIn(1, 30), by + 1, primary.mid)
-                }
-                // Trailing bandana knot on back/side
-                val kx = if (dir == Direction8.W || dir == Direction8.SW) cx + 5 else cx + 4
-                img.setPixel(kx.coerceIn(2, 29), by + 1, primary.highlight)
-                img.setPixel((kx + 1).coerceIn(2, 29), by + 2, primary.mid)
+                val w = 11 + hwPad * 2
+                PixelForm.column(img, (cx - w / 2).coerceIn(1, 30), by, w, 2, primary, 0.62f, round = false)
+                val kx = cx + 5 + hwPad
+                img.setPixel(kx.coerceIn(2, 29), by + 1, primary.sample(0.7f))
+                img.setPixel((kx + 1).coerceIn(2, 29), by + 2, primary.sample(0.5f))
+                img.setPixel((kx).coerceIn(2, 29), by + 3, primary.sample(0.36f))
+                img.setPixel((kx + 1).coerceIn(2, 29), by + 4, primary.sample(0.26f))
             }
             HeadgearKind.VALKYRIE_HELM -> {
-                val by = headCy - 3
-                for (x in (cx - 4)..(cx + 4)) {
-                    img.setPixel(x, by, accent.highlight)
-                }
-                // White-gold winged on sides of helm
-                for (i in 1..4) {
-                    val wy = (by - i).coerceAtLeast(1)
-                    img.setPixel((cx - 4 - i).coerceIn(1, 30), wy, PalettePresets.CREAM_MARBLE.highlight)
-                    img.setPixel((cx - 4 - i).coerceIn(1, 30), wy + 1, PalettePresets.CREAM_MARBLE.mid)
-                    if (dir != Direction8.W) {
-                        img.setPixel((cx + 4 + i).coerceIn(1, 30), wy, PalettePresets.CREAM_MARBLE.highlight)
-                        img.setPixel((cx + 4 + i).coerceIn(1, 30), wy + 1, PalettePresets.CREAM_MARBLE.mid)
+                val metal = STEEL_ARMOR
+                // A round steel cap with a gold brow band, then a feathered wing swept up from each side.
+                PixelForm.dome(img, cx.toFloat(), headCy - 2.2f, 5.6f + hwPad, 4.2f, metal) { _, y -> y <= headCy - 2 }
+                PixelForm.column(img, (cx - 5 - hwPad).coerceIn(1, 30), headCy - 3, 11 + hwPad * 2, 1, accent, 0.62f, round = false)
+                val wingRows = listOf(0 to 2, 1 to 3, 2 to 3, 3 to 2, 4 to 1)
+                for ((i, len) in wingRows) {
+                    val wy = (headCy - 3 - i).coerceAtLeast(1)
+                    for (k in 0 until len) {
+                        val tone = PixelForm.LIT - k * 0.16f + (if (i == 0) 0f else 0.06f)
+                        img.setPixel((cx - 6 - hwPad - k - i / 2).coerceIn(1, 30), wy, metal.sample(tone))
+                        if (dir != Direction8.W) img.setPixel((cx + 6 + hwPad + k + i / 2).coerceIn(1, 30), wy, metal.sample(tone - 0.2f))
                     }
                 }
             }
             HeadgearKind.WIZARD_HAT -> {
                 val brimY = headCy - 3
-                for (x in (cx - 7)..(cx + 7)) {
-                    img.setPixel(x.coerceIn(1, 30), brimY, primary.mid)
-                    img.setPixel(x.coerceIn(1, 30), brimY - 1, accent.highlight)
+                val brimHalf = 7 + hwPad
+                for (x in (cx - brimHalf)..(cx + brimHalf)) {
+                    val edge = abs(x - cx) >= brimHalf - 1
+                    img.setPixel(x.coerceIn(1, 30), brimY, primary.sample(if (x < cx) 0.66f else 0.40f))
+                    img.setPixel(x.coerceIn(1, 30), brimY - 1, if (edge) primary.sample(0.5f) else accent.sample(if (x < cx) 0.84f else 0.62f))
                 }
-                for (i in 1..5) {
+                // Cone: shaded by column, leaning right at the tip.
+                for (i in 1..6) {
                     val y = (brimY - 1 - i).coerceAtLeast(1)
-                    val hw = (5 - i).coerceAtLeast(1)
-                    val bend = i / 2
+                    val hw = (5.4f - i * 0.8f).toInt().coerceAtLeast(1)
+                    val bend = (i * i / 8)
                     for (x in (cx - hw + bend)..(cx + hw + bend)) {
-                        img.setPixel(x.coerceIn(1, 30), y, primary.sample(0.75f - i * 0.08f))
+                        val u = (x - (cx - hw + bend)).toFloat() / (2 * hw).coerceAtLeast(1)
+                        val tone = if (u < 0.3f) 0.74f else if (u > 0.7f) 0.34f else 0.54f
+                        img.setPixel(x.coerceIn(1, 30), y, primary.sample(tone))
                     }
                 }
+                img.setPixel((cx + 1).coerceIn(1, 30), (brimY - 3).coerceAtLeast(1), accent.highlight)
             }
             HeadgearKind.PRIEST_MITRE -> {
-                for (y in (headCy - 7).coerceAtLeast(1)..(headCy - 3)) {
-                    val hw = if (y == headCy - 7) 2 else 4
+                for (y in (headCy - 8).coerceAtLeast(1)..(headCy - 3)) {
+                    val hw = when (y - (headCy - 8)) { 0 -> 1; 1 -> 2; 2 -> 3; else -> 4 }
                     for (x in (cx - hw)..(cx + hw)) {
-                        val isCross = x == cx || y == headCy - 5
-                        img.setPixel(x, y, if (isCross) accent.highlight else primary.highlight)
+                        val u = (x - cx + hw).toFloat() / (2 * hw).coerceAtLeast(1)
+                        img.setPixel(x.coerceIn(1, 30), y, primary.sample(if (u < 0.3f) 0.92f else if (u > 0.7f) 0.62f else 0.78f))
                     }
                 }
+                for (y in (headCy - 7).coerceAtLeast(1)..(headCy - 4)) img.setPixel(cx, y, accent.sample(0.8f))
+                for (x in (cx - 2)..(cx + 2)) img.setPixel(x, (headCy - 6).coerceAtLeast(1), accent.sample(0.8f))
+                for (x in (cx - 4)..(cx + 4)) img.setPixel(x, headCy - 3, accent.sample(if (x < cx) 0.9f else 0.6f))
             }
             HeadgearKind.SLIME_BERET -> {
-                val slime_blob = PalettePresets.PASTEL_PINK
-                for (y in (headCy - 7).coerceAtLeast(1)..(headCy - 3)) {
-                    val hw = if (y == headCy - 7) 2 else 4
-                    for (x in (cx - hw)..(cx + hw)) {
-                        img.setPixel(x, y, slime_blob.sample(0.78f))
-                    }
-                }
+                val blob = PalettePresets.PASTEL_PINK
+                PixelForm.dome(img, cx + 0.5f, headCy - 3.4f, 5.6f, 3.6f, blob) { _, y -> y <= headCy - 2 }
+                img.setPixel((cx + 1).coerceIn(1, 30), (headCy - 7).coerceAtLeast(1), blob.highlight)
             }
             HeadgearKind.FEATHER_CAP -> {
-                val by = headCy - 4
-                for (x in (cx - 4)..(cx + 4)) {
-                    img.setPixel(x, by, primary.mid)
-                    img.setPixel(x, by + 1, primary.shadow)
-                }
-                // White-crimson plume feather
-                for (i in 1..4) {
-                    img.setPixel((cx + 2 + i / 2).coerceIn(2, 29), (by - i).coerceAtLeast(1), PalettePresets.CREAM_MARBLE.highlight)
+                PixelForm.dome(img, cx.toFloat(), headCy - 2.4f, 5.4f + hwPad, 3.8f, primary) { _, y -> y <= headCy - 2 }
+                PixelForm.column(img, (cx - 5 - hwPad).coerceIn(1, 30), headCy - 3, 11 + hwPad * 2, 1, primary, 0.3f, round = false)
+                val cream = PalettePresets.CREAM_MARBLE
+                for (i in 0..5) {
+                    val fx = (cx + 3 + i / 2 + (if (i > 3) 1 else 0)).coerceIn(2, 29)
+                    val fy = (headCy - 5 - i).coerceAtLeast(1)
+                    img.setPixel(fx, fy, cream.sample(0.94f - i * 0.04f))
+                    if (i in 1..4) img.setPixel((fx + 1).coerceIn(2, 29), fy, cream.sample(0.5f))
                 }
             }
             HeadgearKind.GOGGLES -> {
@@ -1453,25 +1450,38 @@ class PaperDollSpriteGenerator(
             HeadgearKind.IRON_HELMET, HeadgearKind.STEEL_HELMET, HeadgearKind.SKYRENDER_HELM -> {
                 val helmPal = when (kind) {
                     HeadgearKind.SKYRENDER_HELM -> accent
-                    HeadgearKind.STEEL_HELMET -> PalettePresets.CREAM_MARBLE
+                    HeadgearKind.STEEL_HELMET -> STEEL_ARMOR
                     else -> PalettePresets.DARK_IRON
                 }
-                for (y in (headCy - 5).coerceAtLeast(1)..(headCy - 2)) {
-                    for (x in (cx - 5 - hwPad)..(cx + 5 + hwPad)) {
-                        img.setPixel(x.coerceIn(1, 30), y, helmPal.sample(0.75f - (y - (headCy - 5)) * 0.1f))
-                    }
-                }
+                // Rounded skull cap that comes down to the brow, with a rim line, then cheek plates.
+                val rx = 5.6f + hwPad
+                PixelForm.dome(img, cx.toFloat(), headCy - 1.4f, rx, 5.0f, helmPal) { _, y -> y <= headCy - 2 }
+                val rimW = 11 + hwPad * 2
+                PixelForm.column(img, (cx - rimW / 2).coerceIn(1, 30), headCy - 2, rimW, 1, helmPal, 0.34f, round = false)
                 if (!dir.isBack) {
-                    // Cheek guards & nasal bar
-                    img.setPixel((cx - 4 - hwPad).coerceIn(1, 30), (headCy - 1).coerceIn(1, 30), helmPal.mid)
-                    img.setPixel((cx + 4 + hwPad).coerceIn(1, 30), (headCy - 1).coerceIn(1, 30), helmPal.shadow)
-                    img.setPixel(cx.coerceIn(1, 30), (headCy - 1).coerceIn(1, 30), helmPal.highlight)
+                    val half = 5 + hwPad
+                    for (y in (headCy - 1)..(headCy + 1)) {
+                        img.setPixel((cx - half).coerceIn(1, 30), y, helmPal.sample(if (y == headCy + 1) 0.4f else 0.66f))
+                        img.setPixel((cx + half).coerceIn(1, 30), y, helmPal.sample(if (y == headCy + 1) 0.22f else 0.34f))
+                    }
+                    // Nasal bar down the brow.
+                    for (y in (headCy - 2)..headCy) img.setPixel(cx.coerceIn(1, 30), y, helmPal.sample(0.78f))
+                } else {
+                    for (y in (headCy - 1)..(headCy + 2)) {
+                        img.setPixel((cx - 5 - hwPad).coerceIn(1, 30), y, helmPal.sample(0.5f))
+                        img.setPixel((cx + 5 + hwPad).coerceIn(1, 30), y, helmPal.sample(0.3f))
+                    }
+                    for (x in (cx - 4)..(cx + 4)) img.setPixel(x.coerceIn(1, 30), headCy + 2, helmPal.sample(0.3f))
                 }
                 if (kind == HeadgearKind.SKYRENDER_HELM) {
-                    // Plume crest
-                    for (i in 1..3) {
-                        img.setPixel(cx.coerceIn(1, 30), (headCy - 5 - i).coerceAtLeast(1), primary.highlight)
+                    // Plume crest rolling back from the crown.
+                    for (i in 1..4) {
+                        img.setPixel(cx.coerceIn(1, 30), (headCy - 6 - i).coerceAtLeast(1), primary.sample(0.9f - i * 0.1f))
+                        if (i in 2..3) img.setPixel((cx + 1).coerceIn(1, 30), (headCy - 6 - i).coerceAtLeast(1), primary.sample(0.4f))
                     }
+                } else if (kind == HeadgearKind.IRON_HELMET) {
+                    // A short crest ridge so the iron cap is not just a half ball.
+                    for (x in (cx - 1)..(cx + 1)) img.setPixel(x.coerceIn(1, 30), (headCy - 6).coerceAtLeast(1), helmPal.sample(0.46f))
                 }
             }
         }
@@ -1529,27 +1539,22 @@ class PaperDollSpriteGenerator(
                 }
             }
             WeaponKind.KNIGHT_SWORD -> {
-                for (i in 0..9) {
-                    val bx = (handX + (if (isSlash) dirSign * (i / 2) else dirSign * (i / 3))).coerceIn(1, 30)
-                    val by = (if (isSlash) handY + 2 - i / 2 else handY - i).coerceIn(1, 30)
-                    img.setPixel(bx, by, if (i <= 2) gold.highlight else steel.highlight)
-                    if (bx + 1 <= 30 && i > 2) img.setPixel(bx + 1, by, steel.mid)
-                }
+                val tipX = handX + dirSign * (if (isSlash) 5 else 2)
+                val tipY = if (isSlash) handY - 3 else handY - 10
+                PixelForm.blade(img, handX, handY - 3, tipX.coerceIn(1, 30), tipY.coerceIn(1, 30), steel)
+                swordHilt(img, handX, handY, gold, wood)
             }
             WeaponKind.ARCANE_STAFF, WeaponKind.HOLY_ROD -> {
                 val lift = if (isCast) -2 else 0
-                for (y in (torsoTop - 4 + lift).coerceAtLeast(2)..(torsoTop + 11 + lift).coerceAtMost(29)) {
-                    img.setPixel(handX.coerceIn(1, 30), y, if (weapon == WeaponKind.HOLY_ROD) gold.mid else wood.mid)
-                }
-                val topY = (torsoTop - 5 + lift).coerceAtLeast(2)
-                val gem = if (weapon == WeaponKind.ARCANE_STAFF) PaletteRamp.rgba(140, 230, 255) else gold.highlight
-                for (dy in -1..1) {
-                    for (dx in -1..1) {
-                        if (abs(dx) + abs(dy) <= 1) {
-                            img.setPixel((handX + dx).coerceIn(1, 30), (topY + dy).coerceIn(1, 30), gem)
-                        }
-                    }
-                }
+                val top = (torsoTop - 3 + lift).coerceAtLeast(3)
+                val shaft = if (weapon == WeaponKind.HOLY_ROD) gold else wood
+                PixelForm.column(img, handX.coerceIn(1, 30), top, 1, ((torsoTop + 11 + lift).coerceAtMost(29) - top), shaft, 0.52f, round = false)
+                img.setPixel((handX + 1).coerceIn(1, 30), top + 2, shaft.sample(0.3f))
+                val gemPal = if (weapon == WeaponKind.ARCANE_STAFF) PalettePresets.CALM_WATER else gold
+                // A claw of two prongs around a shaded orb.
+                img.setPixel((handX - 1).coerceIn(1, 30), top, shaft.sample(0.7f))
+                img.setPixel((handX + 1).coerceIn(1, 30), top, shaft.sample(0.4f))
+                PixelForm.dome(img, handX + 0.5f, top - 1.6f, 2.2f, 2.2f, gemPal)
             }
             WeaponKind.DUAL_KATAR -> {
                 for (i in 0..5) {
@@ -1576,35 +1581,51 @@ class PaperDollSpriteGenerator(
                 }
             }
             WeaponKind.HEAVY_AXE -> {
-                for (y in (torsoTop - 2).coerceAtLeast(2)..(torsoTop + 10).coerceAtMost(29)) {
-                    img.setPixel(handX.coerceIn(1, 30), y, wood.mid)
+                val top = (torsoTop - 2).coerceAtLeast(2)
+                PixelForm.column(img, handX.coerceIn(1, 30), top, 1, (torsoTop + 10).coerceAtMost(29) - top, wood, 0.5f, round = false)
+                val headY = if (isSlash) torsoTop + 2 else top
+                // A crescent bit: wide at the cutting edge, tapering back to the haft, with a bright edge line.
+                val bx = handX.coerceIn(2, 28)
+                for (row in 0 until 5) {
+                    val reach = when (row) { 0, 4 -> 2; 1, 3 -> 3; else -> 3 }
+                    for (k in 1..reach) {
+                        val px = (bx + dirSign * k).coerceIn(1, 30)
+                        val edge = k == reach
+                        img.setPixel(px, (headY + row).coerceIn(1, 30), steel.sample(if (edge) 0.96f else if (row <= 1) 0.7f else 0.46f))
+                    }
                 }
-                val headY = if (isSlash) torsoTop + 2 else (torsoTop - 2).coerceAtLeast(2)
-                fillRectShaded(img, (handX - 2).coerceIn(1, 27), headY, 5, 4, steel, 0.82f)
+                img.setPixel((bx - dirSign).coerceIn(1, 30), headY + 2, steel.sample(0.34f))
             }
             WeaponKind.HOLY_SPEAR -> {
-                for (y in (torsoTop - 6).coerceAtLeast(1)..(torsoTop + 11).coerceAtMost(29)) {
-                    val col = if (y < torsoTop - 3) steel.highlight else accent.mid
-                    img.setPixel(handX.coerceIn(1, 30), y, col)
-                }
+                val top = (torsoTop - 5).coerceAtLeast(2)
+                PixelForm.column(img, handX.coerceIn(1, 30), top + 3, 1, (torsoTop + 11).coerceAtMost(29) - top - 3, accent, 0.5f, round = false)
+                // Leaf-shaped head.
+                img.setPixel(handX.coerceIn(1, 30), top - 1, steel.highlight)
+                img.setPixel(handX.coerceIn(1, 30), top, steel.sample(0.82f))
+                img.setPixel(handX.coerceIn(1, 30), top + 1, steel.sample(0.82f))
+                img.setPixel((handX - 1).coerceIn(1, 30), top + 1, steel.sample(0.72f))
+                img.setPixel((handX + 1).coerceIn(1, 30), top + 1, steel.sample(0.4f))
+                img.setPixel((handX - 1).coerceIn(1, 30), top + 2, steel.sample(0.6f))
+                img.setPixel((handX + 1).coerceIn(1, 30), top + 2, steel.sample(0.32f))
+                img.setPixel(handX.coerceIn(1, 30), top + 2, gold.sample(0.8f))
             }
             WeaponKind.SINGLE_BLADE -> {
-                // Heavy single-edged Duelist blade (wide back-edge + curved tip)
-                for (i in 0..8) {
-                    val bx = (handX + (if (isSlash) dirSign * (i / 2) else dirSign * (i / 4))).coerceIn(1, 30)
-                    val by = (if (isSlash) handY + 2 - i / 2 else handY - i).coerceIn(1, 30)
-                    img.setPixel(bx, by, if (i <= 1) gold.highlight else steel.highlight)
-                    if (bx + dirSign in 1..30 && i in 2..7) img.setPixel(bx + dirSign, by, steel.shadow)
-                }
+                // Heavy single-edged blade: a wider, darker back edge along a bright cutting edge.
+                val tipX = handX + dirSign * (if (isSlash) 5 else 2)
+                val tipY = if (isSlash) handY - 2 else handY - 9
+                PixelForm.blade(img, handX, handY - 3, tipX.coerceIn(1, 30), tipY.coerceIn(1, 30), steel)
+                PixelForm.line(img, (handX + dirSign).coerceIn(1, 30), handY - 3, (tipX + dirSign).coerceIn(1, 30), tipY + 3) { steel.sample(0.28f) }
+                swordHilt(img, handX, handY, gold, wood)
             }
             WeaponKind.KATANA -> {
-                // Slender curved duelist katana
-                for (i in 0..9) {
-                    val curve = if (i > 5) dirSign else 0
-                    val bx = (handX + curve + (if (isSlash) dirSign * (i / 2) else 0)).coerceIn(1, 30)
-                    val by = (if (isSlash) handY + 1 - i / 2 else handY - i).coerceIn(1, 30)
-                    img.setPixel(bx, by, if (i <= 1) gold.mid else steel.highlight)
-                }
+                // Slender, slightly curved blade with a round guard.
+                val tipX = handX + dirSign * (if (isSlash) 6 else 2)
+                val tipY = if (isSlash) handY - 3 else handY - 10
+                PixelForm.blade(img, handX, handY - 3, tipX.coerceIn(1, 30), tipY.coerceIn(1, 30), steel)
+                img.setPixel((handX - 1).coerceIn(1, 30), handY - 2, gold.sample(0.82f))
+                img.setPixel((handX + 1).coerceIn(1, 30), handY - 2, gold.sample(0.5f))
+                img.setPixel(handX.coerceIn(1, 30), handY - 1, PaletteRamp.rgba(52, 40, 62))
+                img.setPixel(handX.coerceIn(1, 30), handY, PaletteRamp.rgba(40, 30, 50))
             }
             WeaponKind.PICKAXE -> {
                 // Miner's pickaxe with downward HARVEST swing
@@ -1628,6 +1649,16 @@ class PaperDollSpriteGenerator(
         }
     }
 
+    /** Grip, crossguard and pommel under a blade whose base is at ([x], [y] - 3). */
+    private fun swordHilt(img: TileImage, x: Int, y: Int, gold: PaletteRamp, wood: PaletteRamp) {
+        img.setPixel(x.coerceIn(1, 30), (y - 2).coerceIn(1, 30), gold.sample(0.86f))
+        img.setPixel((x - 1).coerceIn(1, 30), (y - 2).coerceIn(1, 30), gold.sample(0.7f))
+        img.setPixel((x + 1).coerceIn(1, 30), (y - 2).coerceIn(1, 30), gold.sample(0.42f))
+        img.setPixel(x.coerceIn(1, 30), (y - 1).coerceIn(1, 30), wood.sample(0.55f))
+        img.setPixel(x.coerceIn(1, 30), y.coerceIn(1, 30), wood.sample(0.32f))
+        img.setPixel(x.coerceIn(1, 30), (y + 1).coerceIn(1, 30), gold.sample(0.7f))
+    }
+
     private fun drawShield32(
         img: TileImage,
         cx: Int,
@@ -1644,29 +1675,25 @@ class PaperDollSpriteGenerator(
         when (shield) {
             ShieldKind.NONE -> Unit
             ShieldKind.ROUND_BUCKLER -> {
-                fillRectShaded(img, sx.coerceIn(1, 26), sy, 4, 5, accent, 0.78f)
+                PixelForm.dome(img, sx + 2.5f, sy + 3f, 3.4f, 3.8f, accent)
+                img.setPixel((sx + 2).coerceIn(1, 30), sy + 3, accent.highlight)
             }
             ShieldKind.CRUSADER_CROSS_SHIELD -> {
                 val x0 = sx.coerceIn(1, 25)
-                for (y in sy until (sy + 7).coerceAtMost(29)) {
-                    for (x in x0 until x0 + 5) {
-                        val isCross = x == x0 + 2 || y == sy + 3
-                        img.setPixel(x, y, if (isCross) accent.highlight else primary.sample(0.75f))
-                    }
-                }
+                heater(img, x0, sy, 5, 7, primary, accent, cross = true)
             }
             ShieldKind.SPELLBOOK -> {
-                fillRectShaded(img, sx.coerceIn(1, 26), sy + 1, 4, 4, accent, 0.85f)
+                val x0 = sx.coerceIn(1, 26)
+                PixelForm.column(img, x0, sy + 1, 4, 5, accent, 0.62f, round = false)
+                // Pages along the right edge, a clasp and a rune on the cover.
+                for (y in (sy + 2)..(sy + 4)) img.setPixel((x0 + 4).coerceIn(1, 30), y, PalettePresets.CREAM_MARBLE.sample(0.9f))
+                img.setPixel(x0 + 1, sy + 3, PalettePresets.RUNE_GOLD.highlight)
+                img.setPixel(x0 + 2, sy + 3, PalettePresets.RUNE_GOLD.sample(0.6f))
             }
             ShieldKind.TOWER_SHIELD, ShieldKind.DAWNBRAND_SHIELD -> {
                 val x0 = sx.coerceIn(1, 24)
                 val pal = if (shield == ShieldKind.DAWNBRAND_SHIELD) PalettePresets.RUNE_GOLD else accent
-                for (y in (sy - 1).coerceAtLeast(1) until (sy + 8).coerceAtMost(30)) {
-                    for (x in x0 until (x0 + 5).coerceAtMost(30)) {
-                        val isRim = x == x0 || x == x0 + 4 || y == sy - 1 || y == sy + 7
-                        img.setPixel(x, y, if (isRim) pal.highlight else primary.sample(0.68f))
-                    }
-                }
+                heater(img, x0, sy, 5, 8, primary, pal, cross = false)
             }
             ShieldKind.OFFHAND_BLADE, ShieldKind.OFFHAND_SWORD, ShieldKind.OFFHAND_KATANA -> {
                 val steel = PalettePresets.CREAM_MARBLE
@@ -1682,6 +1709,31 @@ class PaperDollSpriteGenerator(
                         img.setPixel(bx - 1, by, steel.shadow)
                     }
                 }
+            }
+        }
+    }
+
+    /**
+     * A heater-shaped shield: a [rim] ring around a shaded [field], tapering to a point at the bottom; [cross] adds a
+     * cross in the rim colour, otherwise a boss at the centre.
+     */
+    private fun heater(img: TileImage, x0: Int, y0: Int, w: Int, h: Int, field: PaletteRamp, rim: PaletteRamp, cross: Boolean) {
+        for (j in 0 until h) {
+            val taper = if (j >= h - 2) 1 else 0
+            val taper2 = if (j == h - 1) 1 else 0
+            for (i in taper + taper2..(w - 1 - taper - taper2)) {
+                val x = x0 + i
+                val y = y0 + j
+                if (x !in 1..30 || y !in 1..30) continue
+                val onRim = i == taper + taper2 || i == w - 1 - taper - taper2 || j == 0 || j == h - 1
+                val lit = i < w / 2
+                val col = when {
+                    onRim -> rim.sample(if (lit) 0.74f else 0.42f)
+                    cross && (i == w / 2 || j == h / 3) -> rim.sample(if (lit) 0.82f else 0.58f)
+                    !cross && i == w / 2 && j == h / 2 -> rim.sample(0.9f)
+                    else -> field.sample(if (lit) 0.58f else 0.34f)
+                }
+                img.setPixel(x, y, col)
             }
         }
     }
@@ -2247,32 +2299,12 @@ class PaperDollSpriteGenerator(
     }
 
     private fun fillRectShaded(img: TileImage, x0: Int, y0: Int, w: Int, h: Int, pal: PaletteRamp, baseTone: Float) {
-        val maxX = img.width - 1
-        val maxY = img.height - 1
-        for (y in y0 until (y0 + h).coerceAtMost(maxY)) {
-            for (x in x0 until (x0 + w).coerceAtMost(maxX)) {
-                if (x < 1 || y < 1) continue
-                val t = (baseTone - (x - x0) * 0.05f - (y - y0) * 0.04f).coerceIn(0.15f, 0.96f)
-                img.setPixel(x, y, pal.sample(t))
-            }
-        }
+        // Banded column form (lit left, shaded right, dark underside) instead of a diagonal gradient.
+        PixelForm.column(img, x0, y0, w, h, pal, (baseTone - 0.15f).coerceIn(0.2f, 0.9f), round = w >= 3 && h >= 3)
     }
 
     private fun fillEllipseShaded(img: TileImage, cx: Float, cy: Float, rx: Float, ry: Float, pal: PaletteRamp) {
-        val x0 = (cx - rx).toInt().coerceAtLeast(1)
-        val x1 = (cx + rx).toInt().coerceAtMost(img.width - 2)
-        val y0 = (cy - ry).toInt().coerceAtLeast(1)
-        val y1 = (cy + ry).toInt().coerceAtMost(img.height - 2)
-        for (y in y0..y1) {
-            for (x in x0..x1) {
-                val dx = (x - cx) / rx
-                val dy = (y - cy) / ry
-                if (dx * dx + dy * dy <= 1f) {
-                    val t = (0.76f - dx * 0.25f - dy * 0.28f).coerceIn(0.15f, 0.98f)
-                    img.setPixel(x, y, pal.sample(t))
-                }
-            }
-        }
+        PixelForm.dome(img, cx, cy, rx, ry, pal)
     }
 
     private fun drawGroundShadow32(img: TileImage, cx: Float, cy: Float, rx: Float, ry: Float) {

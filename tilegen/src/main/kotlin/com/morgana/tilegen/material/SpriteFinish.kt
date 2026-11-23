@@ -135,8 +135,8 @@ object SpriteFinish {
                 }
                 if (n == 0) continue
                 val isLit = lit > 0
-                val factor = if (isLit) 0.60f else 0.42f
-                val mix = if (isLit) 0.10f else 0.30f
+                val factor = if (isLit) 0.50f else 0.34f
+                val mix = if (isLit) 0.18f else 0.40f
                 val or = ((sr / n) * factor * (1f - mix) + ar * mix).toInt().coerceIn(0, 255)
                 val og = ((sg / n) * factor * (1f - mix) + ag * mix).toInt().coerceIn(0, 255)
                 val ob = ((sb / n) * factor * (1f - mix) + ab * mix).toInt().coerceIn(0, 255)
