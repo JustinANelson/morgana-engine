@@ -1958,10 +1958,20 @@ class PaperDollSpriteGenerator(
         if (att == AttachmentKind.FUR_MANTLE) {
             val fur = PaletteRamp.fromBaseColor(theme.secondaryPalette.mid, steps = 6, hueShift = 0.04f, valueSpread = 0.30f)
             val ring = if (dir == Direction8.W) 5.4f else 8.6f
-            fillEllipseShaded(img, cx.toFloat(), torsoTop + 2.6f, ring - 0.8f, 2.4f, fur)
-            var x = (cx - ring).toInt() + 1
-            while (x < cx + ring - 1) {
-                img.setPixel(x.coerceIn(1, 30), (torsoTop + 5).coerceIn(1, 46), fur.sample(0.42f))
+            val frontOpen = !dir.isBack && dir != Direction8.W
+            // The mantle sits on the shoulders and collar; in front view the chest stays open so the torso (or the
+            // bare body) shows through instead of a fur dome covering it.
+            fillEllipseShaded(img, cx.toFloat(), torsoTop + 1.2f, ring - 1.6f, 1.8f, fur)
+            if (frontOpen) {
+                for (y in (torsoTop + 2)..(torsoTop + 4)) {
+                    for (x in (cx - 2)..(cx + 2)) {
+                        if (x in 0 until img.width && y in 0 until img.height) img.setPixel(x, y, 0)
+                    }
+                }
+            }
+            var x = (cx - ring).toInt() + 2
+            while (x < cx + ring - 2) {
+                if (!frontOpen || abs(x - cx) > 2) img.setPixel(x.coerceIn(1, 30), (torsoTop + 3).coerceIn(1, 46), fur.sample(0.42f))
                 x += 2
             }
             return
