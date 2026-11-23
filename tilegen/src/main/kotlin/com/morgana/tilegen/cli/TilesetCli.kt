@@ -2,6 +2,7 @@ package com.morgana.tilegen.cli
 
 import com.morgana.tilegen.NamedTile
 import com.morgana.tilegen.TileImage
+import com.morgana.tilegen.sprite.CartSprite
 import com.morgana.tilegen.sprite.HorseCoat
 import com.morgana.tilegen.sprite.MountSprite
 import com.morgana.tilegen.sprite.PaperDollProportions
@@ -327,7 +328,7 @@ object TilesetCli {
                     0
                 }
                 "mount" -> {
-                    // mount [job] [--coat bay|chestnut|black|white|dun] [--rider none] [--out dir]: a horse sheet, four facings
+                    // mount [job] [--cart] [--coat bay|chestnut|black|white|dun] [--rider none] [--out dir]: a horse sheet, four facings
                     // (S, W, E, N) by two idle frames and four walk frames, with or without a paper-doll rider.
                     val job = PaperDollJob.valueOf((args.getOrNull(1)?.takeIf { !it.startsWith("--") } ?: "hunter").uppercase())
                     val coat = HorseCoat.valueOf((flags["coat"] ?: "bay").uppercase())
@@ -340,18 +341,24 @@ object TilesetCli {
                     val dirs = listOf(Direction8.S, Direction8.W, Direction8.E, Direction8.N)
                     val actions = listOf(PaperDollAction.IDLE to 2, PaperDollAction.WALK to 4)
                     val columns = actions.sumOf { it.second }
-                    val sheet = TileImage(columns * MountSprite.WIDTH, dirs.size * MountSprite.HEIGHT)
+                    val cart = "cart" in flags
+                    val cellW = if (cart) CartSprite.WIDTH else MountSprite.WIDTH
+                    val sheet = TileImage(columns * cellW, dirs.size * MountSprite.HEIGHT)
                     for ((row, d) in dirs.withIndex()) {
                         var col = 0
                         for ((action, n) in actions) for (f in 0 until n) {
-                            val frame = if (rider) MountSprite.mounted(gen, loadout, d, action, f, coat, style) else MountSprite.horse(d, action, f, coat)
-                            for (y in 0 until frame.height) for (x in 0 until frame.width) sheet.setPixel(col * MountSprite.WIDTH + x, row * MountSprite.HEIGHT + y, frame.getPixel(x, y))
+                            val frame = when {
+                                cart -> CartSprite.hitched(if (rider) gen else null, if (rider) loadout else null, d, action, f, coat, style)
+                                rider -> MountSprite.mounted(gen, loadout, d, action, f, coat, style)
+                                else -> MountSprite.horse(d, action, f, coat)
+                            }
+                            for (y in 0 until frame.height) for (x in 0 until frame.width) sheet.setPixel(col * cellW + x, row * MountSprite.HEIGHT + y, frame.getPixel(x, y))
                             col++
                         }
                     }
-                    val file = outDir.resolve("mount_${coat.name.lowercase()}${if (rider) "_" + job.name.lowercase() else ""}.png")
+                    val file = outDir.resolve("${if (cart) "cart" else "mount"}_${coat.name.lowercase()}${if (rider) "_" + job.name.lowercase() else ""}.png")
                     PngEncoder.writeToFile(sheet, file)
-                    out.println("Wrote $file (${sheet.width}x${sheet.height}, cells ${MountSprite.WIDTH}x${MountSprite.HEIGHT}, idle 2 + walk 4 columns, rows S W E N)")
+                    out.println("Wrote $file (${sheet.width}x${sheet.height}, cells ${cellW}x${MountSprite.HEIGHT}, idle 2 + walk 4 columns, rows S W E N)")
                     0
                 }
                 "paperdoll" -> {

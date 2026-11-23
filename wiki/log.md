@@ -2,6 +2,8 @@
 
 ## 2026-11-23
 
+* **Add** - **A cart for the horse** ([tilegen](/architecture/tilegen.md)): `CartSprite` hitches a two-wheeled cart (plank box, iron straps, sacks and a crate, shafts and a chest strap, turning spokes) behind the horse, with or without a rider, in front, side and back views on a 96 x 64 canvas. `mount --cart` writes a preview sheet. Art only. Tests: `CartSpriteTest`.
+
 * **Add** - **A horse and a mounted pose in tilegen** ([tilegen](/architecture/tilegen.md)): `MountSprite` draws a horse (bay, chestnut, black, white, dun; front, side and back, idle and walk) and seats a paper-doll rider on it with the legs redrawn astride, on a 48 x 64 canvas. New `mount` CLI command writes a preview sheet. Art only: there is no mount mechanic, item or sprite-sheet layout in the engine yet. Tests: `MountSpriteTest`.
 
 * **Change** - **Readable eyes on 32 x 48 paper dolls** ([tilegen](/architecture/tilegen.md)): the eyes were two dim 1 px dots wedged under the hair fringe at the edge of the face. They sit one row lower and 1 px nearer the centre and are three rows tall: a dark lash line, a white corner beside a near-black pupil, and a coloured iris pixel below, so they read at game size the way LPC eyes do. Profile gets the same eye.
