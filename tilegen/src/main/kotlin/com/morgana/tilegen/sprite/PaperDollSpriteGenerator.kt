@@ -779,7 +779,7 @@ class PaperDollSpriteGenerator(
         // 4. Legs, Feet & Torso/Armor layers
         drawLegsAndFeet32(legsLayer, feetLayer, cx, legTop, baseDir, stride, pose, loadout, theme)
         drawTorso32(torsoLayer, cx, torsoTop, legTop, baseDir, stride, pose, loadout, theme, bodyLayer,
-            swing = if (action == PaperDollAction.SLASH || action == PaperDollAction.HARVEST) swing else null)
+            swing = if (action == PaperDollAction.SLASH || action == PaperDollAction.HARVEST || action == PaperDollAction.CAST) swing else null)
 
         // 5. Waist & Shoulder Attachments
         for (att in loadout.attachments) {
@@ -827,7 +827,10 @@ class PaperDollSpriteGenerator(
             }
         }
         when {
-            action == PaperDollAction.CAST && (phase == 1 || phase == 2) -> drawCastAura32(auraFrontLayer, cx, phase, theme.auraPalette)
+            action == PaperDollAction.CAST -> {
+                val (hx, hy) = swing.hand(baseDir, cx, torsoTop)
+                drawCastAura32(auraFrontLayer, cx, phase, theme.auraPalette, hx, hy, Swing.side(baseDir))
+            }
             action == PaperDollAction.SLASH && phase == 1 && loadout.weapon !in SWINGING_BLADES -> drawAttackSlash32(auraFrontLayer, cx, torsoTop, baseDir)
             action == PaperDollAction.THRUST && phase == 1 -> drawThrustVfx32(auraFrontLayer, cx, torsoTop, baseDir)
             action == PaperDollAction.SHOOT && phase == 2 -> drawShootVfx32(auraFrontLayer, cx, torsoTop, baseDir)
@@ -1607,16 +1610,20 @@ class PaperDollSpriteGenerator(
                 swordHilt(img, handX, handY, gold, wood)
             }
             WeaponKind.ARCANE_STAFF, WeaponKind.HOLY_ROD -> {
-                val lift = if (isCast) -2 else 0
+                // While casting the staff rides the casting hand (raised, then thrust forward); otherwise it stands at the side.
+                val casting = action == PaperDollAction.CAST && img.height == 48
+                val (chx, chy) = swing.hand(dir, cx, torsoTop)
+                val sx = if (casting) chx.coerceIn(2, 29) else handX
+                val lift = if (casting) chy - (torsoTop + 5) else if (isCast) -2 else 0
                 val top = (torsoTop - 3 + lift).coerceAtLeast(3)
                 val shaft = if (weapon == WeaponKind.HOLY_ROD) gold else wood
-                PixelForm.column(img, handX.coerceIn(1, 30), top, 1, ((torsoTop + 11 + lift).coerceAtMost(29) - top), shaft, 0.52f, round = false)
-                img.setPixel((handX + 1).coerceIn(1, 30), top + 2, shaft.sample(0.3f))
+                PixelForm.column(img, sx.coerceIn(1, 30), top, 1, ((torsoTop + 11 + lift).coerceAtMost(if (casting) 44 else 29) - top).coerceAtLeast(4), shaft, 0.52f, round = false)
+                img.setPixel((sx + 1).coerceIn(1, 30), top + 2, shaft.sample(0.3f))
                 val gemPal = if (weapon == WeaponKind.ARCANE_STAFF) PalettePresets.CALM_WATER else gold
                 // A claw of two prongs around a shaded orb.
-                img.setPixel((handX - 1).coerceIn(1, 30), top, shaft.sample(0.7f))
-                img.setPixel((handX + 1).coerceIn(1, 30), top, shaft.sample(0.4f))
-                PixelForm.dome(img, handX + 0.5f, top - 1.6f, 2.2f, 2.2f, gemPal)
+                img.setPixel((sx - 1).coerceIn(1, 30), top, shaft.sample(0.7f))
+                img.setPixel((sx + 1).coerceIn(1, 30), top, shaft.sample(0.4f))
+                PixelForm.dome(img, sx + 0.5f, top - 1.6f, 2.2f, 2.2f, gemPal)
             }
             WeaponKind.DUAL_KATAR -> {
                 for (i in 0..5) {
@@ -2215,9 +2222,25 @@ class PaperDollSpriteGenerator(
         }
     }
 
-    private fun drawCastAura32(img: TileImage, cx: Int, phase: Int, auraPal: PaletteRamp) {
+    private fun drawCastAura32(img: TileImage, cx: Int, phase: Int, auraPal: PaletteRamp, hx: Int, hy: Int, side: Int) {
         val runeGlow = auraPal.highlight
         val goldGlow = PaletteRamp.rgba(255, 236, 132)
+        val white = PaletteRamp.rgba(255, 255, 255)
+        fun dot(x: Int, y: Int, c: Int) = img.setPixel(x.coerceIn(1, 30), y.coerceIn(1, img.height - 2), c)
+        // The charge in the casting hand: a spark, a swelling orb overhead, a bolt thrown forward, then fading motes.
+        when (phase) {
+            0 -> { dot(hx, hy - 1, goldGlow); dot(hx + side, hy - 2, runeGlow) }
+            1 -> {
+                for (dx in -1..1) for (dy in -1..1) if (dx * dx + dy * dy <= 1) dot(hx + dx, hy - 3 + dy, if (dx == 0 && dy == 0) white else runeGlow)
+                dot(hx - 2, hy - 3, goldGlow); dot(hx + 2, hy - 3, goldGlow); dot(hx, hy - 6, goldGlow)
+            }
+            2 -> {
+                for (i in 0..5) dot(hx + side * (i + 1), hy - 1 - i / 3, if (i % 2 == 0) white else runeGlow)
+                for (dx in -1..1) for (dy in -1..1) dot(hx + side * (7 + dx), hy - 2 + dy, if (dx == 0 && dy == 0) white else goldGlow)
+            }
+            else -> { dot(hx + side * 2, hy - 3, runeGlow); dot(hx - side, hy - 5, goldGlow) }
+        }
+        if (phase != 1 && phase != 2) return
         val ringY = img.height - 5
         for (dx in -7..7 step 2) {
             val px = (cx + dx).coerceIn(1, 30)

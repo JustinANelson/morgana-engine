@@ -50,10 +50,22 @@ internal data class Swing(
             else -> Swing(dx = 5, dxProfile = 4, dy = 4, angle = 150f)
         }
 
-        /** The keyframe for [action] at [phase], or [REST]. SLASH and HARVEST have their own keys so far. */
+        /**
+         * The four CAST keyframes: draw the hand in to gather power, raise it overhead, throw it forward, settle. The
+         * angle keeps a held staff close to upright.
+         */
+        fun cast(phase: Int): Swing = when (phase) {
+            0 -> Swing(dx = 5, dxProfile = 3, dy = 3, angle = 6f)
+            1 -> Swing(dx = 5, dxProfile = 3, dy = -7, angle = -4f)
+            2 -> Swing(dx = 9, dxProfile = 7, dy = -3, angle = 24f)
+            else -> Swing(dx = 7, dxProfile = 4, dy = 3, angle = 10f)
+        }
+
+        /** The keyframe for [action] at [phase], or [REST]. SLASH, HARVEST and CAST have their own keys so far. */
         fun forAction(action: PaperDollAction, phase: Int): Swing = when (action) {
             PaperDollAction.SLASH -> slash(phase)
             PaperDollAction.HARVEST -> gather(phase)
+            PaperDollAction.CAST -> cast(phase)
             else -> REST
         }
 

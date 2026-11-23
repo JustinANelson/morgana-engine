@@ -58,6 +58,17 @@ class SwingPoseTest {
     }
 
     @Test
+    fun `a cast draws in, raises the staff overhead, throws forward and settles`() {
+        val loadout = PaperDollLoadout.forJob(PaperDollJob.HERO).copy(weapon = WeaponKind.ARCANE_STAFF)
+        for (dir in listOf(Direction8.S, Direction8.W, Direction8.N)) {
+            val frames = (0..3).map { gen.generateCharacterFrame(loadout, dir, PaperDollAction.CAST, it, PixelStyle.MORGANA, includeShadow = false) }
+            for (i in 0..3) for (j in i + 1..3) assertTrue(!frames[i].pixels.contentEquals(frames[j].pixels), "cast frames $i and $j match for $dir")
+            val staff = (0..3).map { bounds(weaponLayer(WeaponKind.ARCANE_STAFF, dir, PaperDollAction.CAST, it)) }
+            assertTrue(staff[1][1] < staff[0][1], "the staff should rise overhead on frame 1 for $dir ($staff)")
+        }
+    }
+
+    @Test
     fun `a gather crouches, reaches low and rises with the item`() {
         val loadout = PaperDollLoadout.forJob(PaperDollJob.HERO).copy(weapon = WeaponKind.NONE)
         fun frame(f: Int) = gen.generateCharacterFrame(loadout, Direction8.S, PaperDollAction.HARVEST, f, PixelStyle.MORGANA, includeShadow = false)

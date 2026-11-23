@@ -1,5 +1,9 @@
 # Directory Update Log
 
+## 2026-11-23
+
+* **Change** - **Keyframed cast pose for paper dolls** ([tilegen](/architecture/tilegen.md)): `CAST` now follows `Swing.cast(phase)` instead of a static arm lift: the casting hand is drawn in with a spark, raised overhead with a swelling orb, thrown forward with a bolt, then settles; arcane staffs and holy rods follow the hand, and the ground rune ring only shows on the raise and release frames. Tests: `SwingPoseTest`.
+
 ## 2026-11-22
 
 * **Add** - **Gather animation, played when picking up loot** ([tilegen](/architecture/tilegen.md), [rendering](/client/rendering.md)): the paper-doll `HARVEST` action is now a gather instead of an overhead pickaxe swing: the knees bend and the body lowers, the head dips, the arm reaches to the ground beside the feet (forward in profile), the hand grabs an item that glints, then the hero rises holding it at the chest (a held weapon points down out of the way; the pickaxe keeps its own strike). The client plays the `HARVEST` pose for 0.5 s whenever it sends a pickup (key, tap, click-to-loot, Auto-loot) and loot the player may take is within reach (`AutoLootModel.lootInReach`, `ClientWorldState.triggerLocalPickup`), unless another action pose is playing or the game's sprite profile has no harvest frames. Tests: `AutoLootModelTest`, `SwingPoseTest`.
