@@ -1,6 +1,10 @@
 package com.morgana.tilegen.cli
 
 import com.morgana.tilegen.NamedTile
+import com.morgana.tilegen.TileImage
+import com.morgana.tilegen.sprite.HorseCoat
+import com.morgana.tilegen.sprite.MountSprite
+import com.morgana.tilegen.sprite.PaperDollProportions
 import com.morgana.tilegen.ThemedTilesetGenerator
 import com.morgana.tilegen.TilesetTheme
 import com.morgana.tilegen.autotile.AutotileGenerator
@@ -320,6 +324,34 @@ object TilesetCli {
                     out.println("Wrote ${result.written.size} tilesets (ids ${result.written.firstOrNull()?.fileName ?: "-"} ..) into $game/assets/tilesets and $game/tilesets.index.json")
                     if (result.removed.isNotEmpty()) out.println("Removed ${result.removed.size} stale owned tilesets")
                     out.println("${result.tiles.size} tiles, ${result.props.size} props, ${result.autotiles.size} autotiles indexed; next free id ${result.nextFreeId}")
+                    0
+                }
+                "mount" -> {
+                    // mount [job] [--coat bay|chestnut|black|white|dun] [--rider none] [--out dir]: a horse sheet, four facings
+                    // (S, W, E, N) by two idle frames and four walk frames, with or without a paper-doll rider.
+                    val job = PaperDollJob.valueOf((args.getOrNull(1)?.takeIf { !it.startsWith("--") } ?: "hunter").uppercase())
+                    val coat = HorseCoat.valueOf((flags["coat"] ?: "bay").uppercase())
+                    val rider = flags["rider"] != "none"
+                    val style = PixelStyle.valueOf((flags["style"] ?: "morgana").uppercase())
+                    val outDir = Paths.get(flags["out"] ?: "build/tilesets/mount")
+                    Files.createDirectories(outDir)
+                    val gen = PaperDollSpriteGenerator(seed = flags["seed"]?.toLong() ?: 1337L, tileSize = 32, tileHeight = 48)
+                    val loadout = PaperDollLoadout.forJob(job).let { it.copy(theme = it.effectiveTheme().copy(proportions = PaperDollProportions.RMXP_32X48, style = style)) }
+                    val dirs = listOf(Direction8.S, Direction8.W, Direction8.E, Direction8.N)
+                    val actions = listOf(PaperDollAction.IDLE to 2, PaperDollAction.WALK to 4)
+                    val columns = actions.sumOf { it.second }
+                    val sheet = TileImage(columns * MountSprite.WIDTH, dirs.size * MountSprite.HEIGHT)
+                    for ((row, d) in dirs.withIndex()) {
+                        var col = 0
+                        for ((action, n) in actions) for (f in 0 until n) {
+                            val frame = if (rider) MountSprite.mounted(gen, loadout, d, action, f, coat, style) else MountSprite.horse(d, action, f, coat)
+                            for (y in 0 until frame.height) for (x in 0 until frame.width) sheet.setPixel(col * MountSprite.WIDTH + x, row * MountSprite.HEIGHT + y, frame.getPixel(x, y))
+                            col++
+                        }
+                    }
+                    val file = outDir.resolve("mount_${coat.name.lowercase()}${if (rider) "_" + job.name.lowercase() else ""}.png")
+                    PngEncoder.writeToFile(sheet, file)
+                    out.println("Wrote $file (${sheet.width}x${sheet.height}, cells ${MountSprite.WIDTH}x${MountSprite.HEIGHT}, idle 2 + walk 4 columns, rows S W E N)")
                     0
                 }
                 "paperdoll" -> {

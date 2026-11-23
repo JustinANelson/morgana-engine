@@ -2,6 +2,8 @@
 
 ## 2026-11-23
 
+* **Add** - **A horse and a mounted pose in tilegen** ([tilegen](/architecture/tilegen.md)): `MountSprite` draws a horse (bay, chestnut, black, white, dun; front, side and back, idle and walk) and seats a paper-doll rider on it with the legs redrawn astride, on a 48 x 64 canvas. New `mount` CLI command writes a preview sheet. Art only: there is no mount mechanic, item or sprite-sheet layout in the engine yet. Tests: `MountSpriteTest`.
+
 * **Change** - **Readable eyes on 32 x 48 paper dolls** ([tilegen](/architecture/tilegen.md)): the eyes were two dim 1 px dots wedged under the hair fringe at the edge of the face. They sit one row lower and 1 px nearer the centre and are three rows tall: a dark lash line, a white corner beside a near-black pupil, and a coloured iris pixel below, so they read at game size the way LPC eyes do. Profile gets the same eye.
 
 * **Change** - **Better starter archer gear: leather jerkin, boots and quiver** ([tilegen](/architecture/tilegen.md)): the `TRAVELER` torso (32 x 48) is a leather jerkin with a dark V-neck, criss-cross lacing, side seams, a belt and a tabbed hem (back view gets a centre seam); `BOOTS` and `SABATONS` are real boots with a lit folded cuff over a shadow row, a taller shaft, a dark sole and in profile a pointed toe (sabatons add a plate line), instead of two-row blobs; the `QUIVER` is a taller banded tube with straps and fletched arrows poking out above the shoulder, shifted so it shows beside the body in front and side views.
