@@ -61,6 +61,9 @@ class HandPixelledMaterialsTest {
         assertTrue((0 until 32).count { lush.getPixel(it, 31) != plain.getPixel(it, 31) } > 24)
         // Left and right caps get the same lip as the centre one (it depends only on the column).
         val left = tiles.getValue("lush_cap_left").image
-        for (x in 4 until 28) assertEquals(lush.getPixel(x, 31), left.getPixel(x, 31))
+        for (x in 10 until 28) assertEquals(lush.getPixel(x, 31), left.getPixel(x, 31))
+        // The outer corner curves up: the leftmost column of the left cap turns to stone higher than the centre cap does.
+        fun firstStoneRow(img: TileImage, x: Int) = (0 until 32).first { y -> img.getPixel(x, y) != plain.getPixel(x, y) && y > 8 }
+        assertTrue(firstStoneRow(left, 0) < firstStoneRow(lush, 0), "left corner not rounded")
     }
 }

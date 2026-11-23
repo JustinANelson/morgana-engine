@@ -222,6 +222,18 @@
    "kind": "RUIN_WALL",
    "primaryPalette": "dune_sandstone",
    "secondaryPalette": "ancient_leaf"
+  },
+  {
+   "name": "cam_ruin_tower",
+   "kind": "RUIN_TOWER",
+   "primaryPalette": "dune_sandstone",
+   "secondaryPalette": "ancient_leaf"
+  },
+  {
+   "name": "cam_ruin_pillar",
+   "kind": "RUIN_PILLAR",
+   "primaryPalette": "dune_sandstone",
+   "secondaryPalette": "ancient_leaf"
   }
  ],
  "autotiles": [

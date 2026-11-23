@@ -233,6 +233,36 @@
    "kind": "RUIN_WALL",
    "primaryPalette": "pale_limestone",
    "secondaryPalette": "ancient_leaf"
+  },
+  {
+   "name": "mere_big_stump",
+   "kind": "OLD_STUMP",
+   "primaryPalette": "warm_timber",
+   "secondaryPalette": "ancient_leaf"
+  },
+  {
+   "name": "mere_log",
+   "kind": "FALLEN_LOG",
+   "primaryPalette": "warm_timber",
+   "secondaryPalette": "ancient_leaf"
+  },
+  {
+   "name": "mere_ruin_tower",
+   "kind": "RUIN_TOWER",
+   "primaryPalette": "pale_limestone",
+   "secondaryPalette": "ancient_leaf"
+  },
+  {
+   "name": "mere_ruin_pillar",
+   "kind": "RUIN_PILLAR",
+   "primaryPalette": "pale_limestone",
+   "secondaryPalette": "ancient_leaf"
+  },
+  {
+   "name": "mere_crystal_bloom",
+   "kind": "CRYSTAL_BLOOM",
+   "primaryPalette": "ancient_leaf",
+   "secondaryPalette": "ocean_water"
   }
  ],
  "autotiles": [

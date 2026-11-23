@@ -225,6 +225,12 @@
    "kind": "BOULDER",
    "primaryPalette": "dark_iron",
    "secondaryPalette": "highland_grass"
+  },
+  {
+   "name": "high_crystal_bloom",
+   "kind": "CRYSTAL_BLOOM",
+   "primaryPalette": "highland_grass",
+   "secondaryPalette": "rift_crimson"
   }
  ],
  "autotiles": [

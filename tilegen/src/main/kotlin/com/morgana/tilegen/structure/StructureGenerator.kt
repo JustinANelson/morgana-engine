@@ -53,7 +53,11 @@ class StructureGenerator(
         val capCenter = buildCapTile(topMaterial, lipHeight, sideBorder, leftEdge = false, rightEdge = false, style = style)
         val capRight = buildCapTile(topMaterial, lipHeight, sideBorder, leftEdge = false, rightEdge = true, style = style)
         val caps = if (lush) {
-            listOf(capLeft, capCenter, capRight).map { lushLip(it, faceMaterial) }
+            listOf(
+                lushLip(capLeft, faceMaterial, leftEdge = true, rightEdge = false),
+                lushLip(capCenter, faceMaterial, leftEdge = false, rightEdge = false),
+                lushLip(capRight, faceMaterial, leftEdge = false, rightEdge = true)
+            )
         } else {
             listOf(capLeft, capCenter, capRight)
         }
@@ -430,12 +434,17 @@ class StructureGenerator(
      * shaded row above it, and the face material (shadowed by the overhang) showing through below the lip. The lip
      * depth depends only on the column, so neighbouring cap tiles line up.
      */
-    private fun lushLip(cap: TileImage, face: TileImage): TileImage {
+    private fun lushLip(cap: TileImage, face: TileImage, leftEdge: Boolean, rightEdge: Boolean): TileImage {
         val out = cap.copy()
         val base = (tileSize * 0.20f).toInt().coerceAtLeast(3)
         for (x in 0 until tileSize) {
             val jitter = (TileNoise.hash(x / 2, 0, 4242L) * (tileSize / 6f)).toInt() - tileSize / 16
-            val edge = (tileSize - base + jitter).coerceIn(tileSize / 2, tileSize - 2)
+            var edge = (tileSize - base + jitter).coerceIn(tileSize / 2, tileSize - 2)
+            // Outer corners curve up in a quarter circle, so a cliff end is rounded instead of square.
+            val rc = (tileSize * 0.28f)
+            val d = if (leftEdge) x.toFloat() else if (rightEdge) (tileSize - 1 - x).toFloat() else rc
+            if (d < rc) edge -= (rc - kotlin.math.sqrt(rc * rc - (rc - d) * (rc - d))).toInt()
+            edge = edge.coerceIn(2, tileSize - 2)
             for (y in edge until tileSize) {
                 val f = face.getPixel(x, (y - edge).coerceIn(0, tileSize - 1))
                 val c = when (y) {

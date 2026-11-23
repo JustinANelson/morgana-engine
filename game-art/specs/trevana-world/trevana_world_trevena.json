@@ -257,6 +257,24 @@
    "kind": "RUIN_WALL",
    "primaryPalette": "pale_limestone",
    "secondaryPalette": "meadow_grass"
+  },
+  {
+   "name": "hub_big_stump",
+   "kind": "OLD_STUMP",
+   "primaryPalette": "warm_timber",
+   "secondaryPalette": "meadow_grass"
+  },
+  {
+   "name": "hub_log",
+   "kind": "FALLEN_LOG",
+   "primaryPalette": "warm_timber",
+   "secondaryPalette": "meadow_grass"
+  },
+  {
+   "name": "hub_ruin_pillar",
+   "kind": "RUIN_PILLAR",
+   "primaryPalette": "pale_limestone",
+   "secondaryPalette": "meadow_grass"
   }
  ],
  "autotiles": [

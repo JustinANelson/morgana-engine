@@ -213,6 +213,36 @@
    "kind": "RUIN_WALL",
    "primaryPalette": "dune_sandstone",
    "secondaryPalette": "ancient_leaf"
+  },
+  {
+   "name": "gelli_big_stump",
+   "kind": "OLD_STUMP",
+   "primaryPalette": "warm_timber",
+   "secondaryPalette": "highland_grass"
+  },
+  {
+   "name": "gelli_log",
+   "kind": "FALLEN_LOG",
+   "primaryPalette": "warm_timber",
+   "secondaryPalette": "highland_grass"
+  },
+  {
+   "name": "gelli_ruin_tower",
+   "kind": "RUIN_TOWER",
+   "primaryPalette": "dune_sandstone",
+   "secondaryPalette": "ancient_leaf"
+  },
+  {
+   "name": "gelli_ruin_pillar",
+   "kind": "RUIN_PILLAR",
+   "primaryPalette": "dune_sandstone",
+   "secondaryPalette": "ancient_leaf"
+  },
+  {
+   "name": "gelli_crystal_bloom",
+   "kind": "CRYSTAL_BLOOM",
+   "primaryPalette": "highland_grass",
+   "secondaryPalette": "pastel_pink"
   }
  ],
  "autotiles": [

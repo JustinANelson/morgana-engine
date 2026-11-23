@@ -224,6 +224,36 @@
    "kind": "RUIN_WALL",
    "primaryPalette": "dune_sandstone",
    "secondaryPalette": "ancient_leaf"
+  },
+  {
+   "name": "cel_big_stump",
+   "kind": "OLD_STUMP",
+   "primaryPalette": "warm_timber",
+   "secondaryPalette": "autumn_grass"
+  },
+  {
+   "name": "cel_log",
+   "kind": "FALLEN_LOG",
+   "primaryPalette": "warm_timber",
+   "secondaryPalette": "autumn_grass"
+  },
+  {
+   "name": "cel_ruin_tower",
+   "kind": "RUIN_TOWER",
+   "primaryPalette": "dune_sandstone",
+   "secondaryPalette": "ancient_leaf"
+  },
+  {
+   "name": "cel_ruin_pillar",
+   "kind": "RUIN_PILLAR",
+   "primaryPalette": "dune_sandstone",
+   "secondaryPalette": "ancient_leaf"
+  },
+  {
+   "name": "cel_crystal_bloom",
+   "kind": "CRYSTAL_BLOOM",
+   "primaryPalette": "meadow_grass",
+   "secondaryPalette": "arcane_violet"
   }
  ],
  "autotiles": [

@@ -251,7 +251,12 @@ enum class PropKind(val widthTiles: Int, val heightTiles: Int) {
     FLOWER_BUSH(2, 2),
     MOSS_MOUND(2, 2),
     BOULDER(2, 2),
-    RUIN_WALL(3, 2)
+    RUIN_WALL(3, 2),
+    OLD_STUMP(2, 2),
+    FALLEN_LOG(3, 2),
+    RUIN_TOWER(3, 3),
+    RUIN_PILLAR(1, 2),
+    CRYSTAL_BLOOM(2, 2)
 }
 
 /**
@@ -459,6 +464,11 @@ class PropGenerator(
             PropKind.FLOWER_BUSH -> NatureProps.bloomBush(canvas, w, h, foliage, secondaryPalette ?: PalettePresets.HAZARD_AMBER, s)
             PropKind.MOSS_MOUND -> NatureProps.mossMound(canvas, w, h, foliage, secondaryPalette ?: PalettePresets.EARTH_DIRT, s)
             PropKind.BOULDER -> NatureProps.boulder(canvas, w, h, primaryPalette ?: PalettePresets.DUNE_SANDSTONE, secondaryPalette ?: PalettePresets.MEADOW_GRASS, s)
+            PropKind.OLD_STUMP -> NatureProps.oldStump(canvas, w, h, primaryPalette ?: PalettePresets.WARM_TIMBER, secondaryPalette ?: PalettePresets.MEADOW_GRASS, s)
+            PropKind.FALLEN_LOG -> NatureProps.fallenLog(canvas, w, h, primaryPalette ?: PalettePresets.WARM_TIMBER, secondaryPalette ?: PalettePresets.MEADOW_GRASS, s)
+            PropKind.RUIN_TOWER -> NatureProps.ruinTower(canvas, w, h, primaryPalette ?: PalettePresets.DUNE_SANDSTONE, secondaryPalette ?: PalettePresets.ANCIENT_LEAF, s)
+            PropKind.RUIN_PILLAR -> NatureProps.ruinPillar(canvas, w, h, primaryPalette ?: PalettePresets.DUNE_SANDSTONE, secondaryPalette ?: PalettePresets.ANCIENT_LEAF, s)
+            PropKind.CRYSTAL_BLOOM -> NatureProps.crystalBloom(canvas, w, h, foliage, secondaryPalette ?: PalettePresets.PASTEL_PINK, s)
             PropKind.RUIN_WALL -> NatureProps.ruinWall(canvas, w, h, primaryPalette ?: PalettePresets.DUNE_SANDSTONE, secondaryPalette ?: PalettePresets.ANCIENT_LEAF, s)
             }
         }

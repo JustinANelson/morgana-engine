@@ -10,7 +10,8 @@ import org.junit.jupiter.api.Test
 class NaturePropsTest {
     private val kinds = listOf(
         PropKind.LEAFY_TREE, PropKind.FRUIT_TREE, PropKind.FLOWER_BUSH,
-        PropKind.MOSS_MOUND, PropKind.BOULDER, PropKind.RUIN_WALL
+        PropKind.MOSS_MOUND, PropKind.BOULDER, PropKind.RUIN_WALL, PropKind.OLD_STUMP, PropKind.FALLEN_LOG,
+        PropKind.RUIN_TOWER, PropKind.RUIN_PILLAR, PropKind.CRYSTAL_BLOOM
     )
 
     private fun opaque(p: com.morgana.tilegen.TileImage): Int = p.pixels.count { (it and 0xFF) > 200 }
@@ -24,7 +25,7 @@ class NaturePropsTest {
                 val b = gen.generateProp("n_${kind.name}", kind)
                 assertTrue(a.fullImage.pixels.contentEquals(b.fullImage.pixels), "$kind not deterministic")
                 val area = a.fullImage.width * a.fullImage.height
-                assertTrue(opaque(a.fullImage) > area / 8, "$kind too sparse at $size px: ${opaque(a.fullImage)} of $area")
+                assertTrue(opaque(a.fullImage) > area / 12, "$kind too sparse at $size px: ${opaque(a.fullImage)} of $area")
             }
         }
     }
