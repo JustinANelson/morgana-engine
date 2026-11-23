@@ -93,7 +93,7 @@
   },
   {
    "name": "high_face",
-   "pattern": "COBBLESTONE",
+   "pattern": "ROUNDED_STONES",
    "palette": "scorch_face",
    "scale": 1.4,
    "detail": 0.3,

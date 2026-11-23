@@ -70,7 +70,20 @@ enum class MaterialPattern {
      * posterised light and dark patches, and short lit blades (grass) or chips (dirt) scattered on top. Far calmer
      * than [ORGANIC_FBM]; `detail` sets how many tufts, `accentColor` adds sparse flowers or pebbles.
      */
-    TUFTED_GROUND
+    TUFTED_GROUND,
+
+    /**
+     * Rounded, individually outlined boulders packed edge to edge (cliff faces, rubble banks): each stone has a
+     * dark gap around it, a lit upper-left shoulder and a shaded lower-right underside, with a per-stone tint.
+     * `scale` sets the stones per tile (about 3 per tile at 1.0).
+     */
+    ROUNDED_STONES,
+
+    /**
+     * Flat, hand-pixelled water: a calm posterised base with a few deeper patches and short light streaks that
+     * drift sideways with `frameIndex` (four frames loop seamlessly). Calmer than [WATER_CAUSTICS].
+     */
+    FLAT_WATER
 }
 
 /**
@@ -138,7 +151,13 @@ class MaterialTileGenerator(
             MaterialPattern.HAZARD_GRATE -> drawHazardGrate(out, effectiveSpec, s)
             MaterialPattern.CYBER_CIRCUIT -> drawCyberCircuit(out, effectiveSpec, s)
             MaterialPattern.TUFTED_GROUND -> drawTuftedGround(out, effectiveSpec, s)
+            MaterialPattern.ROUNDED_STONES -> drawRoundedStones(out, effectiveSpec, s)
+            MaterialPattern.FLAT_WATER -> drawFlatWater(out, effectiveSpec, s)
         }
+        // Hand-pixelled patterns are already flat and posterised; dithering them only adds static (8-bit still limits colours).
+        val handPixelled = spec.pattern == MaterialPattern.TUFTED_GROUND || spec.pattern == MaterialPattern.ROUNDED_STONES ||
+            spec.pattern == MaterialPattern.FLAT_WATER
+        if (handPixelled && spec.style != PixelStyle.RETRO_8BIT) return out
         return PixelDither.applyStyle(out, spec.style, spec.palette)
     }
 
@@ -246,6 +265,110 @@ class MaterialTileGenerator(
                     put(x + 1, y, accent)
                     put(x, y + 1, tone(mid - 1))
                 }
+            }
+        }
+    }
+
+    private fun drawRoundedStones(pm: TileImage, spec: MaterialSpec, s: Long) {
+        val c = spec.palette.colors
+        fun tone(i: Int) = c[i.coerceIn(0, c.lastIndex)]
+        val cells = (3 * spec.scale).roundToInt().coerceIn(2, tileSize / 4)
+        val cw = tileSize.toFloat() / cells
+        val hi = c.lastIndex
+        for (py in 0 until tileSize) {
+            for (px in 0 until tileSize) {
+                val x = px + 0.5f
+                val y = py + 0.5f
+                val gx = Math.floor((x / cw).toDouble()).toInt()
+                val gy = Math.floor((y / cw).toDouble()).toInt()
+                var d1 = Float.MAX_VALUE
+                var d2 = Float.MAX_VALUE
+                var hash = 0f
+                var vx = 0f
+                var vy = 0f
+                for (oy in -1..1) {
+                    for (ox in -1..1) {
+                        val cx = Math.floorMod(gx + ox, cells)
+                        val cy = Math.floorMod(gy + oy, cells)
+                        val jx = TileNoise.hash(cx, cy, s) * 0.5f + 0.25f
+                        val jy = TileNoise.hash(cx, cy, s + 997L) * 0.5f + 0.25f
+                        val fx = (gx + ox + jx) * cw
+                        val fy = (gy + oy + jy) * cw
+                        // Stones are a little wider than tall.
+                        val dx = (x - fx) / cw
+                        val dy = (y - fy) / cw * 1.25f
+                        val d = kotlin.math.hypot(dx, dy)
+                        if (d < d1) {
+                            d2 = d1
+                            d1 = d
+                            hash = TileNoise.hash(cx, cy, s + 3331L)
+                            vx = dx
+                            vy = dy
+                        } else if (d < d2) {
+                            d2 = d
+                        }
+                    }
+                }
+                val gap = d2 - d1
+                val color = when {
+                    gap < 0.09f -> tone(0)
+                    gap < 0.17f -> tone(1)
+                    else -> {
+                        val r = (d1 / 0.5f).coerceIn(0f, 1.2f)
+                        val light = -0.55f * vx / 0.5f - 0.65f * vy / 0.5f + 0.50f - r * 0.25f + (hash - 0.5f) * 0.30f
+                        when {
+                            light > 0.78f -> tone(hi)
+                            light > 0.46f -> tone(hi - 1)
+                            light > 0.14f -> tone(hi - 2)
+                            else -> tone(1)
+                        }
+                    }
+                }
+                pm.setPixel(px, py, color)
+            }
+        }
+        // Mossy speckle in the gaps so the wall does not read as clean tiles.
+        val accent = spec.accentColor
+        if (accent != null) {
+            for (py in 0 until tileSize) {
+                for (px in 0 until tileSize) {
+                    if (pm.getPixel(px, py) == tone(0) && TileNoise.hash(px, py, s + 71L) > 0.7f) pm.setPixel(px, py, accent)
+                }
+            }
+        }
+    }
+
+    private fun drawFlatWater(pm: TileImage, spec: MaterialSpec, s: Long) {
+        val c = spec.palette.colors
+        fun tone(i: Int) = c[i.coerceIn(0, c.lastIndex)]
+        val size = tileSize
+        val mid = c.lastIndex / 2
+        val lattice = (3 * spec.scale).roundToInt().coerceIn(2, size / 4)
+        for (py in 0 until size) {
+            for (px in 0 until size) {
+                val n = TileNoise.wrappedNoise2D(px * lattice / size.toFloat(), py * lattice / size.toFloat(), lattice, s) * 0.6f +
+                    TileNoise.wrappedNoise2D(px * lattice * 2 / size.toFloat(), py * lattice * 2 / size.toFloat(), lattice * 2, s + 3L) * 0.4f
+                pm.setPixel(px, py, tone(if (n < 0.36f) mid - 1 else mid))
+            }
+        }
+        // Light streaks drift one quarter of the tile per frame, so four frames loop exactly.
+        val shift = spec.frameIndex * (size / 4)
+        val rowStep = (size / 10).coerceAtLeast(3)
+        val seg = (size / 5).coerceAtLeast(4)
+        for (y in 1 until size step rowStep) {
+            val row = y / rowStep
+            for (k in 0 until size / seg) {
+                if (TileNoise.hash(k, row, s + 17L) < 0.45f - 0.2f * spec.detail) continue
+                val start = k * seg + (TileNoise.hash(k, row, s + 18L) * (seg / 2)).toInt()
+                val len = (seg / 2) + (TileNoise.hash(k, row, s + 19L) * (seg / 2)).toInt()
+                for (i in 0 until len) {
+                    val x = (start + i + shift).mod(size)
+                    pm.setPixel(x, y, tone(mid + 1))
+                    if (i in 1 until len - 1 && TileNoise.hash(k, row, s + 20L) > 0.6f) pm.setPixel(x, y, tone(c.lastIndex))
+                }
+                // A darker trailing pixel under the streak gives it a little depth.
+                val tail = (start + len + shift).mod(size)
+                pm.setPixel(tail, (y + 1).coerceAtMost(size - 1), tone(mid - 1))
             }
         }
     }

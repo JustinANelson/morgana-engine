@@ -77,14 +77,14 @@
   },
   {
    "name": "cel_stone",
-   "pattern": "COBBLESTONE",
+   "pattern": "ROUNDED_STONES",
    "palette": "slate_stone",
    "scale": 1.0,
    "detail": 0.25
   },
   {
    "name": "cel_stream",
-   "pattern": "WATER_CAUSTICS",
+   "pattern": "FLAT_WATER",
    "palette": "calm_water",
    "scale": 1.0,
    "detail": 0.3,

@@ -100,7 +100,7 @@
   },
   {
    "name": "cam_oasis",
-   "pattern": "WATER_CAUSTICS",
+   "pattern": "FLAT_WATER",
    "palette": "calm_water",
    "scale": 1.0,
    "detail": 0.3,

@@ -3,6 +3,7 @@ package com.morgana.tilegen.structure
 import com.morgana.tilegen.NamedTile
 import com.morgana.tilegen.TileImage
 import com.morgana.tilegen.material.PaletteRamp
+import com.morgana.tilegen.material.TileNoise
 import com.morgana.tilegen.material.PixelDither
 import com.morgana.tilegen.material.PixelStyle
 
@@ -32,7 +33,8 @@ class StructureGenerator(
         faceMaterial: TileImage,
         style: PixelStyle = PixelStyle.STANDARD,
         castShadow: Boolean = true,
-        trimColor: Int? = null
+        trimColor: Int? = null,
+        lush: Boolean = false
     ): List<NamedTile> {
         require(name.isNotBlank()) { "Cliff/wall name must not be blank" }
         require(topMaterial.width == tileSize && topMaterial.height == tileSize) {
@@ -50,15 +52,20 @@ class StructureGenerator(
         val capLeft = buildCapTile(topMaterial, lipHeight, sideBorder, leftEdge = true, rightEdge = false, style = style)
         val capCenter = buildCapTile(topMaterial, lipHeight, sideBorder, leftEdge = false, rightEdge = false, style = style)
         val capRight = buildCapTile(topMaterial, lipHeight, sideBorder, leftEdge = false, rightEdge = true, style = style)
+        val caps = if (lush) {
+            listOf(capLeft, capCenter, capRight).map { lushLip(it, faceMaterial) }
+        } else {
+            listOf(capLeft, capCenter, capRight)
+        }
 
         val faceLeft = buildFaceTile(faceMaterial, overhangDepth, aoDepth, sideBorder, leftEdge = true, rightEdge = false, castShadow = castShadow, trimColor = trimColor, style = style)
         val faceCenter = buildFaceTile(faceMaterial, overhangDepth, aoDepth, sideBorder, leftEdge = false, rightEdge = false, castShadow = castShadow, trimColor = trimColor, style = style)
         val faceRight = buildFaceTile(faceMaterial, overhangDepth, aoDepth, sideBorder, leftEdge = false, rightEdge = true, castShadow = castShadow, trimColor = trimColor, style = style)
 
         return listOf(
-            NamedTile("${name}_cap_left", capLeft),
-            NamedTile("${name}_cap_center", capCenter),
-            NamedTile("${name}_cap_right", capRight),
+            NamedTile("${name}_cap_left", caps[0]),
+            NamedTile("${name}_cap_center", caps[1]),
+            NamedTile("${name}_cap_right", caps[2]),
             NamedTile("${name}_face_left", faceLeft),
             NamedTile("${name}_face_center", faceCenter),
             NamedTile("${name}_face_right", faceRight)
@@ -416,6 +423,31 @@ class StructureGenerator(
         } else {
             out
         }
+    }
+
+    /**
+     * Replaces the bottom rows of a cap tile with a ragged grass lip: an outline in a dark step of the cap colour, one
+     * shaded row above it, and the face material (shadowed by the overhang) showing through below the lip. The lip
+     * depth depends only on the column, so neighbouring cap tiles line up.
+     */
+    private fun lushLip(cap: TileImage, face: TileImage): TileImage {
+        val out = cap.copy()
+        val base = (tileSize * 0.20f).toInt().coerceAtLeast(3)
+        for (x in 0 until tileSize) {
+            val jitter = (TileNoise.hash(x / 2, 0, 4242L) * (tileSize / 6f)).toInt() - tileSize / 16
+            val edge = (tileSize - base + jitter).coerceIn(tileSize / 2, tileSize - 2)
+            for (y in edge until tileSize) {
+                val f = face.getPixel(x, (y - edge).coerceIn(0, tileSize - 1))
+                val c = when (y) {
+                    edge -> shadePixel(cap.getPixel(x, edge - 1), 0.45f)
+                    else -> shadePixel(f, 0.62f)
+                }
+                out.setPixel(x, y, c)
+            }
+            if (edge - 1 >= 0) out.setPixel(x, edge - 1, shadePixel(cap.getPixel(x, edge - 1), 0.78f))
+            if (edge - 2 >= 0 && TileNoise.hash(x, 1, 4243L) > 0.5f) out.setPixel(x, edge - 2, shadePixel(cap.getPixel(x, edge - 2), 1.15f))
+        }
+        return out
     }
 
     private fun buildCapTile(

@@ -69,7 +69,7 @@
   },
   {
    "name": "din_face",
-   "pattern": "COBBLESTONE",
+   "pattern": "ROUNDED_STONES",
    "palette": "red_face",
    "scale": 1.4,
    "detail": 0.3,

@@ -70,7 +70,7 @@
   },
   {
    "name": "mere_water",
-   "pattern": "WATER_CAUSTICS",
+   "pattern": "FLAT_WATER",
    "palette": "murk_water",
    "scale": 1.0,
    "detail": 0.35,
@@ -86,7 +86,7 @@
   },
   {
    "name": "mere_stone",
-   "pattern": "COBBLESTONE",
+   "pattern": "ROUNDED_STONES",
    "palette": "drowned_stone",
    "scale": 1.0,
    "detail": 0.3,

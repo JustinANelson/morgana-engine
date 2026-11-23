@@ -315,7 +315,8 @@ object TilesetSpecJson {
         val style = obj.optString("style")?.let { parseEnum<PixelStyle>(it, "$path.style") }
         val a4Layout = obj.optBool("a4Layout") ?: false
         val townFacade = obj.optBool("townFacade") ?: false
-        return CliffLayerSpec(name, top, face, castShadow, trimColor, style, a4Layout, townFacade)
+        val lush = obj.optBool("lush") ?: false
+        return CliffLayerSpec(name, top, face, castShadow, trimColor, style, a4Layout, townFacade, lush)
     }
 
     private fun parseProp(obj: JsonValue.Obj, idx: Int): PropLayerSpec {
@@ -390,6 +391,7 @@ object TilesetSpecJson {
         if (c.style != null) parts += "\"style\": ${quote(c.style.name)}"
         if (c.a4Layout) parts += "\"a4Layout\": true"
         if (c.townFacade) parts += "\"townFacade\": true"
+        if (c.lush) parts += "\"lush\": true"
         append("{${parts.joinToString(", ")}}")
     }
 

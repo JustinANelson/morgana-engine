@@ -67,7 +67,7 @@
   },
   {
    "name": "gelli_pond",
-   "pattern": "WATER_CAUSTICS",
+   "pattern": "FLAT_WATER",
    "palette": "pond_water",
    "scale": 1.0,
    "detail": 0.3,
@@ -75,7 +75,7 @@
   },
   {
    "name": "gelli_stone",
-   "pattern": "COBBLESTONE",
+   "pattern": "ROUNDED_STONES",
    "palette": "slate_stone",
    "scale": 1.0,
    "detail": 0.25

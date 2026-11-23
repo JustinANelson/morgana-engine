@@ -70,7 +70,7 @@
   },
   {
    "name": "hub_sea",
-   "pattern": "WATER_CAUSTICS",
+   "pattern": "FLAT_WATER",
    "palette": "ocean_water",
    "scale": 1.0,
    "detail": 0.3,

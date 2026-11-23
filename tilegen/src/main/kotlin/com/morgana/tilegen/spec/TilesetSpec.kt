@@ -260,7 +260,9 @@ data class CliffLayerSpec(
     val trimColor: String? = null,
     val style: PixelStyle? = null,
     val a4Layout: Boolean = false,
-    val townFacade: Boolean = false
+    val townFacade: Boolean = false,
+    /** Plain 6-tile cliffs only: the cap overhangs the face with a ragged, outlined grass lip. */
+    val lush: Boolean = false
 ) {
     init {
         if (name.isBlank()) throw SpecException("CliffLayerSpec 'name' must not be blank")

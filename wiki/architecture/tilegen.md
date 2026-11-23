@@ -79,4 +79,10 @@ For LLM-authored specs: grass or dirt on anything should use `TUFTED_GROUND` and
 ### Nature props (`NatureProps`)
 Six `PropKind`s drawn by `NatureProps` in the same style: `LEAFY_TREE` and `FRUIT_TREE` (3 x 3), `FLOWER_BUSH`, `MOSS_MOUND` and `BOULDER` (2 x 2), `RUIN_WALL` (3 x 2). Crowns are overlapping spherical lobes shaded from the upper left with 2 x 2 leaf-clump lights, a continuous outline in the ramp's darkest colour (stray pixels dropped) and a lit inner rim; trunks flare into roots; a skirt of lit grass blades sits at the base; boulders are flat-shaded polygons with a crack; ruins are stepped stone courses with vines. Palettes: `primaryPalette` is the foliage (stone for `BOULDER` and `RUIN_WALL`); `secondaryPalette` is the trunk (`LEAFY_TREE`), the fruit (`FRUIT_TREE`), the blooms (`FLOWER_BUSH`), the dirt (`MOSS_MOUND`), the grass or vine colour (`BOULDER`, `RUIN_WALL`). They scale to any tile size. The old `OAK_TREE` and `BUSH` are unchanged.
 
-Still to do toward the samples: cliff faces with rounded boulder stones, water with flat light streaks, stumps and logs, tall ruined towers and pillars, crystal plants.
+### Stones, water and cliff lips
+* `MaterialPattern.ROUNDED_STONES`: boulders packed edge to edge, each with a dark gap, a lit upper-left shoulder, a shaded underside and a per-stone tint (`scale` = stones per tile / 3, `accentColor` = moss in the gaps). Use it for cliff faces and rubble banks.
+* `MaterialPattern.FLAT_WATER`: calm posterised blue with deeper patches and short light streaks that drift a quarter tile per frame, so `"frames": 4` loops exactly. Lava keeps `WATER_CAUSTICS`.
+* `TUFTED_GROUND`, `ROUNDED_STONES` and `FLAT_WATER` skip the sheet's Bayer dither (`CLASSIC_RPG` and friends only add static to flat fills); `RETRO_8BIT` still limits their colours.
+* Plain 6-tile cliffs take `"lush": true`: the cap's bottom rows become a ragged, outlined grass lip with the (shadowed) face stone showing under it; the lip depends only on the column, so adjacent caps line up. The 9-tile `a4Layout` and `townFacade` sets are unchanged.
+
+Still to do toward the samples: stumps and logs, tall ruined towers and pillars, crystal plants, flower decals, and rounded corners on the lush lip.

@@ -125,7 +125,8 @@ object TilesetSpecRenderer {
                     faceMaterial = face,
                     style = cliffStyle,
                     castShadow = cliff.castShadow,
-                    trimColor = trimRgba
+                    trimColor = trimRgba,
+                    lush = cliff.lush
                 )
             }
         }
