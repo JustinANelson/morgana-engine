@@ -2107,9 +2107,10 @@ class TrevanaRealmsGameTest {
         val c = coordinator(tmp)
         val sim = c.simulation
         val cid = join(c, "farmhand", 1).characterId!!
-        val reeve = sim.mapNpcs.getValue(3).first { it.npcId == 101 }
+        // The Reeve stands at the North Fork's south entrance, the way into the level 1 to 10 hunting ground.
+        val reeve = sim.mapNpcs.getValue(2).first { it.npcId == 101 }
         sim.spawnOrUpdatePlayer(
-            sim.players.getValue(cid).copy(position = com.morgana.domain.spatial.WorldPosition.fromTile(3, reeve.tileX, reeve.tileY + 1, com.morgana.domain.spatial.Direction.UP))
+            sim.players.getValue(cid).copy(position = com.morgana.domain.spatial.WorldPosition.fromTile(2, reeve.tileX, reeve.tileY + 1, com.morgana.domain.spatial.Direction.UP))
         )
         fun talk() = sim.playerInteractFacing(cid).filterIsInstance<com.morgana.domain.sim.WorldSimulationEvent.OpenUiRequested>().single { it.windowType == "DIALOGUE" }
         fun finish(id: Int) {

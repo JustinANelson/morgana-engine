@@ -69,7 +69,9 @@ class TrevanaWorldMapsTest {
         assertEquals(setOf(1, 2, 3, 4, 5, 6, 7, 8), maps.keys.filter { it <= 8 }.toSet())
         for ((id, z) in zones) assertEquals(z.first, maps.getValue(id).name)
         assertEquals("The North Fork", maps.getValue(2).name)
-        assertTrue(maps.values.filter { it.id <= 8 }.all { it.width in 160..200 && it.height in 100..200 })
+        // About 15% smaller than the first draft: the hub 162 x 144, the fork 150 x 120, zones 154 to 170 square.
+        assertTrue(maps.values.filter { it.id <= 8 }.all { it.width in 140..180 && it.height in 110..180 })
+        assertEquals(162 to 144, maps.getValue(1).width to maps.getValue(1).height)
     }
 
     @Test
@@ -162,15 +164,41 @@ class TrevanaWorldMapsTest {
             for (s in m.npcSpawns) assertTrue(open(m, s.spawnX, s.spawnY), "${m.name}: npc ${s.npcId} on a blocked tile")
             assertEquals(m.npcSpawns.indices.toList(), m.npcSpawns.map { it.slotIndex }, "${m.name}: slots numbered in order")
         }
+        // The fork is part of the level 1 to 10 hunting ground: its crossroads is guarded and kept clear of monsters.
         val fork = maps.getValue(2)
-        assertTrue(fork.npcSpawns.all { loaded.catalog.npcs.getValue(it.npcId).behavior == NpcBehavior.GUARD })
+        val hub = 92..122 to 54..80
+        for (s in fork.npcSpawns) {
+            val npc = loaded.catalog.npcs.getValue(s.npcId)
+            if (npc.behavior in setOf(NpcBehavior.PASSIVE, NpcBehavior.ATTACK_ON_SIGHT)) {
+                assertFalse(s.spawnX in hub.first && s.spawnY in hub.second, "${npc.name} stands in the fork's crossroads")
+            }
+        }
+    }
+
+    @Test
+    fun `the North Fork is a level 1 to 10 hunting zone with two exits west into Dinas Bran`() {
+        val fork = maps.getValue(2)
+        val monsters = fork.npcSpawns.map { loaded.catalog.npcs.getValue(it.npcId) }.filter { it.behavior == NpcBehavior.PASSIVE || it.behavior == NpcBehavior.ATTACK_ON_SIGHT }
+        assertTrue(monsters.size > 200, "the fork holds a full level 1 to 10 population, got ${monsters.size}")
+        assertTrue(monsters.all { it.level in 1..10 }, "fork monsters are level 1 to 10")
+        // Two separate openings on the west edge, and the same two on Dinas Bran's east edge.
+        fun runs(ys: Set<Int>) = ys.sorted().fold(0 to -2) { (n, prev), y -> (if (y == prev + 1) n else n + 1) to y }.first
+        val west = edge(fork, "west")
+        assertEquals(2, runs(west), "two exits west: $west")
+        assertEquals(west, edge(maps.getValue(5), "east"))
+        // Both are connected by road to the crossroads on foot.
+        val seen = component(fork, 103, fork.height - 6)
+        for (y in west) assertTrue(seen[y * fork.width], "west exit at y=$y is reachable from the south entrance")
+        assertTrue(seen[1 * fork.width + 103], "the north exit to Gelli Gwyon is reachable")
     }
 
     @Test
     fun `each zone has a quest giver and a pharmacist near its entrance, and the chain of quests can be taken in order`() {
         for ((id, z) in zones) {
+            // The way into Gelli Gwyon is through the fork, so its entrance NPCs stand at the fork's south entrance.
             val m = maps.getValue(id)
-            val givers = m.npcSpawns.map { loaded.catalog.npcs.getValue(it.npcId) }.filter { it.behavior == NpcBehavior.QUEST_GIVER }
+            val entrance = if (id == 3) maps.getValue(2) else m
+            val givers = entrance.npcSpawns.map { loaded.catalog.npcs.getValue(it.npcId) }.filter { it.behavior == NpcBehavior.QUEST_GIVER }
             assertEquals(1, givers.size, "${z.first} has one quest giver")
             val g = givers.single()
             val event = loaded.catalog.events[g.eventId]
@@ -178,9 +206,9 @@ class TrevanaWorldMapsTest {
             val quests = loaded.catalog.quests.values.filter { it.objectives.any { o -> loaded.catalog.npcs[o.targetId]?.level in z.second.first - 2..z.second.last + 2 } && it.id / 10 == 10 + zones.keys.indexOf(id) + 1 }
             assertEquals(3, quests.size, "${z.first} has three quests")
             for (q in quests) {
-                assertTrue(q.reward.xp > 0 && q.objectives.all { o -> m.npcSpawns.any { it.npcId == o.targetId } }, "${q.name}: its targets live in ${z.first}")
+                assertTrue(q.reward.xp > 0 && q.objectives.all { o -> m.npcSpawns.any { it.npcId == o.targetId } || (id == 3 && entrance.npcSpawns.any { it.npcId == o.targetId }) }, "${q.name}: its targets live in ${z.first}")
             }
-            assertTrue(m.npcSpawns.any { loaded.catalog.npcs.getValue(it.npcId).behavior == NpcBehavior.SHOPKEEPER }, "${z.first} has a pharmacist")
+            assertTrue(entrance.npcSpawns.any { loaded.catalog.npcs.getValue(it.npcId).behavior == NpcBehavior.SHOPKEEPER }, "${z.first} has a pharmacist")
         }
         assertTrue(maps.getValue(1).npcSpawns.any { it.npcId == 6 }, "the Waymaster stands in Trevena")
         assertEquals(setOf(3), loaded.catalog.quests.getValue(100).objectives.map { it.targetId }.toSet())

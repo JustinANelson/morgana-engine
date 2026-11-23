@@ -27,10 +27,10 @@ class TrevanaSubzonesTest {
 
     /** dungeon id -> (parent zone id, the door's warp cell, name, core material, instanced). */
     private val dungeons = mapOf(
-        9 to listOf("The Cavern of an Ogof", 3, 139, 45, 164, false), 10 to listOf("Eglos an Bereon", 3, 25, 23, 164, false),
-        11 to listOf("The Hollow of Yr Allt", 4, 121, 169, 165, false), 12 to listOf("The Vault of yr Wiber", 5, 21, 15, 166, false),
-        13 to listOf("The Obelisk of Maen Llia", 6, 165, 157, 167, false), 14 to listOf("The Vault of the Cranner", 7, 151, 169, 168, false),
-        15 to listOf("The Throne of Yr Orsedd", 8, 136, 14, 169, true), 16 to listOf("The Rift of Caer Vandwy", 8, 170, 29, 169, true)
+        9 to listOf("The Cavern of an Ogof", 3, 118, 38, 164, false), 10 to listOf("Eglos an Bereon", 3, 21, 20, 164, false),
+        11 to listOf("The Hollow of Yr Allt", 4, 104, 144, 165, false), 12 to listOf("The Vault of yr Wiber", 5, 18, 13, 166, false),
+        13 to listOf("The Obelisk of Maen Llia", 6, 140, 134, 167, false), 14 to listOf("The Vault of the Cranner", 7, 129, 144, 168, false),
+        15 to listOf("The Throne of Yr Orsedd", 8, 117, 12, 169, true), 16 to listOf("The Rift of Caer Vandwy", 8, 145, 25, 169, true)
     )
 
     private fun open(m: MapDefinition, x: Int, y: Int) = m.getCell(x, y)?.attribute?.let { it !is TileAttribute.Blocked } ?: false

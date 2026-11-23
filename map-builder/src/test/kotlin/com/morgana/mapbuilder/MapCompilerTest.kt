@@ -1,5 +1,6 @@
 package com.morgana.mapbuilder
 
+import com.morgana.domain.map.InstanceOwner
 import com.morgana.domain.map.MapLayer
 import com.morgana.domain.map.TileAttribute
 import com.morgana.tilegen.autotile.AutotileBitmask
@@ -96,6 +97,18 @@ class MapCompilerTest {
         assertEquals(TileAttribute.Blocked, cell(4, 3).attribute, "the flat top is still blocked")
         assertEquals(TileAttribute.None, cell(12, 0).attribute, "the gap in the north band")
         assertEquals(TileAttribute.Blocked, cell(20, 0).attribute)
+    }
+
+    @Test
+    fun `a recipe can make the map instanced for a party or a guild and is not instanced by default`() {
+        val plain = MapCompiler.compile(recipe("""{"op": "rect", "terrain": "rock", "x": 0, "y": 0, "w": 3, "h": 3}"""), index)
+        assertEquals(false, plain.instanced)
+        assertEquals(InstanceOwner.PARTY, plain.instanceOwner)
+        val raid = MapCompiler.compile(recipe("", extra = "\"instanced\": true,"), index)
+        assertEquals(true, raid.instanced)
+        assertEquals(InstanceOwner.PARTY, raid.instanceOwner)
+        val hall = MapCompiler.compile(recipe("", extra = "\"instanced\": true, \"instanceOwner\": \"GUILD\","), index)
+        assertEquals(InstanceOwner.GUILD, hall.instanceOwner)
     }
 
     @Test

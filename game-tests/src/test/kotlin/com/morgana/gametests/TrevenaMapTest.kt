@@ -52,10 +52,10 @@ class TrevenaMapTest {
     }
 
     @Test
-    fun `Trevena is a 200 by 200 safe zone with no enemies and every class starts on open ground inside it`() {
+    fun `Trevena is a 162 by 144 safe zone with no enemies and every class starts on open ground inside it`() {
         val m = trevena()
-        assertEquals(200, m.width)
-        assertEquals(200, m.height)
+        assertEquals(162, m.width)
+        assertEquals(144, m.height)
         assertEquals(MapMoral.SAFE_ZONE, m.moral)
         val loaded = ContentLoader.load(game!!.resolve("data"))
         val enemyBehaviours = setOf(com.morgana.domain.content.NpcBehavior.ATTACK_ON_SIGHT)
@@ -73,31 +73,31 @@ class TrevenaMapTest {
     @Test
     fun `from the plaza a hero can walk to the north, east and south roads and the harbour, and every service NPC can be reached`() {
         val m = trevena()
-        val start = 120 to 104
+        val start = 100 to 80 // the plaza, where every class starts
         val seen = reach(m, start.first, start.second)
         fun ok(x: Int, y: Int) = seen[y * m.width + x]
-        assertTrue(ok(126, 1), "north road leaves the map")
-        assertTrue(ok(198, 104), "east road leaves the map")
-        assertTrue(ok(114, 198), "south road leaves the map")
-        assertTrue(ok(38, 100), "the harbour pier is reachable")
+        assertTrue(ok(103, 1), "north road leaves the map")
+        assertTrue(ok(160, 80), "east road leaves the map")
+        assertTrue(ok(94, 142), "south road leaves the map")
+        assertTrue(ok(26, 76), "the harbour pier is reachable")
         for (s in m.npcSpawns) assertTrue(ok(s.spawnX, s.spawnY), "npc ${s.npcId} at (${s.spawnX},${s.spawnY}) cannot be reached from the plaza")
     }
 
     @Test
     fun `the citadel is walled in so the only ways between the inside and the outside are the gates`() {
         val m = trevena()
-        val inside = reach(m, 120, 104)
+        val inside = reach(m, 100, 80)
         // A tile just outside the north wall that is not on a road: reachable only if a gate is used, so check each wall line is closed
         // except at the gates by walking the wall rows.
         fun open(x: Int, y: Int) = walkable(m, x, y)
-        val northGate = (60..180).filter { open(it, 42) }
-        val southGate = (60..180).filter { open(it, 158) }
+        val northGate = (48..152).filter { open(it, 26) }
+        val southGate = (48..152).filter { open(it, 118) }
         assertTrue(northGate.size in 4..8, "north wall has one gate, open columns: $northGate")
         assertTrue(southGate.size in 4..8, "south wall has one gate, open columns: $southGate")
-        val westGate = (40..160).filter { open(62, it) }
-        val eastGate = (40..160).filter { open(178, it) }
+        val westGate = (24..120).filter { open(50, it) }
+        val eastGate = (24..120).filter { open(150, it) }
         assertTrue(westGate.size in 3..8, "west wall has one gate: $westGate")
         assertTrue(eastGate.size in 3..8, "east wall has one gate: $eastGate")
-        assertTrue(inside[104 * m.width + 126], "inside connects to the outside")
+        assertTrue(inside[80 * m.width + 103], "inside connects to the outside")
     }
 }

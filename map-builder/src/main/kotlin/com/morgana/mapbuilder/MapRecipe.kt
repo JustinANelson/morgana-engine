@@ -1,5 +1,6 @@
 package com.morgana.mapbuilder
 
+import com.morgana.domain.map.InstanceOwner
 import com.morgana.domain.map.MapLayer
 import com.morgana.domain.map.MapMoral
 import com.morgana.domain.map.MapNeighborLinks
@@ -22,6 +23,9 @@ data class MapRecipe(
     val bgm: String = "overworld",
     val indoors: Boolean = false,
     val zoneId: Int = 0,
+    /** Makes the map an instanced copy-per-owner map (a dungeon or raid, a guild hall); [instanceOwner] says whose copy it is. */
+    val instanced: Boolean = false,
+    val instanceOwner: InstanceOwner = InstanceOwner.PARTY,
     val neighbors: MapNeighborLinks = MapNeighborLinks(),
     /**
      * A tile (`[x, y]`) the player can stand on. When given, enemy camp spawns that cannot be walked to from it (an island, a pocket

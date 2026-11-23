@@ -14,7 +14,7 @@ stale_after: 2027-05-21T00:00:00Z
 A recipe is one way to make a map; the `F1` editors and hand-written JSON are the others, and all of them go through the same validation. `:map-builder` depends on `:core-domain`, `:server-persistence` and `:tilegen`; no engine module depends on it.
 
 ## Recipe format
-A recipe (`MapRecipe`) names the map (`id`, size up to 256 x 256, `moral`, `bgm`, `neighbors`, `seed`), a `base` terrain, the `terrains` and an ordered list of `ops` (`"op": "..."`):
+A recipe (`MapRecipe`) names the map (`id`, size up to 256 x 256, `moral`, `bgm`, `neighbors`, `seed`, and `instanced` with `instanceOwner` `PARTY` or `GUILD` for a dungeon, raid or guild hall), a `base` terrain, the `terrains` and an ordered list of `ops` (`"op": "..."`):
 
 | Op | Does |
 | :--- | :--- |

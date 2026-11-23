@@ -232,7 +232,8 @@ object MapCompiler {
         }
         return MapDefinition(
             id = recipe.id, name = recipe.name, width = w, height = h, moral = recipe.moral, bgmTrackId = recipe.bgm,
-            isIndoors = recipe.indoors, zoneId = recipe.zoneId, neighbors = recipe.neighbors, cells = cells, npcSpawns = finalSpawns
+            isIndoors = recipe.indoors, zoneId = recipe.zoneId, instanced = recipe.instanced, instanceOwner = recipe.instanceOwner,
+            neighbors = recipe.neighbors, cells = cells, npcSpawns = finalSpawns
         )
     }
 
