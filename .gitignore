@@ -48,5 +48,8 @@ games/*/source-audio/
 
 # Private / developer games kept locally outside the public engine repo
 games/trevana-realms/
+# Tests of the private game stay beside it, local only (the other games' tests in game-tests are public)
+game-tests/src/test/kotlin/com/morgana/gametests/Trevana*.kt
+game-tests/src/test/kotlin/com/morgana/gametests/Trevena*.kt
 TREVANA_REALMS_DESIGN_AND_CONTENT.md
 TREVANA_OPS.md
