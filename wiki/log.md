@@ -2,6 +2,8 @@
 
 ## 2026-11-23
 
+* **Fix** - **Readable arms, a real walk and a belt that sits on the body (32 x 48 paper dolls)** ([tilegen](/architecture/tilegen.md)): sleeves were the same flat colour as the torso, 2 px wide and swung 1 px, so arms vanished and a walk barely moved. Sleeves are now 3 px with a dark seam against the torso and a lit outer edge, arms swing a full stride opposite the legs, and the feet lift a full stride so one leg visibly plants while the other steps. `WAIST` attachments (utility belt, sash, pouch) were 13 px wide on a 9 to 11 px torso and floated; they now match the torso waist width, are shaded, and the utility belt has a buckle.
+
 * **Change** - **Longer legs and broader shoulders on 32 x 48 paper dolls** ([tilegen](/architecture/tilegen.md)): the head and torso moved up 2 px (`headCy` 15, `torsoTop` 21, `legTop` 34) with the feet planted, so legs are 2 px longer (profile legs 8 px, robe skirts up to 10) and the front torso is 1 px wider. Gives gather, jump and swing poses more limb to work with. Cell size and sheet layout are unchanged; characters are about 2 px taller, so a game's `sprites.uiHeights` for humanoids should be re-read from the exporter.
 
 * **Change** - **Keyframed cast pose for paper dolls** ([tilegen](/architecture/tilegen.md)): `CAST` now follows `Swing.cast(phase)` instead of a static arm lift: the casting hand is drawn in with a spark, raised overhead with a swelling orb, thrown forward with a bolt, then settles; arcane staffs and holy rods follow the hand, and the ground rune ring only shows on the raise and release frames. Tests: `SwingPoseTest`.

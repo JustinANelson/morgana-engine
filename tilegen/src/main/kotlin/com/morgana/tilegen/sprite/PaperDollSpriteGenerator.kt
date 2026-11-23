@@ -1120,8 +1120,10 @@ class PaperDollSpriteGenerator(
             else -> standFootY
         }
         val minFootY = (legTop + 1).coerceAtMost(maxY)
-        val leftFootY = (baseFootY + stride / 2).coerceIn(minFootY, maxY)
-        val rightFootY = (baseFootY - stride / 2).coerceIn(minFootY, maxY)
+        // 32 x 48 dolls take a full stride so one foot visibly lifts while the other plants.
+        val footSwing = if (legsImg.height == 48) stride else stride / 2
+        val leftFootY = (baseFootY + footSwing).coerceIn(minFootY, maxY)
+        val rightFootY = (baseFootY - footSwing).coerceIn(minFootY, maxY)
 
         val chunky = legsImg.height == 48 || theme.proportions == PaperDollProportions.CHUNKY
         if (loadout.legsStyle == LegsStyle.ROBE_SKIRT && !pose.isSeated && legsImg.height == 48) {
@@ -1254,8 +1256,8 @@ class PaperDollSpriteGenerator(
         }
 
         // Sleeves / Arms (raised on CAST or EMOTE; the weapon arm follows the swing keyframes on a SLASH)
-        val armSwing = stride / 2
-        val sleeveW = if (rmxp) 2 else if (chunky) 3 else 2
+        val armSwing = if (rmxp) stride else stride / 2
+        val sleeveW = if (rmxp) 3 else if (chunky) 3 else 2
         val raiseLeft = pose.action == PaperDollAction.CAST && (pose.phase == 1 || pose.phase == 2)
         val raiseRight = raiseLeft || (pose.action == PaperDollAction.EMOTE && pose.phase == 1)
         val armMaxY = img.height - 5
@@ -1283,6 +1285,13 @@ class PaperDollSpriteGenerator(
                     val top = sy.coerceIn(1, armMaxY - 2)
                     fillRectShaded(img, sx.coerceIn(1, 29), top, sleeveW, 4, outfit, tone)
                     fillRectShaded(img, sx.coerceIn(1, 29), top + 4, sleeveW, 1, accent, tone)
+                    // A dark seam on the side against the torso and a lit edge on the outside, so the arm reads as its own shape.
+                    val inner = if (sx < cx) sx + sleeveW - 1 else sx
+                    val outer = if (sx < cx) sx else sx + sleeveW - 1
+                    for (yy in top until top + 4) {
+                        img.setPixel(inner.coerceIn(1, 30), yy, outfit.sample(0.16f))
+                        img.setPixel(outer.coerceIn(1, 30), yy, outfit.sample((tone + 0.2f).coerceAtMost(0.92f)))
+                    }
                     // Hands go on the body layer so tinted torso gear does not tint them.
                     fillRectShaded(handsImg, sx.coerceIn(1, 29), (top + 5).coerceAtMost(armMaxY), sleeveW, 2, skin, 0.62f)
                     handsImg.setPixel(sx.coerceIn(1, 29), (top + 6).coerceAtMost(armMaxY), hand)
@@ -2096,9 +2105,16 @@ class PaperDollSpriteGenerator(
             AttachmentKind.SILK_SASH -> theme.accentPalette
             else -> theme.secondaryPalette
         }
-        val hw = if (chunky) 6 else 4
+        // Match the torso: its waist is a pixel narrower than the chest, so the belt must not poke out past it.
+        val rmxp = img.height == 48
+        val hw = if (rmxp) (if (dir == Direction8.W) 4 else 5) else if (chunky) 6 else 4
         for (dx in -hw..hw) {
-            img.setPixel((cx + dx).coerceIn(1, 30), y, pal.mid)
+            val t = (dx + hw).toFloat() / (2 * hw)
+            img.setPixel((cx + dx).coerceIn(1, 30), y, pal.sample(0.78f - 0.34f * t))
+        }
+        if (rmxp && !dir.isBack && att == AttachmentKind.UTILITY_BELT) {
+            img.setPixel(cx.coerceIn(1, 30), y, PalettePresets.RUNE_GOLD.sample(0.85f))
+            img.setPixel((cx + 1).coerceIn(1, 30), y, PalettePresets.RUNE_GOLD.sample(0.55f))
         }
         if (att == AttachmentKind.POTION_POUCH && !dir.isBack) {
             fillRectShaded(img, (cx + 3).coerceIn(1, 28), y, 2, 3, PalettePresets.LACQUER_RED, 0.85f)
