@@ -54,7 +54,7 @@
  "materials": [
   {
    "name": "mere_mud",
-   "pattern": "ORGANIC_FBM",
+   "pattern": "TUFTED_GROUND",
    "palette": "swamp_mud",
    "scale": 1.4,
    "detail": 0.4,
@@ -62,7 +62,7 @@
   },
   {
    "name": "mere_moss",
-   "pattern": "ORGANIC_FBM",
+   "pattern": "TUFTED_GROUND",
    "palette": "bog_moss",
    "scale": 1.3,
    "detail": 0.4,
@@ -78,7 +78,7 @@
   },
   {
    "name": "mere_reed_bank",
-   "pattern": "ORGANIC_FBM",
+   "pattern": "TUFTED_GROUND",
    "palette": "highland_grass",
    "scale": 1.4,
    "detail": 0.4,
@@ -214,9 +214,8 @@
    "backgroundMaterial": "mere_mud",
    "style": {
     "margin": 4.0,
-    "rimWidth": 1.0,
     "wobbleAmplitude": 2.4,
-    "rimColor": "#3a5a40"
+    "edge": "OUTLINED"
    }
   },
   {
@@ -226,10 +225,9 @@
    "foregroundMaterial": "mere_moss",
    "backgroundMaterial": "mere_mud",
    "style": {
-    "margin": 3.0,
-    "rimWidth": 1.0,
-    "wobbleAmplitude": 1.8,
-    "rimColor": "#2e4824"
+    "margin": 4.0,
+    "wobbleAmplitude": 2.4,
+    "edge": "LUSH"
    }
   },
   {
@@ -239,10 +237,9 @@
    "foregroundMaterial": "mere_mud",
    "backgroundMaterial": "mere_moss",
    "style": {
-    "margin": 3.0,
-    "rimWidth": 1.0,
-    "wobbleAmplitude": 1.8,
-    "rimColor": "#1e2a22"
+    "margin": 4.0,
+    "wobbleAmplitude": 2.4,
+    "edge": "LUSH"
    }
   },
   {
@@ -252,10 +249,9 @@
    "foregroundMaterial": "mere_stone",
    "backgroundMaterial": "mere_mud",
    "style": {
-    "margin": 3.0,
-    "rimWidth": 1.0,
-    "wobbleAmplitude": 1.8,
-    "rimColor": "#566860"
+    "margin": 4.0,
+    "wobbleAmplitude": 2.4,
+    "edge": "OUTLINED"
    }
   }
  ]

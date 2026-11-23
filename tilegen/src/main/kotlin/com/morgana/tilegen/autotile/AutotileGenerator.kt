@@ -26,21 +26,37 @@ enum class TerrainPair {
 }
 
 /**
+ * How the border between foreground and background terrain is finished.
+ *
+ * [SOFT] is the original look (a wobbly cut with an optional one-pixel rim). [OUTLINED] and [LUSH] aim at the hand-pixelled
+ * look of commercial terrain sheets: a hard-edged silhouette, a dark outline taken from the fill itself, a lit
+ * inner band on the upper-left edges and a shaded one on the lower-right ones, and a translucent shadow on the
+ * background. [LUSH] also breaks the silhouette into grass-like tufts that jut over the edge.
+ */
+enum class AutotileEdge { SOFT, OUTLINED, LUSH }
+
+/**
  * Visual parameters controlling how a foreground terrain transitions onto a background terrain.
  *
  * @property margin Inset in pixels from an open (non-connected) edge to the transition boundary.
  * @property rimWidth Width in pixels of the transition border/rim outside the foreground boundary.
  * @property wobbleAmplitude Peak-to-peak amplitude (in pixels) of periodic edge perturbation.
- * @property rimColor Optional packed RGBA8888 color for the transition rim; `null` disables the rim.
+ * @property rimColor Optional packed RGBA8888 color for the transition rim; `null` disables the rim. For the
+ *   [AutotileEdge.OUTLINED] and [AutotileEdge.LUSH] finishes it replaces the derived outline colour.
+ * @property edge Border finish, see [AutotileEdge].
+ * @property shadow Strength `0..1` of the shadow the foreground casts on the background (finished edges only).
  */
 data class AutotileStyle(
     val margin: Float = 5f,
     val rimWidth: Float = 2f,
     val wobbleAmplitude: Float = 3.5f,
     val rimColor: Int? = null,
-    val pixelStyle: PixelStyle = PixelStyle.STANDARD
+    val pixelStyle: PixelStyle = PixelStyle.STANDARD,
+    val edge: AutotileEdge = AutotileEdge.SOFT,
+    val shadow: Float = 0.25f
 ) {
     init {
+        require(shadow in 0f..1f) { "shadow must be in 0..1, got $shadow" }
         require(margin >= 0f) { "margin must be non-negative, got $margin" }
         require(rimWidth >= 0f) { "rimWidth must be non-negative, got $rimWidth" }
         require(wobbleAmplitude >= 0f) { "wobbleAmplitude must be non-negative, got $wobbleAmplitude" }
@@ -199,7 +215,11 @@ class AutotileGenerator(
         val out = background.copy()
         val (n, ne, e, se, s, sw, w, nw) = unpackNeighbors(mask, mode)
         val sizeF = tileSize.toFloat()
+        val finished = style.edge != AutotileEdge.SOFT
 
+        // Foreground coverage, computed once so a finished edge can look at neighbouring pixels.
+        val inside = BooleanArray(tileSize * tileSize)
+        val effective = FloatArray(tileSize * tileSize)
         for (py in 0 until tileSize) {
             val y = py + 0.5f
             for (px in 0 until tileSize) {
@@ -207,21 +227,91 @@ class AutotileGenerator(
                 val dist = distanceToEmpty(x, y, sizeF, n, ne, e, se, s, sw, w, nw)
                 val rawWobble = (TileNoise.wrappedFbm(px.toFloat(), py.toFloat(), period = tileSize, octaves = 2, seed = seed + 4100L) - 0.5f) *
                     style.wobbleAmplitude
-                val wobble = when (style.pixelStyle) {
+                var wobble = when (style.pixelStyle) {
                     PixelStyle.RETRO_8BIT -> round(rawWobble)
                     PixelStyle.CLASSIC_RPG, PixelStyle.JRPG_32BIT -> rawWobble + PixelDither.threshold(px, py, 4) * 0.75f
                     PixelStyle.PAINTED_25D, PixelStyle.MORGANA, PixelStyle.STANDARD -> rawWobble
                 }
-                val effectiveDist = dist + wobble
+                if (style.edge == AutotileEdge.LUSH) wobble += tuft(px, py)
+                effective[py * tileSize + px] = dist + wobble
+                inside[py * tileSize + px] = dist + wobble >= style.margin
+            }
+        }
+        fun covered(px: Int, py: Int): Boolean =
+            inside[py.coerceIn(0, tileSize - 1) * tileSize + px.coerceIn(0, tileSize - 1)]
 
-                if (effectiveDist >= style.margin) {
-                    out.drawPixel(px, py, foreground.getPixel(px, py))
-                } else if (style.rimColor != null && effectiveDist >= style.margin - style.rimWidth) {
-                    out.drawPixel(px, py, style.rimColor)
+        if (!finished) {
+            for (py in 0 until tileSize) {
+                for (px in 0 until tileSize) {
+                    val eff = effective[py * tileSize + px]
+                    if (eff >= style.margin) {
+                        out.drawPixel(px, py, foreground.getPixel(px, py))
+                    } else if (style.rimColor != null && eff >= style.margin - style.rimWidth) {
+                        out.drawPixel(px, py, style.rimColor)
+                    }
+                }
+            }
+            return out
+        }
+
+        val lush = style.edge == AutotileEdge.LUSH
+        if (style.shadow > 0f) {
+            for (py in 0 until tileSize) {
+                for (px in 0 until tileSize) {
+                    if (covered(px, py)) continue
+                    // Shadow falls down and to the right of the raised terrain (light from the upper left).
+                    if (covered(px - 1, py - 1) || covered(px - 2, py - 1) || covered(px - 1, py - 2)) {
+                        out.setPixel(px, py, shade(out.getPixel(px, py), 1f - style.shadow))
+                    }
                 }
             }
         }
+        for (py in 0 until tileSize) {
+            for (px in 0 until tileSize) {
+                if (!covered(px, py)) continue
+                val color = foreground.getPixel(px, py)
+                val ring1 = !covered(px, py - 1) || !covered(px - 1, py) || !covered(px, py + 1) || !covered(px + 1, py)
+                val lit = !covered(px, py - 2) || !covered(px - 2, py) || !covered(px - 1, py - 1)
+                val dark = !covered(px, py + 2) || !covered(px + 2, py) || !covered(px + 1, py + 1)
+                out.setPixel(
+                    px, py,
+                    when {
+                        ring1 -> style.rimColor ?: shade(color, if (lush) 0.62f else 0.5f)
+                        lit && !dark -> shade(color, if (lush) 1.28f else 1.18f)
+                        dark && !lit -> shade(color, 0.82f)
+                        else -> color
+                    }
+                )
+            }
+        }
         return out
+    }
+
+    /** Pixel-pair offset (in pixels of edge distance) that turns a smooth edge into jutting blades and notches. */
+    private fun tuft(px: Int, py: Int): Float {
+        val h = TileNoise.hash(px / 2, py / 2, seed + 7700L)
+        return when {
+            h > 0.66f -> 1.7f
+            h < 0.22f -> -1.3f
+            else -> 0f
+        }
+    }
+
+    /** Scales the colour towards black ([factor] < 1, cooled) or white ([factor] > 1, warmed), keeping alpha. */
+    private fun shade(rgba: Int, factor: Float): Int {
+        val a = rgba and 0xFF
+        if (a == 0) return rgba
+        val r = (rgba ushr 24) and 0xFF
+        val g = (rgba ushr 16) and 0xFF
+        val b = (rgba ushr 8) and 0xFF
+        val warm = if (factor > 1f) 1.05f else 0.94f
+        val cool = if (factor > 1f) 0.93f else 1.06f
+        return rgba(
+            (r * factor * warm).toInt().coerceIn(0, 255),
+            (g * factor).toInt().coerceIn(0, 255),
+            (b * factor * cool).toInt().coerceIn(0, 255),
+            a
+        )
     }
 
     private fun distanceToEmpty(

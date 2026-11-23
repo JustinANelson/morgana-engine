@@ -598,6 +598,7 @@ object TilesetCli {
         MaterialPattern.ASPHALT_ROAD -> "urban_asphalt"
         MaterialPattern.HAZARD_GRATE -> "gunmetal_steel"
         MaterialPattern.CYBER_CIRCUIT -> "crt_green"
+        MaterialPattern.TUFTED_GROUND -> "meadow_grass"
     }
 
     private fun parseFlags(tokens: List<String>): Map<String, String> {

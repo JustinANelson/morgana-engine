@@ -45,7 +45,7 @@
  "materials": [
   {
    "name": "cel_litter",
-   "pattern": "ORGANIC_FBM",
+   "pattern": "TUFTED_GROUND",
    "palette": "leaf_litter",
    "scale": 1.5,
    "detail": 0.4,
@@ -53,7 +53,7 @@
   },
   {
    "name": "cel_moss",
-   "pattern": "ORGANIC_FBM",
+   "pattern": "TUFTED_GROUND",
    "palette": "moss_dark",
    "scale": 1.4,
    "detail": 0.35,
@@ -61,7 +61,7 @@
   },
   {
    "name": "cel_dirt",
-   "pattern": "ORGANIC_FBM",
+   "pattern": "TUFTED_GROUND",
    "palette": "earth_dirt",
    "scale": 1.2,
    "detail": 0.3,
@@ -198,10 +198,9 @@
    "foregroundMaterial": "cel_dirt",
    "backgroundMaterial": "cel_litter",
    "style": {
-    "margin": 3.0,
-    "rimWidth": 1.0,
-    "wobbleAmplitude": 1.8,
-    "rimColor": "#7a4a28"
+    "margin": 4.0,
+    "wobbleAmplitude": 2.4,
+    "edge": "LUSH"
    }
   },
   {
@@ -211,10 +210,9 @@
    "foregroundMaterial": "cel_moss",
    "backgroundMaterial": "cel_litter",
    "style": {
-    "margin": 3.0,
-    "rimWidth": 1.0,
-    "wobbleAmplitude": 1.8,
-    "rimColor": "#3a4a2a"
+    "margin": 4.0,
+    "wobbleAmplitude": 2.4,
+    "edge": "LUSH"
    }
   },
   {
@@ -225,9 +223,8 @@
    "backgroundMaterial": "cel_litter",
    "style": {
     "margin": 4.0,
-    "rimWidth": 1.0,
     "wobbleAmplitude": 2.4,
-    "rimColor": "#a87a40"
+    "edge": "OUTLINED"
    }
   },
   {
@@ -237,10 +234,9 @@
    "foregroundMaterial": "cel_stone",
    "backgroundMaterial": "cel_moss",
    "style": {
-    "margin": 3.0,
-    "rimWidth": 1.0,
-    "wobbleAmplitude": 1.8,
-    "rimColor": "#4a5240"
+    "margin": 4.0,
+    "wobbleAmplitude": 2.4,
+    "edge": "OUTLINED"
    }
   }
  ]

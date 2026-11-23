@@ -36,7 +36,7 @@
  "materials": [
   {
    "name": "gelli_gold",
-   "pattern": "ORGANIC_FBM",
+   "pattern": "TUFTED_GROUND",
    "palette": "golden_grass",
    "scale": 1.4,
    "detail": 0.35,
@@ -44,7 +44,7 @@
   },
   {
    "name": "gelli_grass",
-   "pattern": "ORGANIC_FBM",
+   "pattern": "TUFTED_GROUND",
    "palette": "meadow_grass",
    "scale": 1.3,
    "detail": 0.3,
@@ -52,7 +52,7 @@
   },
   {
    "name": "gelli_dirt",
-   "pattern": "ORGANIC_FBM",
+   "pattern": "TUFTED_GROUND",
    "palette": "earth_dirt",
    "scale": 1.2,
    "detail": 0.3,
@@ -188,9 +188,8 @@
    "backgroundMaterial": "gelli_gold",
    "style": {
     "margin": 4.0,
-    "rimWidth": 1.0,
     "wobbleAmplitude": 2.4,
-    "rimColor": "#c8b06a"
+    "edge": "OUTLINED"
    }
   },
   {
@@ -200,10 +199,9 @@
    "foregroundMaterial": "gelli_dirt",
    "backgroundMaterial": "gelli_gold",
    "style": {
-    "margin": 3.0,
-    "rimWidth": 1.0,
-    "wobbleAmplitude": 1.8,
-    "rimColor": "#9a8040"
+    "margin": 4.0,
+    "wobbleAmplitude": 2.4,
+    "edge": "LUSH"
    }
   },
   {
@@ -213,10 +211,9 @@
    "foregroundMaterial": "gelli_grass",
    "backgroundMaterial": "gelli_gold",
    "style": {
-    "margin": 3.0,
-    "rimWidth": 1.0,
-    "wobbleAmplitude": 1.8,
-    "rimColor": "#6a8a40"
+    "margin": 4.0,
+    "wobbleAmplitude": 2.4,
+    "edge": "LUSH"
    }
   },
   {
@@ -226,10 +223,9 @@
    "foregroundMaterial": "gelli_stone",
    "backgroundMaterial": "gelli_gold",
    "style": {
-    "margin": 3.0,
-    "rimWidth": 1.0,
-    "wobbleAmplitude": 1.8,
-    "rimColor": "#6a6a58"
+    "margin": 4.0,
+    "wobbleAmplitude": 2.4,
+    "edge": "OUTLINED"
    }
   }
  ]

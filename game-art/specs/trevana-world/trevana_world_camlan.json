@@ -54,7 +54,7 @@
  "materials": [
   {
    "name": "cam_sand",
-   "pattern": "ORGANIC_FBM",
+   "pattern": "TUFTED_GROUND",
    "palette": "scorched_sand",
    "scale": 1.4,
    "detail": 0.35,
@@ -62,7 +62,7 @@
   },
   {
    "name": "cam_salt",
-   "pattern": "ORGANIC_FBM",
+   "pattern": "TUFTED_GROUND",
    "palette": "salt_flat",
    "scale": 1.6,
    "detail": 0.2,
@@ -70,7 +70,7 @@
   },
   {
    "name": "cam_cracked",
-   "pattern": "ORGANIC_FBM",
+   "pattern": "TUFTED_GROUND",
    "palette": "cracked_earth",
    "scale": 1.2,
    "detail": 0.5,
@@ -220,10 +220,9 @@
    "foregroundMaterial": "cam_salt",
    "backgroundMaterial": "cam_sand",
    "style": {
-    "margin": 3.0,
-    "rimWidth": 1.0,
-    "wobbleAmplitude": 1.8,
-    "rimColor": "#d8d2c0"
+    "margin": 4.0,
+    "wobbleAmplitude": 2.4,
+    "edge": "LUSH"
    }
   },
   {
@@ -233,10 +232,9 @@
    "foregroundMaterial": "cam_cracked",
    "backgroundMaterial": "cam_sand",
    "style": {
-    "margin": 3.0,
-    "rimWidth": 1.0,
-    "wobbleAmplitude": 1.8,
-    "rimColor": "#7a5c44"
+    "margin": 4.0,
+    "wobbleAmplitude": 2.4,
+    "edge": "LUSH"
    }
   },
   {
@@ -247,9 +245,8 @@
    "backgroundMaterial": "cam_sand",
    "style": {
     "margin": 4.0,
-    "rimWidth": 1.0,
     "wobbleAmplitude": 2.4,
-    "rimColor": "#c8a860"
+    "edge": "OUTLINED"
    }
   },
   {
@@ -259,10 +256,9 @@
    "foregroundMaterial": "cam_flag",
    "backgroundMaterial": "cam_sand",
    "style": {
-    "margin": 3.0,
-    "rimWidth": 1.0,
-    "wobbleAmplitude": 1.8,
-    "rimColor": "#7a7060"
+    "margin": 4.0,
+    "wobbleAmplitude": 2.4,
+    "edge": "OUTLINED"
    }
   }
  ]

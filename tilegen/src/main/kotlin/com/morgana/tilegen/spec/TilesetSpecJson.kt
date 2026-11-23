@@ -1,5 +1,6 @@
 package com.morgana.tilegen.spec
 
+import com.morgana.tilegen.autotile.AutotileEdge
 import com.morgana.tilegen.autotile.AutotileMode
 import com.morgana.tilegen.autotile.TerrainPair
 import com.morgana.tilegen.material.DecalKind
@@ -139,6 +140,7 @@ object TilesetSpecJson {
         val patternEnums = MaterialPattern.entries.joinToString(", ") { quote(it.name) }
         val modeEnums = AutotileMode.entries.joinToString(", ") { quote(it.name) }
         val pairEnums = TerrainPair.entries.joinToString(", ") { quote(it.name) }
+        val edgeEnums = AutotileEdge.entries.joinToString(", ") { quote(it.name) }
         val styleEnums = PixelStyle.entries.joinToString(", ") { quote(it.name) }
         val propEnums = PropKind.entries.joinToString(", ") { quote(it.name) }
         val presetNames = SpecPalettes.presets.keys.sorted().joinToString(", ")
@@ -240,7 +242,9 @@ object TilesetSpecJson {
             "margin": { "type": "number", "minimum": 0, "default": 5.0 },
             "rimWidth": { "type": "number", "minimum": 0, "default": 2.0 },
             "wobbleAmplitude": { "type": "number", "minimum": 0, "default": 3.5 },
-            "rimColor": { "type": "string" }
+            "rimColor": { "type": "string" },
+            "edge": { "type": "string", "enum": [$edgeEnums], "default": "SOFT", "description": "OUTLINED = hard silhouette with a dark outline, lit and shaded inner bands and a background shadow; LUSH = the same plus grass-like tufts jutting over the edge." },
+            "shadow": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.25 }
           }
         }
       }
@@ -293,7 +297,9 @@ object TilesetSpecJson {
                 rimWidth = s.optFloat("rimWidth") ?: 2f,
                 wobbleAmplitude = s.optFloat("wobbleAmplitude") ?: 3.5f,
                 rimColor = s.optString("rimColor"),
-                pixelStyle = s.optString("pixelStyle")?.let { parseEnum<PixelStyle>(it, "$path.style.pixelStyle") }
+                pixelStyle = s.optString("pixelStyle")?.let { parseEnum<PixelStyle>(it, "$path.style.pixelStyle") },
+                edge = s.optString("edge")?.let { parseEnum<AutotileEdge>(it, "$path.style.edge") } ?: AutotileEdge.SOFT,
+                shadow = s.optFloat("shadow") ?: 0.25f
             )
         }
         return AutotileLayerSpec(name, mode, columns, terrainPair, fg, bg, style)
@@ -366,6 +372,8 @@ object TilesetSpecJson {
             )
             if (a.style.rimColor != null) sParts += "\"rimColor\": ${quote(a.style.rimColor)}"
             if (a.style.pixelStyle != null) sParts += "\"pixelStyle\": ${quote(a.style.pixelStyle.name)}"
+            if (a.style.edge != AutotileEdge.SOFT) sParts += "\"edge\": ${quote(a.style.edge.name)}"
+            if (a.style.shadow != 0.25f) sParts += "\"shadow\": ${a.style.shadow}"
             parts += "\"style\": {${sParts.joinToString(", ")}}"
         }
         append("{${parts.joinToString(", ")}}")

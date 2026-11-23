@@ -45,7 +45,7 @@
  "materials": [
   {
    "name": "din_rock",
-   "pattern": "ORGANIC_FBM",
+   "pattern": "TUFTED_GROUND",
    "palette": "red_rock",
    "scale": 1.5,
    "detail": 0.45,
@@ -53,7 +53,7 @@
   },
   {
    "name": "din_scrub",
-   "pattern": "ORGANIC_FBM",
+   "pattern": "TUFTED_GROUND",
    "palette": "dry_scrub",
    "scale": 1.3,
    "detail": 0.3,
@@ -61,7 +61,7 @@
   },
   {
    "name": "din_dirt",
-   "pattern": "ORGANIC_FBM",
+   "pattern": "TUFTED_GROUND",
    "palette": "earth_dirt",
    "scale": 1.2,
    "detail": 0.3,
@@ -203,10 +203,9 @@
    "foregroundMaterial": "din_dirt",
    "backgroundMaterial": "din_rock",
    "style": {
-    "margin": 3.0,
-    "rimWidth": 1.0,
-    "wobbleAmplitude": 1.8,
-    "rimColor": "#7a4a28"
+    "margin": 4.0,
+    "wobbleAmplitude": 2.4,
+    "edge": "LUSH"
    }
   },
   {
@@ -216,10 +215,9 @@
    "foregroundMaterial": "din_scrub",
    "backgroundMaterial": "din_rock",
    "style": {
-    "margin": 3.0,
-    "rimWidth": 1.0,
-    "wobbleAmplitude": 1.8,
-    "rimColor": "#6a5a30"
+    "margin": 4.0,
+    "wobbleAmplitude": 2.4,
+    "edge": "LUSH"
    }
   },
   {
@@ -229,10 +227,9 @@
    "foregroundMaterial": "din_quarry",
    "backgroundMaterial": "din_rock",
    "style": {
-    "margin": 3.0,
-    "rimWidth": 1.0,
-    "wobbleAmplitude": 1.8,
-    "rimColor": "#7a7274"
+    "margin": 4.0,
+    "wobbleAmplitude": 2.4,
+    "edge": "OUTLINED"
    }
   }
  ]

@@ -1,5 +1,6 @@
 package com.morgana.tilegen.spec
 
+import com.morgana.tilegen.autotile.AutotileEdge
 import com.morgana.tilegen.autotile.AutotileMode
 import com.morgana.tilegen.autotile.AutotileStyle
 import com.morgana.tilegen.autotile.TerrainPair
@@ -193,9 +194,12 @@ data class AutotileStyleSpec(
     val rimWidth: Float = 2f,
     val wobbleAmplitude: Float = 3.5f,
     val rimColor: String? = null,
-    val pixelStyle: PixelStyle? = null
+    val pixelStyle: PixelStyle? = null,
+    val edge: AutotileEdge = AutotileEdge.SOFT,
+    val shadow: Float = 0.25f
 ) {
     init {
+        if (shadow !in 0f..1f) throw SpecException("AutotileStyleSpec shadow must be in 0..1, got $shadow")
         if (margin < 0f) throw SpecException("AutotileStyleSpec margin must be non-negative, got $margin")
         if (rimWidth < 0f) throw SpecException("AutotileStyleSpec rimWidth must be non-negative, got $rimWidth")
         if (wobbleAmplitude < 0f) throw SpecException("AutotileStyleSpec wobbleAmplitude must be non-negative, got $wobbleAmplitude")
@@ -206,7 +210,9 @@ data class AutotileStyleSpec(
         rimWidth = rimWidth,
         wobbleAmplitude = wobbleAmplitude,
         rimColor = rimColor?.let { SpecPalettes.parseHexRgba(it) },
-        pixelStyle = pixelStyle ?: inheritedStyle
+        pixelStyle = pixelStyle ?: inheritedStyle,
+        edge = edge,
+        shadow = shadow
     )
 }
 

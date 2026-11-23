@@ -63,7 +63,14 @@ enum class MaterialPattern {
     HAZARD_GRATE,
 
     /** Illuminated cybernetic circuit-board mainframe floor with glowing trace lines and node vias. */
-    CYBER_CIRCUIT
+    CYBER_CIRCUIT,
+
+    /**
+     * Hand-pixelled flat ground in the style of commercial terrain sheets: a nearly flat mid tone with a few big,
+     * posterised light and dark patches, and short lit blades (grass) or chips (dirt) scattered on top. Far calmer
+     * than [ORGANIC_FBM]; `detail` sets how many tufts, `accentColor` adds sparse flowers or pebbles.
+     */
+    TUFTED_GROUND
 }
 
 /**
@@ -130,6 +137,7 @@ class MaterialTileGenerator(
             MaterialPattern.ASPHALT_ROAD -> drawAsphaltRoad(out, effectiveSpec, s)
             MaterialPattern.HAZARD_GRATE -> drawHazardGrate(out, effectiveSpec, s)
             MaterialPattern.CYBER_CIRCUIT -> drawCyberCircuit(out, effectiveSpec, s)
+            MaterialPattern.TUFTED_GROUND -> drawTuftedGround(out, effectiveSpec, s)
         }
         return PixelDither.applyStyle(out, spec.style, spec.palette)
     }
@@ -186,6 +194,58 @@ class MaterialTileGenerator(
                     }
                 }
                 pm.setPixel(px, py, color)
+            }
+        }
+    }
+
+    private fun drawTuftedGround(pm: TileImage, spec: MaterialSpec, s: Long) {
+        val colors = spec.palette.colors
+        val last = colors.lastIndex
+        fun tone(i: Int): Int = colors[i.coerceIn(0, last)]
+        val mid = last / 2
+        val size = tileSize
+        // Coarse lattices (4 and 8 per tile) give big calm patches; wrappedFbm starts at 1 px and reads as static.
+        val lattice = (4 * spec.scale).roundToInt().coerceIn(2, size / 4)
+        for (py in 0 until size) {
+            for (px in 0 until size) {
+                val n = TileNoise.wrappedNoise2D(px * lattice / size.toFloat(), py * lattice / size.toFloat(), lattice, s) * 0.65f +
+                    TileNoise.wrappedNoise2D(px * lattice * 2 / size.toFloat(), py * lattice * 2 / size.toFloat(), lattice * 2, s + 5L) * 0.35f
+                val i = when {
+                    n > 0.62f -> mid + 1
+                    n < 0.36f -> mid - 1
+                    else -> mid
+                }
+                pm.setPixel(px, py, tone(i))
+            }
+        }
+        // Tufts: one candidate per 4 x 4 cell, drawn with wrap-around so the tile stays seamless.
+        val cell = (4 * (size / 32f)).roundToInt().coerceAtLeast(3)
+        val cells = size / cell
+        val density = 0.30f + 0.45f * spec.detail
+        fun put(x: Int, y: Int, color: Int) = pm.setPixel(x.mod(size), y.mod(size), color)
+        for (cy in 0 until cells) {
+            for (cx in 0 until cells) {
+                if (TileNoise.hash(cx, cy, s + 301L) > density) continue
+                val x = cx * cell + (TileNoise.hash(cx, cy, s + 302L) * (cell - 1)).toInt()
+                val y = cy * cell + 1 + (TileNoise.hash(cx, cy, s + 303L) * (cell - 2)).toInt()
+                val lean = if (TileNoise.hash(cx, cy, s + 304L) > 0.5f) 1 else -1
+                put(x, y, tone(mid - 1))           // root shadow
+                put(x, y - 1, tone(mid + 1))       // stem
+                put(x + lean, y - 2, tone(last))   // lit tip leaning to one side
+                if (TileNoise.hash(cx, cy, s + 305L) > 0.5f) put(x - lean, y - 1, tone(mid + 1))
+            }
+        }
+        val accent = spec.accentColor
+        if (accent != null) {
+            for (cy in 0 until cells step 2) {
+                for (cx in 0 until cells step 2) {
+                    if (TileNoise.hash(cx, cy, s + 911L) < 0.82f) continue
+                    val x = cx * cell + 1
+                    val y = cy * cell + 1
+                    put(x, y, accent)
+                    put(x + 1, y, accent)
+                    put(x, y + 1, tone(mid - 1))
+                }
             }
         }
     }
