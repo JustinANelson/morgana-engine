@@ -330,7 +330,7 @@ class AccessibilitySettingsTest {
         val store = MemoryKeyValueStore()
         store.put("uiScale", "huge"); store.put("palette", "NEON"); store.put("keys", "???")
         val s = AccessibilityStore(store).load(defaultReduceMotion = true)
-        assertEquals(1f, s.uiScale)
+        assertEquals(UiScales.AUTO, s.uiScale)
         assertEquals(ColourPalette.DEFAULT, s.palette)
         assertTrue(s.reduceMotion, "no saved choice: follow the system")
         assertTrue(s.keys.isDefault)
@@ -339,12 +339,42 @@ class AccessibilitySettingsTest {
     }
 
     @Test
-    fun `interface sizes step through the list and wrap`() {
+    fun `interface sizes step through the list and wrap through Auto`() {
         assertEquals(1.25f, UiScales.next(1f))
-        assertEquals(0.75f, UiScales.next(2f))
+        assertEquals(2.5f, UiScales.next(2f))
+        assertEquals(UiScales.AUTO, UiScales.next(3f), "after the largest size comes Auto")
+        assertEquals(0.75f, UiScales.next(UiScales.AUTO), "after Auto comes the smallest size")
         assertEquals(1f, UiScales.nearest(1.04f))
+        assertEquals(UiScales.AUTO, UiScales.nearest(0f))
         assertEquals("150%", UiScales.label(1.5f))
+        assertEquals("Auto", UiScales.label(UiScales.AUTO))
+        assertEquals("Auto (175%)", UiScales.describe(UiScales.AUTO, 1.75f))
+        assertEquals("125%", UiScales.describe(1.25f, 1.75f), "a chosen size ignores what Auto would pick")
         store0()
+    }
+
+    @Test
+    fun `Auto is the default and resolves to the platform's size`() {
+        assertEquals(UiScales.AUTO, AccessibilitySettings().uiScale)
+        assertEquals(UiScales.AUTO, AccessibilityStore(MemoryKeyValueStore()).load().uiScale, "nothing saved: Auto")
+        assertEquals(1.75f, UiScales.resolve(UiScales.AUTO, 1.75f))
+        assertEquals(1.5f, UiScales.resolve(1.5f, 1.75f))
+        val store = MemoryKeyValueStore()
+        AccessibilityStore(store).save(AccessibilitySettings())
+        assertEquals(UiScales.AUTO, AccessibilityStore(store).load().uiScale, "Auto survives a save and load")
+    }
+
+    @Test
+    fun `Auto sizes the interface from the screen's resolution and density`() {
+        assertEquals(1f, UiScales.auto(1920, 1080, 1f), "a 1080p monitor is the reference size")
+        assertEquals(1f, UiScales.auto(1366, 768, 0.9f), "never below 100%")
+        assertEquals(1.25f, UiScales.auto(2560, 1440, 0.7f), "1440p")
+        assertEquals(2f, UiScales.auto(3840, 2160, 1f), "a 4K monitor doubles")
+        assertEquals(1.75f, UiScales.auto(3072, 1920, 1.68f), "a dense 16-inch laptop panel")
+        assertEquals(1.5f, UiScales.auto(2560, 1600, 1.42f), "a dense 13-inch panel follows its density")
+        assertEquals(1.5f, UiScales.auto(2400, 1080, 2.6f), "keeps at least 720 interface units on the short side")
+        assertEquals(1.25f, UiScales.auto(2560, 1440, 40f), "a nonsense density is ignored")
+        assertEquals(1f, UiScales.auto(0, 0, 0f), "no screen information: 100%")
     }
 
     private fun store0() {
@@ -367,10 +397,12 @@ class AccessibilityControllerTest {
     fun `each change is applied, saved and reported`() {
         val store = MemoryKeyValueStore()
         val (c, changes) = controller(store = store)
+        assertEquals(0.75f, c.cycleScale(), "from the default Auto to the smallest size")
+        assertEquals(1f, c.cycleScale())
         assertEquals(1.25f, c.cycleScale())
         c.setPalette(ColourPalette.HIGH_CONTRAST)
         c.setReduceMotion(true)
-        assertEquals(listOf(com.morgana.client.access.AccessibilityController.Change.SCALE, com.morgana.client.access.AccessibilityController.Change.PALETTE, com.morgana.client.access.AccessibilityController.Change.MOTION), changes)
+        assertEquals(List(3) { com.morgana.client.access.AccessibilityController.Change.SCALE } + listOf(com.morgana.client.access.AccessibilityController.Change.PALETTE, com.morgana.client.access.AccessibilityController.Change.MOTION), changes)
         assertEquals(1.25f, com.morgana.client.access.Accessibility.settings.uiScale)
         assertTrue(com.morgana.client.access.Accessibility.reduceMotion)
         assertEquals(ColourPalette.HIGH_CONTRAST, com.morgana.client.access.Accessibility.palette)

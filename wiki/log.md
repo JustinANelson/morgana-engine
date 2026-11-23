@@ -2,6 +2,8 @@
 
 ## 2026-11-22
 
+* **Fix** - **The interface follows the screen: Auto interface size and a larger desktop window** ([accessibility](/client/accessibility.md)): the realm screen, HUD and F1 editors were drawn at one interface unit per physical pixel whatever the screen, so they were tiny on dense displays (a 3072 x 1920 laptop showed the realm list across a quarter of the width). `UiScales.AUTO` is now the default interface size; the desktop resolves it from the monitor's resolution and density (`UiScales.auto`: 175% on that panel, 200% on 4K, 100% on 1080p), and the window opens at 80% of the monitor (`DesktopWindow`). Manual sizes go up to 300%; saved sizes are kept. Android and the browser keep 100% for Auto. Tests in `AccessibilitySettingsTest` and `DesktopWindowTest`.
+
 * **Add** - **Trevana Realms guild hall and PK jail** ([Trevana Realms](/content/trevana_realms_game.md)): maps 17 (the Stockade, jail), 18 (the Guildhall) and 19 (the Grand Hall) from map-builder recipes; a gatehouse door in Trevena; events for the Stockade Warden (bail or pardon) and the Hall Steward (Grand Hall for the Keep holder); the jail now points at map 17. Tests replace three of the disabled ones.
 
 * **Add** - **Trevana Realms plaza quests** ([Trevana Realms](/content/trevana_realms_game.md)): the Grand Tour (General), six daily bounties and three weekly contracts by level band (Bounty Clerk and Bounty Board), the Gemwright's pointer, all in Trevena; tests play the clerk's daily cycle, the Grand Tour and the Reeve's three-hunt chain through the real simulation. Eleven old quest-giver NPCs still wait for their features or retirement.

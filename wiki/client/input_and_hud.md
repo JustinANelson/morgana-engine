@@ -85,7 +85,7 @@ A short tap or click (under 12 px of travel and half a second) on the world walk
 World zoom is separate from the interface size below. `WorldZoom` (client-core `render`) picks an integer scale of 1x, 2x or 3x: Auto uses screen density (or 2x on 900p+ screens) but never shows fewer than about 10 tiles on the short side; Settings has a World zoom button to force 1x, 2x or 3x. The camera zoom is `1 / scale` and the camera position snaps to whole screen pixels, so tiles stay crisp. Picking a tile from the mouse already accounts for the camera zoom. While the F1 editor is open its zoom buttons (and **-** / **=**) use finer, non-integer levels instead (`WorldZoom.EDITOR_LEVELS`, 25% to 400%; `MorganaGame.editorScale`), snapped with `WorldZoom.snap(value, Float)`; the game's own setting returns when the editor closes.
 
 ## UI zoom
-The `Interface size` button in Settings cycles 75% / 100% / 125% / 150% (`ScreenViewport.unitsPerPixel`, default 100% everywhere) and pulls windows back on screen. Touch detection also accepts `(pointer: coarse)`; on any device the on-screen controls can be switched on in Settings.
+The `Interface size` button in Settings cycles Auto / 75% to 300% (`ScreenViewport.unitsPerPixel`; Auto is the default and follows the monitor on desktop, 100% on Android and in the browser; see [accessibility](/client/accessibility.md)) and pulls windows back on screen. Touch detection also accepts `(pointer: coarse)`; on any device the on-screen controls can be switched on in Settings.
 
 ## Vital and experience bars
 

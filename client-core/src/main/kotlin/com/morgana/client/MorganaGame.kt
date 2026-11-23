@@ -96,7 +96,9 @@ class MorganaGame(
     /** True when the operating system or browser asks for less motion; the starting value of Reduce motion until the player chooses. */
     private val systemReducedMotion: Boolean = false,
     /** Phone conveniences the platform may offer: a buzz for hits, keeping the screen awake, a last-resort error screen. */
-    private val device: com.morgana.client.net.DeviceFeatures = com.morgana.client.net.DeviceFeatures.NONE
+    private val device: com.morgana.client.net.DeviceFeatures = com.morgana.client.net.DeviceFeatures.NONE,
+    /** The interface size the "Auto" setting stands for on this platform; desktop picks one from the monitor (see [com.morgana.client.access.UiScales.auto]). */
+    private val autoUiScale: () -> Float = { 1f }
 ) : KtxApplicationAdapter {
 
     /** Accessibility settings (keys, colours, motion, interface size): loaded in [create], saved on every change. */
@@ -273,7 +275,8 @@ class MorganaGame(
             onCycleWorldZoom = { cycleWorldZoom() },
             worldZoomLabel = { WorldZoom.label(worldZoomSetting) },
             onLogout = { logout() },
-            uiScaleLabel = { "Zoom: ${com.morgana.client.access.UiScales.label(accessibility.current.uiScale)}" },
+            uiScaleLabel = { "Zoom: ${uiScaleText()}" },
+            uiScaleText = ::uiScaleText,
             accessibility = accessibility
         )
         accessibility.onChanged = { change ->
@@ -794,12 +797,20 @@ class MorganaGame(
 
     /** Steps the interface size (saved with the other accessibility settings) and returns the new button label. */
     private fun cycleUiScale(): String {
-        val scale = accessibility.cycleScale()
-        return "Zoom: ${com.morgana.client.access.UiScales.label(scale)}"
+        accessibility.cycleScale()
+        return "Zoom: ${uiScaleText()}"
     }
 
-    private fun applyUiScaleToViewport(scale: Float) {
-        (stage.viewport as ScreenViewport).unitsPerPixel = 1f / scale
+    /** The interface size setting as shown on buttons: "Auto (175%)" or "150%". */
+    private fun uiScaleText(): String {
+        val setting = accessibility.current.uiScale
+        return com.morgana.client.access.UiScales.describe(setting, effectiveUiScale(setting))
+    }
+
+    private fun effectiveUiScale(setting: Float): Float = com.morgana.client.access.UiScales.resolve(setting, autoUiScale())
+
+    private fun applyUiScaleToViewport(setting: Float) {
+        (stage.viewport as ScreenViewport).unitsPerPixel = 1f / effectiveUiScale(setting)
         stage.viewport.update(Gdx.graphics.width, Gdx.graphics.height, true)
     }
 
@@ -1323,6 +1334,8 @@ class MorganaGame(
     override fun resize(width: Int, height: Int) {
         if (width <= 0 || height <= 0) return
         camera.setToOrtho(false, width.toFloat(), height.toFloat())
+        // Auto follows the monitor, which can change when the window moves to another screen.
+        (stage.viewport as ScreenViewport).unitsPerPixel = 1f / effectiveUiScale(accessibility.current.uiScale)
         stage.viewport.update(width, height, true)
     }
 

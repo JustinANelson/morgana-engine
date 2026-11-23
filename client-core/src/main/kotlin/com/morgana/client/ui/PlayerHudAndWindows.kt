@@ -38,7 +38,6 @@ import com.morgana.client.access.GameAction
 import com.morgana.client.access.KEYS_PER_ACTION
 import com.morgana.client.access.KeyBindings
 import com.morgana.client.access.PaletteRole
-import com.morgana.client.access.UiScales
 import com.morgana.client.editor.dock.MemoryKeyValueStore
 import com.morgana.protocol.FriendActionType
 import com.morgana.domain.explore.Exploration
@@ -82,6 +81,8 @@ class PlayerHudAndWindows(
     /** Cycles the UI zoom and returns the new button label. */
     private val onCycleUiScale: () -> String = { "Zoom: 100%" },
     private val uiScaleLabel: () -> String = { "Zoom: 100%" },
+    /** The interface size as the Accessibility window shows it ("Auto (175%)" or "150%"). */
+    private val uiScaleText: () -> String = { "100%" },
     /** Cycles the world zoom (Auto, 1x, 2x, 3x) and returns the new button label. */
     private val onCycleWorldZoom: () -> String = { "Auto" },
     private val worldZoomLabel: () -> String = { "Auto" },
@@ -1703,8 +1704,8 @@ class PlayerHudAndWindows(
 
         heading("Size")
         table.add(VisLabel("Text and interface size")).colspan(2)
-        table.add(actionButton(UiScales.label(settings.uiScale)) { accessibility.cycleScale() }).width(90f).row()
-        note("Makes everything larger or smaller, from 75% to 200%. Larger sizes suit low vision; windows stay on screen.")
+        table.add(actionButton(uiScaleText()) { accessibility.cycleScale() }).width(110f).row()
+        note("Makes everything larger or smaller, from 75% to 300%. Auto picks a size from your screen; larger sizes suit low vision; windows stay on screen.")
 
         heading("Colours")
         table.add(VisLabel("Colour set")).colspan(2)

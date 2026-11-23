@@ -1,7 +1,9 @@
 package com.morgana.client.desktop
 
+import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration
+import com.morgana.client.access.UiScales
 import com.morgana.client.LocalWorldChoice
 import com.morgana.client.LocalHostingStatus
 import com.morgana.client.LocalWorldDetails
@@ -170,9 +172,11 @@ fun main(args: Array<String>) {
     val port = args.getOrNull(1)?.toIntOrNull() ?: 7001
     val worldHost = EmbeddedWorldHost(WorldLibrary(Paths.get("worlds"), Paths.get("server-data")), port)
 
+    val monitor = Lwjgl3ApplicationConfiguration.getDisplayMode()
+    val (windowWidth, windowHeight) = DesktopWindow.initialSize(monitor.width, monitor.height)
     val config = Lwjgl3ApplicationConfiguration().apply {
         setTitle("Morgana ORPG")
-        setWindowedMode(1280, 768)
+        setWindowedMode(windowWidth, windowHeight)
         useVsync(true)
         setForegroundFPS(60)
     }
@@ -187,7 +191,11 @@ fun main(args: Array<String>) {
         perRealmStore = FilePerRealmStore(Paths.get("client-data", "realms_storage.json").toFile()),
         assetCache = FileAssetCache(Paths.get("client-data", "cache", "assets").toFile()),
         resumeStore = FileResumeStore(Paths.get("client-data", "resume.json").toFile()),
-        pickPngFile = ::pickDesktopPngFile
+        pickPngFile = ::pickDesktopPngFile,
+        autoUiScale = {
+            val mode = Gdx.graphics.displayMode
+            UiScales.auto(mode.width, mode.height, Gdx.graphics.density)
+        }
     )
 
     try {
