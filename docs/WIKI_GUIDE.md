@@ -15,7 +15,7 @@ Known Issues list verified gaps. Prefer the wiki over re-deriving facts from cod
 **Writing (ingest)**: after any change that alters behavior, structure, commands, formats, or decisions:
 1. `.\gradlew.bat :dev-tools:wikiImpact -PwikiArgs="--git HEAD~1"` (or list changed files) to see which pages cover the changed code.
 2. Update those pages. Put new knowledge in the closest existing page; add a page only when the topic has no home.
-3. Add a dated bullet at the top of `wiki/log.md` (newest first, `## YYYY-MM-DD`).
+3. Add a dated bullet at the top of `wiki/log.md` (newest first, `## YYYY-MM-DD`). Only engine, tooling and docs changes go there. A change that touches only one game's own data, art, maps or tests (for example Trevana Realms content) is logged in that game's `games/<id>/CHANGELOG.md` instead; private games are gitignored, so such a change leaves nothing to commit or push.
 4. `.\gradlew.bat :dev-tools:wikiIndex` to regenerate `wiki/index.md`.
 5. `.\gradlew.bat :dev-tools:wikiLint` (also runs inside `.\gradlew.bat check`).
 
