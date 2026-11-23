@@ -166,7 +166,7 @@ class TrevanaWorldMapsTest {
         }
         // The fork is part of the level 1 to 10 hunting ground: its crossroads is guarded and kept clear of monsters.
         val fork = maps.getValue(2)
-        val hub = 92..122 to 54..80
+        val hub = (92 until 122) to (54 until 80) // the reserved crossroads rectangle in the fork's recipe
         for (s in fork.npcSpawns) {
             val npc = loaded.catalog.npcs.getValue(s.npcId)
             if (npc.behavior in setOf(NpcBehavior.PASSIVE, NpcBehavior.ATTACK_ON_SIGHT)) {
