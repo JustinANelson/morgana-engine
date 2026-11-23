@@ -1173,8 +1173,12 @@ class PaperDollSpriteGenerator(
             val leg2X = cx - 1 - stride
             val legH = if (pose.isSeated) 2 else (if (legsImg.height == 48) 8 else 3)
             fillRectShaded(legsImg, leg2X, legTop, legW, legH, legsPal, 0.42f)
+            val bootProfile = (loadout.feetStyle == FeetStyle.BOOTS || loadout.feetStyle == FeetStyle.SABATONS) && !pose.isSeated && legsImg.height == 48
+            val sab = loadout.feetStyle == FeetStyle.SABATONS
+            if (bootProfile) boot(feetImg, leg2X, standFootY - 5, standFootY, legW, feetPal, 0.38f, -1, sab) else
             fillRectShaded(feetImg, leg2X - (if (pose.isSeated) 1 else 0), (legTop + legH).coerceAtMost(standFootY), legW, 2, feetPal, 0.38f)
             fillRectShaded(legsImg, leg1X, legTop, legW, legH, legsPal, 0.72f)
+            if (bootProfile) boot(feetImg, leg1X, standFootY - 5, standFootY, legW, feetPal, 0.68f, -1, sab) else
             fillRectShaded(feetImg, leg1X - (if (pose.isSeated) 1 else 0), (legTop + legH).coerceAtMost(standFootY), legW, 2, feetPal, 0.68f)
         } else {
             val lx = if (chunky) cx - 5 else cx - 4
@@ -1186,11 +1190,39 @@ class PaperDollSpriteGenerator(
                 val legH = (legBottom - legTop).coerceAtLeast(1)
                 PixelForm.column(legsImg, x0.coerceIn(1, 30), legTop, legW, legH, legsPal, if (near) 0.56f else 0.42f, round = false)
                 // Boot: darker cuff line, then a column that is one pixel wider toward the toe.
-                PixelForm.column(feetImg, x0.coerceIn(1, 30), footTop, legW, (footY - footTop + 1).coerceAtLeast(2), feetPal, if (near) 0.58f else 0.44f)
-                feetImg.setPixel(x0.coerceIn(1, 30), (footY).coerceIn(1, 30), feetPal.sample(if (near) 0.25f else 0.18f))
+                if (loadout.feetStyle == FeetStyle.BOOTS || loadout.feetStyle == FeetStyle.SABATONS) {
+                    boot(feetImg, x0, (footY - 5).coerceAtLeast(legTop + 1), footY, legW, feetPal, if (near) 0.58f else 0.44f, 0, loadout.feetStyle == FeetStyle.SABATONS)
+                } else {
+                    PixelForm.column(feetImg, x0.coerceIn(1, 30), footTop, legW, (footY - footTop + 1).coerceAtLeast(2), feetPal, if (near) 0.58f else 0.44f)
+                    feetImg.setPixel(x0.coerceIn(1, 30), (footY).coerceIn(1, 30), feetPal.sample(if (near) 0.25f else 0.18f))
+                }
             }
             leg(rx, rightFootY, near = false)
             leg(lx, leftFootY, near = true)
+        }
+    }
+
+    /**
+     * A boot or sabaton from [topY] (the cuff) to [botY] (the sole): a shaded shaft, a lit folded cuff over a shadow row,
+     * a dark sole, and in profile a toe that points [toeDir] (-1 left, +1 right, 0 for a front or back view). Sabatons add
+     * a plate line.
+     */
+    private fun boot(img: TileImage, x0: Int, topY: Int, botY: Int, w: Int, pal: PaletteRamp, tone: Float, toeDir: Int, plates: Boolean) {
+        val top = topY.coerceIn(1, img.height - 4)
+        val bot = botY.coerceIn(top + 2, img.height - 2)
+        PixelForm.column(img, x0.coerceIn(1, 28), top, w, bot - top + 1, pal, tone, round = false)
+        for (x in x0 until x0 + w) {
+            img.setPixel(x.coerceIn(1, 30), top, pal.sample((tone + 0.3f).coerceAtMost(0.95f)))
+            img.setPixel(x.coerceIn(1, 30), (top + 1).coerceAtMost(bot), pal.sample((tone - 0.12f).coerceAtLeast(0.1f)))
+            img.setPixel(x.coerceIn(1, 30), bot, pal.sample(0.14f))
+            if (plates) img.setPixel(x.coerceIn(1, 30), (top + 3).coerceAtMost(bot - 1), pal.sample((tone + 0.18f).coerceAtMost(0.92f)))
+        }
+        if (toeDir != 0) {
+            val tx = if (toeDir < 0) x0 - 1 else x0 + w
+            img.setPixel(tx.coerceIn(1, 30), bot - 1, pal.sample(tone))
+            img.setPixel(tx.coerceIn(1, 30), bot, pal.sample(0.14f))
+        } else {
+            img.setPixel((x0 - 1).coerceIn(1, 30), bot, pal.sample(0.14f))
         }
     }
 
@@ -1235,6 +1267,33 @@ class PaperDollSpriteGenerator(
                     val corner = y == torsoTop && (x == tx0 || x == tx1)
                     val waist = vy > 0.5f && (x == tx0 || x == tx1)
                     if (corner || waist) continue
+                }
+                val traveler = loadout.torsoStyle == TorsoStyle.TRAVELER && rmxp
+                val row = y - torsoTop
+                // Leather jerkin: a V-neck, criss-cross lacing, side seams and a tabbed hem.
+                if (traveler) {
+                    val dx = x - cx
+                    val front = !dir.isBack && dir != Direction8.W
+                    val vOpen = front && row in 0..3 && abs(dx) <= 3 - row
+                    val vEdge = front && row in 0..4 && abs(dx) == 4 - row
+                    val lace = front && row in 2..7 && abs(dx) == 1 && (row + (if (dx < 0) 0 else 1)) % 2 == 0
+                    val seam = dir != Direction8.W && row in 3..(legTop - torsoTop - 3) && (x == tx0 + 2 || x == tx1 - 2)
+                    val hemGap = y == legTop && (x - tx0) % 2 == 0
+                    val backSeam = dir.isBack && x == cx && row in 2..(legTop - torsoTop - 3)
+                    val tCol = when {
+                        hemGap -> 0
+                        y == legTop - 2 -> boots.shadow
+                        vOpen -> outfit.sample(0.14f)
+                        vEdge -> outfit.sample(0.9f)
+                        lace -> accent.sample(0.8f)
+                        seam || backSeam -> outfit.sample(0.22f)
+                        row == 0 -> outfit.sample(0.92f)
+                        else -> -1
+                    }
+                    if (tCol != -1) {
+                        if (tCol != 0) img.setPixel(x.coerceIn(1, 30), y.coerceIn(1, img.height - 2), tCol)
+                        continue
+                    }
                 }
                 val isCollar = y <= torsoTop + 1 && abs(x - cx) <= 2
                 val isBelt = y == legTop - 2
@@ -1829,9 +1888,20 @@ class PaperDollSpriteGenerator(
         val wood = theme.secondaryPalette
         when (att) {
             AttachmentKind.QUIVER -> {
-                val qx = if (dir == Direction8.W) cx + 3 else cx + 3
-                fillRectShaded(img, qx.coerceIn(1, 28), (torsoTop + 1).coerceIn(1, 25), 3, 6, wood, 0.65f)
-                img.setPixel((qx + 1).coerceIn(1, 30), torsoTop.coerceAtLeast(1), PalettePresets.CREAM_MARBLE.highlight)
+                // A leather tube slung behind the shoulder with fletched arrows poking out of the top.
+                val rmxp = img.height == 48
+                val qx = if (dir == Direction8.W) cx + (if (rmxp) 4 else 3) else cx + (if (rmxp) 5 else 3)
+                val h = if (rmxp) 11 else 6
+                val top = (torsoTop - 1).coerceIn(1, 25)
+                PixelForm.column(img, qx.coerceIn(1, 27), top, 4, h, wood, 0.6f, round = false)
+                img.setPixel((qx + 1).coerceIn(1, 30), top + 3, pal.sample(0.85f))
+                img.setPixel((qx + 2).coerceIn(1, 30), top + h - 3, pal.sample(0.85f))
+                for ((i, fx) in listOf(qx, qx + 2).withIndex()) {
+                    val fy = (top - 3 - i).coerceAtLeast(1)
+                    img.setPixel(fx.coerceIn(1, 30), fy + 1, wood.sample(0.7f))
+                    img.setPixel(fx.coerceIn(1, 30), fy, PalettePresets.LACQUER_RED.sample(0.8f))
+                    img.setPixel((fx + 1).coerceIn(1, 30), fy, PalettePresets.CREAM_MARBLE.sample(0.9f))
+                }
             }
             AttachmentKind.ANGEL_WINGS, AttachmentKind.DEMON_WINGS, AttachmentKind.FAIRY_WINGS -> {
                 val wingPal = when (att) {
