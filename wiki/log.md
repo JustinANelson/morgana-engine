@@ -2,6 +2,8 @@
 
 ## 2026-11-22
 
+* **Add** - **Trevana Realms plaza quests** ([Trevana Realms](/content/trevana_realms_game.md)): the Grand Tour (General), six daily bounties and three weekly contracts by level band (Bounty Clerk and Bounty Board), the Gemwright's pointer, all in Trevena; tests play the clerk's daily cycle, the Grand Tour and the Reeve's three-hunt chain through the real simulation. Eleven old quest-giver NPCs still wait for their features or retirement.
+
 * **Add** - **Per-million drop chances** (`NpcDropEntry.chancePerMillion`, `RandomSource.rollPerMillion`): drops rarer than one basis point (1 in 10,000) can now be written in parts per million (400 = 1 in 2,500, 20 = 1 in 50,000); the NPC editor accepts `20ppm`, the bestiary and game wiki show "1 in N". Basis-point drops roll as before, so existing replays are unchanged. Trevana Realms: Starshards 1 in 2,500 and Wyrm Pearls 1 in 50,000 on every non-guaranteed drop.
 
 * **Change** - **Trevana Realms Volley is a self-centred farming skill** ([Trevana Realms](/content/trevana_realms_game.md)): it was cursor-centred (`AOE_TARGET_CENTERED` takes the tile under the mouse from hotbar casts, with no range check), so it hit whatever was near the cursor and shifted as the world scrolled. It is now `AOE_SELF_CENTERED`, radius 10, no target limit.

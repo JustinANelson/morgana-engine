@@ -2199,6 +2199,101 @@ class TrevanaRealmsGameTest {
         val npcs = ContentLoader.load(game.resolve("data")).catalog.npcs.values.map { it.name }
         assertTrue("Repair Smith" in npcs && "Training Master" in npcs && "Calling Master" in npcs)
     }
+
+    @Test
+    fun `the plaza has the Waymaster, General, bounty clerk, contract board and Gemwright, each with a working event`() {
+        val loaded = ContentLoader.load(game.resolve("data"))
+        val hub = loaded.catalog.maps.getValue(1)
+        for (id in listOf(6, 4, 77, 86, 5)) {
+            val n = loaded.catalog.npcs.getValue(id)
+            assertTrue(hub.npcSpawns.any { it.npcId == id }, "${n.name} stands in Trevena")
+            assertTrue(loaded.catalog.events.containsKey(n.eventId), "${n.name} has event ${n.eventId}")
+        }
+        val daily = loaded.catalog.quests.values.filter { it.cooldownTicks == 1_728_000L }
+        assertEquals(6, daily.size, "one daily bounty for each of the six level bands")
+        assertTrue(daily.all { it.repeatable })
+        val weekly = loaded.catalog.quests.values.filter { it.cooldownTicks == 12_096_000L }
+        assertEquals(4, weekly.size, "three weekly contracts and the weekly raid")
+        assertEquals(setOf(3, 4, 5, 6, 7, 8), loaded.catalog.quests.getValue(150).objectives.map { it.targetId }.toSet(), "the Grand Tour visits every zone")
+        for (q in loaded.catalog.quests.values) for (o in q.objectives.filter { it.type == com.morgana.domain.event.QuestObjectiveType.KILL_NPC }) {
+            assertTrue(o.targetId in loaded.catalog.npcs, "${q.name}: target ${o.targetId} exists")
+        }
+    }
+
+    @Test
+    fun `a Lv 5 hero takes the Gelli bounty from the clerk, hands it in, and it is posted again a day later`(@TempDir tmp: Path) {
+        val c = coordinator(tmp)
+        val sim = c.simulation
+        val cid = join(c, "bounty_hunter", 3).characterId!!
+        val clerk = sim.mapNpcs.getValue(1).first { it.npcId == 77 }
+        sim.spawnOrUpdatePlayer(
+            sim.players.getValue(cid).copy(
+                level = 5,
+                position = com.morgana.domain.spatial.WorldPosition.fromTile(1, clerk.tileX, clerk.tileY + 1, com.morgana.domain.spatial.Direction.UP)
+            )
+        )
+        fun talk() = sim.playerInteractFacing(cid).filterIsInstance<com.morgana.domain.sim.WorldSimulationEvent.OpenUiRequested>().single { it.windowType == "DIALOGUE" }
+        val offer = talk()
+        assertEquals(listOf("Accept Bounty", "Not now."), offer.choiceLabels)
+        sim.selectDialogueChoice(cid, offer.eventId, 0)
+        assertEquals(setOf(201), sim.players.getValue(cid).quests.keys)
+
+        val p = sim.players.getValue(cid)
+        val need = sim.quests.getValue(201).objectives.single().requiredCount
+        sim.players[cid] = p.copy(quests = p.quests + (201 to p.quests.getValue(201).copy(objectiveCounts = listOf(need))))
+        sim.selectDialogueChoice(cid, talk().eventId, -1)
+        assertEquals(com.morgana.domain.event.QuestStatus.COMPLETED, sim.players.getValue(cid).quests.getValue(201).status)
+        val done = talk()
+        assertTrue("tomorrow" in done.dialogueText, "the same day it says to come back: ${done.dialogueText}")
+
+        sim.worldEpochTicks += 1_728_000L
+        assertEquals(listOf("Accept Bounty", "Not now."), talk().choiceLabels, "a day later the bounty is posted again")
+    }
+
+    @Test
+    fun `the Reeve of Gelli Gwyon offers the three hunts in order once the Waymaster's walk is done`(@TempDir tmp: Path) {
+        val c = coordinator(tmp)
+        val sim = c.simulation
+        val cid = join(c, "farmhand", 1).characterId!!
+        val reeve = sim.mapNpcs.getValue(3).first { it.npcId == 101 }
+        sim.spawnOrUpdatePlayer(
+            sim.players.getValue(cid).copy(position = com.morgana.domain.spatial.WorldPosition.fromTile(3, reeve.tileX, reeve.tileY + 1, com.morgana.domain.spatial.Direction.UP))
+        )
+        fun talk() = sim.playerInteractFacing(cid).filterIsInstance<com.morgana.domain.sim.WorldSimulationEvent.OpenUiRequested>().single { it.windowType == "DIALOGUE" }
+        fun finish(id: Int) {
+            val p = sim.players.getValue(cid)
+            val counts = sim.quests.getValue(id).objectives.map { it.requiredCount }
+            sim.players[cid] = p.copy(quests = p.quests + (id to p.quests.getValue(id).copy(objectiveCounts = counts)))
+            sim.selectDialogueChoice(cid, talk().eventId, -1)
+            assertEquals(com.morgana.domain.event.QuestStatus.COMPLETED, sim.players.getValue(cid).quests.getValue(id).status, "quest $id handed in")
+        }
+        // The Waymaster's walk (quest 100) comes first; it is satisfied here by having handed it in.
+        val p0 = sim.players.getValue(cid)
+        sim.players[cid] = p0.copy(quests = p0.quests + (100 to com.morgana.domain.event.PlayerQuestState(100, com.morgana.domain.event.QuestStatus.COMPLETED)))
+        for (id in listOf(111, 112, 113)) {
+            sim.selectDialogueChoice(cid, talk().eventId, 0)
+            assertTrue(id in sim.players.getValue(cid).quests, "the Reeve offers quest $id")
+            finish(id)
+        }
+    }
+
+    @Test
+    fun `the General's Grand Tour completes once every realm has been visited`(@TempDir tmp: Path) {
+        val c = coordinator(tmp)
+        val sim = c.simulation
+        val cid = join(c, "wanderer", 1).characterId!!
+        val general = sim.mapNpcs.getValue(1).first { it.npcId == 4 }
+        sim.spawnOrUpdatePlayer(
+            sim.players.getValue(cid).copy(position = com.morgana.domain.spatial.WorldPosition.fromTile(1, general.tileX, general.tileY + 1, com.morgana.domain.spatial.Direction.UP))
+        )
+        fun talk() = sim.playerInteractFacing(cid).filterIsInstance<com.morgana.domain.sim.WorldSimulationEvent.OpenUiRequested>().single { it.windowType == "DIALOGUE" }
+        sim.selectDialogueChoice(cid, talk().eventId, 0)
+        assertTrue(150 in sim.players.getValue(cid).quests)
+        val p = sim.players.getValue(cid)
+        sim.players[cid] = p.copy(quests = p.quests + (150 to p.quests.getValue(150).copy(objectiveCounts = List(6) { 1 })))
+        sim.selectDialogueChoice(cid, talk().eventId, -1)
+        assertEquals(com.morgana.domain.event.QuestStatus.COMPLETED, sim.players.getValue(cid).quests.getValue(150).status)
+    }
 }
 
 /** These tests need the rebuilt world (maps, NPC placement, quests); re-enable them as the map rebuild lands. */
