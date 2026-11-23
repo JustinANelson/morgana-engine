@@ -144,12 +144,14 @@ object NpcForm : ContentForm<NpcDefinition> {
             val range = parts[1].split('-')
             val min = range.getOrNull(0)?.toIntOrNull()
             val max = if (range.size == 2) range[1].toIntOrNull() else min
-            val chance = parts[2].toIntOrNull()
+            val perMillion = parts[2].endsWith("ppm", ignoreCase = true)
+            val chance = (if (perMillion) parts[2].dropLast(3) else parts[2]).toIntOrNull()
             when {
                 item == null || item < 1 -> problems += "$at: the item id must be a positive whole number"
                 range.size > 2 || min == null || max == null || min < 1 -> problems += "$at: the amount must be like 2 or 1-3"
                 max < min -> problems += "$at: the largest amount is below the smallest"
-                chance == null || chance !in 1..10_000 -> problems += "$at: the chance must be between 1 and 10000"
+                chance == null || chance !in 1..(if (perMillion) 1_000_000 else 10_000) -> problems += "$at: the chance must be between 1 and 10000, or like 20ppm for parts per million"
+                perMillion -> drops += NpcDropEntry(itemId = item, minAmount = min, maxAmount = max, chanceBasisPoints = 0, chancePerMillion = chance)
                 else -> drops += NpcDropEntry(itemId = item, minAmount = min, maxAmount = max, chanceBasisPoints = chance)
             }
         }
@@ -158,7 +160,7 @@ object NpcForm : ContentForm<NpcDefinition> {
 
     fun formatDrops(drops: List<NpcDropEntry>): String = drops.joinToString("\n") { d ->
         val amount = if (d.minAmount == d.maxAmount) d.minAmount.toString() else "${d.minAmount}-${d.maxAmount}"
-        "${d.itemId} $amount ${d.chanceBasisPoints}"
+        "${d.itemId} $amount ${if (d.chancePerMillion > 0) "${d.chancePerMillion}ppm" else d.chanceBasisPoints.toString()}"
     }
 
     // ---- boss encounter lines ----

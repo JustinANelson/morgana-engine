@@ -51,11 +51,11 @@ class GameWiki(private val game: CompiledGame, private val catalog: ContentCatal
 
     // ---- Cross-reference indexes -------------------------------------------------------------------------------------
 
-    private class DropSource(val npc: NpcDefinition, val min: Int, val max: Int, val chanceBp: Int)
+    private class DropSource(val npc: NpcDefinition, val min: Int, val max: Int, val chancePpm: Long)
     private class ShopSource(val shop: ShopDefinition, val price: Long, val currency: String)
 
     private val droppedBy: Map<Int, List<DropSource>> = buildMap<Int, MutableList<DropSource>> {
-        for (n in npcs.values) for (d in n.drops) getOrPut(d.itemId) { mutableListOf() } += DropSource(n, d.minAmount, d.maxAmount, d.chanceBasisPoints)
+        for (n in npcs.values) for (d in n.drops) getOrPut(d.itemId) { mutableListOf() } += DropSource(n, d.minAmount, d.maxAmount, d.chancePpm)
     }
     private val soldBy: Map<Int, List<ShopSource>> = buildMap<Int, MutableList<ShopSource>> {
         for (s in catalog.shops.values) for (e in s.entries) {
@@ -112,7 +112,7 @@ class GameWiki(private val game: CompiledGame, private val catalog: ContentCatal
     private fun attrName(id: String): String = game.definition.attributes.firstOrNull { it.id == id }?.name ?: id
     private fun vitalName(id: String): String = game.definition.vitals.firstOrNull { it.id == id }?.name ?: id
 
-    private fun pct(bp: Int): String = trim(bp / 100.0) + "%"
+    private fun pct(ppm: Long): String = trim(ppm / 10_000.0) + "%"
     private fun trim(v: Double): String = if (v == Math.floor(v) && !v.isInfinite()) String.format(Locale.ROOT, "%,.0f", v) else String.format(Locale.ROOT, "%,.2f", v).trimEnd('0').trimEnd('.')
     private fun money(v: Number): String = String.format(Locale.ROOT, "%,d", v.toLong())
     private fun seconds(ticks: Int): String = trim(ticks / tps) + " s"
@@ -141,7 +141,7 @@ class GameWiki(private val game: CompiledGame, private val catalog: ContentCatal
         val dps = n.attackDamage / (n.attackSpeedTicks.coerceAtLeast(1) / tps)
         val loot = n.drops.sumOf { d ->
             val price = items[d.itemId]?.price ?: 0
-            d.chanceBasisPoints / 10000.0 * (d.minAmount + d.maxAmount) / 2.0 * price
+            d.chancePpm / 1_000_000.0 * (d.minAmount + d.maxAmount) / 2.0 * price
         }
         val need = game.xpToNext(n.level.coerceAtLeast(1))
         return MonsterStats(
@@ -302,7 +302,7 @@ class GameWiki(private val game: CompiledGame, private val catalog: ContentCatal
             droppedBy[i.id]?.let { list ->
                 append("<h2>Dropped by</h2>")
                 append(WikiHtml.table(listOf("Monster", "Level", "Chance", "Amount"), list.sortedBy { it.npc.level }.map {
-                    listOf(rawCell(npcLink(it.npc.id)), num(it.npc.level), cell(pct(it.chanceBp), it.chanceBp), cell(amountRange(it.min, it.max)))
+                    listOf(rawCell(npcLink(it.npc.id)), num(it.npc.level), cell(pct(it.chancePpm), it.chancePpm), cell(amountRange(it.min, it.max)))
                 }, "t-dropped", false))
             }
             soldBy[i.id]?.let { list ->
@@ -400,9 +400,9 @@ class GameWiki(private val game: CompiledGame, private val catalog: ContentCatal
 
             if (n.drops.isNotEmpty()) {
                 append("<h2>Drops</h2>")
-                append(WikiHtml.table(listOf("Item", "Chance", "Amount", "Expected value"), n.drops.sortedByDescending { it.chanceBasisPoints }.map { d ->
-                    val ev = d.chanceBasisPoints / 10000.0 * (d.minAmount + d.maxAmount) / 2.0 * (items[d.itemId]?.price ?: 0)
-                    listOf(rawCell(itemLink(d.itemId)), cell(pct(d.chanceBasisPoints), d.chanceBasisPoints), cell(amountRange(d.minAmount, d.maxAmount)), num(round2(ev)))
+                append(WikiHtml.table(listOf("Item", "Chance", "Amount", "Expected value"), n.drops.sortedByDescending { it.chancePpm }.map { d ->
+                    val ev = d.chancePpm / 1_000_000.0 * (d.minAmount + d.maxAmount) / 2.0 * (items[d.itemId]?.price ?: 0)
+                    listOf(rawCell(itemLink(d.itemId)), cell(pct(d.chancePpm), d.chancePpm), cell(amountRange(d.minAmount, d.maxAmount)), num(round2(ev)))
                 }, "t-drops", false))
             }
             spawnsByNpc[n.id]?.takeIf { it.isNotEmpty() }?.let { per ->

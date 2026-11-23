@@ -135,6 +135,9 @@
                 },
                 "chanceBasisPoints": {
                     "type": "integer"
+                },
+                "chancePerMillion": {
+                    "type": "integer"
                 }
             },
             "required": [

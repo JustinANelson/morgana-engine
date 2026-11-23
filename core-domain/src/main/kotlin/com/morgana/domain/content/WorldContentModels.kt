@@ -80,9 +80,17 @@ data class NpcDropEntry(
     val itemId: Int,
     val minAmount: Int = 1,
     val maxAmount: Int = 1,
-    /** Drop chance in basis points (10000 = 100%, 2500 = 25%). */
-    val chanceBasisPoints: Int = 5000
-)
+    /** Drop chance in basis points (10000 = 100%, 2500 = 25%). Ignored when [chancePerMillion] is set. */
+    val chanceBasisPoints: Int = 5000,
+    /**
+     * Drop chance in parts per million (1,000,000 = 100%, 400 = 1 in 2,500, 20 = 1 in 50,000) for drops rarer than a basis
+     * point can express. 0 means "use [chanceBasisPoints]".
+     */
+    val chancePerMillion: Int = 0
+) {
+    /** The chance in parts per million, whichever field is in use. */
+    val chancePpm: Long get() = if (chancePerMillion > 0) chancePerMillion.toLong() else chanceBasisPoints.toLong() * 100L
+}
 
 /**
  * Authoritative NPC template editable live via the F1 NPC Editor.

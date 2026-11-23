@@ -441,6 +441,7 @@ object ContentValidator {
             }
             n.drops.forEachIndexed { i, d ->
                 itemRef(col, n.id, "/drops/$i/itemId", d.itemId, optional = false)
+                if (d.chancePerMillion !in 0..1_000_000) error(col, n.id, "/drops/$i/chancePerMillion", "out_of_range", "chancePerMillion must be 0..1000000")
                 if (d.chanceBasisPoints !in 0..10000) error(col, n.id, "/drops/$i/chanceBasisPoints", "out_of_range", "chanceBasisPoints must be 0..10000")
                 if (d.minAmount < 1 || d.maxAmount < d.minAmount) error(col, n.id, "/drops/$i", "out_of_range", "Require 1 <= minAmount <= maxAmount")
             }

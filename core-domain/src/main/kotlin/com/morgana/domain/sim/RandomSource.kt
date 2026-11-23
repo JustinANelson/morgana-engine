@@ -23,6 +23,13 @@ interface RandomSource {
         if (thresholdBasisPoints >= 10_000) return true
         return nextInt(10_000) < thresholdBasisPoints
     }
+
+    /** Rolls against a parts-per-million probability (1,000,000 = 100%, 20 = 1 in 50,000). */
+    fun rollPerMillion(thresholdPerMillion: Long): Boolean {
+        if (thresholdPerMillion <= 0L) return false
+        if (thresholdPerMillion >= 1_000_000L) return true
+        return nextInt(1_000_000) < thresholdPerMillion
+    }
 }
 
 /**

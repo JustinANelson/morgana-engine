@@ -1271,8 +1271,10 @@ internal fun WorldSimulation.handleNpcKilled(
     val dropRateMult = (variant?.dropRatePercent ?: 100).coerceAtLeast(1)
     repeat(dropPasses) {
         for (drop in npcDef.drops) {
-            val effectiveBp = ((drop.chanceBasisPoints.toLong() * dropRateMult) / 100L).toInt().coerceIn(0, 10_000)
-            if (rng.rollBasisPoints(effectiveBp)) {
+            // Whole basis points keep the original roll (so older replays are unchanged); only per-million drops use the finer one.
+            val hit = if (drop.chancePerMillion > 0) rng.rollPerMillion(drop.chancePerMillion.toLong() * dropRateMult / 100L)
+            else rng.rollBasisPoints(((drop.chanceBasisPoints.toLong() * dropRateMult) / 100L).toInt().coerceIn(0, 10_000))
+            if (hit) {
                 val qty = rng.nextIntInclusive(drop.minAmount, drop.maxAmount)
                 if (qty > 0) {
                     fun lay(stack: ItemStack) = groundList.add(

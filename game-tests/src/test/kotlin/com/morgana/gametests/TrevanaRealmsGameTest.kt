@@ -147,8 +147,12 @@ class TrevanaRealmsGameTest {
         assertTrue(monsters.all { m -> m.drops.any { loaded.catalog.items[it.itemId]?.equipmentSlotOrNull() != null } }, "Every monster should drop gear")
         val meteorDrop = monsters.first { it.id == 20 }.drops.first { it.itemId == 7 }
         val dbDrop = monsters.first { it.id == 20 }.drops.first { it.itemId == 8 }
-        assertTrue(meteorDrop.chanceBasisPoints in 1..100, "Starshard drop should be tiny")
-        assertTrue(dbDrop.chanceBasisPoints in 1 until meteorDrop.chanceBasisPoints, "Wyrm Pearl drop should be even smaller than Starshard")
+        assertEquals(400L, meteorDrop.chancePpm, "a Starshard drops 1 in 2,500")
+        assertEquals(20L, dbDrop.chancePpm, "a Wyrm Pearl drops 1 in 50,000")
+        for (m in monsters.filter { it.title.isBlank() }) {
+            m.drops.filter { it.itemId == 7 }.forEach { assertEquals(400L, it.chancePpm, "${m.name}'s Starshard chance") }
+            m.drops.filter { it.itemId == 8 }.forEach { assertTrue(it.chancePpm <= 20L || it.chanceBasisPoints >= 1000, "${m.name}'s Wyrm Pearl chance") }
+        }
 
         // Ranger Volley is centred on the Ranger and hits every enemy within 10 tiles (most of the screen) with 40% (+5%/lv) base damage: a farming skill
         val scatter = loaded.catalog.spells.getValue(7)

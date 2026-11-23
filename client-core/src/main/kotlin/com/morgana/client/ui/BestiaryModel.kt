@@ -40,10 +40,16 @@ object BestiaryModel {
         }
         if (row.stage >= Stage.DROPS) {
             if (def.drops.isEmpty()) lines.add("Drops nothing.")
-            else for (d in def.drops) lines.add("Drops ${items[d.itemId]?.name ?: "item ${d.itemId}"} (${d.chanceBasisPoints / 100}%)")
+            else for (d in def.drops) lines.add("Drops ${items[d.itemId]?.name ?: "item ${d.itemId}"} (${chanceText(d)})")
         } else if (row.stage == Stage.STATS) {
             lines.add("Defeat ${rules.dropsAfterKills - row.kills} more to learn what it drops.")
         }
         return lines
+    }
+
+    /** "25%" for common drops, "1 in 2,500" for rare ones. */
+    private fun chanceText(d: com.morgana.domain.content.NpcDropEntry): String {
+        val ppm = d.chancePpm
+        return if (ppm >= 10_000L || ppm <= 0L) "${ppm / 10_000L}%" else "1 in ${String.format(java.util.Locale.ROOT, "%,d", Math.round(1_000_000.0 / ppm))}"
     }
 }

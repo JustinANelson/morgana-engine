@@ -70,7 +70,7 @@ class TrevanaEconomyModelTest {
         fun kill(npc: NpcDefinition): Kill {
             var marks = 0.0; var sale = 0.0; var star = 0.0; var frag = 0.0; var pearl = 0.0
             for (d in npc.drops) {
-                val chance = d.chanceBasisPoints / 10_000.0
+                val chance = d.chancePpm / 1_000_000.0
                 val amount = (d.minAmount + d.maxAmount) / 2.0
                 val item = cat.items[d.itemId] ?: continue
                 when {
@@ -178,11 +178,11 @@ class TrevanaEconomyModelTest {
     }
 
     @Test
-    fun `pearls and Starshards arrive at a pace that makes the upgrades worth chasing`() {
+    fun `pearls and Starshards stay rare - a pearl about 1 in 50,000 kills, a Starshard 1 in 2,500`() {
         val (_, rows) = model()
         for (r in rows) {
-            assertTrue(r.killsPerPearl in 40.0..600.0, "${r.npc.name}: ${r.killsPerPearl.toInt()} kills per pearl")
-            assertTrue(r.killsPerStarLevel in 30.0..500.0, "${r.npc.name}: ${r.killsPerStarLevel.toInt()} kills per Starshard level")
+            assertTrue(r.killsPerPearl in 40.0..60_000.0, "${r.npc.name}: ${r.killsPerPearl.toInt()} kills per pearl")
+            assertTrue(r.killsPerStarLevel in 30.0..10_000.0, "${r.npc.name}: ${r.killsPerStarLevel.toInt()} kills per Starshard level")
         }
     }
 
