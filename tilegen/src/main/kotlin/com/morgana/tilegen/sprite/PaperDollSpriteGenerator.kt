@@ -1037,23 +1037,30 @@ class PaperDollSpriteGenerator(
         if (rmxp) {
             // Wider-set, readable eyes (lash, iris, a white corner), a nose shadow, a small mouth and a little blush.
             val lash = PaletteRamp.rgba(44, 32, 40)
-            val white = PaletteRamp.rgba(246, 244, 240)
+            val white = PaletteRamp.rgba(250, 248, 244)
+            val pupil = PaletteRamp.rgba(30, 24, 40)
             val rose = PaletteRamp.rgba(150, 84, 92)
+            val eyeY = eyeY + 1 // one row lower than the hair fringe's lash line, so the whole eye clears the hair
             fun eyeAt(ex: Int, outward: Int) {
                 if (blink) {
                     eyesImg.setPixel(ex, eyeY, lash)
                     eyesImg.setPixel(ex + outward, eyeY, lash)
                 } else {
+                    // A dark lash line over a white corner, a dark pupil and a coloured iris pixel below it: three rows that read
+                    // as an eye at game size, the way LPC eyes do, instead of two dim dots under the fringe.
                     eyesImg.setPixel(ex, eyeY - 1, lash)
                     eyesImg.setPixel(ex + outward, eyeY - 1, lash)
-                    eyesImg.setPixel(ex, eyeY, eyeIris)
+                    eyesImg.setPixel(ex + 2 * outward, eyeY - 1, (lash and 0xFFFFFF00.toInt()) or 150)
+                    eyesImg.setPixel(ex, eyeY, pupil)
                     eyesImg.setPixel(ex + outward, eyeY, white)
+                    eyesImg.setPixel(ex, eyeY + 1, eyeIris)
+                    eyesImg.setPixel(ex + outward, eyeY + 1, (eyeIris and 0xFFFFFF00.toInt()) or 170)
                 }
             }
             when (dir) {
                 Direction8.S -> {
-                    eyeAt(cx - eyeSep, -1)
-                    eyeAt(cx + eyeSep, 1)
+                    eyeAt(cx - 2, -1)
+                    eyeAt(cx + 2, 1)
                     eyesImg.setPixel(cx, headCy + 3, (skinShadow and 0xFFFFFF00.toInt()) or 150)
                     eyesImg.setPixel(cx, headCy + 4, rose)
                     eyesImg.setPixel(cx - 4, headCy + 3, PaletteRamp.rgba(238, 148, 140, 150))

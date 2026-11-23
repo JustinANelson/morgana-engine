@@ -2,6 +2,8 @@
 
 ## 2026-11-23
 
+* **Change** - **Readable eyes on 32 x 48 paper dolls** ([tilegen](/architecture/tilegen.md)): the eyes were two dim 1 px dots wedged under the hair fringe at the edge of the face. They sit one row lower and 1 px nearer the centre and are three rows tall: a dark lash line, a white corner beside a near-black pupil, and a coloured iris pixel below, so they read at game size the way LPC eyes do. Profile gets the same eye.
+
 * **Change** - **Better starter archer gear: leather jerkin, boots and quiver** ([tilegen](/architecture/tilegen.md)): the `TRAVELER` torso (32 x 48) is a leather jerkin with a dark V-neck, criss-cross lacing, side seams, a belt and a tabbed hem (back view gets a centre seam); `BOOTS` and `SABATONS` are real boots with a lit folded cuff over a shadow row, a taller shaft, a dark sole and in profile a pointed toe (sabatons add a plate line), instead of two-row blobs; the `QUIVER` is a taller banded tube with straps and fletched arrows poking out above the shoulder, shifted so it shows beside the body in front and side views.
 
 * **Fix** - **Readable arms, a real walk and a belt that sits on the body (32 x 48 paper dolls)** ([tilegen](/architecture/tilegen.md)): sleeves were the same flat colour as the torso, 2 px wide and swung 1 px, so arms vanished and a walk barely moved. Sleeves are now 3 px with a dark seam against the torso and a lit outer edge, arms swing a full stride opposite the legs, and the feet lift a full stride so one leg visibly plants while the other steps. `WAIST` attachments (utility belt, sash, pouch) were 13 px wide on a 9 to 11 px torso and floated; they now match the torso waist width, are shaded, and the utility belt has a buckle.
