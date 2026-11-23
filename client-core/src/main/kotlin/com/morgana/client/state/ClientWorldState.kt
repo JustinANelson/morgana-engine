@@ -1466,6 +1466,9 @@ class ClientWorldState {
 
     private var lastSwingMs = Long.MIN_VALUE / 2
 
+    /** How long the gather pose plays: four frames at about the pace of the attack column. */
+    private val PICKUP_POSE_SECONDS = 0.5f
+
     /**
      * True when a swing may start at [nowMs]: the equipped weapon's attack delay (the same one the server enforces, 20 ticks
      * a second) has passed since the last accepted swing. Mashing Attack inside the delay is then ignored, so the hero does
@@ -1478,6 +1481,21 @@ class ClientWorldState {
             ?: gameDefinition?.combat?.defaultAttackSpeedTicks ?: 12
         if (nowMs - lastSwingMs < ticks * 50L) return false
         lastSwingMs = nowMs
+        return true
+    }
+
+    /**
+     * Plays the gather pose ([SpriteState.HARVEST]: crouch, reach to the ground, grab, rise) on the hero for a pickup, but only
+     * when loot they may take is in reach and no other action pose is already playing. Returns true when it started.
+     */
+    fun triggerLocalPickup(): Boolean {
+        val ch = localCharacter ?: return false
+        val vis = playerVisuals[ch.id] ?: return false
+        if (vis.actionState != null) return false
+        // Only games whose sprite sheets have a harvest column: without one the pose would fall back to a walk cycle.
+        if ((gameDefinition?.sprites?.stateFrames?.get(SpriteState.HARVEST) ?: 0) <= 0) return false
+        if (!AutoLootModel.lootInReach(groundItemsOnMap, ch.id, ch.position.mapId, ch.position.tileX, ch.position.tileY)) return false
+        vis.triggerAction(SpriteState.HARVEST, PICKUP_POSE_SECONDS)
         return true
     }
 

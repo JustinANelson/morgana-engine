@@ -39,9 +39,23 @@ internal data class Swing(
             else -> Swing(dx = 7, dxProfile = 4, dy = 6, angle = 74f)
         }
 
-        /** The keyframe for [action] at [phase], or [REST]. Only SLASH has its own keys so far. */
-        fun forAction(action: PaperDollAction, phase: Int): Swing =
-            if (action == PaperDollAction.SLASH) slash(phase) else REST
+        /**
+         * The four HARVEST (gather) keyframes: reach down toward the ground, touch it, grab, then lift the hand to the chest.
+         * A held weapon points down and out of the way (the angle).
+         */
+        fun gather(phase: Int): Swing = when (phase) {
+            0 -> Swing(dx = 8, dxProfile = 5, dy = 9, angle = 160f)
+            1 -> Swing(dx = 9, dxProfile = 7, dy = 13, angle = 172f)
+            2 -> Swing(dx = 9, dxProfile = 7, dy = 13, angle = 170f)
+            else -> Swing(dx = 5, dxProfile = 4, dy = 4, angle = 150f)
+        }
+
+        /** The keyframe for [action] at [phase], or [REST]. SLASH and HARVEST have their own keys so far. */
+        fun forAction(action: PaperDollAction, phase: Int): Swing = when (action) {
+            PaperDollAction.SLASH -> slash(phase)
+            PaperDollAction.HARVEST -> gather(phase)
+            else -> REST
+        }
 
         /** The side of the screen (+1 right, -1 left) the weapon hand is on for [dir]. */
         fun side(dir: Direction8): Int = when (dir) {

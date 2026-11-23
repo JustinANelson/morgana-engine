@@ -380,8 +380,7 @@ class MorganaGame(
                             worldState.triggerLocalInteract()
                         }
                         com.morgana.client.access.GameAction.PICK_UP -> if (worldState.actionReady("pickup", System.currentTimeMillis(), 250L)) {
-                            netClient.send(ClientPacket.PickupGroundItem)
-                            audio.play(RetroSoundEngine.Sfx.PICKUP)
+                            sendPickup()
                         }
                         com.morgana.client.access.GameAction.CONTROLS -> hud.toggleControlsWindow()
                         else -> {
@@ -463,8 +462,7 @@ class MorganaGame(
                                 val dist = maxOf(kotlin.math.abs(ch.position.tileX - clickedLoot.tileX), kotlin.math.abs(ch.position.tileY - clickedLoot.tileY))
                                 if (dist <= 1) {
                                     if (worldState.actionReady("pickup", System.currentTimeMillis(), 250L)) {
-                                        netClient.send(ClientPacket.PickupGroundItem)
-                                        audio.play(RetroSoundEngine.Sfx.PICKUP)
+                                        sendPickup()
                                     }
                                     pendingLootTile = null
                                 } else {
@@ -752,6 +750,13 @@ class MorganaGame(
 
     private val autoLoot = com.morgana.client.state.AutoLootModel()
 
+    /** Asks the server to pick up nearby loot, plays the pickup sound and, when something is in reach, the hero's gather pose. */
+    private fun sendPickup() {
+        netClient.send(ClientPacket.PickupGroundItem)
+        audio.play(RetroSoundEngine.Sfx.PICKUP)
+        worldState.triggerLocalPickup()
+    }
+
     /** Asks for a pickup when the Auto-loot setting is on and something takeable is within reach (see [com.morgana.client.state.AutoLootModel]). */
     private fun tickAutoLoot(nowMs: Long) {
         if (!com.morgana.client.access.Accessibility.settings.autoLoot) return
@@ -769,8 +774,7 @@ class MorganaGame(
             nowMs = nowMs
         )
         if (send && worldState.actionReady("pickup", nowMs, 250L)) {
-            netClient.send(ClientPacket.PickupGroundItem)
-            audio.play(RetroSoundEngine.Sfx.PICKUP)
+            sendPickup()
         }
     }
 
@@ -1167,8 +1171,7 @@ class MorganaGame(
                 val dist = maxOf(kotlin.math.abs(ch.position.tileX - target.x), kotlin.math.abs(ch.position.tileY - target.y))
                 if (dist <= 1) {
                     if (worldState.actionReady("pickup", nowMs, 250L)) {
-                        netClient.send(ClientPacket.PickupGroundItem)
-                        audio.play(RetroSoundEngine.Sfx.PICKUP)
+                        sendPickup()
                     }
                     tapMove.cancel()
                     pendingLootTile = null

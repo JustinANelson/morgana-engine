@@ -56,4 +56,15 @@ class SwingPoseTest {
         val b = weaponLayer(WeaponKind.KATANA, Direction8.S, PaperDollAction.SLASH, 2)
         assertEquals(a.pixels.toList(), b.pixels.toList())
     }
+
+    @Test
+    fun `a gather crouches, reaches low and rises with the item`() {
+        val loadout = PaperDollLoadout.forJob(PaperDollJob.HERO).copy(weapon = WeaponKind.NONE)
+        fun frame(f: Int) = gen.generateCharacterFrame(loadout, Direction8.S, PaperDollAction.HARVEST, f, PixelStyle.MORGANA, includeShadow = false)
+        val frames = (0..3).map { frame(it) }
+        for (i in 0..3) for (j in i + 1..3) assertTrue(!frames[i].pixels.contentEquals(frames[j].pixels), "gather frames $i and $j match")
+        val top = frames.map { bounds(it)[1] }
+        assertTrue(top[1] > top[0] + 1, "the crouch should lower the head (top rows ${top.toList()})")
+        assertTrue(top[3] < top[1], "the hero should rise again")
+    }
 }

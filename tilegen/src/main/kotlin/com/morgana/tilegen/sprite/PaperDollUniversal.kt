@@ -620,10 +620,10 @@ data class PaperDollPose(
                 PaperDollAction.SHOOT -> if (phase == 1) -1 else 0
                 PaperDollAction.CAST -> if (phase == 1 || phase == 2) -2 else 0
                 PaperDollAction.HARVEST -> when (phase) {
-                    0 -> -1 // windup overhead
-                    1 -> 2  // downward swing
-                    2 -> 1  // impact follow-through
-                    else -> 0
+                    0 -> 2  // bend the knees and reach
+                    1 -> 4  // crouched, hand at the ground
+                    2 -> 4  // grab
+                    else -> 2 // rising with the item
                 }
                 PaperDollAction.JUMP -> when (phase) {
                     0 -> 2   // crouch anticipation

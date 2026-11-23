@@ -728,7 +728,7 @@ class PaperDollSpriteGenerator(
         val chunky = isRmxp || theme.proportions == PaperDollProportions.CHUNKY
         val (pose, sockets) = PaperDollPose.compute(baseDir, action, frameIndex, theme.proportions, nativeH)
         val cx = 16 + pose.lungeX
-        val headCy = (if (isRmxp) 17 else if (chunky) 9 else 10) + pose.bobY
+        val headCy = (if (isRmxp) 17 else if (chunky) 9 else 10) + pose.bobY + (if (action == PaperDollAction.HARVEST && pose.phase in 1..2) 1 else 0)
         val torsoTop = (if (isRmxp) 23 else 14) + pose.bobY
         val legTop = (if (isRmxp) (if (pose.isSeated) 34 else 36) else (if (pose.isSeated) 21 else 22)) + pose.bobY
         val stride = pose.stride
@@ -779,7 +779,7 @@ class PaperDollSpriteGenerator(
         // 4. Legs, Feet & Torso/Armor layers
         drawLegsAndFeet32(legsLayer, feetLayer, cx, legTop, baseDir, stride, pose, loadout, theme)
         drawTorso32(torsoLayer, cx, torsoTop, legTop, baseDir, stride, pose, loadout, theme, bodyLayer,
-            swing = if (action == PaperDollAction.SLASH) swing else null)
+            swing = if (action == PaperDollAction.SLASH || action == PaperDollAction.HARVEST) swing else null)
 
         // 5. Waist & Shoulder Attachments
         for (att in loadout.attachments) {
@@ -1260,7 +1260,16 @@ class PaperDollSpriteGenerator(
         val weaponSide = Swing.side(dir)
         fun swingArm(shoulderX: Int, tone: Float) {
             val (hx, hy) = swing!!.hand(dir, cx, torsoTop)
-            SwingArt.drawArm(img, handsImg, shoulderX, torsoTop + 1, hx.coerceIn(1, 29), hy.coerceIn(1, armMaxY), outfit, accent, skin, tone)
+            SwingArt.drawArm(img, if (pose.action == PaperDollAction.HARVEST) img else handsImg, shoulderX, torsoTop + 1, hx.coerceIn(1, 29), hy.coerceIn(1, armMaxY), outfit, accent, skin, tone)
+            if (pose.action == PaperDollAction.HARVEST && pose.phase >= 1) {
+                // The thing being picked up: on the ground in the hand while grabbing, then held at the chest with a glint.
+                val ix = hx.coerceIn(1, 28)
+                val iy = if (pose.phase == 3) (hy - 2).coerceAtLeast(1) else (hy + 2).coerceAtMost(img.height - 3)
+                img.setPixel(ix, iy, PalettePresets.RUNE_GOLD.sample(0.9f))
+                img.setPixel(ix + 1, iy, PalettePresets.RUNE_GOLD.sample(0.62f))
+                img.setPixel(ix, iy + 1, PalettePresets.RUNE_GOLD.sample(0.4f))
+                if (pose.phase != 1) img.setPixel(ix, (iy - 1).coerceAtLeast(1), PaletteRamp.rgba(255, 250, 220))
+            }
         }
         if (dir != Direction8.W) {
             val ly = if (raiseLeft) torsoTop - 2 else torsoTop + 1 - armSwing

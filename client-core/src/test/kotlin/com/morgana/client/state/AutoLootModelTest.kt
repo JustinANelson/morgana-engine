@@ -69,4 +69,16 @@ class AutoLootModelTest {
         assertFalse(m.ask(g, now = 100, x = 20))
         assertTrue(m.ask(g, now = 200), "the signature was cleared while nothing was in reach")
     }
+
+    @Test
+    fun `the gather pose plays only for loot the player could take`() {
+        val g = listOf(drop("a", 3))
+        assertTrue(AutoLootModel.lootInReach(g, "me", 1, 5, 5))
+        assertTrue(AutoLootModel.lootInReach(g, "me", 1, 6, 5), "one tile away is in reach")
+        assertFalse(AutoLootModel.lootInReach(g, "me", 1, 9, 5), "out of reach")
+        assertFalse(AutoLootModel.lootInReach(g, "me", 2, 5, 5), "other map")
+        assertFalse(AutoLootModel.lootInReach(listOf(drop("a", 3, owner = "other")), "me", 1, 5, 5), "owned by someone else")
+        assertTrue(AutoLootModel.lootInReach(listOf(drop("a", 3, owner = "me")), "me", 1, 5, 5))
+        assertFalse(AutoLootModel.lootInReach(emptyList(), "me", 1, 5, 5), "nothing on the ground")
+    }
 }

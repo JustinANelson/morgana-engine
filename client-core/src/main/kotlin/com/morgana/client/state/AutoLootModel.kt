@@ -59,6 +59,17 @@ class AutoLootModel {
     }
 
     companion object {
+        /**
+         * True when the player could take something from the ground right now: loot on this map within pickup range that is
+         * theirs or unowned. Ignores bag room (the pose plays for a try; the server decides). Used to play the gather pose.
+         */
+        fun lootInReach(ground: List<MapGroundItem>, characterId: String?, mapId: Int, tileX: Int, tileY: Int): Boolean =
+            ground.any { g ->
+                g.mapId == mapId &&
+                    maxOf(abs(g.tileX - tileX), abs(g.tileY - tileY)) <= GROUND_PICKUP_RANGE_TILES &&
+                    (g.ownerCharacterId == null || g.ownerCharacterId == characterId)
+            }
+
         /** How long the same loot waits before it is asked for again. */
         const val RETRY_MS = 3_000L
     }
