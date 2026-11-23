@@ -107,8 +107,8 @@ class TrevanaRealmsGameTest {
 
         assertEquals(5, loaded.catalog.classes.size)
         assertTrue(loaded.catalog.maps.isNotEmpty(), "the world has at least the placeholder Trevena map while it is rebuilt")
-        val pvpMaps = setOf(17, 19, 25)
-        val arenaMaps = setOf(27, 30)
+        val pvpMaps = emptySet<Int>() // no contested zones yet
+        val arenaMaps = emptySet<Int>() // the arena is not rebuilt yet
         for ((id, map) in loaded.catalog.maps) {
             val want = when (id) { in pvpMaps -> MapMoral.OPEN_PVP; in arenaMaps -> MapMoral.ARENA; in 9..16 -> MapMoral.INSTANCED_DUNGEON; else -> MapMoral.SAFE_ZONE }
             assertEquals(want, map.moral, "map $id (${map.name})")
@@ -747,106 +747,6 @@ class TrevanaRealmsGameTest {
 
     @Test
     @Disabled(MAP_REBUILD)
-    fun `the Guildhall is a guild-owned instance entered through the arch in Harrow Cross`(@TempDir tmp: Path) {
-        val c = coordinator(tmp)
-        val sim = c.simulation
-        assertTrue(sim.modules.isEnabled(com.morgana.domain.sim.OptionalModule.INSTANCING), "guild halls need the instancing module")
-        val hall = sim.maps.getValue(28)
-        assertTrue(hall.instanced)
-        assertEquals(com.morgana.domain.map.InstanceOwner.GUILD, hall.instanceOwner)
-        assertEquals(4, hall.npcSpawns.count { it.npcId == 75 }, "four practice dummies in the yard")
-        val door = sim.maps.getValue(1).cells.withIndex().first { (_, cell) -> (cell.attribute as? TileAttribute.Warp)?.targetMapId == 28 }.index
-        val w = sim.maps.getValue(1).width
-        val founderSession = join(c, "hall_founder", 1)
-        val founder = founderSession.characterId!!
-        val loner = join(c, "hall_loner", 2).characterId!!
-        sim.guilds["g1"] = com.morgana.domain.entity.GuildDocument("g1", "Hallkeepers", "HK", founder, mapOf(founder to "Founder"))
-        sim.spawnOrUpdatePlayer(sim.players.getValue(founder).copy(guildId = "g1"))
-        fun stepOnto(id: String) {
-            sim.spawnOrUpdatePlayer(sim.players.getValue(id).copy(position = com.morgana.domain.spatial.WorldPosition.fromTile(1, door % w, door / w - 1, com.morgana.domain.spatial.Direction.DOWN)))
-            sim.movePlayer(id, com.morgana.domain.spatial.Direction.DOWN)
-        }
-        stepOnto(founder)
-        assertTrue(com.morgana.domain.sim.MapInstances.isInstanceId(sim.players.getValue(founder).position.mapId), "a guild member steps into their hall")
-        stepOnto(loner)
-        assertEquals(1, sim.players.getValue(loner).position.mapId, "someone with no guild is turned away at the door")
-
-        // The vault: the Quartermaster (npc 76) stands in the alcove, and a deposit through the packet reaches the guild
-        assertEquals(com.morgana.domain.content.NpcBehavior.GUILD_BANKER, sim.npcs.getValue(76).behavior)
-        assertEquals("Officer", sim.game.definition.guildBank!!.defaultWithdrawRank)
-        val insideId = sim.players.getValue(founder).position.mapId
-        val keeper = sim.mapNpcs.getValue(insideId).first { it.npcId == 76 }
-        sim.spawnOrUpdatePlayer(sim.players.getValue(founder).copy(position = com.morgana.domain.spatial.WorldPosition.fromTile(insideId, keeper.tileX + 1, keeper.tileY, com.morgana.domain.spatial.Direction.LEFT)))
-        val slot = sim.players.getValue(founder).inventory.slots.indexOfFirst { it != null && !sim.items.getValue(it.itemId).boundOnPickup }
-        assertTrue(slot >= 0, "the founder carries something that can be stored")
-        val itemId = sim.players.getValue(founder).inventory.getSlot(slot)!!.itemId
-        val had = sim.players.getValue(founder).inventory.totalCountOf(itemId)
-        c.handleClientPacket(founderSession, ClientPacket.GuildBankDeposit(slot, 1))
-        assertEquals(1, sim.guilds.getValue("g1").bank.totalCountOf(itemId), "the guild vault holds the deposit")
-        assertEquals(had - 1, sim.players.getValue(founder).inventory.totalCountOf(itemId))
-        assertTrue(sim.guilds.getValue("g1").bankLog.single().contains("deposited 1 x"))
-    }
-
-    @Test
-    @Disabled(MAP_REBUILD)
-    fun `the Grand Hall opens only to the guild that holds the Holdfast, and a member shown out of the guild is shown out of the hall`(@TempDir tmp: Path) {
-        val c = coordinator(tmp)
-        val sim = c.simulation
-        val grand = sim.maps.getValue(29)
-        assertTrue(grand.instanced)
-        assertEquals(com.morgana.domain.map.InstanceOwner.GUILD, grand.instanceOwner)
-        assertTrue(grand.width > sim.maps.getValue(28).width && grand.height > sim.maps.getValue(28).height, "the Grand Hall is larger than the Guildhall")
-        val inGrand = grand.npcSpawns.map { it.npcId }.toSet()
-        assertTrue(inGrand.containsAll(setOf(76, 81, 82, 83)), "the Grand Hall has the vault, the banner, the notice board and the trophy keeper")
-        grand.npcSpawns.forEach { spawn ->
-            val cell = grand.cells[spawn.spawnY * grand.width + spawn.spawnX]
-            assertTrue(cell.attribute !is TileAttribute.Blocked, "npc ${spawn.npcId} stands on open floor")
-        }
-
-        val door = sim.maps.getValue(1).cells.withIndex().first { (_, cell) -> (cell.attribute as? TileAttribute.Warp)?.targetMapId == 28 }.index
-        val w = sim.maps.getValue(1).width
-        val session = join(c, "grand_founder", 1)
-        val founder = session.characterId!!
-        sim.guilds["g1"] = com.morgana.domain.entity.GuildDocument("g1", "Hallkeepers", "HK", founder, mapOf(founder to "Founder"), motd = "Bring salves")
-        sim.spawnOrUpdatePlayer(sim.players.getValue(founder).copy(guildId = "g1", guildRank = "Founder",
-            position = com.morgana.domain.spatial.WorldPosition.fromTile(1, door % w, door / w - 1, com.morgana.domain.spatial.Direction.DOWN)))
-        sim.movePlayer(founder, com.morgana.domain.spatial.Direction.DOWN)
-        val hallId = sim.players.getValue(founder).position.mapId
-        assertTrue(com.morgana.domain.sim.MapInstances.isInstanceId(hallId))
-
-        fun talkTo(npcId: Int): com.morgana.domain.sim.WorldSimulationEvent.OpenUiRequested {
-            val npc = sim.mapNpcs.getValue(sim.players.getValue(founder).position.mapId).first { it.npcId == npcId }
-            sim.spawnOrUpdatePlayer(sim.players.getValue(founder).copy(
-                position = com.morgana.domain.spatial.WorldPosition.fromTile(sim.players.getValue(founder).position.mapId, npc.tileX, npc.tileY + 1, com.morgana.domain.spatial.Direction.UP)))
-            return sim.playerInteractFacing(founder)
-                .filterIsInstance<com.morgana.domain.sim.WorldSimulationEvent.OpenUiRequested>().single { it.windowType == "DIALOGUE" }
-        }
-        // The notice board and banner read the guild's own details.
-        assertTrue("Bring salves" in talkTo(82).dialogueText, "the board shows the guild's message of the day")
-        assertTrue("Hallkeepers [HK]" in talkTo(81).dialogueText, "the banner shows the guild's name and tag")
-
-        // Without the Holdfast the steward turns the guild away.
-        val refused = talkTo(80)
-        sim.selectDialogueChoice(founder, refused.eventId, 0)
-        assertEquals(hallId, sim.players.getValue(founder).position.mapId, "a guild that does not hold the Holdfast stays in the Guildhall")
-
-        // Holding it opens the Grand Hall, with the guild's win count on the trophy keeper's wall.
-        sim.guilds["g1"] = sim.guilds.getValue("g1").copy(holdsGuildArea = true, warWins = 3)
-        val steward = talkTo(80)
-        sim.selectDialogueChoice(founder, steward.eventId, 0)
-        val grandId = sim.players.getValue(founder).position.mapId
-        assertTrue(com.morgana.domain.sim.MapInstances.isInstanceId(grandId) && grandId != hallId, "the holder is in the Grand Hall")
-        assertEquals(29, sim.instances.getValue(grandId).templateMapId)
-        assertTrue("3 times" in talkTo(83).dialogueText, "the trophy keeper counts the wins")
-
-        // A member who is no longer in the guild is shown out of the hall.
-        sim.spawnOrUpdatePlayer(sim.players.getValue(founder).copy(guildId = null, guildRank = ""))
-        sim.ejectFromGuildHall(founder)
-        assertEquals(1, sim.players.getValue(founder).position.mapId, "shown out to Harrow Cross")
-    }
-
-    @Test
-    @Disabled(MAP_REBUILD)
     fun `the four Undercroft floors are party instances that scale with the party`(@TempDir tmp: Path) {
         val sim = coordinator(tmp).simulation
         for (id in 21..24) {
@@ -1228,54 +1128,6 @@ class TrevanaRealmsGameTest {
         assertEquals(6, sim.npcs.getValue(17).eventId, "Saltmere Captain should be wired to event 6")
         assertEquals(7, sim.npcs.getValue(11).eventId, "Skerry Isle Scout should be wired to event 7")
         assertTrue(sim.npcs.getValue(41).drops.any { it.itemId == 10 }, "Deepwyrm should drop Gold Ingots")
-    }
-
-    @Test
-    @Disabled(MAP_REBUILD)
-    fun `market conductress and pk jail warden work end-to-end`(@TempDir tmp: Path) {
-        val c = coordinator(tmp)
-        val sim = c.simulation
-        val cid = join(c, "market_hero", 1).characterId!!
-
-        // 1. Talk to Waymaster (npc 6) in Harrow Cross and choose "Enter the Market"
-        val conductress = sim.mapNpcs.getValue(1).first { it.npcId == 6 }
-        sim.spawnOrUpdatePlayer(
-            sim.players.getValue(cid).copy(
-                position = com.morgana.domain.spatial.WorldPosition.fromTile(1, conductress.tileX, conductress.tileY + 1, com.morgana.domain.spatial.Direction.UP)
-            )
-        )
-        val condDlg = sim.playerInteractFacing(cid)
-            .filterIsInstance<com.morgana.domain.sim.WorldSimulationEvent.OpenUiRequested>()
-            .single { it.windowType == "DIALOGUE" }
-        assertEquals("Enter the Bazaar", condDlg.choiceLabels.first())
-        sim.selectDialogueChoice(cid, condDlg.eventId, 0)
-        assertEquals(2, sim.players.getValue(cid).position.mapId, "Waymaster should warp player to the Bazaar (map 2)")
-
-        // 2. Talk to Market Waymaster (npc 18) to return to Harrow Cross
-        val mCond = sim.mapNpcs.getValue(2).first { it.npcId == 18 }
-        sim.spawnOrUpdatePlayer(
-            sim.players.getValue(cid).copy(
-                position = com.morgana.domain.spatial.WorldPosition.fromTile(2, mCond.tileX, mCond.tileY + 1, com.morgana.domain.spatial.Direction.UP)
-            )
-        )
-        val mCondDlg = sim.playerInteractFacing(cid)
-            .filterIsInstance<com.morgana.domain.sim.WorldSimulationEvent.OpenUiRequested>()
-            .single { it.windowType == "DIALOGUE" }
-        sim.selectDialogueChoice(cid, mCondDlg.eventId, 0)
-        assertEquals(1, sim.players.getValue(cid).position.mapId, "Market Waymaster should return player to Harrow Cross")
-
-        // 4. Stockade Warden (npc 60) in Stockade (map 26) can pardon and return player to Harrow Cross
-        val warden = sim.mapNpcs.getValue(26).first { it.npcId == 60 }
-        sim.spawnOrUpdatePlayer(
-            sim.players.getValue(cid).copy(
-                position = com.morgana.domain.spatial.WorldPosition.fromTile(26, warden.tileX, warden.tileY + 1, com.morgana.domain.spatial.Direction.UP)
-            )
-        )
-        val jailDlg = sim.playerInteractFacing(cid)
-            .filterIsInstance<com.morgana.domain.sim.WorldSimulationEvent.OpenUiRequested>()
-            .single { it.windowType == "DIALOGUE" }
-        sim.selectDialogueChoice(cid, jailDlg.eventId, 1) // Plead for Pardon
-        assertEquals(1, sim.players.getValue(cid).position.mapId, "Stockade Warden pardon should return player to Harrow Cross")
     }
 
     @Test
@@ -2275,6 +2127,132 @@ class TrevanaRealmsGameTest {
             assertTrue(id in sim.players.getValue(cid).quests, "the Reeve offers quest $id")
             finish(id)
         }
+    }
+
+    private fun hallDoor(sim: com.morgana.domain.sim.WorldSimulation): Pair<Int, Int> {
+        val hub = sim.maps.getValue(1)
+        val i = hub.cells.indexOfFirst { (it.attribute as? TileAttribute.Warp)?.targetMapId == 18 }
+        assertTrue(i >= 0, "Trevena has a door to the Guildhall")
+        return i % hub.width to i / hub.width
+    }
+
+    @Test
+    fun `the Guildhall is a guild-owned instance entered through the gatehouse in Trevena, with a vault, dummies and a steward`(@TempDir tmp: Path) {
+        val c = coordinator(tmp)
+        val sim = c.simulation
+        assertTrue(sim.modules.isEnabled(com.morgana.domain.sim.OptionalModule.INSTANCING), "guild halls need the instancing module")
+        val hall = sim.maps.getValue(18)
+        assertTrue(hall.instanced)
+        assertEquals(com.morgana.domain.map.InstanceOwner.GUILD, hall.instanceOwner)
+        assertEquals(4, hall.npcSpawns.count { it.npcId == 75 }, "four practice dummies in the yard")
+        assertTrue(hall.npcSpawns.any { it.npcId == 76 } && hall.npcSpawns.any { it.npcId == 80 }, "the vault keeper and the steward are in the hall")
+        val (dx, dy) = hallDoor(sim)
+        val founderSession = join(c, "hall_founder", 1)
+        val founder = founderSession.characterId!!
+        val loner = join(c, "hall_loner", 2).characterId!!
+        sim.guilds["g1"] = com.morgana.domain.entity.GuildDocument("g1", "Hallkeepers", "HK", founder, mapOf(founder to "Founder"))
+        sim.spawnOrUpdatePlayer(sim.players.getValue(founder).copy(guildId = "g1"))
+        fun stepOnto(id: String) {
+            sim.spawnOrUpdatePlayer(sim.players.getValue(id).copy(position = com.morgana.domain.spatial.WorldPosition.fromTile(1, dx, dy + 1, com.morgana.domain.spatial.Direction.UP)))
+            sim.movePlayer(id, com.morgana.domain.spatial.Direction.UP)
+        }
+        stepOnto(founder)
+        assertTrue(com.morgana.domain.sim.MapInstances.isInstanceId(sim.players.getValue(founder).position.mapId), "a guild member steps into their hall")
+        stepOnto(loner)
+        assertEquals(1, sim.players.getValue(loner).position.mapId, "someone with no guild is turned away at the door")
+
+        // The vault: the Quartermaster stands in the alcove, and a deposit through the packet reaches the guild.
+        assertEquals(com.morgana.domain.content.NpcBehavior.GUILD_BANKER, sim.npcs.getValue(76).behavior)
+        val insideId = sim.players.getValue(founder).position.mapId
+        val keeper = sim.mapNpcs.getValue(insideId).first { it.npcId == 76 }
+        sim.spawnOrUpdatePlayer(sim.players.getValue(founder).copy(position = com.morgana.domain.spatial.WorldPosition.fromTile(insideId, keeper.tileX + 1, keeper.tileY, com.morgana.domain.spatial.Direction.LEFT)))
+        val slot = sim.players.getValue(founder).inventory.slots.indexOfFirst { it != null && !sim.items.getValue(it.itemId).boundOnPickup }
+        assertTrue(slot >= 0, "the founder carries something that can be stored")
+        val itemId = sim.players.getValue(founder).inventory.getSlot(slot)!!.itemId
+        c.handleClientPacket(founderSession, ClientPacket.GuildBankDeposit(slot, 1))
+        assertEquals(1, sim.guilds.getValue("g1").bank.totalCountOf(itemId), "the guild vault holds the deposit")
+    }
+
+    @Test
+    fun `the Grand Hall opens only to the guild that holds the Keep, and a member shown out of the guild is shown out of the hall`(@TempDir tmp: Path) {
+        val c = coordinator(tmp)
+        val sim = c.simulation
+        val grand = sim.maps.getValue(19)
+        assertTrue(grand.instanced)
+        assertEquals(com.morgana.domain.map.InstanceOwner.GUILD, grand.instanceOwner)
+        assertTrue(grand.width > sim.maps.getValue(18).width && grand.height > sim.maps.getValue(18).height, "the Grand Hall is larger than the Guildhall")
+        assertTrue(grand.npcSpawns.map { it.npcId }.toSet().containsAll(setOf(76, 81, 82, 83)), "the Grand Hall has the vault, the banner, the notice board and the trophy keeper")
+
+        val (dx, dy) = hallDoor(sim)
+        val session = join(c, "grand_founder", 1)
+        val founder = session.characterId!!
+        sim.guilds["g1"] = com.morgana.domain.entity.GuildDocument("g1", "Hallkeepers", "HK", founder, mapOf(founder to "Founder"), motd = "Bring salves")
+        sim.spawnOrUpdatePlayer(sim.players.getValue(founder).copy(guildId = "g1", guildRank = "Founder",
+            position = com.morgana.domain.spatial.WorldPosition.fromTile(1, dx, dy + 1, com.morgana.domain.spatial.Direction.UP)))
+        sim.movePlayer(founder, com.morgana.domain.spatial.Direction.UP)
+        val hallId = sim.players.getValue(founder).position.mapId
+        assertTrue(com.morgana.domain.sim.MapInstances.isInstanceId(hallId))
+
+        fun talkTo(npcId: Int): com.morgana.domain.sim.WorldSimulationEvent.OpenUiRequested {
+            val here = sim.players.getValue(founder).position.mapId
+            val npc = sim.mapNpcs.getValue(here).first { it.npcId == npcId }
+            sim.spawnOrUpdatePlayer(sim.players.getValue(founder).copy(
+                position = com.morgana.domain.spatial.WorldPosition.fromTile(here, npc.tileX, npc.tileY + 1, com.morgana.domain.spatial.Direction.UP)))
+            return sim.playerInteractFacing(founder).filterIsInstance<com.morgana.domain.sim.WorldSimulationEvent.OpenUiRequested>().single { it.windowType == "DIALOGUE" }
+        }
+        val refused = talkTo(80)
+        sim.selectDialogueChoice(founder, refused.eventId, 0)
+        assertEquals(hallId, sim.players.getValue(founder).position.mapId, "a guild that does not hold the Keep stays in the Guildhall")
+
+        sim.guilds["g1"] = sim.guilds.getValue("g1").copy(holdsGuildArea = true, warWins = 3)
+        sim.selectDialogueChoice(founder, talkTo(80).eventId, 0)
+        val grandId = sim.players.getValue(founder).position.mapId
+        assertTrue(com.morgana.domain.sim.MapInstances.isInstanceId(grandId) && grandId != hallId, "the holder is in the Grand Hall")
+        assertEquals(19, sim.instances.getValue(grandId).templateMapId)
+        assertTrue("Bring salves" in talkTo(82).dialogueText, "the board shows the guild's message of the day")
+        assertTrue("Hallkeepers [HK]" in talkTo(81).dialogueText, "the banner shows the guild's name and tag")
+        assertTrue("3 times" in talkTo(83).dialogueText, "the trophy keeper counts the wins")
+
+        sim.spawnOrUpdatePlayer(sim.players.getValue(founder).copy(guildId = null, guildRank = ""))
+        sim.ejectFromGuildHall(founder)
+        assertEquals(1, sim.players.getValue(founder).position.mapId, "shown out to Trevena")
+    }
+
+    @Test
+    fun `the Stockade is the PK jail, and its warden releases a hero for bail or pardons a young one`(@TempDir tmp: Path) {
+        val c = coordinator(tmp)
+        val sim = c.simulation
+        val pk = sim.game.definition.combat.pk!!
+        assertEquals(17, pk.jailMapId)
+        val jail = sim.maps.getValue(17)
+        assertEquals("The Stockade", jail.name)
+        assertTrue(jail.cells[pk.jailY * jail.width + pk.jailX].attribute !is TileAttribute.Blocked, "the jail cell tile is open")
+        assertTrue(jail.cells.none { it.attribute is TileAttribute.Warp }, "no way out except through the warden")
+        assertTrue(17 in sim.game.definition.townGate!!.disabledMapIds, "a town scroll does not work in jail")
+
+        val cid = join(c, "jailbird", 1).characterId!!
+        val warden = sim.mapNpcs.getValue(17).first { it.npcId == 60 }
+        fun toWarden(level: Int, marks: Int) {
+            val p = sim.players.getValue(cid)
+            val inv = if (marks > 0) p.inventory.addItem(sim.items.getValue(1), marks).updatedInventory else p.inventory
+            sim.spawnOrUpdatePlayer(p.copy(level = level, inventory = inv,
+                position = com.morgana.domain.spatial.WorldPosition.fromTile(17, warden.tileX, warden.tileY + 1, com.morgana.domain.spatial.Direction.UP)))
+        }
+        fun talk() = sim.playerInteractFacing(cid).filterIsInstance<com.morgana.domain.sim.WorldSimulationEvent.OpenUiRequested>().single { it.windowType == "DIALOGUE" }
+
+        toWarden(level = 40, marks = 0)
+        sim.selectDialogueChoice(cid, talk().eventId, 0) // bail with no money
+        assertEquals(17, sim.players.getValue(cid).position.mapId, "no bail, no release")
+        sim.selectDialogueChoice(cid, talk().eventId, 1) // pardon at level 40
+        assertEquals(17, sim.players.getValue(cid).position.mapId, "a level 40 hero gets no pardon")
+
+        toWarden(level = 40, marks = 3000)
+        sim.selectDialogueChoice(cid, talk().eventId, 0)
+        assertEquals(1, sim.players.getValue(cid).position.mapId, "bail releases the hero to Trevena")
+
+        toWarden(level = 12, marks = 0)
+        sim.selectDialogueChoice(cid, talk().eventId, 1)
+        assertEquals(1, sim.players.getValue(cid).position.mapId, "a young hero is pardoned")
     }
 
     @Test

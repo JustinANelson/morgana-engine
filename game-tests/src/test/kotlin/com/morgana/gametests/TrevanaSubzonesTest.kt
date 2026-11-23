@@ -97,7 +97,7 @@ class TrevanaSubzonesTest {
             val walkable = dun.cells.count { it.attribute !is TileAttribute.Blocked }
             assertTrue(walkable.toFloat() / dun.npcSpawns.size in 25f..70f || id == 16, "${dun.name}: one enemy per ${walkable.toFloat() / dun.npcSpawns.size} tiles")
         }
-        assertEquals(2, loaded.catalog.maps.values.count { it.instanced && it.id > 8 })
+        assertEquals(2, loaded.catalog.maps.values.count { it.instanced && it.id in 9..16 })
     }
 
     @Test

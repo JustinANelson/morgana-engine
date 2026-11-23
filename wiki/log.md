@@ -2,6 +2,8 @@
 
 ## 2026-11-22
 
+* **Add** - **Trevana Realms guild hall and PK jail** ([Trevana Realms](/content/trevana_realms_game.md)): maps 17 (the Stockade, jail), 18 (the Guildhall) and 19 (the Grand Hall) from map-builder recipes; a gatehouse door in Trevena; events for the Stockade Warden (bail or pardon) and the Hall Steward (Grand Hall for the Keep holder); the jail now points at map 17. Tests replace three of the disabled ones.
+
 * **Add** - **Trevana Realms plaza quests** ([Trevana Realms](/content/trevana_realms_game.md)): the Grand Tour (General), six daily bounties and three weekly contracts by level band (Bounty Clerk and Bounty Board), the Gemwright's pointer, all in Trevena; tests play the clerk's daily cycle, the Grand Tour and the Reeve's three-hunt chain through the real simulation. Eleven old quest-giver NPCs still wait for their features or retirement.
 
 * **Add** - **Per-million drop chances** (`NpcDropEntry.chancePerMillion`, `RandomSource.rollPerMillion`): drops rarer than one basis point (1 in 10,000) can now be written in parts per million (400 = 1 in 2,500, 20 = 1 in 50,000); the NPC editor accepts `20ppm`, the bestiary and game wiki show "1 in N". Basis-point drops roll as before, so existing replays are unchanged. Trevana Realms: Starshards 1 in 2,500 and Wyrm Pearls 1 in 50,000 on every non-guaranteed drop.
