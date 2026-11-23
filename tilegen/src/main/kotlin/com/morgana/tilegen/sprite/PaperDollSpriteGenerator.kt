@@ -127,6 +127,9 @@ internal val STEEL_ARMOR = PaletteRamp(intArrayOf(
     PaletteRamp.rgba(144, 162, 190), PaletteRamp.rgba(192, 206, 226), PaletteRamp.rgba(232, 240, 250)
 ))
 
+/** Weapons drawn by the keyframed blade swing, which brings its own trailing arc. */
+internal val SWINGING_BLADES = setOf(WeaponKind.KNIGHT_SWORD, WeaponKind.SINGLE_BLADE, WeaponKind.KATANA)
+
 enum class RobeHem { STRAIGHT, SCALLOPED, JAGGED }
 
 data class PaperDollLoadout(
@@ -731,6 +734,8 @@ class PaperDollSpriteGenerator(
         val stride = pose.stride
         val phase = pose.phase
 
+        val swing = Swing.forAction(action, phase)
+        val trailLayer = TileImage(32, nativeH)
         val shadowLayer = TileImage(32, nativeH)
         if (style == PixelStyle.MORGANA) {
             SpriteFinish.softShadow(shadowLayer, 16f, if (isRmxp) 45.5f else 28.5f, pose.shadowRadiusX + 1f, 2.6f)
@@ -773,7 +778,8 @@ class PaperDollSpriteGenerator(
 
         // 4. Legs, Feet & Torso/Armor layers
         drawLegsAndFeet32(legsLayer, feetLayer, cx, legTop, baseDir, stride, pose, loadout, theme)
-        drawTorso32(torsoLayer, cx, torsoTop, legTop, baseDir, stride, pose, loadout, theme, bodyLayer)
+        drawTorso32(torsoLayer, cx, torsoTop, legTop, baseDir, stride, pose, loadout, theme, bodyLayer,
+            swing = if (action == PaperDollAction.SLASH) swing else null)
 
         // 5. Waist & Shoulder Attachments
         for (att in loadout.attachments) {
@@ -808,7 +814,7 @@ class PaperDollSpriteGenerator(
             }
         }
         if (loadout.weapon != WeaponKind.NONE) {
-            drawWeapon32(weaponLayer, cx, torsoTop, baseDir, action, phase, loadout.weapon, theme.accentPalette, chunky)
+            drawWeapon32(weaponLayer, cx, torsoTop, baseDir, action, phase, loadout.weapon, theme.accentPalette, chunky, swing, trailLayer)
         }
         if (loadout.shield != ShieldKind.NONE) {
             drawShield32(shieldLayer, cx, torsoTop, baseDir, loadout.shield, theme.accentPalette, theme.outfitPalette, chunky)
@@ -822,7 +828,7 @@ class PaperDollSpriteGenerator(
         }
         when {
             action == PaperDollAction.CAST && (phase == 1 || phase == 2) -> drawCastAura32(auraFrontLayer, cx, phase, theme.auraPalette)
-            action == PaperDollAction.SLASH && phase == 1 -> drawAttackSlash32(auraFrontLayer, cx, torsoTop, baseDir)
+            action == PaperDollAction.SLASH && phase == 1 && loadout.weapon !in SWINGING_BLADES -> drawAttackSlash32(auraFrontLayer, cx, torsoTop, baseDir)
             action == PaperDollAction.THRUST && phase == 1 -> drawThrustVfx32(auraFrontLayer, cx, torsoTop, baseDir)
             action == PaperDollAction.SHOOT && phase == 2 -> drawShootVfx32(auraFrontLayer, cx, torsoTop, baseDir)
             action == PaperDollAction.HARVEST && phase == 1 -> drawHarvestVfx32(auraFrontLayer, cx, torsoTop, baseDir)
@@ -853,6 +859,12 @@ class PaperDollSpriteGenerator(
         } else {
             PaletteRamp.rgba(34, 30, 54)
         }
+        fun withTrail(trail: TileImage, weapon: TileImage): TileImage {
+            if (!hasVisiblePixels(trail)) return weapon
+            val merged = trail.copy()
+            compositeOverlay(merged, weapon)
+            return merged
+        }
         fun outline(layer: TileImage): TileImage =
             if (style == PixelStyle.MORGANA) SpriteFinish.finish(layer) else PixelDither.applySelectiveOutline(layer, shadowAnchor)
 
@@ -873,7 +885,7 @@ class PaperDollSpriteGenerator(
             PaperDollSlot.FACE_ACCESSORY to outline(faceAccessoryLayer),
             PaperDollSlot.HEADGEAR to outline(headgearLayer),
             PaperDollSlot.OFF_HAND to outline(shieldLayer),
-            PaperDollSlot.MAIN_HAND to outline(weaponLayer),
+            PaperDollSlot.MAIN_HAND to withTrail(trailLayer, outline(weaponLayer)),
             PaperDollSlot.AURA_FRONT to auraFrontLayer
         )
         return rawMap to sockets
@@ -1187,7 +1199,8 @@ class PaperDollSpriteGenerator(
         pose: PaperDollPose,
         loadout: PaperDollLoadout,
         theme: PaperDollTheme,
-        handsImg: TileImage = img
+        handsImg: TileImage = img,
+        swing: Swing? = null
     ) {
         val chunky = img.height == 48 || theme.proportions == PaperDollProportions.CHUNKY
         val outfit = theme.outfitPalette
@@ -1237,18 +1250,23 @@ class PaperDollSpriteGenerator(
             }
         }
 
-        // Sleeves / Arms (raised on CAST or EMOTE)
+        // Sleeves / Arms (raised on CAST or EMOTE; the weapon arm follows the swing keyframes on a SLASH)
         val armSwing = stride / 2
         val sleeveW = if (rmxp) 2 else if (chunky) 3 else 2
         val raiseLeft = pose.action == PaperDollAction.CAST && (pose.phase == 1 || pose.phase == 2)
         val raiseRight = raiseLeft || (pose.action == PaperDollAction.EMOTE && pose.phase == 1)
         val armMaxY = img.height - 5
+        val skin = theme.skinPalette
+        val weaponSide = Swing.side(dir)
+        fun swingArm(shoulderX: Int, tone: Float) {
+            val (hx, hy) = swing!!.hand(dir, cx, torsoTop)
+            SwingArt.drawArm(img, handsImg, shoulderX, torsoTop + 1, hx.coerceIn(1, 29), hy.coerceIn(1, armMaxY), outfit, accent, skin, tone)
+        }
         if (dir != Direction8.W) {
             val ly = if (raiseLeft) torsoTop - 2 else torsoTop + 1 - armSwing
             val ry = if (raiseRight) torsoTop - 3 else torsoTop + 1 + armSwing
             if (rmxp) {
                 // Sleeve in the outfit colour, an accent cuff, then a skin hand.
-                val skin = theme.skinPalette
                 fun arm(sx: Int, sy: Int, tone: Float, hand: Int) {
                     val top = sy.coerceIn(1, armMaxY - 2)
                     fillRectShaded(img, sx.coerceIn(1, 29), top, sleeveW, 4, outfit, tone)
@@ -1257,12 +1275,22 @@ class PaperDollSpriteGenerator(
                     fillRectShaded(handsImg, sx.coerceIn(1, 29), (top + 5).coerceAtMost(armMaxY), sleeveW, 2, skin, 0.62f)
                     handsImg.setPixel(sx.coerceIn(1, 29), (top + 6).coerceAtMost(armMaxY), hand)
                 }
-                arm(tx0 - sleeveW, ly, 0.76f, skin.mid)
-                arm(tx1 + 1, ry, 0.52f, skin.shadow)
+                if (swing != null && weaponSide > 0) {
+                    arm(tx0 - sleeveW, ly, 0.76f, skin.mid)
+                    swingArm(tx1, 0.52f)
+                } else if (swing != null) {
+                    swingArm(tx0 + 1, 0.76f)
+                    arm(tx1 + 1, ry, 0.52f, skin.shadow)
+                } else {
+                    arm(tx0 - sleeveW, ly, 0.76f, skin.mid)
+                    arm(tx1 + 1, ry, 0.52f, skin.shadow)
+                }
             } else {
                 fillRectShaded(img, (tx0 - sleeveW).coerceIn(1, 29), ly.coerceIn(1, armMaxY), sleeveW, 5, accent, 0.78f)
                 fillRectShaded(img, (tx1 + 1).coerceIn(1, 29), ry.coerceIn(1, armMaxY), sleeveW, 5, accent, 0.52f)
             }
+        } else if (swing != null && rmxp) {
+            swingArm(cx - 1, 0.7f)
         } else {
             val ay = if (raiseRight) torsoTop - 2 else torsoTop + 2
             fillRectShaded(img, (cx - 1 + armSwing).coerceIn(1, 28), ay.coerceIn(1, armMaxY), sleeveW + 1, 5, accent, 0.76f)
@@ -1496,11 +1524,36 @@ class PaperDollSpriteGenerator(
         phase: Int,
         weapon: WeaponKind,
         accent: PaletteRamp,
-        chunky: Boolean = false
+        chunky: Boolean = false,
+        swing: Swing = Swing.REST,
+        trail: TileImage? = null
     ) {
         val steel = PalettePresets.CREAM_MARBLE
         val wood = PalettePresets.WARM_TIMBER
         val gold = PalettePresets.RUNE_GOLD
+
+        // A bow plays the same arm path as a swing: raised, drawn at the chest, released, lowered.
+        if (weapon == WeaponKind.COMPOSITE_BOW && action == PaperDollAction.SLASH) {
+            val (hx, hy) = swing.hand(dir, cx, torsoTop)
+            SwingArt.drawBow(
+                img, dir, phase, hx.coerceIn(2, 29), hy.coerceIn(8, img.height - 9), cx, torsoTop,
+                wood, steel, gold, if (img.height == 48) 7 else 5
+            )
+            return
+        }
+
+        // Swords and katanas follow the swing keyframes: a long blade from the (moving) hand, with a trailing arc.
+        if (weapon == WeaponKind.KNIGHT_SWORD || weapon == WeaponKind.SINGLE_BLADE || weapon == WeaponKind.KATANA) {
+            val (hx, hy) = swing.hand(dir, cx, torsoTop)
+            val len = if (img.height == 48) (if (weapon == WeaponKind.KATANA) 15f else 13.5f) else 10f
+            if (img.height == 48 || action != PaperDollAction.THRUST) {
+                SwingArt.drawBlade(
+                    img, trail, dir, swing, hx.coerceIn(2, 29), hy.coerceIn(2, img.height - 3), len, steel, gold, wood,
+                    broad = weapon == WeaponKind.SINGLE_BLADE, curved = weapon != WeaponKind.KNIGHT_SWORD
+                )
+                return
+            }
+        }
 
         val dirSign = if (dir == Direction8.W || dir == Direction8.SW) -1 else 1
         val handX = cx + dirSign * (if (chunky) 8 else 5)

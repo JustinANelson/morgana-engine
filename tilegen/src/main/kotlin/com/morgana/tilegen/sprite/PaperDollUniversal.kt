@@ -615,7 +615,7 @@ data class PaperDollPose(
                 PaperDollAction.IDLE -> if (phase % 2 == 1) 1 else 0
                 PaperDollAction.WALK -> if (phase == 1 || phase == 3) -1 else 0
                 PaperDollAction.RUN -> if (phase == 1 || phase == 3) -2 else 0
-                PaperDollAction.SLASH -> if (phase == 1) 1 else 0
+                PaperDollAction.SLASH -> when (phase) { 0 -> -1; 1 -> 1; 2 -> 1; else -> 0 }
                 PaperDollAction.THRUST -> if (phase == 1) 1 else 0
                 PaperDollAction.SHOOT -> if (phase == 1) -1 else 0
                 PaperDollAction.CAST -> if (phase == 1 || phase == 2) -2 else 0
@@ -660,7 +660,7 @@ data class PaperDollPose(
             }
 
             val lungeX = when (action) {
-                PaperDollAction.SLASH -> if (phase == 1) dirSignX * 2 else 0
+                PaperDollAction.SLASH -> when (phase) { 0 -> -dirSignX; 1 -> dirSignX * 2; 2 -> dirSignX * 2; else -> 0 }
                 PaperDollAction.THRUST -> if (phase == 1) dirSignX * 3 else 0
                 PaperDollAction.RUN -> if (phase == 1 || phase == 3) dirSignX else 0
                 PaperDollAction.HURT -> if (phase == 0) -(dirSignX.takeIf { it != 0 } ?: -1) else 0
