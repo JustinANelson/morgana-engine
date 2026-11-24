@@ -2891,6 +2891,10 @@ class MorganaWorldCoordinator(
                 }
                 // For the server and systems only: players hear a schedule through the chat announcement it also emitted.
                 is WorldSimulationEvent.ScheduleTriggered -> Unit
+                is WorldSimulationEvent.MapRuntimeReset -> {
+                    simulation.players.values.filter { it.position.mapId == ev.mapId }
+                        .forEach { p -> sessionByCharacterId[p.id]?.let { sendFullMapSnapshotTo(it, ev.mapId) } }
+                }
                 is WorldSimulationEvent.WorldObjectsChanged -> broadcastWorldObjects(ev.mapId, ServerPacket.WorldObjectsUpdated(ev.mapId, ev.upserted, ev.removedIds))
                 is WorldSimulationEvent.BossTelegraph -> {
                     broadcastNear(ev.mapId, ev.centerX, ev.centerY, ServerPacket.BossTelegraph(ev.mapId, ev.centerX, ev.centerY, ev.radius, ev.windUpTicks, ev.label))

@@ -46,7 +46,8 @@ object ScriptCapability {
         is ScriptEffect.AwardExperience -> PROGRESSION
         is ScriptEffect.ConsumeVital -> VITAL
         is ScriptEffect.SetState, is ScriptEffect.ScheduleOnce, is ScriptEffect.CancelSchedule,
-        is ScriptEffect.PlaceObject, is ScriptEffect.RemoveObject, is ScriptEffect.DamageObject, is ScriptEffect.SetObjectData -> STATE
+        is ScriptEffect.PlaceObject, is ScriptEffect.RemoveObject, is ScriptEffect.DamageObject, is ScriptEffect.SetObjectData,
+        is ScriptEffect.DespawnNpcs, is ScriptEffect.ResetMap -> STATE
     }
 }
 

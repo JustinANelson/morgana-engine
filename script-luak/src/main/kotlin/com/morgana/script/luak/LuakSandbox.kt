@@ -251,6 +251,24 @@ object LuakSandbox {
             }
         })
 
+        // world.players_on_map(map_id) and world.npcs_on_map(map_id): every player / monster instance on a map (monsters include dead ones: see is_alive).
+        world.set("players_on_map", object : OneArgFunction() {
+            override fun call(arg: LuaValue?): LuaValue? {
+                val list = worldView.playersOnMap(arg?.checkint() ?: return LuaValue.NIL)
+                val arr = LuaValue.tableOf(list.size, 0)
+                list.forEachIndexed { i, p -> arr.set(i + 1, playerToTable(p)) }
+                return arr
+            }
+        })
+        world.set("npcs_on_map", object : OneArgFunction() {
+            override fun call(arg: LuaValue?): LuaValue? {
+                val list = worldView.npcsOnMap(arg?.checkint() ?: return LuaValue.NIL)
+                val arr = LuaValue.tableOf(list.size, 0)
+                list.forEachIndexed { i, n -> arr.set(i + 1, npcToTable(n)) }
+                return arr
+            }
+        })
+
         world.set("get_map", object : OneArgFunction() {
             override fun call(arg: LuaValue?): LuaValue? {
                 val mapId = arg?.checkint() ?: return LuaValue.NIL
@@ -403,6 +421,20 @@ object LuakSandbox {
                 val x = args.checkint(3)
                 val y = args.checkint(4)
                 effectsOut.add(ScriptEffect.WarpPlayer(playerId, mapId, x, y))
+                return LuaValue.NIL
+            }
+        })
+
+        // world.despawn_npcs(map_id [, npc_id]): remove monsters (all, or one kind) without loot; world.reset_map(map_id): fresh monsters, nodes, no loot.
+        world.set("despawn_npcs", object : VarArgFunction() {
+            override fun invoke(args: Varargs): Varargs {
+                effectsOut.add(ScriptEffect.DespawnNpcs(args.checkint(1), args.optint(2, 0)))
+                return LuaValue.NIL
+            }
+        })
+        world.set("reset_map", object : OneArgFunction() {
+            override fun call(arg: LuaValue?): LuaValue? {
+                effectsOut.add(ScriptEffect.ResetMap(arg?.checkint() ?: return LuaValue.NIL))
                 return LuaValue.NIL
             }
         })

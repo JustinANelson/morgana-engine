@@ -120,6 +120,12 @@ interface ScriptWorldView {
      */
     fun getContent(kind: String, id: Int): Any? = null
 
+    /** Every player on [mapId], by id. Exposed to Lua as `world.players_on_map(map_id)`. */
+    fun playersOnMap(mapId: Int): List<ScriptPlayerSnapshot> = emptyList()
+
+    /** Every monster instance on [mapId] (alive or not), by instance id. Exposed to Lua as `world.npcs_on_map(map_id)`. */
+    fun npcsOnMap(mapId: Int): List<ScriptNpcSnapshot> = emptyList()
+
     /** The script state stored under [key] (see [ScriptEffect.SetState]), or null. */
     fun getState(key: String): Map<String, String>? = null
 

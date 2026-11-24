@@ -176,6 +176,20 @@ sealed interface ScriptEffect {
     @Serializable
     data class SetObjectData(val id: String, val data: Map<String, String>) : ScriptEffect
 
+    /**
+     * Removes the monsters of [npcId] (every monster when 0) from [mapId], with no loot and no experience. They stay gone until
+     * [ResetMap] or the map is swapped; nothing respawns them by itself.
+     */
+    @Serializable
+    data class DespawnNpcs(val mapId: Int, val npcId: Int = 0) : ScriptEffect
+
+    /**
+     * Puts the runtime of [mapId] back to a fresh start: monsters at their spawn slots with full vitals, resource nodes whole,
+     * no loot on the ground and no projectiles in flight. Players and world objects are not touched.
+     */
+    @Serializable
+    data class ResetMap(val mapId: Int) : ScriptEffect
+
     /** Cancels a one-off booked with [ScheduleOnce]. */
     @Serializable
     data class CancelSchedule(val id: String) : ScriptEffect

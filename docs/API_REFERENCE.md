@@ -387,6 +387,10 @@ These functions emit declarative `ScriptEffect` mutations that are validated aga
 | `world.consume_vital` | `(playerId, vitalId, amount)` | Deducts points from a player's vital pool. |
 | `world.schedule_once` | `(id, atMs, [{ name, warnings = {seconds...}, data = {k = v}, warning_message, fire_message }])` | Books a one-off with the scheduler, `atMs` in epoch milliseconds (use `world.now_ms + ...`). Ignored if the scheduler is off, the time is not in the future, or `id` belongs to a `game.json` schedule. Needs the `state` capability. |
 | `world.cancel_schedule` | `(id)` | Cancels a one-off booked with `world.schedule_once`. Needs the `state` capability. |
+| `world.players_on_map` | `(mapId)` | Every player on the map, each as `world.get_player` returns, by id. A query (works in any hook). |
+| `world.npcs_on_map` | `(mapId)` | Every monster instance on the map (dead ones too: check `is_alive`), each as `world.get_npc` returns, by instance id. A query. |
+| `world.despawn_npcs` | `(mapId, [npcId])` | Removes the monsters of that kind (all when omitted) from the map, with no loot or experience; nothing respawns them until `world.reset_map` or the map is swapped. Clients get a fresh snapshot. Needs the `state` capability. |
+| `world.reset_map` | `(mapId)` | Puts the map's monsters (at their spawn slots, full vitals), resource nodes, ground loot and projectiles back to a fresh start; players and world objects are untouched. Needs the `state` capability. |
 | `world.get_object` | `(id)` | The world object with that id as `{ id, kind, map_id, x, y, owner_id, guild_id, hp, data }`, or `nil`. |
 | `world.objects_near` | `(mapId, x, y, [radius])` | World objects within `radius` tiles (default 1, at most 64), nearest first, each as above. |
 | `world.place_object` | `(kind, mapId, x, y, [ownerId], [data])` | Places a world object; ignored if refused. Needs the `state` capability. |

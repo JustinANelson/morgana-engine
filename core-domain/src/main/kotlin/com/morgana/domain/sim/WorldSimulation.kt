@@ -390,6 +390,29 @@ class WorldSimulation(
     // Map & World Initialization
     // -------------------------------------------------------------------------
 
+    /** Removes the monsters of [npcId] (all when 0) from [mapId] without loot or experience; returns how many went. */
+    fun despawnNpcs(mapId: Int, npcId: Int = 0, out: MutableList<WorldSimulationEvent> = mutableListOf()): Int {
+        val list = mapNpcs[mapId] ?: return 0
+        val before = list.size
+        list.removeAll { npcId == 0 || it.npcId == npcId }
+        val removed = before - list.size
+        if (removed > 0) out += WorldSimulationEvent.MapRuntimeReset(mapId)
+        return removed
+    }
+
+    /** Puts the monsters, resource nodes, loot and projectiles of [mapId] back to a fresh start (see [com.morgana.domain.script.ScriptEffect.ResetMap]). */
+    fun resetMapRuntime(mapId: Int, out: MutableList<WorldSimulationEvent> = mutableListOf()): Boolean {
+        val map = maps[mapId] ?: return false
+        mapNpcs[mapId]?.clear()
+        mapResources[mapId]?.clear()
+        mapGroundItems.remove(mapId)
+        mapProjectiles.remove(mapId)
+        syncMapNpcSpawns(map)
+        syncMapResourceNodes(map)
+        out += WorldSimulationEvent.MapRuntimeReset(mapId)
+        return true
+    }
+
     fun registerMap(map: MapDefinition) {
         maps[map.id] = map
         syncMapNpcSpawns(map)
@@ -1094,6 +1117,12 @@ class WorldSimulation(
                 pixelY = (p.position.pixelY + com.morgana.domain.script.PIXELS_PER_TILE / 2).toInt()
             )
         }
+
+        override fun playersOnMap(mapId: Int): List<ScriptPlayerSnapshot> =
+            players.values.filter { it.position.mapId == mapId }.sortedBy { it.id }.mapNotNull { getPlayer(it.id) }
+
+        override fun npcsOnMap(mapId: Int): List<ScriptNpcSnapshot> =
+            mapNpcs[mapId].orEmpty().sortedBy { it.instanceId }.mapNotNull { getNpc(mapId, it.instanceId) }
 
         override fun getNpc(mapId: Int, instanceId: String): ScriptNpcSnapshot? {
             val npc = mapNpcs[mapId]?.firstOrNull { it.instanceId == instanceId } ?: return null

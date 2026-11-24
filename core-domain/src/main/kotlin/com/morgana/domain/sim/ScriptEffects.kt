@@ -223,6 +223,8 @@ internal fun WorldSimulation.applyScriptEffectImpl(effect: ScriptEffect): List<W
         is ScriptEffect.ScheduleOnce ->
             scheduleOnce(effect.id, effect.atMillis, effect.name, effect.warningsSeconds, effect.data, effect.warningMessage, effect.fireMessage)
         is ScriptEffect.CancelSchedule -> cancelSchedule(effect.id)
+        is ScriptEffect.DespawnNpcs -> despawnNpcs(effect.mapId, effect.npcId, out)
+        is ScriptEffect.ResetMap -> resetMapRuntime(effect.mapId, out)
         is ScriptEffect.PlaceObject -> placeWorldObject(effect.kind, effect.mapId, effect.x, effect.y, effect.ownerId, null, effect.data, out)
         is ScriptEffect.RemoveObject -> removeWorldObject(effect.id, effect.reason, out)
         is ScriptEffect.DamageObject -> damageWorldObject(effect.id, effect.amount, out)

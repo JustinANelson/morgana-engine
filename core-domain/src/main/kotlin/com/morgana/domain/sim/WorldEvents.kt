@@ -25,6 +25,9 @@ sealed interface WorldSimulationEvent {
 
     data class NpcUpdated(val npc: MapNpcInstance) : WorldSimulationEvent
 
+    /** The monsters, loot, projectiles and resource nodes of [mapId] were removed or reset wholesale; the server resends the map to its players. */
+    data class MapRuntimeReset(val mapId: Int) : WorldSimulationEvent
+
     data class GroundItemsChanged(
         val mapId: Int,
         val items: List<MapGroundItem>
