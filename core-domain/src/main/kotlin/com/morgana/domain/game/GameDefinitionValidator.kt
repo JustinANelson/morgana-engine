@@ -73,6 +73,7 @@ object GameDefinitionValidator {
         checkClock(definition, ::error)
         checkSchedules(definition, ::error)
         checkTuning(definition, ::error)
+        checkClassPassives(definition, ::error)
         checkWeather(definition, ::error)
         checkSprites(definition, ::error)
         checkOnboarding(definition, ::error)
@@ -416,6 +417,25 @@ object GameDefinitionValidator {
             error("/clock", "dawnStartPermille <= dayStartPermille <= duskStartPermille <= nightStartPermille must hold (the day runs midnight, dawn, day, dusk, night)")
         }
         if (clock.nightLight !in 0..1000) error("/clock/nightLight", "must be between 0 and 1000")
+    }
+
+    private fun checkClassPassives(definition: GameDefinition, error: (String, String) -> Unit) {
+        val vitalIds = definition.vitals.map { it.id }.toSet()
+        for ((classId, p) in definition.classPassives) {
+            val at = "/classPassives/$classId"
+            if (classId <= 0) error(at, "class ids are 1 or more")
+            fun percent(field: String, value: Int) {
+                if (value !in ClassPassive.MIN_PERCENT..ClassPassive.MAX_PERCENT) error("$at/$field", "must be ${ClassPassive.MIN_PERCENT} to ${ClassPassive.MAX_PERCENT} (got $value)")
+            }
+            percent("damagePercent", p.damagePercent)
+            percent("armorPercent", p.armorPercent)
+            percent("healingPercent", p.healingPercent)
+            percent("moveSpeedPercent", p.moveSpeedPercent)
+            for ((vital, value) in p.vitalMaxPercent) {
+                if (vital !in vitalIds) error("$at/vitalMaxPercent/$vital", "is not a vital of this game")
+                percent("vitalMaxPercent/$vital", value)
+            }
+        }
     }
 
     private fun checkTuning(definition: GameDefinition, error: (String, String) -> Unit) {

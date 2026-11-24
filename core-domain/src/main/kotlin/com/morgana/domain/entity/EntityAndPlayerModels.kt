@@ -194,7 +194,9 @@ data class CharacterState(
         val newVitals = mutableMapOf<String, VitalState>()
         for (vDef in game.definition.vitals) {
             val bonus = equipment.totalVitalMaxBonuses(vDef.id, itemCatalog, game.definition.gearRules)
-            val maxVal = game.vitalMax(vDef.id, level, eff, bonus).toInt().coerceAtLeast(if (vDef.role == VitalRole.LIFE) 1 else 0)
+            val baseMax = game.vitalMax(vDef.id, level, eff, bonus).toInt()
+            val maxVal = com.morgana.domain.game.ClassPassive.scale(baseMax, game.definition.passiveOf(classId).vitalMaxPercent[vDef.id] ?: 0)
+                .coerceAtLeast(if (vDef.role == VitalRole.LIFE) 1 else 0)
             val existingCur = vitals[vDef.id]?.cur
             val curVal = if (refill || existingCur == null) maxVal else existingCur.coerceIn(0, maxVal)
             newVitals[vDef.id] = VitalState(cur = curVal, max = maxVal)

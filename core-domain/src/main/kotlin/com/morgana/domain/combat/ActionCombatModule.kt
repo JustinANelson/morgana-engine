@@ -17,6 +17,7 @@ import com.morgana.domain.sim.WorldSimulation
 import com.morgana.domain.sim.WorldSimulationEvent
 import com.morgana.domain.sim.applyDamageToNpc
 import com.morgana.domain.sim.isHostileNpc
+import com.morgana.domain.sim.rollOffHandStrike
 import com.morgana.domain.spatial.Direction
 import com.morgana.domain.stats.ActiveStatusEffect
 import com.morgana.domain.stats.StatusEffectType
@@ -276,8 +277,7 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
     private fun damageOf(sim: WorldSimulation, player: CharacterState, npc: MapNpcInstance?, hit: SkillHit): Pair<Int, Boolean> {
         if (hit.damagePercent <= 0) return 0 to false
         val attrs = player.effectiveAttributes(sim.game, sim.items)
-        val def = npc?.let { sim.npcs[it.npcId] }
-        val defender = sim.game.definition.attributes.associate { a -> a.id to (def?.attributes?.get(a.id) ?: a.base) }
+        val defender = defenderAttributes(sim, npc)
         val critBp = (sim.game.critChanceBp(attrs).toInt() + player.equipment.totalCritBonusBp(sim.items, sim.game.definition.gearRules) + com.morgana.domain.game.BuildBonuses.critChanceBpBonus(player, sim.game.definition)).coerceIn(0, 10_000)
         val crit = sim.rng.rollBasisPoints(critBp)
         val weapon = weaponDamage(sim, player)
@@ -289,9 +289,24 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         return (raw * hit.damagePercent / 100L).toInt().coerceAtLeast(1) to crit
     }
 
+    private fun defenderAttributes(sim: WorldSimulation, npc: MapNpcInstance?): Map<String, Int> {
+        val def = npc?.let { sim.npcs[it.npcId] }
+        return sim.game.definition.attributes.associate { a -> a.id to (def?.attributes?.get(a.id) ?: a.base) }
+    }
+
     private fun hitNpc(sim: WorldSimulation, player: CharacterState, npc: MapNpcInstance, hit: SkillHit, st: ActionState, out: MutableList<WorldSimulationEvent>) {
         val (damage, crit) = damageOf(sim, player, npc, hit)
         if (damage > 0) sim.applyDamageToNpc(player, npc, damage, crit, out)
+        // Dual-wielding works under action combat as it does under realtime: each landed melee hit may be followed by a second
+        // strike from the off-hand weapon. No random number is drawn unless a usable off-hand weapon is worn.
+        if (damage > 0 && hit.damageKind == SkillDamageKind.MELEE) {
+            val attacker = sim.players[player.id] ?: player
+            sim.rollOffHandStrike(player.id, attacker.effectiveAttributes(sim.game, sim.items), defenderAttributes(sim, npc), 0L)?.let { offDamage ->
+                sim.mapNpcs[npc.mapId]?.firstOrNull { it.instanceId == npc.instanceId && it.isAlive }?.let { alive ->
+                    sim.applyDamageToNpc(sim.players[player.id] ?: player, alive, offDamage, false, out)
+                }
+            }
+        }
         val list = sim.mapNpcs[npc.mapId] ?: return
         val idx = list.indexOfFirst { it.instanceId == npc.instanceId }
         if (idx < 0) return

@@ -55,7 +55,7 @@ internal fun WorldSimulation.movePlayerImpl(
     if (mode == MovementMode.SUB_TILE && (deltaPixelsX != 0f || deltaPixelsY != 0f)) {
         val sprintRules = game.definition.sprint?.takeIf { it.enabled }
         val hasStamina = sprintRules == null || (player.vitals[sprintRules.staminaVitalId]?.cur ?: 0) > 0
-        val (clampedDx, clampedDy, sprinting) = MovementRules.limitStep(deltaPixelsX, deltaPixelsY, sprintRules?.speedPercent, hasStamina, player.equipment.mountSpeedPercent(items))
+        val (clampedDx, clampedDy, sprinting) = MovementRules.limitStep(deltaPixelsX, deltaPixelsY, sprintRules?.speedPercent, hasStamina, player.equipment.mountSpeedPercent(items).let { mount -> com.morgana.domain.game.ClassPassive.scale(mount, game.definition.passiveOf(player.classId).moveSpeedPercent) })
         if (sprinting && sprintRules != null && currentTick % sprintRules.stepsPerStamina == 0L) sprintDrainVitalId = sprintRules.staminaVitalId
         val nextPx = player.position.pixelX + clampedDx
         val nextPy = player.position.pixelY + clampedDy

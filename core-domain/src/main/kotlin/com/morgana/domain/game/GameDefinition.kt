@@ -92,8 +92,13 @@ data class GameDefinition(
     /** Wall-clock events (a weekly reset, a daily bonus, a launch) run by the `scheduler` system. See [ScheduleDefinition]. */
     val schedules: List<ScheduleDefinition> = emptyList(),
     /** Gameplay numbers a game may change without engine code (harvest cooldown, ranges, `+` level values, party size...). See [GameplayTuning]. */
-    val tuning: GameplayTuning? = null
+    val tuning: GameplayTuning? = null,
+    /** A small standing bonus per class id (maximum vitals, damage, armour, healing, movement speed). See [ClassPassive]. */
+    val classPassives: Map<Int, ClassPassive> = emptyMap()
 ) {
+    /** The passive of class [classId], or none. */
+    fun passiveOf(classId: Int): ClassPassive = classPassives[classId] ?: ClassPassive.NONE
+
     /** The equipment slots this game has, in display order: [equipmentSlots] or the classic nine. */
     val slots: List<EquipmentSlotDefinition>
         get() = equipmentSlots ?: EquipmentSlotDefinition.CLASSIC

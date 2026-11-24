@@ -103,6 +103,40 @@ class ActionCombatModuleTest {
     }
 
     @Test
+    fun `dual-wielding works under action combat, a landed melee hit is followed by the off-hand strike`() {
+        val offhand = com.morgana.domain.item.ItemDefinition(id = 77, name = "Dagger", type = com.morgana.domain.item.ItemType.WEAPON, attackDamage = 40)
+        fun damageOfOneCut(dualWield: com.morgana.domain.game.DualWieldDefinition?, wearOffhand: Boolean): Int {
+            val definition = MorganaClassic.definition.copy(dualWield = dualWield)
+            val sim = WorldSimulation(SeededRandomSource(11L), game = com.morgana.domain.game.CompiledGame.compile(definition))
+            sim.modules = ModuleFlags.ALL_ENABLED
+            sim.combat = ActionCombatModule()
+            sim.npcs[9] = dummy
+            listOf(cut, backhand, finisher, dash, ward, riposte).forEach { sim.actionSkills[it.id] = it }
+            sim.weaponSets[1] = blades
+            sim.items[77] = offhand
+            sim.registerMap(MapDefinition(id = 1, name = "Arena", width = 16, height = 12, npcSpawns = listOf(MapNpcSpawnSlot(0, 9, 7, 5))))
+            val worn = if (wearOffhand) mapOf(com.morgana.domain.item.EquipmentSlot.SHIELD to com.morgana.domain.item.ItemStack(77)) else emptyMap()
+            sim.spawnOrUpdatePlayer(
+                CharacterState(
+                    id = "ann", accountId = "a", name = "Ann", level = 10, position = WorldPosition.fromTile(1, 6, 5, Direction.RIGHT),
+                    equipment = com.morgana.domain.item.EquipmentLoadout(worn)
+                )
+            )
+            val full = sim.dummyHp()
+            sim.press("LMB")
+            sim.ticks(6)
+            return full - sim.dummyHp()
+        }
+        val alwaysStrikes = com.morgana.domain.game.DualWieldDefinition(strikeChancePercent = 100, damagePercent = 100)
+        val plain = damageOfOneCut(dualWield = null, wearOffhand = false)
+        assertTrue(plain > 0)
+        assertEquals(plain, damageOfOneCut(alwaysStrikes, wearOffhand = false), "dual-wield on but nothing in the off-hand: unchanged")
+        assertEquals(plain, damageOfOneCut(null, wearOffhand = true), "an off-hand weapon in a game without dual-wield adds nothing")
+        assertTrue(damageOfOneCut(alwaysStrikes, wearOffhand = true) > plain, "the off-hand strike lands after the cut")
+        assertEquals(plain, damageOfOneCut(com.morgana.domain.game.DualWieldDefinition(strikeChancePercent = 0), wearOffhand = true), "a 0% strike chance never lands")
+    }
+
+    @Test
     fun `an early press is buffered and fires at the cancel point, a late one only starts a fresh entry`() {
         val sim = world()
         sim.press("LMB")

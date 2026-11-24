@@ -522,7 +522,7 @@ internal fun WorldSimulation.playerAttackImpl(characterId: String): List<WorldSi
             }
             val isCrit = rng.rollBasisPoints(game.critChanceBp(attackerAttrs).toInt())
             val defAttrs = targetPlayer.effectiveAttributes(game, items)
-            val defArmor = targetPlayer.equipment.totalArmorDefense(items, game.definition.gearRules)
+            val defArmor = armorOf(targetPlayer)
             val rawDmg = game.meleeDamage(
                 attacker = attackerAttrs,
                 defender = defAttrs,
@@ -1073,7 +1073,9 @@ internal fun WorldSimulation.applySpellEffectToPlayer(
         basePower = spell.basePower.toLong(),
         scales = spell.scales,
         heals = spell.isHealing
-    ).toInt().coerceAtLeast(1)
+    ).toInt().coerceAtLeast(1).let { raw ->
+        if (spell.isHealing) com.morgana.domain.game.ClassPassive.scale(raw, game.definition.passiveOf(caster.classId).healingPercent).coerceAtLeast(1) else raw
+    }
     if (spell.isHealing && power > 0) {
         val lifeId = game.lifeVitalId
         val curLife = updated.vitals[lifeId]
@@ -1181,10 +1183,11 @@ internal fun WorldSimulation.isHostileNpc(npc: MapNpcInstance): Boolean {
 internal fun WorldSimulation.applyDamageToNpc(
     attacker: CharacterState,
     npc: MapNpcInstance,
-    damage: Int,
+    rawDamage: Int,
     isCrit: Boolean,
     out: MutableList<WorldSimulationEvent>
 ) {
+    val damage = withClassDamage(attacker, rawDamage)
     val list = mapNpcs[npc.mapId] ?: return
     val idx = list.indexOfFirst { it.instanceId == npc.instanceId }
     if (idx < 0) return
@@ -1480,13 +1483,22 @@ internal fun WorldSimulation.grantXpToCharacter(characterId: String, amount: Lon
     }
 }
 
+/** [damage] a character is about to deal, raised or lowered by their class passive (see `ClassPassive.damagePercent`). */
+internal fun WorldSimulation.withClassDamage(attacker: CharacterState, damage: Int): Int =
+    com.morgana.domain.game.ClassPassive.scale(damage, game.definition.passiveOf(attacker.classId).damagePercent).coerceAtLeast(if (damage > 0) 1 else 0)
+
+/** The armour a character's gear gives, with their class passive applied (see `ClassPassive.armorPercent`). */
+internal fun WorldSimulation.armorOf(player: CharacterState): Int =
+    com.morgana.domain.game.ClassPassive.scale(player.equipment.totalArmorDefense(items, game.definition.gearRules), game.definition.passiveOf(player.classId).armorPercent)
+
 internal fun WorldSimulation.applyPvpDamage(
     attacker: CharacterState,
     defender: CharacterState,
-    damage: Int,
+    rawDamage: Int,
     isCrit: Boolean,
     out: MutableList<WorldSimulationEvent>
 ) {
+    val damage = withClassDamage(attacker, rawDamage)
     val map = maps[defender.position.mapId] ?: return
     if (!map.moral.pvpEnabled) return
     if (!canAttackPlayer(attacker, defender)) return

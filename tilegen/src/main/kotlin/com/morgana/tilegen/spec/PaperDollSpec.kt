@@ -8,6 +8,7 @@ import com.morgana.tilegen.sprite.BodyAncestry
 import com.morgana.tilegen.sprite.CustomPixelAttachment
 import com.morgana.tilegen.sprite.Direction8
 import com.morgana.tilegen.sprite.FeetStyle
+import com.morgana.tilegen.sprite.GloveStyle
 import com.morgana.tilegen.sprite.HairStyle
 import com.morgana.tilegen.sprite.HeadgearKind
 import com.morgana.tilegen.sprite.LegsStyle
@@ -145,6 +146,7 @@ data class PaperDollSpec(
     val shield: ShieldKind? = null,
     val legsStyle: LegsStyle? = null,
     val feetStyle: FeetStyle? = null,
+    val gloves: GloveStyle? = null,
     val torsoStyle: TorsoStyle? = null,
     val robeHem: RobeHem? = null,
     val includeCape: Boolean? = null,
@@ -183,6 +185,7 @@ data class PaperDollSpec(
             includeCape = includeCape ?: PaperDollLoadout.defaultCapeFor(job),
             legsStyle = legsStyle ?: PaperDollLoadout.defaultLegsFor(job),
             feetStyle = feetStyle ?: PaperDollLoadout.defaultFeetFor(job),
+            gloves = gloves ?: GloveStyle.NONE,
             torsoStyle = torsoStyle ?: PaperDollLoadout.defaultTorsoFor(job),
             robeHem = robeHem ?: RobeHem.STRAIGHT
         )
@@ -212,6 +215,7 @@ object PaperDollSpecJson {
         val shield = obj.optNullableEnum<ShieldKind>("shield", path)
         val legsStyle = obj.optNullableEnum<LegsStyle>("legsStyle", path)
         val feetStyle = obj.optNullableEnum<FeetStyle>("feetStyle", path)
+        val gloves = obj.optNullableEnum<GloveStyle>("gloves", path)
         val torsoStyle = obj.optNullableEnum<TorsoStyle>("torsoStyle", path)
         val robeHem = obj.optNullableEnum<RobeHem>("robeHem", path)
         val includeCape = obj.optNullableBool("includeCape", path)
@@ -251,6 +255,7 @@ object PaperDollSpecJson {
             shield = shield,
             legsStyle = legsStyle,
             feetStyle = feetStyle,
+            gloves = gloves,
             torsoStyle = torsoStyle,
             robeHem = robeHem,
             includeCape = includeCape,
@@ -280,6 +285,7 @@ object PaperDollSpecJson {
         spec.legsStyle?.let { append("  \"legsStyle\": \"${it.name.lowercase()}\",\n") }
         spec.robeHem?.let { append("  \"robeHem\": \"${it.name.lowercase()}\",\n") }
         spec.feetStyle?.let { append("  \"feetStyle\": \"${it.name.lowercase()}\",\n") }
+        spec.gloves?.let { append("  \"gloves\": \"${it.name.lowercase()}\",\n") }
         spec.includeCape?.let { append("  \"includeCape\": $it,\n") }
         spec.theme?.let { t ->
             append("  \"theme\": ")

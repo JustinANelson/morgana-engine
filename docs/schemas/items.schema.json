@@ -225,7 +225,8 @@
                                 "HEAD",
                                 "MAIN_HAND",
                                 "OFF_HAND",
-                                "ACCESSORY"
+                                "ACCESSORY",
+                                "HANDS"
                             ]
                         },
                         {
@@ -263,7 +264,8 @@
                             "HEAD",
                             "MAIN_HAND",
                             "OFF_HAND",
-                            "ACCESSORY"
+                            "ACCESSORY",
+                            "HANDS"
                         ]
                     }
                 },

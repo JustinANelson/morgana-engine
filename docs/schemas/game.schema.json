@@ -375,6 +375,12 @@
                             "type": "null"
                         }
                     ]
+                },
+                "classPassives": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/$defs/com.morgana.domain.game.ClassPassive"
+                    }
                 }
             },
             "required": [
@@ -2104,6 +2110,31 @@
                     "type": "integer"
                 },
                 "actionTargetRadiusPixels": {
+                    "type": "integer"
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.ClassPassive": {
+            "type": "object",
+            "properties": {
+                "vitalMaxPercent": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "damagePercent": {
+                    "type": "integer"
+                },
+                "armorPercent": {
+                    "type": "integer"
+                },
+                "healingPercent": {
+                    "type": "integer"
+                },
+                "moveSpeedPercent": {
                     "type": "integer"
                 }
             },

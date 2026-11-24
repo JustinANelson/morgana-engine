@@ -246,7 +246,10 @@ internal object SwingArt {
         sleeve: PaletteRamp,
         cuff: PaletteRamp,
         skin: PaletteRamp,
-        tone: Float
+        tone: Float,
+        glovesImg: TileImage? = null,
+        glove: PaletteRamp? = null,
+        gloveStyle: GloveStyle = GloveStyle.NONE
     ) {
         val steep = kotlin.math.abs(handY - shoulderY) >= kotlin.math.abs(handX - shoulderX)
         val ox = if (steep) 1 else 0
@@ -260,6 +263,27 @@ internal object SwingArt {
         // Hand: a 2 x 2 fist on the body layer.
         for (dy in 0..1) for (dx in 0..1) {
             handsImg.setPixel((handX + dx - 0).coerceIn(1, handsImg.width - 2), (handY + dy - 0).coerceIn(1, handsImg.height - 2), skin.sample(if (dx == 0 && dy == 0) 0.74f else 0.5f))
+        }
+        // A glove covers the same 2 x 2 fist; a gauntlet's cuff runs back up the last stretch of the arm, a wrap gets a light stripe.
+        if (glovesImg != null && glove != null) {
+            for (dy in 0..1) for (dx in 0..1) {
+                glovesImg.setPixel((handX + dx).coerceIn(1, glovesImg.width - 2), (handY + dy).coerceIn(1, glovesImg.height - 2), glove.sample(if (dx == 0 && dy == 0) 0.78f else 0.56f))
+            }
+            when (gloveStyle) {
+                GloveStyle.GAUNTLET -> {
+                    val fromX = handX - ((handX - shoulderX) * 0.3f).toInt()
+                    val fromY = handY - ((handY - shoulderY) * 0.3f).toInt()
+                    PixelForm.line(glovesImg, fromX, fromY, handX, handY) { t -> glove.sample(0.4f + 0.2f * t) }
+                    PixelForm.line(glovesImg, fromX + ox, fromY + oy, handX + ox, handY + oy) { t -> glove.sample(0.3f + 0.2f * t) }
+                }
+                GloveStyle.LEATHER -> {
+                    val wx = handX - if (handX >= shoulderX) 1 else -1
+                    val wy = handY - if (handY >= shoulderY) 1 else -1
+                    glovesImg.setPixel(wx.coerceIn(1, glovesImg.width - 2), wy.coerceIn(1, glovesImg.height - 2), glove.sample(0.42f))
+                }
+                GloveStyle.WRAPS -> glovesImg.setPixel(handX.coerceIn(1, glovesImg.width - 2), (handY + 1).coerceIn(1, glovesImg.height - 2), glove.sample(0.92f))
+                GloveStyle.NONE -> Unit
+            }
         }
     }
 }

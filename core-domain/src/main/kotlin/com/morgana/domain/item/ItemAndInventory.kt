@@ -46,8 +46,9 @@ value class EquipmentSlot(val id: String) {
         "SHIELD" -> PaperdollSlot.OFF_HAND
         "HELMET" -> PaperdollSlot.HEAD
         "ARMOR" -> PaperdollSlot.TORSO
+        "GLOVES" -> PaperdollSlot.HANDS
         "BOOTS" -> PaperdollSlot.FEET
-        "AMMO" -> PaperdollSlot.BACK
+        "AMMO", "CLOAK" -> PaperdollSlot.BACK
         else -> PaperdollSlot.ACCESSORY
     }
 
@@ -86,7 +87,10 @@ enum class PaperdollSlot {
     HEAD,
     MAIN_HAND,
     OFF_HAND,
-    ACCESSORY
+    ACCESSORY,
+
+    /** Gloves and gauntlets: drawn over the body's skin hands and the torso's sleeves, under hair, headgear and held weapons. */
+    HANDS
 }
 
 /**
@@ -114,11 +118,12 @@ object PaperdollComposer {
         PaperdollSlot.FEET to 2,
         PaperdollSlot.LEGS to 3,
         PaperdollSlot.TORSO to 4,
-        PaperdollSlot.HAIR to 5,
-        PaperdollSlot.ACCESSORY to 6,
-        PaperdollSlot.HEAD to 7,
-        PaperdollSlot.OFF_HAND to 8,
-        PaperdollSlot.MAIN_HAND to 9
+        PaperdollSlot.HANDS to 5,
+        PaperdollSlot.HAIR to 6,
+        PaperdollSlot.ACCESSORY to 7,
+        PaperdollSlot.HEAD to 8,
+        PaperdollSlot.OFF_HAND to 9,
+        PaperdollSlot.MAIN_HAND to 10
     )
 
     // Facing LEFT the main hand is the far hand, so it sits behind the body; RIGHT mirrors it with the off-hand.
@@ -129,10 +134,11 @@ object PaperdollComposer {
         PaperdollSlot.FEET to 3,
         PaperdollSlot.LEGS to 4,
         PaperdollSlot.TORSO to 5,
-        PaperdollSlot.HAIR to 6,
-        PaperdollSlot.ACCESSORY to 7,
-        PaperdollSlot.HEAD to 8,
-        PaperdollSlot.OFF_HAND to 9
+        PaperdollSlot.HANDS to 6,
+        PaperdollSlot.HAIR to 7,
+        PaperdollSlot.ACCESSORY to 8,
+        PaperdollSlot.HEAD to 9,
+        PaperdollSlot.OFF_HAND to 10
     )
 
     private val DRAW_ORDER_RIGHT: Map<PaperdollSlot, Int> = mapOf(
@@ -142,10 +148,11 @@ object PaperdollComposer {
         PaperdollSlot.FEET to 3,
         PaperdollSlot.LEGS to 4,
         PaperdollSlot.TORSO to 5,
-        PaperdollSlot.HAIR to 6,
-        PaperdollSlot.ACCESSORY to 7,
-        PaperdollSlot.HEAD to 8,
-        PaperdollSlot.MAIN_HAND to 9
+        PaperdollSlot.HANDS to 6,
+        PaperdollSlot.HAIR to 7,
+        PaperdollSlot.ACCESSORY to 8,
+        PaperdollSlot.HEAD to 9,
+        PaperdollSlot.MAIN_HAND to 10
     )
 
     // When facing UP, held gear draws behind the body/torso while capes/quivers (BACK) draw over the back.
@@ -156,10 +163,11 @@ object PaperdollComposer {
         PaperdollSlot.FEET to 3,
         PaperdollSlot.LEGS to 4,
         PaperdollSlot.TORSO to 5,
-        PaperdollSlot.HAIR to 6,
-        PaperdollSlot.ACCESSORY to 7,
-        PaperdollSlot.HEAD to 8,
-        PaperdollSlot.BACK to 9
+        PaperdollSlot.HANDS to 6,
+        PaperdollSlot.HAIR to 7,
+        PaperdollSlot.ACCESSORY to 8,
+        PaperdollSlot.HEAD to 9,
+        PaperdollSlot.BACK to 10
     )
 
     /** Returns draw order rank (`0` drawn first / furthest back) for [slot] when facing [direction]. */

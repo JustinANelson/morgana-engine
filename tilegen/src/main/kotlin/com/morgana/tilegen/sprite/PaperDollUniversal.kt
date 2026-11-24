@@ -21,6 +21,7 @@ enum class PaperDollSlot(val layerName: String) {
     LEGS("legs"),
     FEET("feet"),
     TORSO("torso"),
+    HANDS("hands"),
     WAIST_ATTACHMENT("waist_attachment"),
     SHOULDER_ATTACHMENT("shoulder_attachment"),
     HAIR_FRONT("hair_front"),
@@ -55,6 +56,7 @@ enum class PaperDollSlot(val layerName: String) {
                     add(LEGS)
                     add(FEET)
                     add(TORSO)
+                    add(HANDS)
                     add(WAIST_ATTACHMENT)
                     add(SHOULDER_ATTACHMENT)
                     add(EYES)
@@ -81,6 +83,7 @@ enum class PaperDollSlot(val layerName: String) {
                     LEGS,
                     FEET,
                     TORSO,
+                    HANDS,
                     WAIST_ATTACHMENT,
                     SHOULDER_ATTACHMENT,
                     EYES,
@@ -101,6 +104,7 @@ enum class PaperDollSlot(val layerName: String) {
                     LEGS,
                     FEET,
                     TORSO,
+                    HANDS,
                     WAIST_ATTACHMENT,
                     SHOULDER_ATTACHMENT,
                     EYES,
@@ -120,6 +124,7 @@ enum class PaperDollSlot(val layerName: String) {
                     LEGS,
                     FEET,
                     TORSO,
+                    HANDS,
                     WAIST_ATTACHMENT,
                     SHOULDER_ATTACHMENT,
                     EYES,
@@ -215,6 +220,23 @@ enum class TorsoStyle {
     TRAVELER,
     BRIGANDINE,
     SKYRENDER
+}
+
+/**
+ * Hand covering for the [PaperDollSlot.HANDS] layer. [NONE] draws no layer at all (bare hands are part of the body layer), so a
+ * sheet without gloves is exactly what it was before this layer existed.
+ */
+enum class GloveStyle {
+    NONE,
+
+    /** Close-fitting leather gloves: a fist and a wrist band. */
+    LEATHER,
+
+    /** Armoured gauntlets: a fist and a cuff running up the forearm. */
+    GAUNTLET,
+
+    /** Cloth hand wraps: a fist with banded stripes. */
+    WRAPS
 }
 
 /**

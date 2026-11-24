@@ -158,4 +158,28 @@ class PaperdollV2DomainTest {
         assertEquals(null, com.morgana.domain.item.LootRules(rarities = listOf(tier("normal"))).topRarityId)
         assertEquals(null, com.morgana.domain.item.LootRules().topRarityId)
     }
+
+    @Test
+    fun `gloves have their own layer over the torso and under hair, headgear and held weapons in every facing`() {
+        assertEquals(PaperdollSlot.HANDS, EquipmentSlot("GLOVES").defaultPaperdollSlot())
+        assertEquals(PaperdollSlot.BACK, EquipmentSlot("CLOAK").defaultPaperdollSlot(), "a cloak hangs on the back like a cape")
+        assertEquals(PaperdollSlot.ACCESSORY, EquipmentSlot("CHARM").defaultPaperdollSlot())
+        for (facing in listOf(Direction.DOWN, Direction.UP, Direction.LEFT, Direction.RIGHT)) {
+            val torso = PaperdollComposer.drawOrderRank(PaperdollSlot.TORSO, facing)
+            val hands = PaperdollComposer.drawOrderRank(PaperdollSlot.HANDS, facing)
+            assertTrue(hands > torso, "$facing: gloves over the torso's sleeves")
+            for (above in listOf(PaperdollSlot.HAIR, PaperdollSlot.HEAD, PaperdollSlot.ACCESSORY)) {
+                assertTrue(hands < PaperdollComposer.drawOrderRank(above, facing), "$facing: gloves under $above")
+            }
+            assertEquals(PaperdollSlot.entries.size, PaperdollSlot.entries.map { PaperdollComposer.drawOrderRank(it, facing) }.toSet().size, "$facing: every slot has its own rank")
+        }
+        val layers = listOf(
+            PaperdollLayer(PaperdollSlot.HANDS, spriteId = 61), PaperdollLayer(PaperdollSlot.TORSO, spriteId = 31), PaperdollLayer(PaperdollSlot.BODY, spriteId = 1),
+            PaperdollLayer(PaperdollSlot.MAIN_HAND, spriteId = 9)
+        )
+        assertEquals(
+            listOf(PaperdollSlot.BODY, PaperdollSlot.TORSO, PaperdollSlot.HANDS, PaperdollSlot.MAIN_HAND),
+            PaperdollComposer.composeLayers(layers, Direction.DOWN).map { it.slot }
+        )
+    }
 }

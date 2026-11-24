@@ -148,7 +148,9 @@ data class PaperDollLoadout(
     val legsStyle: LegsStyle = defaultLegsFor(job),
     val feetStyle: FeetStyle = defaultFeetFor(job),
     val torsoStyle: TorsoStyle = defaultTorsoFor(job),
-    val robeHem: RobeHem = RobeHem.STRAIGHT
+    val robeHem: RobeHem = RobeHem.STRAIGHT,
+    /** Gloves drawn on their own [PaperDollSlot.HANDS] layer; [GloveStyle.NONE] (the default) makes no such layer. */
+    val gloves: GloveStyle = GloveStyle.NONE
 ) {
     /**
      * Returns the effective [PaperDollTheme] with any explicit palette overrides applied.
@@ -751,6 +753,7 @@ class PaperDollSpriteGenerator(
         val legsLayer = TileImage(32, nativeH)
         val feetLayer = TileImage(32, nativeH)
         val torsoLayer = TileImage(32, nativeH)
+        val glovesLayer = TileImage(32, nativeH)
         val waistLayer = TileImage(32, nativeH)
         val shoulderLayer = TileImage(32, nativeH)
         val hairBackLayer = TileImage(32, nativeH)
@@ -779,7 +782,8 @@ class PaperDollSpriteGenerator(
         // 4. Legs, Feet & Torso/Armor layers
         drawLegsAndFeet32(legsLayer, feetLayer, cx, legTop, baseDir, stride, pose, loadout, theme)
         drawTorso32(torsoLayer, cx, torsoTop, legTop, baseDir, stride, pose, loadout, theme, bodyLayer,
-            swing = if (action == PaperDollAction.SLASH || action == PaperDollAction.HARVEST || action == PaperDollAction.CAST) swing else null)
+            swing = if (action == PaperDollAction.SLASH || action == PaperDollAction.HARVEST || action == PaperDollAction.CAST) swing else null,
+            glovesImg = if (loadout.gloves != GloveStyle.NONE) glovesLayer else null)
 
         // 5. Waist & Shoulder Attachments
         for (att in loadout.attachments) {
@@ -891,6 +895,7 @@ class PaperDollSpriteGenerator(
             PaperDollSlot.MAIN_HAND to withTrail(trailLayer, outline(weaponLayer)),
             PaperDollSlot.AURA_FRONT to auraFrontLayer
         )
+        if (loadout.gloves != GloveStyle.NONE) rawMap[PaperDollSlot.HANDS] = outline(glovesLayer)
         return rawMap to sockets
     }
 
@@ -1244,8 +1249,10 @@ class PaperDollSpriteGenerator(
         loadout: PaperDollLoadout,
         theme: PaperDollTheme,
         handsImg: TileImage = img,
-        swing: Swing? = null
+        swing: Swing? = null,
+        glovesImg: TileImage? = null
     ) {
+        val gloveRamp = glovePaletteFor(loadout.gloves, theme)
         val chunky = img.height == 48 || theme.proportions == PaperDollProportions.CHUNKY
         val outfit = theme.outfitPalette
         val accent = theme.accentPalette
@@ -1331,7 +1338,7 @@ class PaperDollSpriteGenerator(
         val weaponSide = Swing.side(dir)
         fun swingArm(shoulderX: Int, tone: Float) {
             val (hx, hy) = swing!!.hand(dir, cx, torsoTop)
-            SwingArt.drawArm(img, if (pose.action == PaperDollAction.HARVEST) img else handsImg, shoulderX, torsoTop + 1, hx.coerceIn(1, 29), hy.coerceIn(1, armMaxY), outfit, accent, skin, tone)
+            SwingArt.drawArm(img, if (pose.action == PaperDollAction.HARVEST) img else handsImg, shoulderX, torsoTop + 1, hx.coerceIn(1, 29), hy.coerceIn(1, armMaxY), outfit, accent, skin, tone, glovesImg, gloveRamp, loadout.gloves)
             if (pose.action == PaperDollAction.HARVEST && pose.phase >= 1) {
                 // The thing being picked up: on the ground in the hand while grabbing, then held at the chest with a glint.
                 val ix = hx.coerceIn(1, 28)
@@ -1361,6 +1368,17 @@ class PaperDollSpriteGenerator(
                     // Hands go on the body layer so tinted torso gear does not tint them.
                     fillRectShaded(handsImg, sx.coerceIn(1, 29), (top + 5).coerceAtMost(armMaxY), sleeveW, 2, skin, 0.62f)
                     handsImg.setPixel(sx.coerceIn(1, 29), (top + 6).coerceAtMost(armMaxY), hand)
+                    // Gloves cover exactly the pixels the skin hand covers; gauntlets also run up the forearm over the cuff.
+                    if (glovesImg != null && gloveRamp != null) {
+                        val gx = sx.coerceIn(1, 29)
+                        fillRectShaded(glovesImg, gx, (top + 5).coerceAtMost(armMaxY), sleeveW, 2, gloveRamp, 0.66f)
+                        when (loadout.gloves) {
+                            GloveStyle.GAUNTLET -> fillRectShaded(glovesImg, gx, (top + 3).coerceAtMost(armMaxY), sleeveW, 2, gloveRamp, 0.5f)
+                            GloveStyle.LEATHER -> fillRectShaded(glovesImg, gx, (top + 4).coerceAtMost(armMaxY), sleeveW, 1, gloveRamp, 0.44f)
+                            GloveStyle.WRAPS -> glovesImg.setPixel(gx, (top + 5).coerceAtMost(armMaxY), gloveRamp.sample(0.9f))
+                            GloveStyle.NONE -> Unit
+                        }
+                    }
                 }
                 if (swing != null && weaponSide > 0) {
                     arm(tx0 - sleeveW, ly, 0.76f, skin.mid)
@@ -1375,13 +1393,28 @@ class PaperDollSpriteGenerator(
             } else {
                 fillRectShaded(img, (tx0 - sleeveW).coerceIn(1, 29), ly.coerceIn(1, armMaxY), sleeveW, 5, accent, 0.78f)
                 fillRectShaded(img, (tx1 + 1).coerceIn(1, 29), ry.coerceIn(1, armMaxY), sleeveW, 5, accent, 0.52f)
+                if (glovesImg != null && gloveRamp != null) {
+                    fillRectShaded(glovesImg, (tx0 - sleeveW).coerceIn(1, 29), (ly + 3).coerceIn(1, armMaxY), sleeveW, 2, gloveRamp, 0.7f)
+                    fillRectShaded(glovesImg, (tx1 + 1).coerceIn(1, 29), (ry + 3).coerceIn(1, armMaxY), sleeveW, 2, gloveRamp, 0.5f)
+                }
             }
         } else if (swing != null && rmxp) {
             swingArm(cx - 1, 0.7f)
         } else {
             val ay = if (raiseRight) torsoTop - 2 else torsoTop + 2
             fillRectShaded(img, (cx - 1 + armSwing).coerceIn(1, 28), ay.coerceIn(1, armMaxY), sleeveW + 1, 5, accent, 0.76f)
+            if (glovesImg != null && gloveRamp != null) {
+                fillRectShaded(glovesImg, (cx - 1 + armSwing).coerceIn(1, 28), (ay + 3).coerceIn(1, armMaxY), sleeveW + 1, 2, gloveRamp, 0.66f)
+            }
         }
+    }
+
+    /** The colours of a glove style, from the character's own palettes so gloves sit with the rest of the outfit; null for none. */
+    private fun glovePaletteFor(style: GloveStyle, theme: PaperDollTheme): PaletteRamp? = when (style) {
+        GloveStyle.NONE -> null
+        GloveStyle.LEATHER -> PalettePresets.WARM_TIMBER
+        GloveStyle.GAUNTLET -> PalettePresets.DARK_IRON
+        GloveStyle.WRAPS -> PalettePresets.PALE_LIMESTONE
     }
 
     private fun drawAnimeEye(img: TileImage, ex: Int, ey: Int, iris: Int, catchlight: Int, closed: Boolean) {
