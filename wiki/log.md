@@ -2,6 +2,8 @@
 
 ## 2026-11-24
 
+* **Change** - **Content reloads are per file, with a status file for authors** ([hot reload](/content/hot_reload.md)): `ContentSalvage` applies every valid file and keeps the live version of each document with an error (or leaves a new bad one out) instead of rejecting the whole reload; `<game>/.reload-status.json` reports applied/rejected files with JSON-pointer errors; the watcher ignores dot-files. Roadmap items 1, 2 and 6 of live hot-loading. `Phase11ContentReloadTest` now expects partial application.
+
 * **Add** - **Clients are told about world objects** ([world state](/systems/world_state.md), [server packets](/protocol/server_packets.md)): capability `world_objects` (default), `MapStateSnapshot.worldObjects`, `s_world_objects` (`WorldObjectsUpdated`), client state, a renderer pass (sprite or coloured block, damage bar, claim reach overlay), `MorganaWorldCoordinator.placeWorldObject`/`removeWorldObject`. No version bump (new packet and field). Tests: `WorldObjectsPacketTest`, `WorldObjectsClientStateTest`. Trevena's engine item S4 (placement preview and a claim window still to build).
 
 * **Add** - **Roadmap: live hot-loading of generated content, before any map authoring** (`docs/DESIGN.md` Next; [hot reload](/content/hot_reload.md)): per-file validation, a reload feedback file for LLM authors, watching `game.json`, scripts and assets, live asset delivery to clients, first-class map add/remove/update, partial-write safety. Records what `ContentWatcher` already does and the gaps.

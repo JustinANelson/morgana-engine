@@ -57,7 +57,8 @@ class ContentWatcher(
                         val name = event.context() as? Path ?: continue
                         val full = dir?.resolve(name)
                         if (full != null && dir == worldDir && Files.isDirectory(full)) register(full)
-                        if (name.toString().endsWith(".json")) pendingSince = System.currentTimeMillis()
+                        // Dot-files (the reload status file, editor temp files) are not content.
+                        if (name.toString().endsWith(".json") && !name.toString().startsWith(".")) pendingSince = System.currentTimeMillis()
                     }
                     if (!key.reset()) keys.remove(key)
                 }

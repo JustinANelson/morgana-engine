@@ -1956,9 +1956,19 @@ class MorganaWorldCoordinator(
         recorder?.markGap("content hot reload")
         // Reload what the store actually serves (a game's data/ folder or the legacy world/), judged by this game's own rules.
         val loaded = ContentLoader.load(dataStore.contentDir)
-        val report = loaded.fullReport(simulation.game.definition)
-        if (!report.isValid) {
-            return ContentReloadResult(false, emptyList(), report, "Reload rejected: ${report.errors.size} error(s); live world unchanged.")
+        // Every file that is fine is applied; one that is not keeps its live version (or, if new, is left out) and is reported.
+        val liveCatalog = com.morgana.domain.validation.ContentCatalog(
+            maps = simulation.maps, classes = simulation.classes, items = simulation.items, npcs = simulation.npcs, spells = simulation.spells,
+            shops = simulation.shops, resources = simulation.resources, recipes = simulation.recipes, quests = simulation.quests,
+            events = simulation.events, commonEvents = simulation.commonEvents, animations = simulation.animations,
+            actionSkills = simulation.actionSkills, weaponSets = simulation.weaponSets
+        )
+        val salvage = com.morgana.domain.validation.ContentSalvage.salvage(loaded.catalog, loaded.fileIssues, liveCatalog, simulation.game.definition)
+        val report = salvage.report
+        if (!salvage.applicable) {
+            val result = ContentReloadResult(false, emptyList(), report, "Reload rejected: ${report.errors.size} error(s) that could not be set aside; live world unchanged.")
+            ReloadStatusFile.write(dataStore.gameDir, result, salvage.rejected)
+            return result
         }
         val changed = mutableListOf<String>()
         fun <T> sync(label: String, live: MutableMap<Int, T>, incoming: Map<Int, T>) {
@@ -1969,7 +1979,7 @@ class MorganaWorldCoordinator(
                 else if (live[id] != new) { live[id] = new; changed += "$label#$id" }
             }
         }
-        val c = loaded.catalog
+        val c = salvage.catalog
         sync("class", simulation.classes, c.classes)
         sync("item", simulation.items, c.items)
         sync("npc", simulation.npcs, c.npcs)
@@ -1999,7 +2009,10 @@ class MorganaWorldCoordinator(
         }
         dispatchEvents(events)
         val warnings = if (report.warnings.isNotEmpty()) " (${report.warnings.size} warning(s))" else ""
-        return ContentReloadResult(true, changed, report, "Content reloaded: ${changed.size} change(s)$warnings.")
+        val left = if (salvage.rejected.isNotEmpty()) "; ${salvage.rejected.size} file(s) kept as they were because of errors" else ""
+        val result = ContentReloadResult(true, changed, report, "Content reloaded: ${changed.size} change(s)$warnings$left.")
+        ReloadStatusFile.write(dataStore.gameDir, result, salvage.rejected)
+        return result
     }
 
     private fun handleChat(session: ClientSession, charId: String, packet: ClientPacket.SendChat) {

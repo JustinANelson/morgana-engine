@@ -59,3 +59,6 @@ game-art/specs/trevana_*.json
 smoke-test/trailer*.mjs
 TREVANA_REALMS_DESIGN_AND_CONTENT.md
 TREVANA_OPS.md
+
+# Written by every content reload (see wiki/content/hot_reload.md)
+**/.reload-status.json

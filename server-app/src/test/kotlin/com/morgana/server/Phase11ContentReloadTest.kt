@@ -97,19 +97,27 @@ class Phase11ContentReloadTest {
         assertTrue(coordinator.simulation.maps.getValue(1).revision > oldRevision)
         assertTrue(owner.outbox.any { it is ServerPacket.MapDefinitionUpdated })
 
-        // 4. An invalid edit (dangling reference) is rejected wholesale; the live world is unchanged.
+        // 4. An invalid edit (dangling reference): that file keeps its live version and is reported; the rest still applies.
         val classFile = world.resolve("classes/class_001.json")
         Files.writeString(classFile, Files.readString(classFile).replaceFirst("\"itemId\": 1", "\"itemId\": 4242"))
-        val rejected = coordinator.reloadContent()
-        assertFalse(rejected.applied)
-        assertTrue(rejected.report.errors.any { it.code == "missing_reference" })
-        assertNotEquals(4242, coordinator.simulation.classes.getValue(1).startingItems.first().itemId)
+        Files.writeString(itemFile, Files.readString(itemFile).replaceFirst("\"name\": \"Edited On Disk\"", "\"name\": \"Edited Again\""))
+        val partial = coordinator.reloadContent()
+        assertTrue(partial.applied, partial.summary)
+        assertTrue(partial.report.errors.any { it.code == "missing_reference" })
+        assertNotEquals(4242, coordinator.simulation.classes.getValue(1).startingItems.first().itemId, "the bad class stayed as it was")
+        assertEquals("Edited Again", coordinator.simulation.items.getValue(1).name, "the good file applied despite the bad one")
+        val status = Files.readString(dir.resolve(ReloadStatusFile.NAME))
+        assertTrue(status.contains("classes/class_001.json") && status.contains("missing_reference") && status.contains("\"keptPrevious\": true"), status)
 
-        // 5. Malformed JSON is reported as a parse error, not an exception.
-        Files.writeString(world.resolve("items/item_777.json"), "{ nope")
+        // 5. Malformed JSON (a half-written file) is reported as a parse error and the live definition is kept.
+        Files.writeString(classFile, Files.readString(classFile).replace("4242", "1"))
+        Files.writeString(itemFile, "{ \"id\": 1, \"na")
         val malformed = coordinator.reloadContent()
-        assertFalse(malformed.applied)
+        assertTrue(malformed.applied, malformed.summary)
         assertTrue(malformed.report.errors.any { it.code == "parse_error" })
+        assertEquals("Edited Again", coordinator.simulation.items.getValue(1).name, "the unreadable file did not remove the live item")
+        Files.writeString(world.resolve("items/item_777.json"), "{ nope")
+        assertTrue(coordinator.reloadContent().report.errors.any { it.code == "parse_error" })
     }
 
     @Test
@@ -133,5 +141,24 @@ class Phase11ContentReloadTest {
             Thread.sleep(500)
             assertEquals(1, calls)
         }
+    }
+
+    @Test
+    fun `a new file with errors is left out while a new good file is added, and the status file says which`(@TempDir dir: Path) {
+        val store = MorganaDataStore(dir)
+        val coordinator = MorganaWorldCoordinator(store)
+        val world = dir.resolve("world")
+        val template = Files.readString(world.resolve("items/item_001.json"))
+        Files.writeString(world.resolve("items/item_050.json"), template.replaceFirst("\"id\": 1", "\"id\": 50").replaceFirst("\"name\": \"${coordinator.simulation.items.getValue(1).name}\"", "\"name\": \"Fresh Item\""))
+        val classTemplate = Files.readString(world.resolve("classes/class_001.json"))
+        Files.writeString(world.resolve("classes/class_050.json"), classTemplate.replaceFirst("\"id\": 1", "\"id\": 50").replaceFirst("\"itemId\": 1", "\"itemId\": 4242"))
+
+        val result = coordinator.reloadContent()
+        assertTrue(result.applied, result.summary)
+        assertEquals("Fresh Item", coordinator.simulation.items[50]?.name, "the good new file applied")
+        assertFalse(50 in coordinator.simulation.classes, "the bad new file was left out")
+        val status = Files.readString(dir.resolve(ReloadStatusFile.NAME))
+        assertTrue(status.contains("classes/class_050.json") && status.contains("\"keptPrevious\": false"), status)
+        assertTrue(status.contains("item#50"))
     }
 }
