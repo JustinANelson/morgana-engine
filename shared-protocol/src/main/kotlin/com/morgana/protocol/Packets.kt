@@ -840,6 +840,8 @@ sealed interface ServerPacket {
         val groundItems: List<MapGroundItem> = emptyList(),
         val projectiles: List<MapProjectile> = emptyList(),
         val resources: List<MapResourceState> = emptyList(),
+        /** The world objects (walls, chests, totems) on the map; sent only to clients with the `world_objects` capability. */
+        val worldObjects: List<com.morgana.domain.entity.WorldObject> = emptyList(),
         /** The server's simulation tick when this was sent, to keep the client's game clock in step. */
         val serverTick: Long = 0L
     ) : ServerPacket
@@ -880,6 +882,18 @@ sealed interface ServerPacket {
     @Serializable
     @SerialName("s_projectiles")
     data class ProjectilesUpdated(val mapId: Int, val projectiles: List<MapProjectile>) : ServerPacket
+
+    /**
+     * World objects placed or changed ([upserted], the whole object each time) and taken away ([removedIds]) on [mapId]. Sent to clients
+     * with the `world_objects` capability, to the players on the map.
+     */
+    @Serializable
+    @SerialName("s_world_objects")
+    data class WorldObjectsUpdated(
+        val mapId: Int,
+        val upserted: List<com.morgana.domain.entity.WorldObject> = emptyList(),
+        val removedIds: List<String> = emptyList()
+    ) : ServerPacket
 
     @Serializable
     @SerialName("s_resource_sync")

@@ -70,6 +70,13 @@ object ProtocolCapabilities {
      */
     const val TIPS = "tips"
 
+    /**
+     * The client draws world objects (walls, chests, totems placed by the `worldState` system). The server then sends the objects of the
+     * map in [ServerPacket.MapStateSnapshot.worldObjects] and changes as [ServerPacket.WorldObjectsUpdated]; without it clients are told
+     * nothing about them. A new field with a default and a new packet type, so no [PROTOCOL_VERSION] bump.
+     */
+    const val WORLD_OBJECTS = "world_objects"
+
     /** Default capability set advertised by standard Morgana clients. */
     val DEFAULT_CLIENT_CAPABILITIES: List<String> = listOf(
         SOFT_SEAMS,
@@ -79,7 +86,8 @@ object ProtocolCapabilities {
         ART_V2,
         PLUGIN_UI,
         RP_CHAT,
-        TIPS
+        TIPS,
+        WORLD_OBJECTS
     )
 }
 

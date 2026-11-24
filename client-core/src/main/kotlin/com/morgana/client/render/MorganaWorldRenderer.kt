@@ -403,6 +403,52 @@ class MorganaWorldRenderer(
             }
         }
 
+        // World objects: walls, chests, totems placed by the world state system. A kind with a tileset sprite draws it; otherwise a coloured block.
+        if (worldState.worldObjectsOnMap.isNotEmpty()) {
+            val kinds = worldState.gameDefinition?.worldObjects
+            for (obj in worldState.worldObjectsOnMap.values) {
+                val kind = kinds?.kind(obj.kind)
+                val ox = obj.tileX * ts.toFloat()
+                val oy = toRenderY(map.height, obj.tileY, ts)
+                if (kind != null && kind.spriteTilesetId > 0) {
+                    batch.draw(assets.getTileRegion(kind.spriteTilesetId, kind.spriteTileX, kind.spriteTileY), ox, oy, ts.toFloat(), ts.toFloat())
+                } else {
+                    val shade = 0.35f + (obj.kind.hashCode() and 0xFF) / 255f * 0.45f
+                    batch.color = Color(shade, 0.9f * shade, 0.7f * shade, 1f)
+                    batch.draw(assets.whitePixel, ox + 2f, oy + 2f, ts - 4f, ts - 4f)
+                    batch.color = Color(0f, 0f, 0f, 0.6f)
+                    batch.draw(assets.whitePixel, ox + 2f, oy + 2f, ts - 4f, 2f)
+                    batch.draw(assets.whitePixel, ox + 2f, oy + ts - 4f, ts - 4f, 2f)
+                    batch.color = Color.WHITE
+                }
+                // A claim shows how far it reaches: a tinted square with an outline (the level is kept in the object's data).
+                val claimKind = worldState.gameDefinition?.territory?.claimKind(obj.kind)
+                if (claimKind != null) {
+                    val radius = claimKind.level(obj.data["level"]?.toIntOrNull()?.coerceAtLeast(1) ?: 1).radiusTiles
+                    val left = (obj.tileX - radius) * ts.toFloat()
+                    val size = (2 * radius + 1) * ts.toFloat()
+                    val bottom = toRenderY(map.height, obj.tileY + radius, ts)
+                    val open = obj.data["window"] == "open"
+                    batch.color = if (open) Color(0.9f, 0.2f, 0.2f, 0.14f) else Color(0.3f, 0.6f, 1f, 0.12f)
+                    batch.draw(assets.whitePixel, left, bottom, size, size)
+                    batch.color = if (open) Color(0.9f, 0.2f, 0.2f, 0.8f) else Color(0.3f, 0.6f, 1f, 0.7f)
+                    batch.draw(assets.whitePixel, left, bottom, size, 2f)
+                    batch.draw(assets.whitePixel, left, bottom + size - 2f, size, 2f)
+                    batch.draw(assets.whitePixel, left, bottom, 2f, size)
+                    batch.draw(assets.whitePixel, left + size - 2f, bottom, 2f, size)
+                    batch.color = Color.WHITE
+                }
+                val maxHp = kind?.maxHp ?: obj.hp
+                if (maxHp > 0 && obj.hp < maxHp) {
+                    batch.color = Color(0f, 0f, 0f, 0.7f)
+                    batch.draw(assets.whitePixel, ox + 2f, oy + ts - 6f, ts - 4f, 4f)
+                    batch.color = Color(0.9f, 0.25f, 0.2f, 1f)
+                    batch.draw(assets.whitePixel, ox + 3f, oy + ts - 5f, (ts - 6f) * obj.hp.coerceAtLeast(0) / maxHp, 2f)
+                    batch.color = Color.WHITE
+                }
+            }
+        }
+
         val spriteProfile = worldState.gameDefinition?.sprites
 
         // Seam ground items (muted)

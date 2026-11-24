@@ -29,6 +29,9 @@ Everything goes through the simulation so it is an event and is recorded:
 | Kotlin systems | implement `WorldObjectGate.refusal(...)` to veto a placement, and `WorldObjectObserver.onWorldObject(...)` to hear every `PLACED`, `CHANGED` and `REMOVED` (with a reason such as `placed`, `damaged`, `data`, `decayed`, `destroyed`) ([system seams](/systems/system_seams.md)) |
 | Lua | `register.object_gate{ kinds, check }` for rules; `world.get_object`, `world.objects_near` to read; `world.place_object`, `remove_object`, `damage_object`, `set_object_data` as effects (the `state` capability) ([API reference](/../docs/API_REFERENCE.md)) |
 
+## Clients
+Clients with the `world_objects` capability (in the default set) get the map's objects in `MapStateSnapshot.worldObjects` and every change as `WorldObjectsUpdated` ([server packets](/protocol/server_packets.md)); `ClientWorldState.worldObjectsOnMap` holds them. The renderer draws a kind's tileset sprite (`spriteTilesetId` above 0) or, without one, a coloured block, with a damage bar when hurt, and shows a claim's reach as a tinted square (red while its attack window is open). `MorganaWorldCoordinator.placeWorldObject` and `removeWorldObject` place and remove objects the way a game would (recorded, announced), for tools and tests.
+
 ## Using an object
 Facing a placed object and interacting (the same input as opening a door or harvesting a node, `InteractFacing`) asks the `WorldObjectInteraction` seam before the tile's own interaction. `interactionRefusal` can veto (the reason is told to the player, nothing else runs: a damaged structure refuses storage or crafting); then `interact` lets a system carry the use out and settle it. An object nobody has a rule for does nothing and the interaction carries on as before. Lua: `register.object_use{ kinds, gate, use }`. The engine ships no object that does anything when used; chests, stations and doors are rules of a game or a later system.
 
@@ -45,7 +48,7 @@ Objects are state the simulation owns: `StateHasher` includes them (only when th
 `WorldObjectRepository` writes one file per map, `<data dir>/world-objects/map_<id>.json` (atomic: a temporary file moved into place; a map with nothing left has no file). The coordinator loads them at boot, marks changed maps (`dirtyWorldObjectMaps`), saves those off the tick thread every 200 ticks (`AsyncPersistenceWriter.enqueueWorldObjects`; a newer snapshot of a map replaces an older unwritten one) and saves everything on shutdown. A file that cannot be read is reported and skipped, and left as it is. The objects belong to the realm, not to the game folder, so they live under the data directory.
 
 ## Not built yet
-- **Clients are not told.** `WorldSimulationEvent.WorldObjectsChanged` is raised, but there is no packet (and so no area-of-interest broadcast, no protocol capability) and no renderer, so players cannot see placed objects. This is the next piece, and needs a client placement preview.
+- A **placement preview** (a ghost of the held item's object on the tile in front), a build/claim window, a sprite picker in `F1`, and **area-of-interest filtering** of object changes (they go to everyone on the map today).
 - Objects are one tile. Larger pieces, rotation, and a per-kind build cost or tool are not modelled.
 - Damage by spells, monsters and area effects; siege engines as placed machines (a siege weapon is a weapon type for now); decay and upkeep (a game's Lua plugin).
 - Refunding an item when a player takes an object down; an F1 editor form for kinds.

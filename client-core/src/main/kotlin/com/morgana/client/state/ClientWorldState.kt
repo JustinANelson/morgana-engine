@@ -230,6 +230,9 @@ class ClientWorldState {
     val projectilesOnMap: MutableList<MapProjectile> = mutableListOf()
     val resourcesOnMap: MutableMap<TileCoord, MapResourceState> = linkedMapOf()
 
+    /** The walls, chests and totems placed on the active map, by object id (see the `world_objects` capability). */
+    val worldObjectsOnMap: MutableMap<String, com.morgana.domain.entity.WorldObject> = linkedMapOf()
+
     val playerVisuals: MutableMap<String, EntityVisualSmoothing> = linkedMapOf()
     val npcVisuals: MutableMap<String, EntityVisualSmoothing> = linkedMapOf()
 
@@ -752,6 +755,7 @@ class ClientWorldState {
         groundItemsOnMap.clear()
         projectilesOnMap.clear()
         resourcesOnMap.clear()
+        worldObjectsOnMap.clear()
         playerVisuals.clear()
         npcVisuals.clear()
         seamMaps = emptyList()
@@ -929,6 +933,8 @@ class ClientWorldState {
                 projectilesOnMap.addAll(packet.projectiles)
                 resourcesOnMap.clear()
                 packet.resources.forEach { resourcesOnMap[TileCoord(it.tileX, it.tileY)] = it }
+                worldObjectsOnMap.clear()
+                packet.worldObjects.forEach { worldObjectsOnMap[it.id] = it }
             }
             is ServerPacket.SeamView -> applySeamView(packet)
             is ServerPacket.CharacterSync -> {
@@ -1026,6 +1032,12 @@ class ClientWorldState {
                 if (activeMap?.id == packet.mapId) {
                     projectilesOnMap.clear()
                     projectilesOnMap.addAll(packet.projectiles)
+                }
+            }
+            is ServerPacket.WorldObjectsUpdated -> {
+                if (activeMap?.id == packet.mapId) {
+                    packet.removedIds.forEach { worldObjectsOnMap.remove(it) }
+                    packet.upserted.forEach { worldObjectsOnMap[it.id] = it }
                 }
             }
             is ServerPacket.ResourceNodeUpdated -> {

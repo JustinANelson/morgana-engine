@@ -335,6 +335,28 @@ class MorganaWorldCoordinator(
     private fun runInput(input: SimInput): List<WorldSimulationEvent> =
         recorder?.apply(input) ?: input.applyTo(simulation)
 
+    /**
+     * Places a world object as the game would (recorded, announced to the players on the map who draw objects, saved with the map). False when
+     * the placement was refused (see `WorldStateSystem`). For tools and tests; players place objects with items.
+     */
+    @Synchronized
+    fun placeWorldObject(
+        kind: String, mapId: Int, tileX: Int, tileY: Int,
+        ownerCharacterId: String? = null, ownerGuildId: String? = null, data: Map<String, String> = emptyMap()
+    ): Boolean {
+        val events = runInput(SimInput.PlaceWorldObject(kind, mapId, tileX, tileY, ownerCharacterId, ownerGuildId, data))
+        dispatchEvents(events)
+        return events.any { it is WorldSimulationEvent.WorldObjectsChanged }
+    }
+
+    /** Takes a world object away (recorded and announced). False when there is no such object. */
+    @Synchronized
+    fun removeWorldObject(id: String, reason: String = "removed"): Boolean {
+        val events = runInput(SimInput.RemoveWorldObject(id, reason))
+        dispatchEvents(events)
+        return events.any { it is WorldSimulationEvent.WorldObjectsChanged }
+    }
+
     /** Replaces a player's state wholesale (recorded so replays reproduce coordinator-side edits). */
     private fun setPlayerState(character: CharacterState) {
         runInput(SimInput.SetPlayerState(character))
@@ -2779,8 +2801,7 @@ class MorganaWorldCoordinator(
                 }
                 // For the server and systems only: players hear a schedule through the chat announcement it also emitted.
                 is WorldSimulationEvent.ScheduleTriggered -> Unit
-                // Clients are not told about world objects yet: the protocol and the renderer are still to build (see the world state page).
-                is WorldSimulationEvent.WorldObjectsChanged -> Unit
+                is WorldSimulationEvent.WorldObjectsChanged -> broadcastWorldObjects(ev.mapId, ServerPacket.WorldObjectsUpdated(ev.mapId, ev.upserted, ev.removedIds))
                 is WorldSimulationEvent.BossTelegraph -> {
                     broadcastNear(ev.mapId, ev.centerX, ev.centerY, ServerPacket.BossTelegraph(ev.mapId, ev.centerX, ev.centerY, ev.radius, ev.windUpTicks, ev.label))
                 }
@@ -3029,6 +3050,7 @@ class MorganaWorldCoordinator(
         val groundOnMap = simulation.mapGroundItems[mapId]?.toList().orEmpty()
         val projOnMap = simulation.mapProjectiles[mapId]?.toList().orEmpty()
         val resOnMap = simulation.mapResources[mapId]?.values?.toList().orEmpty()
+        val objectsOnMap = simulation.worldObjectsOn(mapId).sortedBy { it.id }
 
         // With the map cache, maps this connection already holds at the current revision are left out and only referenced.
         val caps = clientCapabilitiesBySession[session.sessionId]
@@ -3053,6 +3075,7 @@ class MorganaWorldCoordinator(
                 groundItems = groundOnMap,
                 projectiles = projOnMap,
                 resources = resOnMap,
+                worldObjects = if (clientCapabilitiesBySession[session.sessionId]?.contains(ProtocolCapabilities.WORLD_OBJECTS) == true) objectsOnMap else emptyList(),
                 serverTick = simulation.effectiveWorldTick()
             )
         )
@@ -3121,6 +3144,16 @@ class MorganaWorldCoordinator(
         weaponSets = simulation.weaponSets.values.toList(),
         maps = simulation.contentMaps().values.sortedBy { it.id }.map { MapSummary(it.id, it.name, it.width, it.height, it.revision) }
     )
+
+    /** Tells the players on [mapId] whose client draws world objects (the `world_objects` capability). */
+    private fun broadcastWorldObjects(mapId: Int, packet: ServerPacket) {
+        val encoded = lazy(LazyThreadSafetyMode.NONE) { PacketCodec.encodeServerJson(packet) }
+        for (p in simulation.players.values) {
+            if (p.position.mapId != mapId) continue
+            val session = sessionByCharacterId[p.id] ?: continue
+            if (clientCapabilitiesBySession[session.sessionId]?.contains(ProtocolCapabilities.WORLD_OBJECTS) == true) session.sendEncoded(packet) { encoded.value }
+        }
+    }
 
     private fun broadcastToMap(mapId: Int, packet: ServerPacket) {
         // Encoded at most once, however many players are on the map (encoding per recipient was most of a busy tick).
