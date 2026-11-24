@@ -18,3 +18,6 @@ stale_after: 2027-05-06T00:00:00Z
 - F1 saves write files too, which retriggers the watcher harmlessly (no diff -> no-op).
 
 Test: `Phase11ContentReloadTest`. Pipeline overview: [content pipeline](/content/content_pipeline.md); coordinator context: [coordinator](/server/coordinator.md).
+
+## Known gaps (roadmap: do before map authoring)
+One invalid file rejects the whole reload; only `.json` under `data/` is watched (not `game.json`, `scripts/` or `assets/`); there is no machine-readable result for an author; changed maps lose their runtime state and deleted maps stay loaded; new assets are not pushed to connected clients. The plan is in `docs/DESIGN.md` (Next, "Live content hot-loading for generated content").

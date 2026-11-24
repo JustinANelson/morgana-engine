@@ -2,6 +2,8 @@
 
 ## 2026-11-24
 
+* **Add** - **Roadmap: live hot-loading of generated content, before any map authoring** (`docs/DESIGN.md` Next; [hot reload](/content/hot_reload.md)): per-file validation, a reload feedback file for LLM authors, watching `game.json`, scripts and assets, live asset delivery to clients, first-class map add/remove/update, partial-write safety. Records what `ContentWatcher` already does and the gaps.
+
 * **Add** - **The `combatStance` system: SAFE / PvE / PvP** ([combat stance](/systems/combat_stance.md)): game.json `combatStance` (per-map permission NONE/OPTIONAL/FORCED, arm, disarm and switch times), a stance on every character (`stance`, `stanceArmsAtTick`, `lastCombatTick`), `/stance`, a `CombatArbiter` that lets only two PvP-stance characters fight (the PK mode and safe zones still decide), a `StanceForcer` seam that territory uses to force PvP inside an open siege window, and `isInCombat`/`ticksSinceCombat` for lockouts. Without the section nothing changes. Trevena's engine item S10.
 
 * **Add** - **Structures can be hurt: `attackable` objects, weapon and siege percentages, `WorldObjectDamageGate`** ([world state](/systems/world_state.md), [territory](/systems/territory.md)): world object kinds gained `attackable`, `weaponDamagePercent` and `siegeDamagePercent` (and `worldObjects.siegeWeaponTypes`), validated 1 to 1000; melee, action hitboxes and projectiles strike the object they reach via `WorldStateSystem.strike`; `territory` protects structures in safe-zone claims except in an attack window. Existing games are unchanged (nothing is attackable by default). Trevena's engine item S5.
