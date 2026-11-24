@@ -280,6 +280,9 @@ class MorganaDataStore(
         playerCollection("exploration", ExplorationDocument.serializer(), rootDir.resolve("social/exploration"))
     )
 
+    /** The things placed on maps (walls, chests, claims), saved per map under `<rootDir>/world-objects/`. They belong to the realm, not to the game folder. */
+    val worldObjects = WorldObjectRepository(rootDir.resolve("world-objects"))
+
     /** Loads runtime server state (such as [ServerState.worldEpochTicks]) from `<rootDir>/server-state.json`. */
     fun loadServerState(): ServerState = ServerState.load(rootDir)
 

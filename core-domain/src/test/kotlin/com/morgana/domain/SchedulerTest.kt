@@ -7,6 +7,7 @@ import com.morgana.domain.game.MorganaClassic
 import com.morgana.domain.game.ScheduleDefinition
 import com.morgana.domain.game.ScheduleKind
 import com.morgana.domain.game.ScheduleRules
+import com.morgana.domain.game.UtcScheduleCalendar
 import com.morgana.domain.map.MapDefinition
 import com.morgana.domain.replay.SimInput
 import com.morgana.domain.replay.StateHasher
@@ -33,37 +34,17 @@ class SchedulerTest {
     private fun ms(iso: String): Long = Instant.parse(iso).toEpochMilli()
 
     private val cleansing = ScheduleDefinition(
-        id = "cleansing", name = "Weekly Cleansing", kind = ScheduleKind.WEEKLY, timezone = "America/New_York",
-        dayOfWeek = "SATURDAY", time = "10:00", warningsSeconds = listOf(3600, 900, 60)
+        id = "cleansing", name = "Weekly Cleansing", kind = ScheduleKind.WEEKLY, timezone = "UTC",
+        dayOfWeek = "SATURDAY", time = "15:00", warningsSeconds = listOf(3600, 900, 60)
     )
 
-    // ---- the date maths -------------------------------------------------------------------------------------------------------
+    // ---- the pure UTC calendar (time zones and daylight saving are tested in :server-persistence) ------------------------------
 
     @Test
     fun `a weekly schedule lands on its weekday and local time`() {
         // Saturday 28 November 2026, 10:00 in New York (standard time, UTC-5) is 15:00 UTC.
-        val found = ScheduleRules.occurrences(cleansing, ms("2026-11-24T00:00:00Z"), ms("2026-12-13T00:00:00Z"))
+        val found = UtcScheduleCalendar.occurrences(cleansing, ms("2026-11-24T00:00:00Z"), ms("2026-12-13T00:00:00Z"))
         assertEquals(listOf(ms("2026-11-28T15:00:00Z"), ms("2026-12-05T15:00:00Z"), ms("2026-12-12T15:00:00Z")), found)
-    }
-
-    @Test
-    fun `a weekly schedule keeps its local time across daylight saving`() {
-        // Clocks go forward on Sunday 8 March 2026: Saturday 10:00 is 15:00 UTC before it and 14:00 UTC after.
-        val found = ScheduleRules.occurrences(cleansing, ms("2026-03-01T00:00:00Z"), ms("2026-03-20T00:00:00Z"))
-        assertEquals(listOf(ms("2026-03-07T15:00:00Z"), ms("2026-03-14T14:00:00Z")), found)
-        // And back on Sunday 1 November 2026.
-        val fall = ScheduleRules.occurrences(cleansing, ms("2026-10-25T00:00:00Z"), ms("2026-11-10T00:00:00Z"))
-        assertEquals(listOf(ms("2026-10-31T14:00:00Z"), ms("2026-11-07T15:00:00Z")), fall)
-    }
-
-    @Test
-    fun `a time that does not exist or happens twice still occurs exactly once a day`() {
-        val gap = ScheduleDefinition(id = "gap", kind = ScheduleKind.DAILY, timezone = "America/New_York", time = "02:30")
-        val springDay = ScheduleRules.occurrences(gap, ms("2026-03-08T00:00:00Z"), ms("2026-03-09T00:00:00Z"))
-        assertEquals(1, springDay.size, "02:30 does not exist on 8 March, so it moves on instead of being skipped")
-        val twice = ScheduleDefinition(id = "twice", kind = ScheduleKind.DAILY, timezone = "America/New_York", time = "01:30")
-        val fallDay = ScheduleRules.occurrences(twice, ms("2026-11-01T00:00:00Z"), ms("2026-11-02T06:00:00Z"))
-        assertEquals(1, fallDay.size, "01:30 happens twice on 1 November, but the schedule fires once")
     }
 
     @Test
@@ -71,26 +52,46 @@ class SchedulerTest {
         val daily = ScheduleDefinition(id = "d", kind = ScheduleKind.DAILY, timezone = "UTC", time = "06:00")
         assertEquals(
             listOf(ms("2026-11-24T06:00:00Z"), ms("2026-11-25T06:00:00Z")),
-            ScheduleRules.occurrences(daily, ms("2026-11-24T00:00:00Z"), ms("2026-11-25T23:00:00Z"))
+            UtcScheduleCalendar.occurrences(daily, ms("2026-11-24T00:00:00Z"), ms("2026-11-25T23:00:00Z"))
         )
 
         val hourly = ScheduleDefinition(id = "h", kind = ScheduleKind.INTERVAL, intervalSeconds = 3600, at = "2026-11-24T00:30:00Z")
         assertEquals(
             listOf(ms("2026-11-24T01:30:00Z"), ms("2026-11-24T02:30:00Z")),
-            ScheduleRules.occurrences(hourly, ms("2026-11-24T00:30:00Z"), ms("2026-11-24T02:45:00Z")),
+            UtcScheduleCalendar.occurrences(hourly, ms("2026-11-24T00:30:00Z"), ms("2026-11-24T02:45:00Z")),
             "the range excludes its start, and counts from the anchor"
         )
-        assertEquals(emptyList<Long>(), ScheduleRules.occurrences(hourly, ms("2026-11-20T00:00:00Z"), ms("2026-11-24T00:29:00Z")), "nothing before the anchor")
+        assertEquals(emptyList<Long>(), UtcScheduleCalendar.occurrences(hourly, ms("2026-11-20T00:00:00Z"), ms("2026-11-24T00:29:00Z")), "nothing before the anchor")
 
         val once = ScheduleDefinition(id = "o", kind = ScheduleKind.ONCE, timezone = "UTC", at = "2026-12-01T12:00")
-        assertEquals(listOf(ms("2026-12-01T12:00:00Z")), ScheduleRules.occurrences(once, 0, ms("2027-01-01T00:00:00Z")))
-        assertEquals(emptyList<Long>(), ScheduleRules.occurrences(once, ms("2026-12-01T12:00:00Z"), ms("2027-01-01T00:00:00Z")), "already past")
+        assertEquals(listOf(ms("2026-12-01T12:00:00Z")), UtcScheduleCalendar.occurrences(once, 0, ms("2027-01-01T00:00:00Z")))
+        assertEquals(emptyList<Long>(), UtcScheduleCalendar.occurrences(once, ms("2026-12-01T12:00:00Z"), ms("2027-01-01T00:00:00Z")), "already past")
+    }
+
+    @Test
+    fun `the pure calendar reads and writes ISO times, counts weekdays and refuses zones it does not know`() {
+        assertEquals(ms("2026-12-05T10:00:00Z"), UtcScheduleCalendar.parseIso("2026-12-05T10:00"))
+        assertEquals(ms("2026-12-05T15:00:00Z"), UtcScheduleCalendar.parseIso("2026-12-05T10:00:00-05:00"), "an offset is applied")
+        assertEquals(ms("2024-02-29T00:00:00Z"), UtcScheduleCalendar.parseIso("2024-02-29T00:00:00Z"), "a leap day")
+        assertNull(UtcScheduleCalendar.parseIso("2026-02-30T10:00"), "30 February")
+        assertNull(UtcScheduleCalendar.parseIso("2026-13-01T10:00"))
+        assertNull(UtcScheduleCalendar.parseIso("soon"))
+        for (iso in listOf("1970-01-01T00:00:00Z", "2000-02-29T23:59:59Z", "2026-11-24T12:00:00Z", "2100-03-01T00:00:01Z", "1969-12-31T23:59:59Z")) {
+            assertEquals(iso, UtcScheduleCalendar.formatIso(ms(iso)), "formatting reads back as it was written")
+        }
+        // 24 November 2026 is a Tuesday and 1 January 1970 a Thursday.
+        assertEquals("Tue 24 Nov 2026 12:00 UTC", UtcScheduleCalendar.describeLocal(cleansing, ms("2026-11-24T12:00:00Z")))
+        assertEquals("Thu 1 Jan 1970 00:00 UTC", UtcScheduleCalendar.describeLocal(cleansing, 0))
+        assertTrue(UtcScheduleCalendar.problems(cleansing).isEmpty())
+        val newYork = cleansing.copy(timezone = "America/New_York")
+        assertEquals("timezone", UtcScheduleCalendar.problems(newYork).single().first, "a zone needing a time-zone database is reported")
+        assertEquals(emptyList<Long>(), UtcScheduleCalendar.occurrences(newYork, 0, ms("2027-01-01T00:00:00Z")), "and has no occurrences here")
     }
 
     @Test
     fun `next finds the following occurrence and durations read in words`() {
-        assertEquals(ms("2026-11-28T15:00:00Z"), ScheduleRules.next(cleansing, ms("2026-11-24T12:00:00Z")))
-        assertNull(ScheduleRules.next(ScheduleDefinition(id = "x", kind = ScheduleKind.ONCE, at = "2020-01-01T00:00"), ms("2026-11-24T00:00:00Z")))
+        assertEquals(ms("2026-11-28T15:00:00Z"), UtcScheduleCalendar.next(cleansing, ms("2026-11-24T12:00:00Z")))
+        assertNull(UtcScheduleCalendar.next(ScheduleDefinition(id = "x", kind = ScheduleKind.ONCE, at = "2020-01-01T00:00"), ms("2026-11-24T00:00:00Z")))
         assertEquals("1 hour", ScheduleRules.describeDuration(3600))
         assertEquals("15 minutes", ScheduleRules.describeDuration(900))
         assertEquals("1 minute", ScheduleRules.describeDuration(60))
@@ -104,7 +105,8 @@ class SchedulerTest {
             GameDefinitionValidator.validate(MorganaClassic.definition.copy(schedules = listOf(def))).map { it.pointer }
 
         assertTrue(GameDefinitionValidator.validate(MorganaClassic.definition.copy(schedules = listOf(cleansing))).isEmpty(), "a good schedule validates")
-        assertTrue("/schedules/0/timezone" in pointers(cleansing.copy(timezone = "Mars/Olympus")))
+        assertTrue("/schedules/0/timezone" in pointers(cleansing.copy(timezone = "Mars Olympus")), "a zone name that cannot be one")
+        assertTrue(pointers(cleansing.copy(timezone = "America/New_York")).isEmpty(), "whether a zone exists is the server calendar's to say, not the validator's")
         assertTrue("/schedules/0/time" in pointers(cleansing.copy(time = "ten o'clock")))
         assertTrue("/schedules/0/dayOfWeek" in pointers(cleansing.copy(dayOfWeek = "Caturday")))
         assertTrue("/schedules/0/id" in pointers(cleansing.copy(id = "Bad Id")))
@@ -116,7 +118,7 @@ class SchedulerTest {
         assertTrue("/schedules/0/messageColorHex" in pointers(cleansing.copy(messageColorHex = "yellow")))
         val twice = GameDefinitionValidator.validate(MorganaClassic.definition.copy(schedules = listOf(cleansing, cleansing))).map { it.pointer }
         assertTrue("/schedules/1/id" in twice, "duplicate ids: $twice")
-        assertEquals(emptyList<Long>(), ScheduleRules.occurrences(cleansing.copy(timezone = "Nope"), 0, ms("2027-01-01T00:00:00Z")))
+        assertEquals(emptyList<Long>(), UtcScheduleCalendar.occurrences(cleansing.copy(timezone = "Nope"), 0, ms("2027-01-01T00:00:00Z")))
     }
 
     // ---- the system -----------------------------------------------------------------------------------------------------------
@@ -280,7 +282,7 @@ class SchedulerTest {
         assertFalse(s.scheduleOnce("cleansing", ms("2026-11-25T12:00:00Z")), "that id belongs to game.json")
         assertTrue(s.scheduleOnce("w", ms("2026-11-25T12:00:00Z")))
         assertTrue(s.scheduleOnce("w", ms("2026-11-26T12:00:00Z")), "booking again replaces")
-        assertEquals(ms("2026-11-26T12:00:00Z"), ScheduleRules.next(s.scheduleOneShots.getValue("w").def, ms("2026-11-24T12:00:00Z")))
+        assertEquals(ms("2026-11-26T12:00:00Z"), UtcScheduleCalendar.next(s.scheduleOneShots.getValue("w").def, ms("2026-11-24T12:00:00Z")))
         assertTrue(s.cancelSchedule("w"))
         assertFalse(s.cancelSchedule("w"))
         assertTrue(s.at("2026-11-26T12:00:30Z").triggers().none { it.scheduleId == "w" })
@@ -306,12 +308,36 @@ class SchedulerTest {
     }
 
     @Test
+    fun `a recording of a run already in progress replays exactly, scheduler state included`() {
+        fun fresh() = sim(cleansing)
+        val live = fresh()
+        // The live server had been up a while: the cursor, a last-fired record and a booked one-off all existed before recording began.
+        live.advanceWallClock(ms("2026-11-28T13:00:00Z"))
+        live.scheduleLastFired["earlier"] = ms("2026-11-21T15:00:00Z")
+        assertTrue(live.scheduleOnce("window", ms("2026-11-28T14:30:00Z"), name = "Window", warningsSeconds = listOf(60)))
+
+        val recorder = com.morgana.domain.replay.InputRecorder(live, seed = 5L)
+        for (iso in listOf("2026-11-28T14:00:00Z", "2026-11-28T14:29:30Z", "2026-11-28T14:30:10Z", "2026-11-28T14:59:30Z", "2026-11-28T15:00:10Z")) {
+            recorder.apply(SimInput.WallClock(ms(iso)))
+            repeat(20) { recorder.apply(SimInput.Tick(50)) }
+        }
+        val log = recorder.finish()
+        assertEquals(ms("2026-11-28T13:00:00Z"), log.startingScheduleCursorMillis, "the cursor as recording began, not as it ended")
+        assertEquals(setOf("window"), log.startingScheduleOneShots.keys)
+        assertEquals(ms("2026-11-21T15:00:00Z"), log.startingScheduleLastFired["earlier"])
+
+        val result = com.morgana.domain.replay.ReplayPlayer.replay(fresh(), log)
+        assertTrue(result.ok, "the replay agrees with the live run: $result")
+        assertEquals(StateHasher.hash(live), result.finalHash)
+    }
+
+    @Test
     fun `slash schedule lists what is coming`() {
         val s = sim(cleansing)
         assertTrue(s.executeAdminSlashCommand("p1", "/schedule").announcementsAnyChannel().any { it.contains("not started") })
         s.at("2026-11-24T12:00:00Z")
         val lines = s.executeAdminSlashCommand("p1", "/schedule").announcementsAnyChannel()
-        assertTrue(lines.any { it.startsWith("Weekly Cleansing: in 4 days") && it.contains("Sat 28 Nov 2026 10:00") }, "got $lines")
+        assertTrue(lines.any { it.startsWith("Weekly Cleansing: in 4 days") && it.contains("Sat 28 Nov 2026 15:00") }, "got $lines")
         // A player who is not staff cannot force a start.
         assertTrue(s.executeAdminSlashCommand("p1", "/schedule fire cleansing").triggers().isEmpty())
     }

@@ -106,6 +106,13 @@ sealed interface WorldSimulationEvent {
         val notice: String? = null
     ) : WorldSimulationEvent
 
+    /** World objects on [mapId] were placed or changed ([upserted], whole objects) or taken away ([removedIds]); the server tells nearby players. */
+    data class WorldObjectsChanged(
+        val mapId: Int,
+        val upserted: List<com.morgana.domain.entity.WorldObject>,
+        val removedIds: List<String>
+    ) : WorldSimulationEvent
+
     /** The scheduler raised a warning or started an occurrence (see [ScheduleTrigger]); for the server and systems, not sent to clients. */
     data class ScheduleTriggered(val trigger: ScheduleTrigger) : WorldSimulationEvent
 

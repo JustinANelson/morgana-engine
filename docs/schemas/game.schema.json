@@ -381,6 +381,16 @@
                     "additionalProperties": {
                         "$ref": "#/$defs/com.morgana.domain.game.ClassPassive"
                     }
+                },
+                "worldObjects": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.game.WorldObjectsDefinition"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
                 }
             },
             "required": [
@@ -2139,6 +2149,58 @@
                 }
             },
             "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.WorldObjectsDefinition": {
+            "type": "object",
+            "properties": {
+                "kinds": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.game.WorldObjectKind"
+                    }
+                },
+                "maxPerMap": {
+                    "type": "integer"
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.WorldObjectKind": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "blocksMovement": {
+                    "type": "boolean"
+                },
+                "maxHp": {
+                    "type": "integer"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "spriteTilesetId": {
+                    "type": "integer"
+                },
+                "spriteTileX": {
+                    "type": "integer"
+                },
+                "spriteTileY": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "id"
+            ],
             "additionalProperties": false
         }
     }

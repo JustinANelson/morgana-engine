@@ -170,6 +170,34 @@ class ScriptScheduleHook(
     fun covers(scheduleId: String): Boolean = scheduleIds.isEmpty() || scheduleId in scheduleIds
 }
 
+/** A world object as a script sees it (see `WorldObject`). */
+data class ScriptObjectSnapshot(
+    val id: String,
+    val kind: String,
+    val mapId: Int,
+    val x: Int,
+    val y: Int,
+    val ownerId: String?,
+    val guildId: String?,
+    val hp: Int,
+    val data: Map<String, String>
+)
+
+/** A placement a [ScriptObjectGateHook] is asked about: [kind] at ([x], [y]) on [mapId], by [ownerId] (null when the game places it). */
+data class ScriptObjectRequest(val kind: String, val mapId: Int, val x: Int, val y: Int, val ownerId: String?)
+
+/**
+ * A plugin ruling on placements (`register.object_gate`). [kinds] limits it to those kinds (empty means every kind). [check] returns the
+ * reason to refuse (shown to the player), or null to allow. A pure query: it may read the world but causes no effects.
+ */
+class ScriptObjectGateHook(
+    val moduleId: String,
+    val kinds: Set<String> = emptySet(),
+    val check: (request: ScriptObjectRequest, world: ScriptWorldView) -> String?
+) {
+    fun covers(kind: String): Boolean = kinds.isEmpty() || kind in kinds
+}
+
 /** A plugin sharing in a kill: [run] is told the killer and the experience the kill earned them, and may cause effects. */
 class ScriptKillHook(
     val moduleId: String,

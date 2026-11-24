@@ -73,6 +73,7 @@ enum class OptionalModule(
     RUN_LIFECYCLE("runLifecycle", "Dungeon runs", "Track dungeon runs with timers, custom seeds, extraction or ephemeral runs, and optional permadeath (needs a runs section in the game rules).", setOf(SystemTags.ROGUELIKE), setOf("instancing")),
     BOONS("boons", "Roguelike boons", "Offer and stack roguelike boon upgrades (/boon) that can clear when a run ends (needs boons in the game rules).", setOf(SystemTags.ROGUELIKE)),
     SKILL_TREES("skillTrees", "Skill trees", "Per-class skill and talent trees (/skills) spending points earned on level-up (needs skillTree in the game rules).", setOf(SystemTags.ROGUELIKE, SystemTags.RPG)),
+    WORLD_STATE("worldState", "World state", "Things placed on a map that stay there: walls, chests, signs, the base of base building and claims (needs worldObjects in the game rules).", setOf(SystemTags.SURVIVAL, SystemTags.FARMING, SystemTags.RPG, SystemTags.ROLEPLAY)),
     SCHEDULER("scheduler", "Scheduler", "Real-world-time events: weekly resets, daily bonuses, timed windows with advance warnings in chat and for Lua plugins (needs schedules in the game rules).", setOf(SystemTags.SURVIVAL, SystemTags.RPG, SystemTags.ROLEPLAY));
 
     companion object {

@@ -1,7 +1,7 @@
 {
     "formatVersion": 1,
     "seed": 4208861222,
-    "contentFingerprint": "661a98b6e09a4cc7",
+    "contentFingerprint": "9c43c06f3188ec83",
     "inputs": [
         {
             "_type": "com.morgana.domain.replay.SimInput.SpawnPlayer",
@@ -1263,5 +1263,9 @@
     "startingEpochTicks": 0,
     "startingWorldSwitches": {},
     "startingWorldVariables": {},
-    "startingWorldStringVariables": {}
+    "startingWorldStringVariables": {},
+    "startingScheduleCursorMillis": 0,
+    "startingScheduleLastFired": {},
+    "startingScheduleOneShots": {},
+    "startingWorldObjects": []
 }

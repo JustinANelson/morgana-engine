@@ -77,7 +77,7 @@ class SystemListTest {
         assertEquals(4, keys.count { it == "luaPlugins" }, "the Lua plugins system is four objects: the system, its warp router and a tick participant per stage")
         assertTrue(keys.all { OptionalModule.fromConfigKey(it) != null }, "each key is an OptionalModule, so server.json and the F1 panel know it")
         assertEquals(
-            setOf("rebirth", "promotion", "arena", "runLifecycle", "boons", "skillTrees", "guildWar", "pets", "stalls", "durability", "gearUpgrades", "respec", "threat", "bossEncounters", "instancing", "scheduler", "luaPlugins"),
+            setOf("rebirth", "promotion", "arena", "runLifecycle", "boons", "skillTrees", "guildWar", "pets", "stalls", "durability", "gearUpgrades", "respec", "threat", "bossEncounters", "instancing", "scheduler", "worldState", "luaPlugins"),
             keys.toSet()
         )
     }

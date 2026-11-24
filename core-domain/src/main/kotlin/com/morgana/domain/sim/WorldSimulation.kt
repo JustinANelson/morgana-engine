@@ -2,6 +2,8 @@ package com.morgana.domain.sim
 
 import com.morgana.domain.systems.ArenaMatch
 import com.morgana.domain.systems.SchedulerSystem
+import com.morgana.domain.systems.WorldObjectResult
+import com.morgana.domain.systems.WorldStateSystem
 import com.morgana.domain.game.ScheduleDefinition
 import com.morgana.domain.game.ScheduledOneShot
 import com.morgana.domain.systems.BossEncounterSystem
@@ -289,6 +291,31 @@ class WorldSimulation(
     /** Systems that follow real-world time ([WallClockListener]). */
     val wallClockListeners: MutableList<WallClockListener> = mutableListOf()
 
+    /**
+     * How scheduled times become real time. The default is pure and knows only UTC; a server installs the full time-zone calendar
+     * (`JavaTimeScheduleCalendar`) before ticking, because the shared domain carries no time-zone database. See [com.morgana.domain.game.ScheduleCalendar].
+     */
+    var scheduleCalendar: com.morgana.domain.game.ScheduleCalendar = com.morgana.domain.game.UtcScheduleCalendar
+
+    /** Systems that may refuse a placement in the world ([WorldObjectGate]). */
+    val worldObjectGates: MutableList<WorldObjectGate> = mutableListOf()
+
+    /** Systems that hear every world object placed, changed or removed ([WorldObjectObserver]). */
+    val worldObjectObservers: MutableList<WorldObjectObserver> = mutableListOf()
+
+    /**
+     * Everything placed on the maps and left there, by map id and then object id ([com.morgana.domain.entity.WorldObject]). Hashed for
+     * replay and saved by the server per map. Change it only through [placeWorldObject], [removeWorldObject], [damageWorldObject]
+     * and [setWorldObjectData], so each change is an event and is recorded.
+     */
+    val worldObjects: MutableMap<Int, MutableMap<String, com.morgana.domain.entity.WorldObject>> = linkedMapOf()
+
+    /** Tile to object id, per map: the index that makes "what is built here" a lookup. Derived from [worldObjects]; never saved. */
+    private val worldObjectTiles: MutableMap<Int, MutableMap<Long, String>> = linkedMapOf()
+
+    /** Maps whose objects changed since the server last saved them. Persistence bookkeeping, not simulation state. */
+    val dirtyWorldObjectMaps: MutableSet<Int> = linkedSetOf()
+
     /** Systems that react to scheduled warnings and occurrences ([ScheduleHandler]). */
     val scheduleHandlers: MutableList<ScheduleHandler> = mutableListOf()
 
@@ -326,6 +353,8 @@ class WorldSimulation(
         if (system is ItemUseHandler) itemUseHandlers += system
         if (system is WallClockListener) wallClockListeners += system
         if (system is ScheduleHandler) scheduleHandlers += system
+        if (system is WorldObjectGate) worldObjectGates += system
+        if (system is WorldObjectObserver) worldObjectObservers += system
     }
 
     init {
@@ -333,7 +362,7 @@ class WorldSimulation(
         listOf(
             RebirthSystem, PromotionSystem, ArenaSystem, GuildWarSystem, PetSystem,
             StallSystem, DurabilitySystem, GearUpgradeSystem, RespecSystem,
-            ThreatSystem, BossEncounterSystem, RunLifecycleSystem, BoonSystem, SkillTreeSystem, SchedulerSystem,
+            ThreatSystem, BossEncounterSystem, RunLifecycleSystem, BoonSystem, SkillTreeSystem, SchedulerSystem, WorldStateSystem,
             ScriptedWarps, // before instancing: a plugin sees a warp as it was made, and its redirect is routed again
             InstancingSystem,
             ScriptedSystem, // last: the engine's own systems give their opinion before a game's Lua plugins
@@ -909,6 +938,72 @@ class WorldSimulation(
         warningMessage: String = ScheduleDefinition.DEFAULT_WARNING_MESSAGE, fireMessage: String = ScheduleDefinition.DEFAULT_FIRE_MESSAGE
     ): Boolean = SchedulerSystem.scheduleOnce(this, id, atMillis, name, warningsSeconds, data, warningMessage, fireMessage)
 
+    // ---- world objects ----------------------------------------------------------------------------------------------------------
+
+    /**
+     * Places a [kindId] object (from `game.json` `worldObjects`) on a tile. Refused, with a reason fit for a player, when the system
+     * is off, the kind is unknown, the tile is outside the map, blocked, built on or occupied, the map is full, or a
+     * [WorldObjectGate] says no. Events are added to [out].
+     */
+    fun placeWorldObject(
+        kindId: String, mapId: Int, tileX: Int, tileY: Int, ownerCharacterId: String? = null, ownerGuildId: String? = null,
+        data: Map<String, String> = emptyMap(), out: MutableList<WorldSimulationEvent> = mutableListOf()
+    ): WorldObjectResult = WorldStateSystem.place(this, kindId, mapId, tileX, tileY, ownerCharacterId, ownerGuildId, data, out)
+
+    /** Takes an object away ([reason] goes to observers: `removed`, `decayed`, `destroyed`...). False if it does not exist. */
+    fun removeWorldObject(id: String, reason: String = "removed", out: MutableList<WorldSimulationEvent> = mutableListOf()): Boolean =
+        WorldStateSystem.remove(this, id, reason, out)
+
+    /** Hurts an object; it is removed (`destroyed`) when its hit points run out. */
+    fun damageWorldObject(id: String, amount: Int, out: MutableList<WorldSimulationEvent> = mutableListOf()): Boolean =
+        WorldStateSystem.damage(this, id, amount, out)
+
+    /** Replaces what a system keeps on an object. */
+    fun setWorldObjectData(id: String, data: Map<String, String>, out: MutableList<WorldSimulationEvent> = mutableListOf()): Boolean =
+        WorldStateSystem.setData(this, id, data, out)
+
+    /** The object with [id], or null. */
+    fun worldObject(id: String): com.morgana.domain.entity.WorldObject? = worldObjects.values.firstNotNullOfOrNull { it[id] }
+
+    /** The object on a tile, or null. */
+    fun worldObjectAt(mapId: Int, tileX: Int, tileY: Int): com.morgana.domain.entity.WorldObject? =
+        worldObjectTiles[mapId]?.get(tileKey(tileX, tileY))?.let { worldObjects[mapId]?.get(it) }
+
+    /** Every object on a map. */
+    fun worldObjectsOn(mapId: Int): Collection<com.morgana.domain.entity.WorldObject> = worldObjects[mapId]?.values.orEmpty()
+
+    /** True when a blocking object stands on the tile, so nobody can walk onto it. */
+    fun isTileBlockedByObject(mapId: Int, tileX: Int, tileY: Int): Boolean {
+        val obj = worldObjectAt(mapId, tileX, tileY) ?: return false
+        return game.definition.worldObjects?.kind(obj.kind)?.blocksMovement ?: true
+    }
+
+    /** Adds or replaces [obj] in the world and marks its map to be saved. For the placing code and for loading; it makes no event. */
+    internal fun storeWorldObject(obj: com.morgana.domain.entity.WorldObject) {
+        worldObjects.getOrPut(obj.mapId) { linkedMapOf() }[obj.id] = obj
+        worldObjectTiles.getOrPut(obj.mapId) { linkedMapOf() }[tileKey(obj.tileX, obj.tileY)] = obj.id
+        dirtyWorldObjectMaps += obj.mapId
+    }
+
+    internal fun eraseWorldObject(obj: com.morgana.domain.entity.WorldObject) {
+        worldObjects[obj.mapId]?.remove(obj.id)
+        worldObjectTiles[obj.mapId]?.remove(tileKey(obj.tileX, obj.tileY))
+        if (worldObjects[obj.mapId]?.isEmpty() == true) { worldObjects.remove(obj.mapId); worldObjectTiles.remove(obj.mapId) }
+        dirtyWorldObjectMaps += obj.mapId
+    }
+
+    /** Puts saved objects back (at boot, and when a replay starts). They are not marked to be saved again, and make no event. */
+    fun loadWorldObjects(objects: Collection<com.morgana.domain.entity.WorldObject>) {
+        for (obj in objects) {
+            worldObjects.getOrPut(obj.mapId) { linkedMapOf() }[obj.id] = obj
+            worldObjectTiles.getOrPut(obj.mapId) { linkedMapOf() }[tileKey(obj.tileX, obj.tileY)] = obj.id
+            // Ids are `obj-<n>` from the shared entity counter: keep it ahead of every loaded id so a new object never reuses one.
+            obj.id.substringAfterLast('-').toLongOrNull()?.let { if (it >= entitySeq) entitySeq = it + 1 }
+        }
+    }
+
+    private fun tileKey(x: Int, y: Int): Long = (x.toLong() shl 32) or (y.toLong() and 0xFFFFFFFFL)
+
     /** Cancels a one-off made with [scheduleOnce]; false if there was none. */
     fun cancelSchedule(id: String): Boolean = scheduleOneShots.remove(id) != null
 
@@ -924,6 +1019,18 @@ class WorldSimulation(
         override val clock: com.morgana.domain.game.ClockTime? get() = clockNow()
 
         override val wallClockMillis: Long get() = this@WorldSimulation.wallClockMillis
+
+        private fun snapshotOf(o: com.morgana.domain.entity.WorldObject) = com.morgana.domain.script.ScriptObjectSnapshot(
+            o.id, o.kind, o.mapId, o.tileX, o.tileY, o.ownerCharacterId, o.ownerGuildId, o.hp, o.data
+        )
+
+        override fun getWorldObject(id: String) = this@WorldSimulation.worldObject(id)?.let(::snapshotOf)
+
+        override fun worldObjectsNear(mapId: Int, x: Int, y: Int, radius: Int) =
+            this@WorldSimulation.worldObjectsOn(mapId)
+                .filter { maxOf(kotlin.math.abs(it.tileX - x), kotlin.math.abs(it.tileY - y)) <= radius }
+                .sortedWith(compareBy({ maxOf(kotlin.math.abs(it.tileX - x), kotlin.math.abs(it.tileY - y)) }, { it.id }))
+                .map(::snapshotOf)
 
         override fun random(min: Int, max: Int): Int {
             return rng.nextIntInclusive(min, max)

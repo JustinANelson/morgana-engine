@@ -74,6 +74,7 @@ object GameDefinitionValidator {
         checkSchedules(definition, ::error)
         checkTuning(definition, ::error)
         checkClassPassives(definition, ::error)
+        checkWorldObjects(definition, ::error)
         checkWeather(definition, ::error)
         checkSprites(definition, ::error)
         checkOnboarding(definition, ::error)
@@ -419,6 +420,20 @@ object GameDefinitionValidator {
         if (clock.nightLight !in 0..1000) error("/clock/nightLight", "must be between 0 and 1000")
     }
 
+    private fun checkWorldObjects(definition: GameDefinition, error: (String, String) -> Unit) {
+        val w = definition.worldObjects ?: return
+        if (w.maxPerMap !in 1..WorldObjectsDefinition.MAX_PER_MAP) error("/worldObjects/maxPerMap", "must be 1 to ${WorldObjectsDefinition.MAX_PER_MAP} (got ${w.maxPerMap})")
+        if (w.kinds.size > WorldObjectsDefinition.MAX_KINDS) error("/worldObjects/kinds", "has ${w.kinds.size} kinds; the limit is ${WorldObjectsDefinition.MAX_KINDS}")
+        w.kinds.forEachIndexed { i, k ->
+            val at = "/worldObjects/kinds/$i"
+            if (!WorldObjectKind.ID_PATTERN.matches(k.id)) error("$at/id", "must be 1 to 32 characters: lower-case letters, digits or _")
+            if (w.kinds.indexOfFirst { it.id == k.id } != i) error("$at/id", "kind id '${k.id}' is used twice")
+            if (k.name.length > 40) error("$at/name", "must be at most 40 characters")
+            if (k.maxHp !in 1..WorldObjectKind.MAX_HP) error("$at/maxHp", "must be 1 to ${WorldObjectKind.MAX_HP} (got ${k.maxHp})")
+            if (k.tags.size > 16 || k.tags.any { it.isBlank() || it.length > 24 }) error("$at/tags", "at most 16 tags of 1 to 24 characters")
+        }
+    }
+
     private fun checkClassPassives(definition: GameDefinition, error: (String, String) -> Unit) {
         val vitalIds = definition.vitals.map { it.id }.toSet()
         for ((classId, p) in definition.classPassives) {
@@ -461,7 +476,7 @@ object GameDefinitionValidator {
         if (schedules.size > ScheduleDefinition.MAX_SCHEDULES) error("/schedules", "has ${schedules.size} schedules; the limit is ${ScheduleDefinition.MAX_SCHEDULES}")
         schedules.forEachIndexed { i, def ->
             if (schedules.indexOfFirst { it.id == def.id } != i) error("/schedules/$i/id", "schedule id '${def.id}' is used twice")
-            for ((field, message) in ScheduleRules.problems(def)) error("/schedules/$i/$field", message)
+            for ((field, message) in ScheduleRules.structureProblems(def)) error("/schedules/$i/$field", message)
         }
     }
 

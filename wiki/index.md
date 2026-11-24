@@ -68,6 +68,7 @@ Maintenance knowledge base for Morgana ORPG, written for human and AI contributo
 * [System Seams and Installed Systems](/systems/system_seams.md) - How the kernel reaches the systems built on it: twelve seam interfaces, WorldSimulation.install, the installed systems, the boundary test and what stays in the kernel.
 * [Tick Loop and System Layout](/systems/tick_loop.md) - The exact order of work in one simulation tick and how WorldSimulation delegates to system files.
 * [Player Trading](/systems/trading.md) - The two-stage lock-and-confirm trade protocol and its safeguards.
+* [World State (placed objects)](/systems/world_state.md) - Things placed on a map that stay there (walls, chests, totems): deterministic, saved per map, and open to Kotlin systems and Lua through a placement gate and an observer.
 
 ## Server
 

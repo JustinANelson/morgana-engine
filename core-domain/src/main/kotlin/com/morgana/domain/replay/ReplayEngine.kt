@@ -19,6 +19,7 @@ object StateHasher {
         if (sim.scheduleCursorMillis != 0L) append("scheduleCursor=").append(sim.scheduleCursorMillis).append('\n')
         if (sim.scheduleLastFired.isNotEmpty()) append("scheduleLastFired=").append(sim.scheduleLastFired.toSortedMap()).append('\n')
         if (sim.scheduleOneShots.isNotEmpty()) append("scheduleOneShots=").append(sim.scheduleOneShots.toSortedMap()).append('\n')
+        if (sim.worldObjects.isNotEmpty()) append("worldObjects=").append(sim.worldObjects.toSortedMap().mapValues { it.value.toSortedMap() }).append('\n')
         if (sim.pendingEventWaits.isNotEmpty()) append("waits=").append(sim.pendingEventWaits).append('\n')
         if (sim.pendingTextInputs.isNotEmpty()) append("textInputs=").append(sim.pendingTextInputs).append('\n')
         append("entitySeq=").append(sim.entitySeqSnapshot()).append('\n')
@@ -79,6 +80,16 @@ class InputRecorder(
     private val contentFingerprint = StateHasher.contentFingerprint(sim)
     private val gaps = linkedSetOf<String>()
 
+    // The world as it was when recording began: a replay has to start from exactly this, not from where the run ended.
+    private val startEpochTicks = sim.worldEpochTicks
+    private val startSwitches = sim.worldSwitches.toMap()
+    private val startVariables = sim.worldVariables.toMap()
+    private val startStringVariables = sim.worldStringVariables.toMap()
+    private val startScheduleCursor = sim.scheduleCursorMillis
+    private val startScheduleLastFired = sim.scheduleLastFired.toMap()
+    private val startScheduleOneShots = sim.scheduleOneShots.toMap()
+    private val startWorldObjects = sim.worldObjects.values.flatMap { it.values }
+
     /** Notes a state change that bypassed the recorder, so the log is flagged as not faithfully replayable. */
     fun markGap(reason: String) {
         gaps += reason
@@ -101,10 +112,14 @@ class InputRecorder(
         finalTick = sim.currentTick,
         finalHash = StateHasher.hash(sim),
         gaps = gaps.toList(),
-        startingEpochTicks = sim.worldEpochTicks,
-        startingWorldSwitches = sim.worldSwitches.toMap(),
-        startingWorldVariables = sim.worldVariables.toMap(),
-        startingWorldStringVariables = sim.worldStringVariables.toMap()
+        startingEpochTicks = startEpochTicks,
+        startingWorldSwitches = startSwitches,
+        startingWorldVariables = startVariables,
+        startingWorldStringVariables = startStringVariables,
+        startingScheduleCursorMillis = startScheduleCursor,
+        startingScheduleLastFired = startScheduleLastFired,
+        startingScheduleOneShots = startScheduleOneShots,
+        startingWorldObjects = startWorldObjects
     )
 }
 
@@ -130,6 +145,10 @@ object ReplayPlayer {
         sim.worldSwitches.putAll(log.startingWorldSwitches)
         sim.worldVariables.putAll(log.startingWorldVariables)
         sim.worldStringVariables.putAll(log.startingWorldStringVariables)
+        sim.scheduleCursorMillis = log.startingScheduleCursorMillis
+        sim.scheduleLastFired.putAll(log.startingScheduleLastFired)
+        sim.scheduleOneShots.putAll(log.startingScheduleOneShots)
+        sim.loadWorldObjects(log.startingWorldObjects)
         val contentMatches = log.contentFingerprint.isEmpty() || log.contentFingerprint == StateHasher.contentFingerprint(sim)
         val expected = log.checkpoints.associateBy { it.tick }
         val divergences = mutableListOf<ReplayDivergence>()

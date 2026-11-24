@@ -17,6 +17,8 @@ server-data/                      (gitignored; created on first start; repo root
   characters/<id>.json
   world/<collection>/<prefix>_<id:3>.json     e.g. items/item_007.json, maps/map_001.json
   social/guilds/  social/mail/  social/market/  social/exploration/
+  world-objects/map_<id>.json     things placed on maps (walls, chests, claims), one file per map; always JSON ([world state](/systems/world_state.md))
+  server-state.json               world epoch, world switches and variables, the scheduler's cursor, last-fired record and one-offs
   admin-token.txt                 (only when the admin panel is on; owner-only where supported; see [admin panel](/server/admin_panel.md))
 ```
 - `JsonFileDocumentCollection` writes `<id>.json` via temp file + atomic move, pretty-printed, `encodeDefaults = true`, polymorphic discriminator `_type`, `ignoreUnknownKeys = true`. Unsafe filename characters become `_`.

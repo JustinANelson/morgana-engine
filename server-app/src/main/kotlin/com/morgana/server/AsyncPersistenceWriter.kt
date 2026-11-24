@@ -30,6 +30,8 @@ class AsyncPersistenceWriter(private val dataStore: MorganaDataStore) : AutoClos
     private val charGenerations = ConcurrentHashMap<String, Long>()
     private val explorationGenerations = ConcurrentHashMap<String, Long>()
 
+    private val worldObjectGenerations = ConcurrentHashMap<Int, Long>()
+
     private val serverStateLock = Any()
     private var serverStateGeneration = 0L
 
@@ -66,6 +68,25 @@ class AsyncPersistenceWriter(private val dataStore: MorganaDataStore) : AutoClos
         pendingAutosave.set(PendingAutosave(batch, ssGen, serverState))
         if (autosaveScheduled.compareAndSet(false, true)) {
             submitSafely { drainAutosave() }
+        }
+    }
+
+    /** Queues a non-blocking save of map [mapId]'s world objects; a newer snapshot of the same map replaces an older one that has not been written. */
+    fun enqueueWorldObjects(mapId: Int, objects: List<com.morgana.domain.entity.WorldObject>) {
+        if (closed.get()) return
+        val gen = worldObjectGenerations.compute(mapId) { _, prev -> (prev ?: 0L) + 1L }!!
+        submitSafely {
+            synchronized(worldObjectGenerations) {
+                if (worldObjectGenerations[mapId] == gen) dataStore.worldObjects.save(mapId, objects)
+            }
+        }
+    }
+
+    /** Synchronously saves map [mapId]'s world objects, superseding any queued write for it. */
+    fun saveWorldObjectsNow(mapId: Int, objects: List<com.morgana.domain.entity.WorldObject>) {
+        synchronized(worldObjectGenerations) {
+            worldObjectGenerations.compute(mapId) { _, prev -> (prev ?: 0L) + 1L }
+            dataStore.worldObjects.save(mapId, objects)
         }
     }
 

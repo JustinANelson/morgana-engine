@@ -157,6 +157,25 @@ sealed interface ScriptEffect {
         val fireMessage: String = com.morgana.domain.game.ScheduleDefinition.DEFAULT_FIRE_MESSAGE
     ) : ScriptEffect
 
+    /** Places a world object of [kind] on a tile (see `WorldSimulation.placeWorldObject`); ignored if the placement is refused. */
+    @Serializable
+    data class PlaceObject(
+        val kind: String, val mapId: Int, val x: Int, val y: Int,
+        val ownerId: String? = null, val data: Map<String, String> = emptyMap()
+    ) : ScriptEffect
+
+    /** Takes a world object away, with [reason] for observers. */
+    @Serializable
+    data class RemoveObject(val id: String, val reason: String = "removed") : ScriptEffect
+
+    /** Hurts a world object; it is destroyed when its hit points run out. */
+    @Serializable
+    data class DamageObject(val id: String, val amount: Int) : ScriptEffect
+
+    /** Replaces what is kept on a world object. */
+    @Serializable
+    data class SetObjectData(val id: String, val data: Map<String, String>) : ScriptEffect
+
     /** Cancels a one-off booked with [ScheduleOnce]. */
     @Serializable
     data class CancelSchedule(val id: String) : ScriptEffect

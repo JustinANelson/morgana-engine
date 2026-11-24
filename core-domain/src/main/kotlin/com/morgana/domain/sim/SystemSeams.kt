@@ -114,6 +114,24 @@ interface ScheduleHandler {
     fun onSchedule(sim: WorldSimulation, trigger: ScheduleTrigger, out: MutableList<WorldSimulationEvent>)
 }
 
+/** What happened to a world object, for a [WorldObjectObserver]. */
+enum class WorldObjectChange { PLACED, CHANGED, REMOVED }
+
+/**
+ * A system with a say in where things may be built (a claim system refuses a tile near a resource node or inside another's land).
+ * Asked after the world state's own checks (a free tile, a known kind, room on the map); the first refusal wins. Lua plugins use
+ * `register.object_gate`.
+ */
+interface WorldObjectGate {
+    /** Why [kind] may not be placed at the tile (fit to show a player), or null to allow it. [ownerCharacterId] is null for a placement the game makes. */
+    fun refusal(sim: WorldSimulation, kind: com.morgana.domain.game.WorldObjectKind, mapId: Int, tileX: Int, tileY: Int, ownerCharacterId: String?): String?
+}
+
+/** A system that hears every world object placed, changed or removed (a claim tracks its pieces; a quest counts builds). */
+interface WorldObjectObserver {
+    fun onWorldObject(sim: WorldSimulation, obj: com.morgana.domain.entity.WorldObject, change: WorldObjectChange, reason: String, out: MutableList<WorldSimulationEvent>)
+}
+
 /** A system that gives some items a use of their own (a pet item adopts its pet instead of being eaten). */
 interface ItemUseHandler {
     /** Carries out the use of [item] from bag slot [slotIndex] and returns true, or returns false to let the item be used normally. */
@@ -189,6 +207,12 @@ fun WorldSimulation.systemStatus(): List<SystemStatus> = OptionalModule.entries.
         replacedBy = pluginReplacing(m.configKey)?.id,
         installed = systems.any { it is GameSystem && it.key == m.configKey }
     )
+}
+
+internal fun WorldSimulation.notifyWorldObject(
+    obj: com.morgana.domain.entity.WorldObject, change: WorldObjectChange, reason: String, out: MutableList<WorldSimulationEvent>
+) {
+    for (observer in worldObjectObservers) if (isOn(observer)) observer.onWorldObject(this, obj, change, reason, out)
 }
 
 internal fun WorldSimulation.notifyWallClock(nowMillis: Long, out: MutableList<WorldSimulationEvent>) {

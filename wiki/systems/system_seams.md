@@ -27,6 +27,8 @@ stale_after: 2027-05-20T00:00:00Z
 | `WarpRouter` | decide where a warp really goes: `WarpRoute.To` a map (a private copy, say), `Redirect` to another map (routed again, at most four times) or `Refused`; no opinion means the map the warp named | every player warp (`warpedPlayer`: warp tiles, warp spells and scrolls, the event warp step, script warps) |
 | `ChatCommandHandler` | own slash commands (`/arena`, `/pet`, `/guildwar`, `/stall`) | `executeAdminSlashCommand`, before the kernel's own commands |
 | `WallClockListener` | follow real-world time: told the wall clock about once a second (the scheduler runs from it) | `WorldSimulation.advanceWallClock`, from the recorded `SimInput.WallClock` |
+| `WorldObjectGate` | refuse a placement in the world (a claim system keeps builders out of someone's land) | `WorldSimulation.placeWorldObject`, after the world state's own checks |
+| `WorldObjectObserver` | hear every world object placed, changed or removed | the world state system |
 | `ScheduleHandler` | react to a scheduled warning or start | the scheduler, for each trigger it raises |
 | `ItemUseHandler` | give an item a use of its own (a pet item adopts its pet) | using an inventory slot |
 | `KillObserver` | share in a kill's reward (a pet earns experience beside its owner) | the monster-death path, after the killer's XP |
@@ -77,6 +79,7 @@ Every seam is open to a game's Lua plugin. The plugin API is in `docs/API_REFERE
 | `TickParticipant` | `register.tick` |
 | `ItemUseHandler` | `register.item_use` |
 | `ScheduleHandler` | `register.schedule` |
+| `WorldObjectGate` | `register.object_gate` |
 | `ActionGate` | `register.action_gate` |
 | `ActivityInterrupter` | `register.on_interrupt` |
 | `CombatObserver` | `register.combat_observer` |

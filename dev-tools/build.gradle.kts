@@ -24,6 +24,16 @@ registerWikiTool("wikiLint", "Lint the OKF wiki: conformance, links, code refere
 registerWikiTool("wikiIndex", "Regenerate wiki/index.md from page frontmatter", "index")
 registerWikiTool("wikiImpact", "List wiki pages affected by changed source files (-PwikiArgs=\"--git <ref>\" or file paths)", "impact")
 
+// EngineBoundaryTest reads the engine's source files, which Gradle cannot see as inputs: without this declaration the test counted as
+// up to date and silently did not re-run when a module's sources changed (a java.time import in :core-domain got through for a day).
+tasks.test {
+    inputs.files(
+        rootProject.fileTree(rootProject.projectDir) {
+            include("*/src/main/**/*.kt", "*/src/main/**/*.java", "*/build.gradle.kts")
+        }
+    ).withPropertyName("engineSources")
+}
+
 // The repository verification gate includes the wiki.
 tasks.named("check") {
     dependsOn("wikiLint")

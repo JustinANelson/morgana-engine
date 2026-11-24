@@ -17,6 +17,7 @@ import com.morgana.domain.script.ScriptItemSubject
 import com.morgana.domain.script.ScriptItemUseHook
 import com.morgana.domain.script.ScriptItemUseResult
 import com.morgana.domain.script.ScriptKillHook
+import com.morgana.domain.script.ScriptObjectGateHook
 import com.morgana.domain.script.ScriptScheduleHook
 import com.morgana.domain.script.ScriptTickHook
 import com.morgana.domain.script.ScriptWarpHook
@@ -481,6 +482,47 @@ class LuakScriptRuntime(
                     }
                 }
                 registry.registerScheduleHook(ScriptScheduleHook(moduleId, ids, onWarning?.let(::runner), onFire?.let(::runner)))
+                return LuaValue.NIL
+            }
+        })
+
+        // register.object_gate(function(info, world) return false, "Why." end) or register.object_gate{ kinds = {"wall"}, check = fn }
+        // info = { kind, map_id, x, y, owner_id }. Return false (and a reason) to refuse the placement; anything else allows it.
+        reg.set("object_gate", object : OneArgFunction() {
+            override fun call(arg: LuaValue?): LuaValue? {
+                val spec = arg ?: return LuaValue.NIL
+                val fn: LuaFunction
+                val kinds = LinkedHashSet<String>()
+                if (spec.isfunction()) {
+                    fn = spec as LuaFunction
+                } else {
+                    val t = spec.checktable() ?: throw LuaError("register.object_gate: give a function or a table")
+                    val check = t.get("check")
+                    if (check == null || !check.isfunction()) throw LuaError("register.object_gate: give a check function")
+                    fn = check as LuaFunction
+                    val list = t.get("kinds")
+                    if (list != null && !list.isnil()) {
+                        if (!list.istable()) throw LuaError("register.object_gate: kinds must be a list of kind ids")
+                        for (i in 1..list.length()) kinds += (list.get(i)?.tojstring() ?: "")
+                    }
+                }
+                registry.registerObjectGateHook(
+                    ScriptObjectGateHook(moduleId, kinds) { request, view ->
+                        runQuery(moduleId, budget.formulaInstructions, null, view) { world ->
+                            val info = LuaValue.tableOf()
+                            info.set("kind", LuaValue.valueOf(request.kind))
+                            info.set("map_id", LuaValue.valueOf(request.mapId))
+                            info.set("x", LuaValue.valueOf(request.x))
+                            info.set("y", LuaValue.valueOf(request.y))
+                            request.ownerId?.let { info.set("owner_id", LuaValue.valueOf(it)) }
+                            val result = fn.invoke(LuaValue.varargsOf(arrayOf(info, world)))
+                            val first = result.arg1()
+                            if (first != null && first.isboolean() && !first.toboolean()) {
+                                result.arg(2)?.takeIf { it.isstring() }?.tojstring() ?: "You cannot build that here."
+                            } else null
+                        }
+                    }
+                )
                 return LuaValue.NIL
             }
         })

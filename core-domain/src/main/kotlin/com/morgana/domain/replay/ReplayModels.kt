@@ -24,6 +24,24 @@ sealed interface SimInput {
     @Serializable data class WallClock(val millis: Long) : SimInput {
         override fun applyTo(sim: WorldSimulation) = sim.advanceWallClock(millis)
     }
+    /** Places a world object (a placement the game or a system makes, not a player's item use, which is recorded as `UseInventorySlot`). */
+    @Serializable data class PlaceWorldObject(
+        val kind: String, val mapId: Int, val tileX: Int, val tileY: Int,
+        val ownerCharacterId: String? = null, val ownerGuildId: String? = null, val data: Map<String, String> = emptyMap()
+    ) : SimInput {
+        override fun applyTo(sim: WorldSimulation): List<WorldSimulationEvent> {
+            val out = mutableListOf<WorldSimulationEvent>()
+            sim.placeWorldObject(kind, mapId, tileX, tileY, ownerCharacterId, ownerGuildId, data, out)
+            return out
+        }
+    }
+    @Serializable data class RemoveWorldObject(val id: String, val reason: String = "removed") : SimInput {
+        override fun applyTo(sim: WorldSimulation): List<WorldSimulationEvent> {
+            val out = mutableListOf<WorldSimulationEvent>()
+            sim.removeWorldObject(id, reason, out)
+            return out
+        }
+    }
     @Serializable data class SpawnPlayer(val character: CharacterState) : SimInput {
         override fun applyTo(sim: WorldSimulation) = sim.spawnOrUpdatePlayer(character)
     }
@@ -183,7 +201,15 @@ data class ReplayLog(
     /** World-wide numbers present when this replay started. */
     val startingWorldVariables: Map<String, Int> = emptyMap(),
     /** World-wide strings present when this replay started. */
-    val startingWorldStringVariables: Map<String, String> = emptyMap()
+    val startingWorldStringVariables: Map<String, String> = emptyMap(),
+    /** The scheduler's cursor (wall-clock milliseconds it had raised events up to) when this replay started; 0 if it had not started. */
+    val startingScheduleCursorMillis: Long = 0L,
+    /** Which occurrence of each schedule had last started when this replay started. */
+    val startingScheduleLastFired: Map<String, Long> = emptyMap(),
+    /** One-off schedules waiting when this replay started. */
+    val startingScheduleOneShots: Map<String, com.morgana.domain.game.ScheduledOneShot> = emptyMap(),
+    /** The world objects on the maps when this replay started. */
+    val startingWorldObjects: List<com.morgana.domain.entity.WorldObject> = emptyList()
 ) {
     companion object {
         const val FORMAT_VERSION = 1

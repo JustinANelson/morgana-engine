@@ -91,6 +91,12 @@ interface ScriptWorldView {
     /** The real-world time (epoch milliseconds, UTC) the server last reported, 0 before the first report. Exposed to Lua as `world.now_ms`. */
     val wallClockMillis: Long get() = 0L
 
+    /** The world object with [id], or null. Exposed to Lua as `world.get_object(id)`. */
+    fun getWorldObject(id: String): ScriptObjectSnapshot? = null
+
+    /** World objects within [radius] tiles of ([x], [y]) on [mapId], nearest first. Exposed to Lua as `world.objects_near(map_id, x, y, radius)`. */
+    fun worldObjectsNear(mapId: Int, x: Int, y: Int, radius: Int): List<ScriptObjectSnapshot> = emptyList()
+
     /** The game's calendar right now, or null when the game declares no clock. Exposed to Lua as `world.clock`. */
     val clock: com.morgana.domain.game.ClockTime? get() = null
 

@@ -305,6 +305,16 @@ register.schedule{ id = "cleansing",
   end }
 ```
 
+#### `register.object_gate(function(info, world))` or `register.object_gate{ kinds, check }`
+Rules on what may be built (needs the `worldState` system and `worldObjects` kinds in `game.json`). Asked for every placement after the engine's own checks (a free tile, a known kind, room on the map). `info` is `{ kind, map_id, x, y, owner_id }` (`owner_id` is absent when the game places it). Return `false` to refuse, optionally `false, "Why."` (shown to the player; the default is "You cannot build that here."); return nothing to allow. `kinds` limits it to those kinds. A pure query with the formula budget: it reads the world (`world.objects_near`, `world.get_map`) but causes no effects.
+```lua
+register.object_gate{ kinds = { "wall" }, check = function(info, world)
+  for _, o in ipairs(world.objects_near(info.map_id, info.x, info.y, 6)) do
+    if o.owner_id ~= info.owner_id then return false, "Too close to another base." end
+  end
+end }
+```
+
 #### `register.warp(function(player, warp, world))`
 Rules on warps: every way a player is moved to a map (warp tiles, warp spells and scrolls, the event warp step, a script warp) asks this first. `warp` is `{ map_id, name, x, y, instanced }`. Return `false` to refuse the warp (optionally `false, "Why."` to tell the player), return a map id to send the player to **that map instead** (same tile; the new target is routed again, so a redirect to an instanced map gets its private copy), or return nothing to leave the warp alone. Pure query, formula budget. A warp hook is asked before the engine's own instancing, so it sees the warp as it was made. A plugin that wants a different rule for instanced maps replaces the system: `register.plugin{ id = "shared-crypts", replaces = { "instancing" } }` makes an instanced map one shared map.
 ```lua
@@ -328,6 +338,7 @@ end)
 | combat observers | `register.combat_observer` |
 | kill observers | `register.on_kill` |
 | schedule handlers | `register.schedule` |
+| world object gates | `register.object_gate` |
 | warp routers | `register.warp` |
 | chat commands | `register.command` |
 | event commands | `register.event_command` (and `register.event_condition`) |
@@ -367,6 +378,12 @@ These functions emit declarative `ScriptEffect` mutations that are validated aga
 | `world.consume_vital` | `(playerId, vitalId, amount)` | Deducts points from a player's vital pool. |
 | `world.schedule_once` | `(id, atMs, [{ name, warnings = {seconds...}, data = {k = v}, warning_message, fire_message }])` | Books a one-off with the scheduler, `atMs` in epoch milliseconds (use `world.now_ms + ...`). Ignored if the scheduler is off, the time is not in the future, or `id` belongs to a `game.json` schedule. Needs the `state` capability. |
 | `world.cancel_schedule` | `(id)` | Cancels a one-off booked with `world.schedule_once`. Needs the `state` capability. |
+| `world.get_object` | `(id)` | The world object with that id as `{ id, kind, map_id, x, y, owner_id, guild_id, hp, data }`, or `nil`. |
+| `world.objects_near` | `(mapId, x, y, [radius])` | World objects within `radius` tiles (default 1, at most 64), nearest first, each as above. |
+| `world.place_object` | `(kind, mapId, x, y, [ownerId], [data])` | Places a world object; ignored if refused. Needs the `state` capability. |
+| `world.remove_object` | `(id, [reason])` | Takes a world object away (`reason` goes to observers). Needs the `state` capability. |
+| `world.damage_object` | `(id, amount)` | Hurts a world object; it is destroyed at 0 HP. Needs the `state` capability. |
+| `world.set_object_data` | `(id, table)` | Replaces what is kept on a world object (string, number and boolean values, kept as strings). Needs the `state` capability. |
 | `world.set_state` | `(key, table)` | Stores `table` (string, number and boolean values, kept as strings) under `key` in the simulation's script state; `nil` or `{}` deletes the key. Hooks are stateless, so this is how a script remembers anything between ticks. Hashed for replays, not saved. |
 
 ### Content and State Queries (action combat)

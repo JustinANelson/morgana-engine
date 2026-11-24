@@ -41,6 +41,10 @@ in `AuthResult`, `MapStateSnapshot` and `Pong`, so no clock packets are sent.
 season, 1..12 unique season names, start time 0..999. Plan for crops and homes that build on it: [ADR 0015](/decisions/0015_plots_crops_and_housing_plan.md).
 
 
+## World objects (`worldObjects`, optional)
+`"worldObjects": { "maxPerMap": 20000, "kinds": [ { "id": "wall", "name": "Wall", "blocksMovement": true, "maxHp": 100, "tags": ["wall"] } ] }`.
+The kinds of thing that can be placed in the world and stay there (walls, chests, totems, signs), used by the `worldState` system: [world state](/systems/world_state.md). Per kind: `id` (`a-z 0-9 _`, unique), `name`, `blocksMovement` (default true), `maxHp` (default 100), `tags`, and `spriteTilesetId`/`spriteTileX`/`spriteTileY` for the future renderer. An item places one when its `placesObject` names the kind. Validation: ids, duplicates, `maxHp` 1..10,000,000, `maxPerMap` 1..500,000.
+
 ## Class passives (`classPassives`, optional)
 `"classPassives": { "1": { "vitalMaxPercent": { "hp": 5 }, "armorPercent": 5 }, "5": { "damagePercent": 5, "moveSpeedPercent": 5 } }`.
 A small standing bonus per class id, so a soft class template (anyone may use any gear and skill) still has a flavour. Every field is a percentage (-90 to 500) and defaults to no change; a class with no entry has none. `vitalMaxPercent` (by vital id) raises maximum vitals; `damagePercent` is applied to all damage a character deals to monsters and players (melee, ranged, spells, action skills and the dual-wield off-hand strike); `armorPercent` to the armour their gear gives; `healingPercent` to the healing they cast; `moveSpeedPercent` to movement speed (stacks with mounts and sprint). Rounded half up; an empty or missing passive changes nothing. Validation: percent range, vital ids must exist, class ids 1 or more (a class id that does not exist is not checked). Not covered by an end-to-end test: movement speed (the scaling and the hook exist). Tests: `ClassPassiveTest`.

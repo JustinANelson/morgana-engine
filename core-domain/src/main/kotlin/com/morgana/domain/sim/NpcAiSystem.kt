@@ -494,6 +494,7 @@ internal fun WorldSimulation.canNpcStepTo(map: MapDefinition, from: TileCoord, t
     if (!map.canTraverse(from, to, dir, isNpc = true, unlockedDoors = unlocked, depletedResources = depleted)) {
         return false
     }
+    if (isTileBlockedByObject(map.id, to.x, to.y)) return false
     val occupiedByPlayer = players.values.any {
         it.isAlive(game.lifeVitalId) && it.position.mapId == map.id && it.position.tileX == to.x && it.position.tileY == to.y
     }

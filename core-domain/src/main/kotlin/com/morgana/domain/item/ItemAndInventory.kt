@@ -294,6 +294,8 @@ data class ItemDefinition(
     val townGate: Boolean = false,
     /** A consumable that adopts the pet NPC with this id when used (see `PetTraits`); 0 for none. */
     val adoptPetNpcId: Int = 0,
+    /** A `worldObjects.kinds[].id`: using this item places one on the tile the character faces and uses the item up (needs the `worldState` system). */
+    val placesObject: String = "",
     /** A mount: while this is worn, free-movement steps are this percent of a normal step (0 = not a mount, 101 to 200 = faster). */
     val mountSpeedPercent: Int = 0,
     val statusEffectToApply: StatusEffectType? = null,

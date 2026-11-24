@@ -130,9 +130,10 @@ internal fun WorldSimulation.movePlayerImpl(
     if (targetCoord != player.position.tileCoord) {
         val unlocked = unlockedDoors[currentMap.id]?.keys ?: emptySet()
         val depleted = mapResources[currentMap.id]?.filterValues { it.depleted }?.keys ?: emptySet()
-        val npcAtTarget = mapNpcs[currentMap.id]?.any {
+        // A body in the way: a live monster, or a blocking world object (a wall someone built).
+        val npcAtTarget = (mapNpcs[currentMap.id]?.any {
             it.isAlive && it.tileX == targetCoord.x && it.tileY == targetCoord.y
-        } ?: false
+        } ?: false) || isTileBlockedByObject(currentMap.id, targetCoord.x, targetCoord.y)
         val traversable = if (player.isFlying && mayFlyOver(currentMap)) {
             currentMap.isInBounds(targetCoord)
         } else currentMap.canTraverse(

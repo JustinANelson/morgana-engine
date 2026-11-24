@@ -18,8 +18,8 @@ class LuaSchedulerTest {
     private fun ms(iso: String): Long = Instant.parse(iso).toEpochMilli()
 
     private val cleansing = ScheduleDefinition(
-        id = "cleansing", name = "Weekly Cleansing", kind = ScheduleKind.WEEKLY, timezone = "America/New_York",
-        dayOfWeek = "SATURDAY", time = "10:00", warningsSeconds = listOf(900, 60)
+        id = "cleansing", name = "Weekly Cleansing", kind = ScheduleKind.WEEKLY, timezone = "UTC",
+        dayOfWeek = "SATURDAY", time = "15:00", warningsSeconds = listOf(900, 60)
     )
 
     private fun world(): WorldSimulation {

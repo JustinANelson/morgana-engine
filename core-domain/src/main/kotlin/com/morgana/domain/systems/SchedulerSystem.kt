@@ -4,6 +4,7 @@ import com.morgana.domain.entity.CharacterState
 import com.morgana.domain.game.ScheduleDefinition
 import com.morgana.domain.game.ScheduleKind
 import com.morgana.domain.game.ScheduleRules
+import com.morgana.domain.game.UtcScheduleCalendar
 import com.morgana.domain.game.ScheduledOneShot
 import com.morgana.domain.access.PermissionFlag
 import com.morgana.domain.sim.ChatCommandHandler
@@ -17,10 +18,6 @@ import com.morgana.domain.sim.WorldSimulationEvent
 import com.morgana.domain.sim.systemOn
 import com.morgana.domain.sim.notifySchedule
 import com.morgana.domain.sim.tellPlayer
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 /**
  * The scheduler: real-world-time events for any game. It turns the `schedules` in `game.json` (and one-offs booked with
@@ -95,7 +92,7 @@ object SchedulerSystem : WallClockListener, ChatCommandHandler, GameSystem {
         // Starts that are due and not too late, and starts still ahead whose warning time has come. Older occurrences are not looked at.
         val lower = maxOf(cursor, now - grace - 1)
         val lastFired = scheduleLastFired[def.id] ?: 0L
-        for (occurrence in ScheduleRules.occurrences(def, lower, now + lookahead)) {
+        for (occurrence in scheduleCalendar.occurrences(def, lower, now + lookahead)) {
             if (occurrence <= now) {
                 if (occurrence > cursor && occurrence > lastFired && now - occurrence <= grace) {
                     into += Due(occurrence, def, trigger(def, SchedulePhase.FIRE, 0, occurrence, recurring, data))
@@ -117,7 +114,8 @@ object SchedulerSystem : WallClockListener, ChatCommandHandler, GameSystem {
 
     private class Due(val at: Long, val def: ScheduleDefinition, val trigger: ScheduleTrigger)
 
-    private fun oneShotMillis(shot: ScheduledOneShot): Long = ScheduleRules.parseInstant(shot.def.at, ZoneId.of("UTC")) ?: 0L
+    /** When a one-off is due: its `at` is always a UTC ISO time that [scheduleOnce] wrote, so the pure parser reads it. */
+    private fun oneShotMillis(shot: ScheduledOneShot): Long = UtcScheduleCalendar.parseIso(shot.def.at) ?: 0L
 
     internal fun scheduleOnce(
         sim: WorldSimulation, id: String, atMillis: Long, name: String, warningsSeconds: List<Int>, data: Map<String, String>,
@@ -127,17 +125,15 @@ object SchedulerSystem : WallClockListener, ChatCommandHandler, GameSystem {
         if (sim.game.definition.schedules.any { it.id == id }) return false
         if (sim.wallClockMillis <= 0L || atMillis <= sim.wallClockMillis) return false
         val def = ScheduleDefinition(
-            id = id, name = name, kind = ScheduleKind.ONCE, timezone = "UTC", at = Instant.ofEpochMilli(atMillis).toString(),
+            id = id, name = name, kind = ScheduleKind.ONCE, timezone = "UTC", at = UtcScheduleCalendar.formatIso(atMillis),
             warningsSeconds = warningsSeconds.distinct().sortedDescending(), warningMessage = warningMessage, fireMessage = fireMessage
         )
-        if (ScheduleRules.problems(def).isNotEmpty()) return false
+        if (ScheduleRules.structureProblems(def).isNotEmpty() || UtcScheduleCalendar.problems(def).isNotEmpty()) return false
         sim.scheduleOneShots[id] = ScheduledOneShot(def, data.toSortedMap())
         return true
     }
 
     // ---- /schedule --------------------------------------------------------------------------------------------------------
-
-    private val whenFormat = DateTimeFormatter.ofPattern("EEE d MMM yyyy HH:mm z", Locale.ENGLISH)
 
     override fun handle(sim: WorldSimulation, player: CharacterState, parts: List<String>, out: MutableList<WorldSimulationEvent>): Boolean {
         if (parts.firstOrNull()?.lowercase() != "schedule") return false
@@ -162,10 +158,9 @@ object SchedulerSystem : WallClockListener, ChatCommandHandler, GameSystem {
         }
         out.add(sim.tellPlayer(player, "Upcoming:", "INFO"))
         for (def in defs) {
-            val next = ScheduleRules.next(def, now)
+            val next = sim.scheduleCalendar.next(def, now)
             val line = if (next == null) "${def.displayName}: nothing coming up" else {
-                val zone = ScheduleRules.zoneOf(def) ?: ZoneId.of("UTC")
-                "${def.displayName}: in ${ScheduleRules.describeDuration((next - now) / 1000)} (${Instant.ofEpochMilli(next).atZone(zone).format(whenFormat)})"
+                "${def.displayName}: in ${ScheduleRules.describeDuration((next - now) / 1000)} (${sim.scheduleCalendar.describeLocal(def, next)})"
             }
             out.add(sim.tellPlayer(player, line, "INFO"))
         }

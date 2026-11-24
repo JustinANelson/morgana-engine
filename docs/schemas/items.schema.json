@@ -151,6 +151,9 @@
                 "adoptPetNpcId": {
                     "type": "integer"
                 },
+                "placesObject": {
+                    "type": "string"
+                },
                 "mountSpeedPercent": {
                     "type": "integer"
                 },

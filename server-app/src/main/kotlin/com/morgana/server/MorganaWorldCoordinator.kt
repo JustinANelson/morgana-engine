@@ -274,6 +274,12 @@ class MorganaWorldCoordinator(
         simulation.worldSwitches.putAll(serverState.worldSwitches)
         simulation.worldVariables.putAll(serverState.worldVariables)
         simulation.worldStringVariables.putAll(serverState.worldStringVariables)
+        simulation.scheduleCalendar = com.morgana.persistence.JavaTimeScheduleCalendar
+        for (def in simulation.game.definition.schedules) {
+            for ((field, message) in simulation.scheduleCalendar.problems(def)) {
+                org.slf4j.LoggerFactory.getLogger("Scheduler").warn("Schedule '{}' will never run: {} {}", def.id, field, message)
+            }
+        }
         simulation.scheduleCursorMillis = serverState.scheduleCursorMillis
         simulation.scheduleLastFired.putAll(serverState.scheduleLastFired)
         simulation.scheduleOneShots.putAll(serverState.scheduleOneShots)
@@ -281,6 +287,7 @@ class MorganaWorldCoordinator(
             GameScaffolder.seedIfEmpty(dataStore.world)
         }
         dataStore.world.loadIntoSimulation(simulation)
+        simulation.loadWorldObjects(dataStore.worldObjects.loadAll { org.slf4j.LoggerFactory.getLogger("WorldState").warn(it) })
         dataStore.social.guilds.findAll().forEach { simulation.guilds[it.id] = it }
         simulation.modules = modules ?: ServerConfig.load(dataStore.rootDir).moduleFlags()
         simulation.instanceSettings = (ServerConfig.load(dataStore.rootDir).instances ?: InstancesConfig()).toSettings(TICKS_PER_SECOND)
@@ -422,9 +429,21 @@ class MorganaWorldCoordinator(
                 currentServerStateSnapshot()
             )
         }
+        saveChangedWorldObjects(everyTicks = 200L)
         if (simulation.currentTick % 1200L == 0L) expireMarketListings()
         if (simulation.currentTick % 10L == 0L) updateExploration()
         recordTick(startedNanos)
+    }
+
+    /** Saves the maps whose world objects changed, off the tick thread (checked every [everyTicks] ticks; 0 saves now, synchronously). */
+    private fun saveChangedWorldObjects(everyTicks: Long, synchronous: Boolean = false) {
+        if (simulation.dirtyWorldObjectMaps.isEmpty()) return
+        if (!synchronous && simulation.currentTick % everyTicks != 0L) return
+        for (mapId in simulation.dirtyWorldObjectMaps.toList()) {
+            val snapshot = simulation.worldObjectsOn(mapId).toList()
+            if (synchronous) persistenceWriter.saveWorldObjectsNow(mapId, snapshot) else persistenceWriter.enqueueWorldObjects(mapId, snapshot)
+        }
+        simulation.dirtyWorldObjectMaps.clear()
     }
 
     /**
@@ -485,6 +504,7 @@ class MorganaWorldCoordinator(
     @Synchronized
     override fun close() {
         expireGhosts(all = true)
+        saveChangedWorldObjects(everyTicks = 0L, synchronous = true)
         saveServerState()
         persistenceWriter.close()
     }
@@ -2759,6 +2779,8 @@ class MorganaWorldCoordinator(
                 }
                 // For the server and systems only: players hear a schedule through the chat announcement it also emitted.
                 is WorldSimulationEvent.ScheduleTriggered -> Unit
+                // Clients are not told about world objects yet: the protocol and the renderer are still to build (see the world state page).
+                is WorldSimulationEvent.WorldObjectsChanged -> Unit
                 is WorldSimulationEvent.BossTelegraph -> {
                     broadcastNear(ev.mapId, ev.centerX, ev.centerY, ServerPacket.BossTelegraph(ev.mapId, ev.centerX, ev.centerY, ev.radius, ev.windUpTicks, ev.label))
                 }

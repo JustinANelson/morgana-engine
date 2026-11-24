@@ -26,6 +26,8 @@ import com.morgana.domain.sim.OptionalModule
 import com.morgana.domain.sim.PlayerActivity
 import com.morgana.domain.sim.RequirementGate
 import com.morgana.domain.sim.ScheduleHandler
+import com.morgana.domain.sim.WorldObjectGate
+import com.morgana.domain.script.ScriptObjectRequest
 import com.morgana.domain.sim.ScheduleTrigger
 import com.morgana.domain.sim.SchedulePhase
 import com.morgana.domain.script.ScriptScheduleTrigger
@@ -53,7 +55,7 @@ import com.morgana.domain.sim.tellPlayer
  */
 object ScriptedSystem :
     RequirementGate, MonsterBehavior, CombatArbiter, ActionGate, ActivityInterrupter, CombatObserver, KillObserver, ItemUseHandler,
-    ScheduleHandler, GameSystem {
+    ScheduleHandler, WorldObjectGate, GameSystem {
     override val key: String = OptionalModule.LUA_PLUGINS.configKey
 
     private fun WorldSimulation.active(moduleId: String): Boolean =
@@ -161,6 +163,16 @@ object ScriptedSystem :
         val view = sim.asScriptWorldView()
         val snapshot = view.getPlayer(killer.id) ?: return
         for (hook in hooks) sim.apply(hook.run(snapshot, xpReward, view), out)
+    }
+
+    // --- WorldObjectGate
+
+    override fun refusal(sim: WorldSimulation, kind: com.morgana.domain.game.WorldObjectKind, mapId: Int, tileX: Int, tileY: Int, ownerCharacterId: String?): String? {
+        val hooks = sim.scripts.registry.objectGateHooks().filter { it.covers(kind.id) && sim.active(it.moduleId) }
+        if (hooks.isEmpty()) return null
+        val view = sim.asScriptWorldView()
+        val request = ScriptObjectRequest(kind.id, mapId, tileX, tileY, ownerCharacterId)
+        return hooks.firstNotNullOfOrNull { it.check(request, view) }
     }
 
     // --- ScheduleHandler

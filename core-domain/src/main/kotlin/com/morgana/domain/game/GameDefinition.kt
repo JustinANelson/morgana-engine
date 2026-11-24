@@ -94,7 +94,9 @@ data class GameDefinition(
     /** Gameplay numbers a game may change without engine code (harvest cooldown, ranges, `+` level values, party size...). See [GameplayTuning]. */
     val tuning: GameplayTuning? = null,
     /** A small standing bonus per class id (maximum vitals, damage, armour, healing, movement speed). See [ClassPassive]. */
-    val classPassives: Map<Int, ClassPassive> = emptyMap()
+    val classPassives: Map<Int, ClassPassive> = emptyMap(),
+    /** The kinds of thing that can be placed in the world and stay there (walls, chests, totems). See [WorldObjectsDefinition]. */
+    val worldObjects: WorldObjectsDefinition? = null
 ) {
     /** The passive of class [classId], or none. */
     fun passiveOf(classId: Int): ClassPassive = classPassives[classId] ?: ClassPassive.NONE

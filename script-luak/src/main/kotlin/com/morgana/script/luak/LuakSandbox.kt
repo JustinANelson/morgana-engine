@@ -162,6 +162,63 @@ object LuakSandbox {
             }
         })
 
+        fun objectToTable(o: com.morgana.domain.script.ScriptObjectSnapshot): LuaTable {
+            val t = LuaValue.tableOf()
+            t.set("id", LuaValue.valueOf(o.id))
+            t.set("kind", LuaValue.valueOf(o.kind))
+            t.set("map_id", LuaValue.valueOf(o.mapId))
+            t.set("x", LuaValue.valueOf(o.x))
+            t.set("y", LuaValue.valueOf(o.y))
+            o.ownerId?.let { t.set("owner_id", LuaValue.valueOf(it)) }
+            o.guildId?.let { t.set("guild_id", LuaValue.valueOf(it)) }
+            t.set("hp", LuaValue.valueOf(o.hp))
+            val data = LuaValue.tableOf()
+            for ((k, v) in o.data) data.set(k, LuaValue.valueOf(v))
+            t.set("data", data)
+            return t
+        }
+
+        // world.get_object(id) and world.objects_near(map_id, x, y, radius): what has been built.
+        world.set("get_object", object : OneArgFunction() {
+            override fun call(arg: LuaValue?): LuaValue? = worldView.getWorldObject(arg?.checkjstring() ?: return LuaValue.NIL)?.let(::objectToTable) ?: LuaValue.NIL
+        })
+        world.set("objects_near", object : VarArgFunction() {
+            override fun invoke(args: Varargs): Varargs {
+                val list = worldView.worldObjectsNear(args.checkint(1), args.checkint(2), args.checkint(3), args.optint(4, 1).coerceIn(0, 64))
+                val out = LuaValue.tableOf()
+                list.forEachIndexed { i, o -> out.set(i + 1, objectToTable(o)) }
+                return out
+            }
+        })
+
+        // world.place_object(kind, map_id, x, y, [owner_id], [data]), remove_object(id, [reason]), damage_object(id, amount), set_object_data(id, table)
+        world.set("place_object", object : VarArgFunction() {
+            override fun invoke(args: Varargs): Varargs {
+                val owner = args.arg(5)?.takeIf { it.isstring() }?.tojstring()
+                val data = args.arg(6)?.takeIf { it.istable() }?.let { tableToStringMap(it) } ?: emptyMap()
+                effectsOut.add(ScriptEffect.PlaceObject(args.checkjstring(1), args.checkint(2), args.checkint(3), args.checkint(4), owner, data))
+                return LuaValue.NIL
+            }
+        })
+        world.set("remove_object", object : VarArgFunction() {
+            override fun invoke(args: Varargs): Varargs {
+                effectsOut.add(ScriptEffect.RemoveObject(args.checkjstring(1), args.optjstring(2, "removed") ?: "removed"))
+                return LuaValue.NIL
+            }
+        })
+        world.set("damage_object", object : VarArgFunction() {
+            override fun invoke(args: Varargs): Varargs {
+                effectsOut.add(ScriptEffect.DamageObject(args.checkjstring(1), args.checkint(2)))
+                return LuaValue.NIL
+            }
+        })
+        world.set("set_object_data", object : VarArgFunction() {
+            override fun invoke(args: Varargs): Varargs {
+                effectsOut.add(ScriptEffect.SetObjectData(args.checkjstring(1), args.arg(2)?.takeIf { it.istable() }?.let { tableToStringMap(it) } ?: emptyMap()))
+                return LuaValue.NIL
+            }
+        })
+
         world.set("cancel_schedule", object : OneArgFunction() {
             override fun call(arg: LuaValue?): LuaValue? {
                 effectsOut.add(ScriptEffect.CancelSchedule(arg?.checkjstring() ?: return LuaValue.NIL))
