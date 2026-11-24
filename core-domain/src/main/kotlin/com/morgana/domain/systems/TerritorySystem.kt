@@ -36,7 +36,7 @@ import com.morgana.domain.spatial.TileCoord
  * What the GDD of a particular game adds (upkeep, decay, weekly wipes, raids, siege damage) is built from the same parts: schedules, Lua
  * hooks (`register.schedule`, `register.object_gate`) and the claim data (`data` on the claim object).
  */
-object TerritorySystem : WorldObjectGate, com.morgana.domain.sim.WorldObjectDamageGate, CombatArbiter, ScheduleHandler, ChatCommandHandler, GameSystem {
+object TerritorySystem : WorldObjectGate, com.morgana.domain.sim.StanceForcer, com.morgana.domain.sim.WorldObjectDamageGate, CombatArbiter, ScheduleHandler, ChatCommandHandler, GameSystem {
     override val key: String = OptionalModule.TERRITORY.configKey
 
     private const val KEY_LEVEL = "level"
@@ -173,6 +173,13 @@ object TerritorySystem : WorldObjectGate, com.morgana.domain.sim.WorldObjectDama
         if (kindOf(sim, claim)?.safeZone != true || isWindowOpen(claim)) return null
         if (mayBuildIn(sim, claim, attacker.id)) return null
         return "This land is protected right now."
+    }
+
+    /** Inside a claim whose attack window is open everyone is in PvP stance: a siege cannot be sat out. */
+    override fun forcesPvp(sim: WorldSimulation, player: CharacterState): Boolean {
+        if (sim.game.definition.territory == null) return false
+        val claim = claimAt(sim, player.position.mapId, player.position.tileX, player.position.tileY) ?: return false
+        return isWindowOpen(claim)
     }
 
     // ---- attack windows ---------------------------------------------------------------------------------------------------------

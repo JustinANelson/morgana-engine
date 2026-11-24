@@ -75,6 +75,7 @@ enum class OptionalModule(
     SKILL_TREES("skillTrees", "Skill trees", "Per-class skill and talent trees (/skills) spending points earned on level-up (needs skillTree in the game rules).", setOf(SystemTags.ROGUELIKE, SystemTags.RPG)),
     WORLD_STATE("worldState", "World state", "Things placed on a map that stay there: walls, chests, signs, the base of base building and claims (needs worldObjects in the game rules).", setOf(SystemTags.SURVIVAL, SystemTags.FARMING, SystemTags.RPG, SystemTags.ROLEPLAY)),
     TERRITORY("territory", "Territory", "Claim land: only owners (and their guild or friends) build on it, claims keep apart and hold a limited number of pieces, safe zones and timed attack windows (needs territory and worldObjects in the game rules).", setOf(SystemTags.SURVIVAL, SystemTags.RPG), setOf("worldState")),
+    COMBAT_STANCE("combatStance", "Combat stance", "A SAFE / PvE / PvP stance each character chooses (/stance), with per-map permission, arming and disarming times, and forced PvP in an attack window (needs combatStance in the game rules).", setOf(SystemTags.SURVIVAL, SystemTags.RPG)),
     SCHEDULER("scheduler", "Scheduler", "Real-world-time events: weekly resets, daily bonuses, timed windows with advance warnings in chat and for Lua plugins (needs schedules in the game rules).", setOf(SystemTags.SURVIVAL, SystemTags.RPG, SystemTags.ROLEPLAY));
 
     companion object {

@@ -51,6 +51,7 @@ These are installed through the [kernel seams](/systems/system_seams.md) (each i
 | `instancing` | Instanced maps | *(listed in the first table; it is also an installed system now)* an instanced map is one shared map; no private copies, generated floors, tiers or scaling; `warpedPlayer` follows the map the warp named |
 | `bossEncounters` | Boss encounters | bosses act like ordinary monsters: no phases, ground attacks, adds or lockout, and they may roll elite variants |
 | `territory` | Territory | claims stop applying: anyone builds anywhere, claims need no spacing, safe zones and attack windows do nothing, `/claim` is skipped; claims already placed stay as ordinary objects ([territory](/systems/territory.md)) (needs `worldState`) |
+| `combatStance` | Combat stance | stances stop applying: whoever the PK mode and safe zones allow can fight, `/stance` says there are no stances; stored stances are kept ([combat stance](/systems/combat_stance.md)) |
 | `worldState` | World state | nothing can be placed: `placeWorldObject` refuses, items that place objects do nothing, `/object` is skipped; objects already saved are kept and still block walking ([world state](/systems/world_state.md)) |
 | `scheduler` | Scheduler | no schedule or booked window is ever raised; `/schedule` is skipped; the wall clock is still recorded ([scheduler](/systems/scheduler.md)) |
 | `luaPlugins` | Lua plugins | every plugin hook is silent (a kill switch for all of a game's Lua extensions) |

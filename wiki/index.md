@@ -45,6 +45,7 @@ Maintenance knowledge base for Morgana ORPG, written for human and AI contributo
 * [Arena](/systems/arena.md) - Instanced team fights: the /arena queue, rating-based pairing, countdown, no loss on death, Elo rating changes and rewards.
 * [Boss Encounters](/systems/boss_encounters.md) - Scripted boss fights: phases by life percent, adds, telegraphed ground attacks, dungeon difficulty tiers and weekly lockouts.
 * [Combat, Status Effects, Death, and Loot](/systems/combat.md) - Pluggable CombatModule port, RealtimeCombatModule, LuaCombatModule, NoOpCombatModule, generic actions, melee, ranged, spells, projectiles, PvP, status effects, regeneration, death penalties, loot, and XP sharing.
+* [Combat stance (SAFE / PvE / PvP)](/systems/combat_stance.md) - A stance each character chooses: only two PvP-stance characters can hurt each other. Per-map permission, arming and disarming times, forced PvP in a siege window, and a shared 'in combat' record.
 * [Deterministic Replay](/systems/deterministic_replay.md) - Input-log recorder, replay player, state hashing, JSON codec, and the golden-master test workflow.
 * [Shops, Bank, and Crafting](/systems/economy.md) - Buy/sell rate rules, bank storage, and recipe crafting including crafting-station enforcement.
 * [Page Events, Dialogue, and Quests](/systems/events_quests.md) - How event pages are chosen, which commands exist, and how quest objectives progress.

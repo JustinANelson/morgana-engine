@@ -9,6 +9,8 @@ import com.morgana.domain.sim.contentMaps
  * data-class rendering of the (ordered) state maps, so it needs no I/O or platform crypto.
  */
 object StateHasher {
+    private const val DEFAULT_STANCE_FIELDS = ", stance=PVE, stanceArmsAtTick=-1, lastCombatTick=-1"
+
     fun canonicalState(sim: WorldSimulation): String = buildString {
         append("tick=").append(sim.currentTick).append('\n')
         if (sim.worldEpochTicks != 0L) append("epoch=").append(sim.worldEpochTicks).append('\n')
@@ -24,7 +26,8 @@ object StateHasher {
         if (sim.pendingTextInputs.isNotEmpty()) append("textInputs=").append(sim.pendingTextInputs).append('\n')
         append("entitySeq=").append(sim.entitySeqSnapshot()).append('\n')
         append("rng=").append(sim.rng.stateFingerprint).append('\n')
-        append("players=").append(sim.players).append('\n')
+        // The combat-stance fields are left out while they hold their defaults, so state hashed before they existed (golden replays) is unchanged.
+        append("players=").append(sim.players.toString().replace(DEFAULT_STANCE_FIELDS, "")).append('\n')
         append("npcs=").append(sim.mapNpcs).append('\n')
         append("ground=").append(sim.mapGroundItems).append('\n')
         append("projectiles=").append(sim.mapProjectiles).append('\n')

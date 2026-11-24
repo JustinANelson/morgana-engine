@@ -45,6 +45,10 @@ season, 1..12 unique season names, start time 0..999. Plan for crops and homes t
 `"territory": { "noBuildRadiusTiles": 6, "minClaimSpacingTiles": 0, "claimKinds": [ { "kind": "claim_totem", "levels": [ { "radiusTiles": 10, "maxPieces": 150 } ], "maxPerOwner": 1, "safeZone": true, "guild": false } ] }`.
 Claiming land, on top of world objects: a claim kind names a `worldObjects` kind; each level sets a radius and a piece limit; `guild` makes it the placer's guild's; `safeZone` stops fighting inside it except in an attack window; `maxPerOwner` limits claims per character or guild per map. `noBuildRadiusTiles` keeps placements away from resource nodes and monster spawn tiles; `minClaimSpacingTiles` adds space between claims beyond their radii. Rules and limits: [territory](/systems/territory.md). Validation: kinds exist and are listed once, 1..20 levels, radius 1..200, pieces 1..100,000, `maxPerOwner` 1..1,000.
 
+## Combat stance (`combatStance`, optional)
+`"combatStance": { "defaultPermission": "NONE", "maps": [ { "mapIds": [2], "permission": "OPTIONAL" }, { "mapIds": [3], "permission": "FORCED" } ], "defaultStance": "PVE", "armTicks": 200, "disarmTicks": 2400, "switchTicks": 100 }`.
+Characters choose SAFE, PvE or PvP (`/stance`); only two PvP-stance characters can hurt each other. `permission` is per map: NONE (the stance is ignored), OPTIONAL, FORCED. See [combat stance](/systems/combat_stance.md).
+
 ## World objects (`worldObjects`, optional)
 `"worldObjects": { "maxPerMap": 20000, "kinds": [ { "id": "wall", "name": "Wall", "blocksMovement": true, "maxHp": 100, "tags": ["wall"] } ] }`.
 The kinds of thing that can be placed in the world and stay there (walls, chests, totems, signs), used by the `worldState` system: [world state](/systems/world_state.md). Per kind: `id` (`a-z 0-9 _`, unique), `name`, `blocksMovement` (default true), `maxHp` (default 100), `tags`, and `spriteTilesetId`/`spriteTileX`/`spriteTileY` for the future renderer. An item places one when its `placesObject` names the kind. Validation: ids, duplicates, `maxHp` 1..10,000,000, `maxPerMap` 1..500,000.

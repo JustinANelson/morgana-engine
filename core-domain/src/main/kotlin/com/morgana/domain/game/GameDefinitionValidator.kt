@@ -76,6 +76,7 @@ object GameDefinitionValidator {
         checkClassPassives(definition, ::error)
         checkWorldObjects(definition, ::error)
         checkTerritory(definition, ::error)
+        checkCombatStance(definition, ::error)
         checkWeather(definition, ::error)
         checkSprites(definition, ::error)
         checkOnboarding(definition, ::error)
@@ -436,6 +437,19 @@ object GameDefinitionValidator {
                 if (l.maxPieces !in 1..TerritoryDefinition.MAX_PIECES) error("$at/levels/$j/maxPieces", "must be 1 to ${TerritoryDefinition.MAX_PIECES} (got ${l.maxPieces})")
             }
             if (c.maxPerOwner !in 1..TerritoryDefinition.MAX_PER_OWNER) error("$at/maxPerOwner", "must be 1 to ${TerritoryDefinition.MAX_PER_OWNER} (got ${c.maxPerOwner})")
+        }
+    }
+
+    private fun checkCombatStance(definition: GameDefinition, error: (String, String) -> Unit) {
+        val c = definition.combatStance ?: return
+        for ((field, value) in listOf("armTicks" to c.armTicks, "disarmTicks" to c.disarmTicks, "switchTicks" to c.switchTicks)) {
+            if (value !in 0..CombatStanceDefinition.MAX_TICKS) error("/combatStance/$field", "must be 0 to ${CombatStanceDefinition.MAX_TICKS} (got $value)")
+        }
+        if (c.defaultStance == Stance.PVP) error("/combatStance/defaultStance", "cannot be PVP: a character arms it by choice")
+        val seen = mutableSetOf<Int>()
+        c.maps.forEachIndexed { i, rule ->
+            if (rule.mapIds.isEmpty()) error("/combatStance/maps/$i/mapIds", "list at least one map id")
+            for (id in rule.mapIds) if (!seen.add(id)) error("/combatStance/maps/$i/mapIds", "map $id is in more than one rule")
         }
     }
 

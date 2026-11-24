@@ -98,7 +98,9 @@ data class GameDefinition(
     /** The kinds of thing that can be placed in the world and stay there (walls, chests, totems). See [WorldObjectsDefinition]. */
     val worldObjects: WorldObjectsDefinition? = null,
     /** Claiming land: who may build where, claim spacing and size, safe zones. Needs `worldObjects`. See [TerritoryDefinition]. */
-    val territory: TerritoryDefinition? = null
+    val territory: TerritoryDefinition? = null,
+    /** A SAFE / PvE / PvP stance each character chooses, over the PK mode. See [CombatStanceDefinition]. */
+    val combatStance: CombatStanceDefinition? = null
 ) {
     /** The passive of class [classId], or none. */
     fun passiveOf(classId: Int): ClassPassive = classPassives[classId] ?: ClassPassive.NONE

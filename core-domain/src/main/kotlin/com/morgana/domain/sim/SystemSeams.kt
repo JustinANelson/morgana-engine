@@ -127,6 +127,12 @@ interface WorldObjectGate {
     fun refusal(sim: WorldSimulation, kind: com.morgana.domain.game.WorldObjectKind, mapId: Int, tileX: Int, tileY: Int, ownerCharacterId: String?): String?
 }
 
+/** A system that can force characters into the PvP stance where they stand (a siege window forces everyone inside the claim). */
+interface StanceForcer {
+    /** True when [player] is in PvP stance right now whatever they chose, and cannot leave it. */
+    fun forcesPvp(sim: WorldSimulation, player: CharacterState): Boolean
+}
+
 /** A system with a say in whether a placed object may be hurt (a claim in its protected state shrugs off blows). */
 interface WorldObjectDamageGate {
     /** Why [attacker] may not hurt [obj] now (a short reason; nothing is shown when it is blank), or null to allow it. The first refusal wins. */

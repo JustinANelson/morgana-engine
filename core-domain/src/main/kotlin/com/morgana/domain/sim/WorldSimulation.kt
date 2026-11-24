@@ -1,6 +1,7 @@
 package com.morgana.domain.sim
 
 import com.morgana.domain.systems.ArenaMatch
+import com.morgana.domain.systems.CombatStanceSystem
 import com.morgana.domain.systems.SchedulerSystem
 import com.morgana.domain.systems.WorldObjectResult
 import com.morgana.domain.systems.WorldStateSystem
@@ -300,6 +301,7 @@ class WorldSimulation(
 
     /** Systems that may refuse a placement in the world ([WorldObjectGate]). */
     val worldObjectGates: MutableList<WorldObjectGate> = mutableListOf()
+    val stanceForcers: MutableList<StanceForcer> = mutableListOf()
     val worldObjectDamageGates: MutableList<WorldObjectDamageGate> = mutableListOf()
     val worldObjectInteractions: MutableList<WorldObjectInteraction> = mutableListOf()
 
@@ -360,6 +362,7 @@ class WorldSimulation(
         if (system is WallClockListener) wallClockListeners += system
         if (system is ScheduleHandler) scheduleHandlers += system
         if (system is WorldObjectGate) worldObjectGates += system
+        if (system is StanceForcer) stanceForcers += system
         if (system is WorldObjectDamageGate) worldObjectDamageGates += system
         if (system is WorldObjectInteraction) worldObjectInteractions += system
         if (system is WorldObjectObserver) worldObjectObservers += system
@@ -370,7 +373,7 @@ class WorldSimulation(
         listOf(
             RebirthSystem, PromotionSystem, ArenaSystem, GuildWarSystem, PetSystem,
             StallSystem, DurabilitySystem, GearUpgradeSystem, RespecSystem,
-            ThreatSystem, BossEncounterSystem, RunLifecycleSystem, BoonSystem, SkillTreeSystem, SchedulerSystem, WorldStateSystem, TerritorySystem,
+            ThreatSystem, BossEncounterSystem, RunLifecycleSystem, BoonSystem, SkillTreeSystem, SchedulerSystem, WorldStateSystem, TerritorySystem, CombatStanceSystem,
             ScriptedWarps, // before instancing: a plugin sees a warp as it was made, and its redirect is routed again
             InstancingSystem,
             ScriptedSystem, // last: the engine's own systems give their opinion before a game's Lua plugins

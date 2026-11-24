@@ -134,6 +134,12 @@ data class CharacterState(
     val pkPoints: Int = 0,
     val isRoguePk: Boolean = false,
     val pkMode: PkMode = PkMode.PEACE,
+    /** The stance this character chose (see `combatStance`); has no effect unless the game defines one. */
+    val stance: com.morgana.domain.game.Stance = com.morgana.domain.game.Stance.PVE,
+    /** The tick the PvP stance finishes arming, or -1 when it is not arming. */
+    val stanceArmsAtTick: Long = -1L,
+    /** The tick this character last dealt or took damage in a fight, or -1 for never. */
+    val lastCombatTick: Long = -1L,
     val lastMoveTick: Long = 0L,
     val lastAttackTick: Long = 0L,
     /** True while the character is a ghost after dying (see `GhostDefinition`); they keep 0 life until revived or released. */

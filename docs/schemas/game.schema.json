@@ -401,6 +401,16 @@
                             "type": "null"
                         }
                     ]
+                },
+                "combatStance": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.game.CombatStanceDefinition"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
                 }
             },
             "required": [
@@ -2282,6 +2292,65 @@
                 },
                 "maxPieces": {
                     "type": "integer"
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.CombatStanceDefinition": {
+            "type": "object",
+            "properties": {
+                "defaultPermission": {
+                    "type": "string",
+                    "enum": [
+                        "NONE",
+                        "OPTIONAL",
+                        "FORCED"
+                    ]
+                },
+                "maps": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.game.StanceMapRule"
+                    }
+                },
+                "defaultStance": {
+                    "type": "string",
+                    "enum": [
+                        "SAFE",
+                        "PVE",
+                        "PVP"
+                    ]
+                },
+                "armTicks": {
+                    "type": "integer"
+                },
+                "disarmTicks": {
+                    "type": "integer"
+                },
+                "switchTicks": {
+                    "type": "integer"
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.StanceMapRule": {
+            "type": "object",
+            "properties": {
+                "mapIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "permission": {
+                    "type": "string",
+                    "enum": [
+                        "NONE",
+                        "OPTIONAL",
+                        "FORCED"
+                    ]
                 }
             },
             "required": [],
