@@ -393,6 +393,7 @@ These functions emit declarative `ScriptEffect` mutations that are validated aga
 | `world.despawn_npcs` | `(mapId, [npcId])` | Removes the monsters of that kind (all when omitted) from the map, with no loot or experience; nothing respawns them until `world.reset_map` or the map is swapped. Clients get a fresh snapshot. Needs the `state` capability. |
 | `world.reset_map` | `(mapId)` | Puts the map's monsters (at their spawn slots, full vitals), resource nodes, ground loot and projectiles back to a fresh start; players and world objects are untouched. Needs the `state` capability. |
 | `world.get_object` | `(id)` | The world object with that id as `{ id, kind, map_id, x, y, owner_id, guild_id, hp, data }`, or `nil`. |
+| `world.objects_on_map` | `(mapId)` | Every world object on the map, by id, each as above (`max_hp` is the most hit points its kind has). A query. |
 | `world.objects_near` | `(mapId, x, y, [radius])` | World objects within `radius` tiles (default 1, at most 64), nearest first, each as above. |
 | `world.place_object` | `(kind, mapId, x, y, [ownerId], [data])` | Places a world object; ignored if refused. Needs the `state` capability. |
 | `world.remove_object` | `(id, [reason])` | Takes a world object away (`reason` goes to observers). Needs the `state` capability. |

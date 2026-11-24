@@ -2,6 +2,8 @@
 
 ## 2026-11-24
 
+* **Add** - **`world.objects_on_map(map_id)` and `max_hp` on object tables** ([API reference](/../docs/API_REFERENCE.md)): a plugin can read every world object on a map and each kind's maximum health, which a zone-wide structure rule (Trevena's Cleansing) needs.
+
 * **Add** - **Population scaling** ([population scaling](/systems/population_scaling.md), [game definition](/domain/game_definition.md)): opt-in `game.json` `populationScaling` (`playersForFull`, `floorPercent`, exempt maps and monsters): a map's density, from the players on it, decides how many monster slots respawn and how fast resource nodes regrow; `world.population_percent(map_id)` for plugins. Deterministic; without the section nothing changes. Trevena's engine item S8. Tests: `PopulationScalingTest`.
 
 * **Add** - **Lua per-map API: `world.players_on_map`, `world.npcs_on_map`, `world.despawn_npcs`, `world.reset_map`** ([API reference](/../docs/API_REFERENCE.md), [scripting](/systems/scripting.md)): with the existing `world.warp_player` a plugin can send everyone on a map away, clear its monsters and refill the map. `ScriptEffect.DespawnNpcs` / `ResetMap` (state capability), `WorldSimulation.despawnNpcs` / `resetMapRuntime`, event `MapRuntimeReset` (the server resends the map to its players). Built for Trevena's zoned Cleansing and population-scaled spawns. Tests: `LuaMapApiTest`.

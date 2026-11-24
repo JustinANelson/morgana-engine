@@ -1090,8 +1090,11 @@ class WorldSimulation(
         override val wallClockMillis: Long get() = this@WorldSimulation.wallClockMillis
 
         private fun snapshotOf(o: com.morgana.domain.entity.WorldObject) = com.morgana.domain.script.ScriptObjectSnapshot(
-            o.id, o.kind, o.mapId, o.tileX, o.tileY, o.ownerCharacterId, o.ownerGuildId, o.hp, o.data
+            o.id, o.kind, o.mapId, o.tileX, o.tileY, o.ownerCharacterId, o.ownerGuildId, o.hp, o.data,
+            game.definition.worldObjects?.kind(o.kind)?.maxHp ?: 0
         )
+
+        override fun worldObjectsOnMap(mapId: Int) = this@WorldSimulation.worldObjectsOn(mapId).sortedBy { it.id }.map(::snapshotOf)
 
         override fun getWorldObject(id: String) = this@WorldSimulation.worldObject(id)?.let(::snapshotOf)
 

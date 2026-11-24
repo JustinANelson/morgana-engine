@@ -167,6 +167,14 @@ object LuakSandbox {
         world.set("get_object", object : OneArgFunction() {
             override fun call(arg: LuaValue?): LuaValue? = worldView.getWorldObject(arg?.checkjstring() ?: return LuaValue.NIL)?.let(::objectToTable) ?: LuaValue.NIL
         })
+        world.set("objects_on_map", object : OneArgFunction() {
+            override fun call(arg: LuaValue?): LuaValue? {
+                val list = worldView.worldObjectsOnMap(arg?.checkint() ?: return LuaValue.NIL)
+                val out = LuaValue.tableOf(list.size, 0)
+                list.forEachIndexed { i, o -> out.set(i + 1, objectToTable(o)) }
+                return out
+            }
+        })
         world.set("objects_near", object : VarArgFunction() {
             override fun invoke(args: Varargs): Varargs {
                 val list = worldView.worldObjectsNear(args.checkint(1), args.checkint(2), args.checkint(3), args.optint(4, 1).coerceIn(0, 64))
@@ -600,6 +608,7 @@ object LuakSandbox {
         o.ownerId?.let { t.set("owner_id", LuaValue.valueOf(it)) }
         o.guildId?.let { t.set("guild_id", LuaValue.valueOf(it)) }
         t.set("hp", LuaValue.valueOf(o.hp))
+        t.set("max_hp", LuaValue.valueOf(o.maxHp))
         val data = LuaValue.tableOf()
         for ((k, v) in o.data) data.set(k, LuaValue.valueOf(v))
         t.set("data", data)

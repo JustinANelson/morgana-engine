@@ -97,6 +97,9 @@ interface ScriptWorldView {
     /** World objects within [radius] tiles of ([x], [y]) on [mapId], nearest first. Exposed to Lua as `world.objects_near(map_id, x, y, radius)`. */
     fun worldObjectsNear(mapId: Int, x: Int, y: Int, radius: Int): List<ScriptObjectSnapshot> = emptyList()
 
+    /** Every world object on [mapId], by id. Exposed to Lua as `world.objects_on_map(map_id)`. */
+    fun worldObjectsOnMap(mapId: Int): List<ScriptObjectSnapshot> = emptyList()
+
     /** The game's calendar right now, or null when the game declares no clock. Exposed to Lua as `world.clock`. */
     val clock: com.morgana.domain.game.ClockTime? get() = null
 

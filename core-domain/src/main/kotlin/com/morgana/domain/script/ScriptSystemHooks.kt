@@ -180,7 +180,9 @@ data class ScriptObjectSnapshot(
     val ownerId: String?,
     val guildId: String?,
     val hp: Int,
-    val data: Map<String, String>
+    val data: Map<String, String>,
+    /** The most hit points this kind of object has (0 when the kind is unknown). */
+    val maxHp: Int = 0
 )
 
 /** A placement a [ScriptObjectGateHook] is asked about: [kind] at ([x], [y]) on [mapId], by [ownerId] (null when the game places it). */
