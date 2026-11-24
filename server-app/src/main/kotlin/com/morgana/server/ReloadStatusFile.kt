@@ -21,7 +21,13 @@ data class ReloadStatus(
     val changed: List<String>,
     /** Files left as they were because of errors, each with its problems (JSON pointer, code, message). */
     val rejected: List<RejectedDocument>,
-    val warnings: List<ContentIssue>
+    val warnings: List<ContentIssue>,
+    /** Art files (manifest paths such as `tilesets/7.png`) new or changed in the last art refresh and sent to connected clients. */
+    val assetsUpdated: List<String> = emptyList(),
+    /** Problems with art files in the last refresh (a file left out of the manifest, and why). */
+    val assetErrors: List<String> = emptyList(),
+    /** True when `game.json` changed on disk: game rules are read at start, so the change takes effect after a restart. */
+    val restartRequired: Boolean = false
 )
 
 /**
@@ -33,9 +39,8 @@ object ReloadStatusFile {
     const val NAME = ".reload-status.json"
     private val json = Json { prettyPrint = true; encodeDefaults = true }
 
-    fun write(gameDir: Path, result: ContentReloadResult, rejected: List<RejectedDocument>, now: Long = System.currentTimeMillis()) {
+    fun write(gameDir: Path, status: ReloadStatus) {
         try {
-            val status = ReloadStatus(now, result.applied, result.summary, result.changed, rejected, result.report.warnings)
             Files.createDirectories(gameDir)
             val tmp = gameDir.resolve("$NAME.tmp")
             Files.writeString(tmp, json.encodeToString(status))

@@ -459,8 +459,17 @@ class WorldSimulation(
 
     private fun syncMapNpcSpawns(map: MapDefinition) {
         val list = mapNpcs.getOrPut(map.id) { mutableListOf() }
+        // A map that is swapped while the world runs (a hot reload, an F1 edit) keeps the monsters whose spawn slot did not change.
+        val previous = list.toList()
         list.clear()
         for (slot in map.npcSpawns) {
+            val homeX = slot.spawnX.coerceIn(0, map.width - 1)
+            val homeY = slot.spawnY.coerceIn(0, map.height - 1)
+            val kept = previous.firstOrNull { it.spawnSlotIndex == slot.slotIndex && it.npcId == slot.npcId && it.homeX == homeX && it.homeY == homeY }
+            if (kept != null) {
+                list.add(kept)
+                continue
+            }
             val npcDef = npcs[slot.npcId]
             val variant = rollVariantForNpc(npcDef)
             val vMap = spawnVitalsForNpc(npcDef, variant)
@@ -484,6 +493,8 @@ class WorldSimulation(
 
     private fun syncMapResourceNodes(map: MapDefinition) {
         val nodeMap = mapResources.getOrPut(map.id) { linkedMapOf() }
+        // Nodes that are still the same resource on the same tile keep their health and respawn timer.
+        val previous = nodeMap.toMap()
         nodeMap.clear()
         for (y in 0 until map.height) {
             for (x in 0 until map.width) {
@@ -493,6 +504,11 @@ class WorldSimulation(
                     val resDef = resources[attr.resourceId]
                     val maxHealth = resDef?.maxHealth ?: 3
                     val coord = TileCoord(x, y)
+                    val keptNode = previous[coord]?.takeIf { it.resourceId == attr.resourceId }
+                    if (keptNode != null) {
+                        nodeMap[coord] = keptNode
+                        continue
+                    }
                     nodeMap[coord] = MapResourceState(
                         mapId = map.id,
                         tileX = x,

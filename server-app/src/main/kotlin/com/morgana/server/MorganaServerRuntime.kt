@@ -137,14 +137,26 @@ class MorganaServerRuntime private constructor(
             coordinator.assetBaseUrl = resolveAssetBaseUrl(serverConfig.assets, server.boundWebSocketPort, tls)
             val watcher = if (watchContent) {
                 val log = LoggerFactory.getLogger("ContentReload")
-                val watchTarget = dataStore.contentDir
-                if (java.nio.file.Files.isDirectory(watchTarget)) {
-                    ContentWatcher(watchTarget) {
+                val trees = listOf(
+                    WatchedTree(ChangeKind.CONTENT, dataStore.contentDir) { it.endsWith(".json") },
+                    WatchedTree(ChangeKind.SCRIPTS, dataStore.gameDir.resolve("scripts"), recursive = true) { it.endsWith(".lua") },
+                    WatchedTree(ChangeKind.ASSETS, dataStore.gameDir.resolve(com.morgana.server.assets.GameAssets.FOLDER), recursive = true),
+                    WatchedTree(ChangeKind.GAME, dataStore.gameDir) { it == com.morgana.persistence.GameDefinitionLoader.FILE_NAME }
+                )
+                ContentWatcher(trees) { kinds ->
+                    if (ChangeKind.CONTENT in kinds || ChangeKind.SCRIPTS in kinds) {
                         val result = coordinator.reloadContent()
                         log.info(result.summary)
                         result.report.errors.forEach { log.warn(it.toString()) }
-                    }.start()
-                } else null
+                    }
+                    if (ChangeKind.ASSETS in kinds) {
+                        val sent = coordinator.refreshAssets()
+                        log.info("Game art refreshed: {} file(s) sent to players.", sent.size)
+                    }
+                    if (ChangeKind.GAME in kinds && coordinator.noteGameFileChanged()) {
+                        log.warn("game.json changed on disk; the new rules take effect after a restart.")
+                    }
+                }.start()
             } else {
                 null
             }

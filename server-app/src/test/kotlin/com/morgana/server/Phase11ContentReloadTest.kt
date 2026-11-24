@@ -161,4 +161,28 @@ class Phase11ContentReloadTest {
         assertTrue(status.contains("classes/class_050.json") && status.contains("\"keptPrevious\": false"), status)
         assertTrue(status.contains("item#50"))
     }
+
+    @Test
+    fun `a map file added then deleted is loaded and then unloaded with its players sent back to the start`(@TempDir dir: Path) {
+        val store = MorganaDataStore(dir)
+        val coordinator = MorganaWorldCoordinator(store)
+        val world = dir.resolve("world")
+        val template = Files.readString(world.resolve("maps/map_001.json"))
+        val newFile = world.resolve("maps/map_002.json")
+        Files.writeString(newFile, template.replaceFirst("\"id\": 1", "\"id\": 2").replaceFirst(Regex("\"name\": \"[^\"]*\""), "\"name\": \"Annex\""))
+        val added = coordinator.reloadContent()
+        assertTrue(added.applied, added.summary)
+        assertEquals("Annex", coordinator.simulation.maps[2]?.name)
+
+        val owner = ownerSession(coordinator)
+        val id = owner.characterId!!
+        coordinator.simulation.spawnOrUpdatePlayer(coordinator.simulation.players.getValue(id).copy(position = com.morgana.domain.spatial.WorldPosition.fromTile(2, 3, 3, com.morgana.domain.spatial.Direction.DOWN)))
+
+        Files.delete(newFile)
+        val removed = coordinator.reloadContent()
+        assertTrue(removed.applied, removed.summary)
+        assertTrue("map#2 removed" in removed.changed, removed.changed.toString())
+        assertEquals(null, coordinator.simulation.maps[2])
+        assertEquals(1, coordinator.simulation.players.getValue(id).position.mapId)
+    }
 }

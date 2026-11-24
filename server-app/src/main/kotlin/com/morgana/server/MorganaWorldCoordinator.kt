@@ -41,6 +41,8 @@ import com.morgana.domain.map.MapDefinition
 import com.morgana.domain.replay.InputRecorder
 import com.morgana.domain.sim.ModuleFlags
 import com.morgana.domain.sim.OptionalModule
+import com.morgana.domain.sim.settlePlayersOn
+import com.morgana.domain.sim.unloadContentMap
 import com.morgana.persistence.ServerConfig
 import com.morgana.server.assets.GameAssets
 import com.morgana.server.moderation.ModerationService
@@ -1937,6 +1939,71 @@ class MorganaWorldCoordinator(
         sendSystemMessage(session, "Systems saved to ${ServerConfig.FILE_NAME}: " + (if (disabled.isEmpty()) "all on." else "off: ${disabled.sorted().joinToString()}."))
     }
 
+    // ---- reload status (what an author of generated content reads) ------------------------------------------------------------
+
+    private var lastContentResult: ContentReloadResult? = null
+    private var lastRejected: List<com.morgana.domain.validation.RejectedDocument> = emptyList()
+    private var lastAssetsUpdated: List<String> = emptyList()
+    private var lastAssetErrors: List<String> = emptyList()
+    private var gameJsonChanged: Boolean = false
+
+    private fun publishReloadStatus(result: ContentReloadResult? = null, rejected: List<com.morgana.domain.validation.RejectedDocument>? = null) {
+        if (result != null) { lastContentResult = result; lastRejected = rejected.orEmpty() }
+        val shown = lastContentResult
+        ReloadStatusFile.write(
+            dataStore.gameDir,
+            ReloadStatus(
+                atMillis = System.currentTimeMillis(), applied = shown?.applied ?: true, summary = shown?.summary ?: "No content reload yet.",
+                changed = shown?.changed.orEmpty(), rejected = lastRejected, warnings = shown?.report?.warnings.orEmpty(),
+                assetsUpdated = lastAssetsUpdated, assetErrors = lastAssetErrors, restartRequired = gameJsonChanged
+            )
+        )
+    }
+
+    /**
+     * Rescans `<game>/assets/` after files were added, changed or removed on disk, and sends every new or changed file to the players
+     * who are connected (the same `GameArtUpdated` packet an `F1` art import uses), so generated art shows up without a relog. Files that
+     * fail the art rules are left out and reported in the status file. Returns the manifest paths that were sent.
+     */
+    @Synchronized
+    fun refreshAssets(): List<String> {
+        recorder?.markGap("game art refreshed")
+        val fresh = GameAssets.scan(dataStore.gameDir, simulation.game.definition.id, sprites = simulation.game.definition.sprites)
+        val before = gameAssets.manifest.assets
+        val changed = fresh.manifest.assets.values.filter { before[it.path]?.sha256 != it.sha256 }.sortedBy { it.path }
+        gameAssets = fresh
+        val sent = mutableListOf<String>()
+        for (entry in changed) {
+            val file = fresh.fileFor(entry.path) ?: continue
+            val bytes = try { java.nio.file.Files.readAllBytes(file) } catch (_: Exception) { continue }
+            val encoded = com.morgana.protocol.Base64Codec.encode(bytes)
+            for (target in sessionByCharacterId.values) {
+                val artV2 = clientCapabilitiesBySession[target.sessionId]?.contains(ProtocolCapabilities.ART_V2) == true
+                if (artV2 || entry.kind == com.morgana.protocol.realms.AssetKind.TILESET || entry.kind == com.morgana.protocol.realms.AssetKind.SPRITE) {
+                    target.send(ServerPacket.GameArtUpdated(entry = entry, manifest = fresh.manifestFor(artV2), pngBase64 = encoded))
+                }
+            }
+            sent += entry.path
+        }
+        lastAssetsUpdated = sent
+        lastAssetErrors = fresh.errors
+        publishReloadStatus()
+        return sent
+    }
+
+    /**
+     * Called when `game.json` changed on disk. Game rules are compiled when the server starts, so a change cannot be swapped into the
+     * running world; this records that a restart is needed (in the status file) when the file now differs from what is running.
+     * Returns true when it differs.
+     */
+    @Synchronized
+    fun noteGameFileChanged(): Boolean {
+        val onDisk = try { GameDefinitionLoader.loadFor(dataStore.gameDir, dataStore.rootDir) } catch (_: Exception) { return false }
+        gameJsonChanged = onDisk.definition != simulation.game.definition
+        publishReloadStatus()
+        return gameJsonChanged
+    }
+
     private fun handleReloadCommand(session: ClientSession, charId: String) {
         val admin = simulation.players[charId] ?: return
         if (!admin.accessLevel.hasPermission(PermissionFlag.SERVER_MAINTENANCE)) return
@@ -1949,7 +2016,8 @@ class MorganaWorldCoordinator(
      * Re-reads every content file under `<data>/world`, validates the complete set, and, only if it is
      * error-free, hot-swaps changed definitions into the live simulation and broadcasts them.
      * This is the same pipeline used by the `F1` editor, so hand/script/agent edits behave identically.
-     * Maps removed from disk are kept until restart (players may be standing on them).
+     * A map deleted from disk is unloaded and its players sent to the start; a changed map keeps its monsters and resource nodes
+     * where their spawn slots did not change, and players on tiles that became blocked are moved to the nearest open tile.
      */
     @Synchronized
     fun reloadContent(): ContentReloadResult {
@@ -1967,7 +2035,7 @@ class MorganaWorldCoordinator(
         val report = salvage.report
         if (!salvage.applicable) {
             val result = ContentReloadResult(false, emptyList(), report, "Reload rejected: ${report.errors.size} error(s) that could not be set aside; live world unchanged.")
-            ReloadStatusFile.write(dataStore.gameDir, result, salvage.rejected)
+            publishReloadStatus(result, salvage.rejected)
             return result
         }
         val changed = mutableListOf<String>()
@@ -2006,12 +2074,21 @@ class MorganaWorldCoordinator(
             simulation.registerMap(bumped)
             changed += "map#${map.id}"
             events += WorldSimulationEvent.MapHotSwapped(bumped)
+            // Someone standing where a wall now is gets moved to the nearest open tile.
+            events += simulation.settlePlayersOn(map.id)
+        }
+        // A map whose file was deleted is unloaded, with its players sent to the start. An empty maps folder is never taken to mean
+        // "delete everything" (a missing or mid-copy directory looks the same).
+        if (c.maps.isNotEmpty()) {
+            for (id in simulation.maps.keys.filter { it !in c.maps }.sorted()) {
+                if (simulation.unloadContentMap(id, events)) changed += "map#$id removed"
+            }
         }
         dispatchEvents(events)
         val warnings = if (report.warnings.isNotEmpty()) " (${report.warnings.size} warning(s))" else ""
         val left = if (salvage.rejected.isNotEmpty()) "; ${salvage.rejected.size} file(s) kept as they were because of errors" else ""
         val result = ContentReloadResult(true, changed, report, "Content reloaded: ${changed.size} change(s)$warnings$left.")
-        ReloadStatusFile.write(dataStore.gameDir, result, salvage.rejected)
+        publishReloadStatus(result, salvage.rejected)
         return result
     }
 

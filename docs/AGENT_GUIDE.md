@@ -75,3 +75,14 @@ Unknown field names (typos) are reported as `unknown_field` warnings. `F1` saves
 
 **Gotchas**: Links between maps (warps, neighbors) may dangle temporarily (warning `missing_map_link`); every other reference must exist. Owner access comes from the owner policy, not from a username (`wiki/server/owner_policy.md`). Maps edited in Tiled keep full attribute data in the `morganaAttributes` property (`wiki/content/tiled_conversion.md`). Maps removed from disk stay loaded until restart. A map's `revision` is bumped automatically on reload.
 Create referenced documents before the ones that reference them (e.g. an NPC before the map that spawns it).
+
+## 5. Authoring with a running server (hot loading)
+Start the server on your game (`.\gradlew.bat :server-app:run` with the game's path) and a client, then write files; the running world follows within about a second.
+
+- **Content** (`<game>/data/<collection>/<name>_NNN.json`, including maps): write or edit the file. Every file that validates is applied; one that does not keeps its previous version (a new bad file is simply left out). Write whole files, in place; a half-written file is harmless and is picked up when complete.
+- **Scripts** (`<game>/scripts/*.lua`): saved scripts are reloaded with the content.
+- **Art** (`<game>/assets/tilesets/<id>.png`, `sprites/<id>.png`, ...): new and changed files are pushed to connected clients with their PNG, so a new map and its tileset appear together.
+- **`game.json`**: read at start. A change is noted and needs a restart.
+- **Read the answer** in `<game>/.reload-status.json` after each change: `applied`, `changed` (`map#4`), `rejected` (per file: the file, whether the previous version was kept, and each error with its JSON pointer, code and message), `warnings`, `assetsUpdated`, `assetErrors`, `restartRequired`. Fix what `rejected` lists and save again; the status is rewritten on every reload.
+- A map you delete is unloaded and its players go back to the start; a map you change keeps its monsters and resource nodes where their spawn slots did not change, and moves anyone standing in a new wall. `/reload` (owner) forces a reload.
+
