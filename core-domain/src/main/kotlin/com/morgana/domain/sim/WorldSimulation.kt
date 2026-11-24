@@ -4,6 +4,7 @@ import com.morgana.domain.systems.ArenaMatch
 import com.morgana.domain.systems.SchedulerSystem
 import com.morgana.domain.systems.WorldObjectResult
 import com.morgana.domain.systems.WorldStateSystem
+import com.morgana.domain.systems.TerritorySystem
 import com.morgana.domain.game.ScheduleDefinition
 import com.morgana.domain.game.ScheduledOneShot
 import com.morgana.domain.systems.BossEncounterSystem
@@ -313,6 +314,9 @@ class WorldSimulation(
     /** Tile to object id, per map: the index that makes "what is built here" a lookup. Derived from [worldObjects]; never saved. */
     private val worldObjectTiles: MutableMap<Int, MutableMap<Long, String>> = linkedMapOf()
 
+    /** Map id to kind to the ids of that kind: an index so "every claim on this map" does not scan every object. Derived; never saved. */
+    private val worldObjectsByKind: MutableMap<Int, MutableMap<String, MutableSet<String>>> = linkedMapOf()
+
     /** Maps whose objects changed since the server last saved them. Persistence bookkeeping, not simulation state. */
     val dirtyWorldObjectMaps: MutableSet<Int> = linkedSetOf()
 
@@ -362,7 +366,7 @@ class WorldSimulation(
         listOf(
             RebirthSystem, PromotionSystem, ArenaSystem, GuildWarSystem, PetSystem,
             StallSystem, DurabilitySystem, GearUpgradeSystem, RespecSystem,
-            ThreatSystem, BossEncounterSystem, RunLifecycleSystem, BoonSystem, SkillTreeSystem, SchedulerSystem, WorldStateSystem,
+            ThreatSystem, BossEncounterSystem, RunLifecycleSystem, BoonSystem, SkillTreeSystem, SchedulerSystem, WorldStateSystem, TerritorySystem,
             ScriptedWarps, // before instancing: a plugin sees a warp as it was made, and its redirect is routed again
             InstancingSystem,
             ScriptedSystem, // last: the engine's own systems give their opinion before a game's Lua plugins
@@ -969,6 +973,12 @@ class WorldSimulation(
     fun worldObjectAt(mapId: Int, tileX: Int, tileY: Int): com.morgana.domain.entity.WorldObject? =
         worldObjectTiles[mapId]?.get(tileKey(tileX, tileY))?.let { worldObjects[mapId]?.get(it) }
 
+    /** Every object of [kind] on a map, in the order they were placed. */
+    fun worldObjectsOfKind(mapId: Int, kind: String): List<com.morgana.domain.entity.WorldObject> {
+        val byId = worldObjects[mapId] ?: return emptyList()
+        return worldObjectsByKind[mapId]?.get(kind)?.mapNotNull { byId[it] }.orEmpty()
+    }
+
     /** Every object on a map. */
     fun worldObjectsOn(mapId: Int): Collection<com.morgana.domain.entity.WorldObject> = worldObjects[mapId]?.values.orEmpty()
 
@@ -982,13 +992,15 @@ class WorldSimulation(
     internal fun storeWorldObject(obj: com.morgana.domain.entity.WorldObject) {
         worldObjects.getOrPut(obj.mapId) { linkedMapOf() }[obj.id] = obj
         worldObjectTiles.getOrPut(obj.mapId) { linkedMapOf() }[tileKey(obj.tileX, obj.tileY)] = obj.id
+        worldObjectsByKind.getOrPut(obj.mapId) { linkedMapOf() }.getOrPut(obj.kind) { linkedSetOf() } += obj.id
         dirtyWorldObjectMaps += obj.mapId
     }
 
     internal fun eraseWorldObject(obj: com.morgana.domain.entity.WorldObject) {
         worldObjects[obj.mapId]?.remove(obj.id)
         worldObjectTiles[obj.mapId]?.remove(tileKey(obj.tileX, obj.tileY))
-        if (worldObjects[obj.mapId]?.isEmpty() == true) { worldObjects.remove(obj.mapId); worldObjectTiles.remove(obj.mapId) }
+        worldObjectsByKind[obj.mapId]?.get(obj.kind)?.remove(obj.id)
+        if (worldObjects[obj.mapId]?.isEmpty() == true) { worldObjects.remove(obj.mapId); worldObjectTiles.remove(obj.mapId); worldObjectsByKind.remove(obj.mapId) }
         dirtyWorldObjectMaps += obj.mapId
     }
 
@@ -997,6 +1009,7 @@ class WorldSimulation(
         for (obj in objects) {
             worldObjects.getOrPut(obj.mapId) { linkedMapOf() }[obj.id] = obj
             worldObjectTiles.getOrPut(obj.mapId) { linkedMapOf() }[tileKey(obj.tileX, obj.tileY)] = obj.id
+            worldObjectsByKind.getOrPut(obj.mapId) { linkedMapOf() }.getOrPut(obj.kind) { linkedSetOf() } += obj.id
             // Ids are `obj-<n>` from the shared entity counter: keep it ahead of every loaded id so a new object never reuses one.
             obj.id.substringAfterLast('-').toLongOrNull()?.let { if (it >= entitySeq) entitySeq = it + 1 }
         }

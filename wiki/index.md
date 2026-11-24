@@ -66,6 +66,7 @@ Maintenance knowledge base for Morgana ORPG, written for human and AI contributo
 * [Scheduler](/systems/scheduler.md) - Real-world-time events (a weekly reset, a daily bonus, a booked window) with advance warnings, announced in chat and passed to Lua and other systems, deterministic through a recorded wall-clock input.
 * [Script Host and Sandbox](/systems/scripting.md) - Sandboxed Lua scripting runtime powered by Luak with deterministic instruction budgets, memory ceilings, world queries, and declarative effects.
 * [System Seams and Installed Systems](/systems/system_seams.md) - How the kernel reaches the systems built on it: twelve seam interfaces, WorldSimulation.install, the installed systems, the boundary test and what stays in the kernel.
+* [Territory (claims)](/systems/territory.md) - Claiming land: only owners build inside a claim, claims keep apart and hold limited pieces, claims can be safe zones opened to attack by timed windows. Built on world state and the scheduler.
 * [Tick Loop and System Layout](/systems/tick_loop.md) - The exact order of work in one simulation tick and how WorldSimulation delegates to system files.
 * [Player Trading](/systems/trading.md) - The two-stage lock-and-confirm trade protocol and its safeguards.
 * [World State (placed objects)](/systems/world_state.md) - Things placed on a map that stay there (walls, chests, totems): deterministic, saved per map, and open to Kotlin systems and Lua through a placement gate and an observer.

@@ -50,6 +50,7 @@ import com.morgana.domain.systems.PromotionSystem
 import com.morgana.domain.systems.RebirthSystem
 import com.morgana.domain.systems.SchedulerSystem
 import com.morgana.domain.systems.WorldStateSystem
+import com.morgana.domain.systems.TerritorySystem
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertSame
@@ -86,19 +87,19 @@ class SystemSeamsTest {
         assertEquals(
             listOf(
                 RebirthSystem, PromotionSystem, ArenaSystem, GuildWarSystem, PetSystem, StallSystem, DurabilitySystem, GearUpgradeSystem, RespecSystem,
-                ThreatSystem, BossEncounterSystem, RunLifecycleSystem, BoonSystem, SkillTreeSystem, SchedulerSystem, WorldStateSystem, ScriptedWarps, InstancingSystem, ScriptedSystem
+                ThreatSystem, BossEncounterSystem, RunLifecycleSystem, BoonSystem, SkillTreeSystem, SchedulerSystem, WorldStateSystem, TerritorySystem, ScriptedWarps, InstancingSystem, ScriptedSystem
             ),
-            s.systems.take(19)
+            s.systems.take(20)
         )
-        assertEquals(listOf("ScriptedTicks", "ScriptedTicks"), names(s.systems.drop(19)))
+        assertEquals(listOf("ScriptedTicks", "ScriptedTicks"), names(s.systems.drop(20)))
         assertEquals(listOf(ScriptedWarps, InstancingSystem), s.warpRouters)
         assertEquals(listOf(RebirthSystem, PromotionSystem, ScriptedSystem), s.requirementGates)
         assertEquals(listOf(RebirthSystem, PromotionSystem, ArenaSystem, DurabilitySystem, GearUpgradeSystem, RespecSystem), s.eventCommandHandlers)
-        assertEquals(listOf(ArenaSystem, GuildWarSystem, PetSystem, StallSystem, RunLifecycleSystem, BoonSystem, SkillTreeSystem, SchedulerSystem, WorldStateSystem), s.chatCommandHandlers)
+        assertEquals(listOf(ArenaSystem, GuildWarSystem, PetSystem, StallSystem, RunLifecycleSystem, BoonSystem, SkillTreeSystem, SchedulerSystem, WorldStateSystem, TerritorySystem), s.chatCommandHandlers)
         assertEquals(listOf(SchedulerSystem), s.wallClockListeners)
-        assertEquals(listOf(ScriptedSystem), s.scheduleHandlers)
-        assertEquals(listOf(ScriptedSystem), s.worldObjectGates)
-        assertEquals(listOf(ArenaSystem, GuildWarSystem, RunLifecycleSystem, ScriptedSystem), s.combatArbiters)
+        assertEquals(listOf(TerritorySystem, ScriptedSystem), s.scheduleHandlers)
+        assertEquals(listOf(TerritorySystem, ScriptedSystem), s.worldObjectGates)
+        assertEquals(listOf(ArenaSystem, GuildWarSystem, RunLifecycleSystem, TerritorySystem, ScriptedSystem), s.combatArbiters)
         assertEquals(listOf(ArenaSystem, GuildWarSystem, PetSystem, RunLifecycleSystem), s.tickParticipants.take(4))
         assertEquals(listOf("ScriptedTicks", "ScriptedTicks"), names(s.tickParticipants.drop(4)))
         assertEquals(listOf(PetSystem, RunLifecycleSystem, ScriptedSystem), s.killObservers)

@@ -391,6 +391,16 @@
                             "type": "null"
                         }
                     ]
+                },
+                "territory": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.game.TerritoryDefinition"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
                 }
             },
             "required": [
@@ -2201,6 +2211,65 @@
             "required": [
                 "id"
             ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.TerritoryDefinition": {
+            "type": "object",
+            "properties": {
+                "claimKinds": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.game.ClaimKindDefinition"
+                    }
+                },
+                "noBuildRadiusTiles": {
+                    "type": "integer"
+                },
+                "minClaimSpacingTiles": {
+                    "type": "integer"
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.ClaimKindDefinition": {
+            "type": "object",
+            "properties": {
+                "kind": {
+                    "type": "string"
+                },
+                "levels": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.game.ClaimLevel"
+                    }
+                },
+                "guild": {
+                    "type": "boolean"
+                },
+                "safeZone": {
+                    "type": "boolean"
+                },
+                "maxPerOwner": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "kind"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.ClaimLevel": {
+            "type": "object",
+            "properties": {
+                "radiusTiles": {
+                    "type": "integer"
+                },
+                "maxPieces": {
+                    "type": "integer"
+                }
+            },
+            "required": [],
             "additionalProperties": false
         }
     }

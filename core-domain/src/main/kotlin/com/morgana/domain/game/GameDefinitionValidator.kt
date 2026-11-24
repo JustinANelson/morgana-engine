@@ -75,6 +75,7 @@ object GameDefinitionValidator {
         checkTuning(definition, ::error)
         checkClassPassives(definition, ::error)
         checkWorldObjects(definition, ::error)
+        checkTerritory(definition, ::error)
         checkWeather(definition, ::error)
         checkSprites(definition, ::error)
         checkOnboarding(definition, ::error)
@@ -418,6 +419,24 @@ object GameDefinitionValidator {
             error("/clock", "dawnStartPermille <= dayStartPermille <= duskStartPermille <= nightStartPermille must hold (the day runs midnight, dawn, day, dusk, night)")
         }
         if (clock.nightLight !in 0..1000) error("/clock/nightLight", "must be between 0 and 1000")
+    }
+
+    private fun checkTerritory(definition: GameDefinition, error: (String, String) -> Unit) {
+        val t = definition.territory ?: return
+        if (t.noBuildRadiusTiles !in 0..TerritoryDefinition.MAX_NO_BUILD_RADIUS) error("/territory/noBuildRadiusTiles", "must be 0 to ${TerritoryDefinition.MAX_NO_BUILD_RADIUS} (got ${t.noBuildRadiusTiles})")
+        if (t.minClaimSpacingTiles !in 0..TerritoryDefinition.MAX_SPACING) error("/territory/minClaimSpacingTiles", "must be 0 to ${TerritoryDefinition.MAX_SPACING} (got ${t.minClaimSpacingTiles})")
+        val kinds = definition.worldObjects?.kinds?.map { it.id }?.toSet().orEmpty()
+        t.claimKinds.forEachIndexed { i, c ->
+            val at = "/territory/claimKinds/$i"
+            if (c.kind !in kinds) error("$at/kind", "'${c.kind}' is not one of worldObjects.kinds")
+            if (t.claimKinds.indexOfFirst { it.kind == c.kind } != i) error("$at/kind", "'${c.kind}' is listed twice")
+            if (c.levels.isEmpty() || c.levels.size > TerritoryDefinition.MAX_LEVELS) error("$at/levels", "must list 1 to ${TerritoryDefinition.MAX_LEVELS} levels")
+            c.levels.forEachIndexed { j, l ->
+                if (l.radiusTiles !in 1..TerritoryDefinition.MAX_RADIUS) error("$at/levels/$j/radiusTiles", "must be 1 to ${TerritoryDefinition.MAX_RADIUS} (got ${l.radiusTiles})")
+                if (l.maxPieces !in 1..TerritoryDefinition.MAX_PIECES) error("$at/levels/$j/maxPieces", "must be 1 to ${TerritoryDefinition.MAX_PIECES} (got ${l.maxPieces})")
+            }
+            if (c.maxPerOwner !in 1..TerritoryDefinition.MAX_PER_OWNER) error("$at/maxPerOwner", "must be 1 to ${TerritoryDefinition.MAX_PER_OWNER} (got ${c.maxPerOwner})")
+        }
     }
 
     private fun checkWorldObjects(definition: GameDefinition, error: (String, String) -> Unit) {

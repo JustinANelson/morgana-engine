@@ -9,6 +9,7 @@ import com.morgana.domain.sim.GameSystem
 import com.morgana.domain.sim.ItemUseHandler
 import com.morgana.domain.sim.OptionalModule
 import com.morgana.domain.sim.WorldObjectChange
+import com.morgana.domain.sim.isOn
 import com.morgana.domain.sim.WorldSimulation
 import com.morgana.domain.sim.WorldSimulationEvent
 import com.morgana.domain.sim.notifyWorldObject
@@ -43,7 +44,7 @@ object WorldStateSystem : ItemUseHandler, ChatCommandHandler, GameSystem {
     override fun use(sim: WorldSimulation, player: CharacterState, slotIndex: Int, item: ItemDefinition, out: MutableList<WorldSimulationEvent>): Boolean {
         if (item.placesObject.isBlank()) return false
         val facing = player.position.tileCoord.step(player.position.direction)
-        when (val result = place(sim, item.placesObject, player.position.mapId, facing.x, facing.y, player.id, null, emptyMap(), out)) {
+        when (val result = place(sim, item.placesObject, player.position.mapId, facing.x, facing.y, player.id, player.guildId, emptyMap(), out)) {
             is WorldObjectResult.Refused -> out.add(sim.tellPlayer(player, result.reason, "WARNING"))
             is WorldObjectResult.Placed -> {
                 val (inventory, _) = player.inventory.removeFromSlot(slotIndex, 1) ?: return true
@@ -80,6 +81,7 @@ object WorldStateSystem : ItemUseHandler, ChatCommandHandler, GameSystem {
         }
         if ((sim.worldObjects[mapId]?.size ?: 0) >= definition.maxPerMap) return WorldObjectResult.Refused("This place cannot hold anything more.")
         for (gate in sim.worldObjectGates) {
+            if (!sim.isOn(gate)) continue // a system that is switched off, or replaced by a plugin, has no say
             val refusal = gate.refusal(sim, kind, mapId, tileX, tileY, ownerCharacterId)
             if (refusal != null) return WorldObjectResult.Refused(refusal)
         }
