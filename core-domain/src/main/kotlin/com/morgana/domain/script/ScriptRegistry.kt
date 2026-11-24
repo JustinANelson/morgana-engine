@@ -51,6 +51,7 @@ class ScriptRegistry {
     private val interruptHooks = mutableListOf<ScriptInterruptHook>()
     private val combatObserverHooks = mutableListOf<ScriptCombatObserverHook>()
     private val killHooks = mutableListOf<ScriptKillHook>()
+    private val scheduleHooks = mutableListOf<ScriptScheduleHook>()
     private val warpHooks = mutableListOf<ScriptWarpHook>()
 
     fun registerCommand(definition: ScriptCommandDefinition) {
@@ -175,6 +176,12 @@ class ScriptRegistry {
 
     fun killHooks(): List<ScriptKillHook> = killHooks
 
+    fun registerScheduleHook(hook: ScriptScheduleHook) {
+        scheduleHooks += hook
+    }
+
+    fun scheduleHooks(): List<ScriptScheduleHook> = scheduleHooks
+
     fun registerWarpHook(hook: ScriptWarpHook) {
         warpHooks += hook
     }
@@ -200,6 +207,7 @@ class ScriptRegistry {
         interruptHooks.clear()
         combatObserverHooks.clear()
         killHooks.clear()
+        scheduleHooks.clear()
         warpHooks.clear()
     }
 }

@@ -354,7 +354,7 @@ internal fun WorldSimulation.playerAttackImpl(characterId: String): List<WorldSi
     if (!player.isAlive(game.lifeVitalId)) return emptyList()
     if (player.statusEffects.any { it.preventsActions } || actionBlocked(characterId, PlayerActivity.ATTACK)) return emptyList()
 
-    val weaponStack = player.equipment.getActive(EquipmentSlot.WEAPON, game.definition.brokenGearStatPercent)
+    val weaponStack = player.equipment.getActive(EquipmentSlot.WEAPON, game.definition.gearRules)
     val weaponDef = weaponStack?.let { items[it.itemId] }
     val attackSpeed = weaponDef?.attackSpeedTicks ?: game.definition.combat.defaultAttackSpeedTicks
     if (currentTick - player.lastAttackTick < attackSpeed) return emptyList()
@@ -408,13 +408,13 @@ internal fun WorldSimulation.playerAttackImpl(characterId: String): List<WorldSi
         }
 
         val attrs = player.effectiveAttributes(game, items)
-        val critBp = (game.critChanceBp(attrs).toInt() + player.equipment.totalCritBonusBp(items, game.definition.brokenGearStatPercent) + com.morgana.domain.game.BuildBonuses.critChanceBpBonus(player, game.definition)).coerceIn(0, 10_000)
+        val critBp = (game.critChanceBp(attrs).toInt() + player.equipment.totalCritBonusBp(items, game.definition.gearRules) + com.morgana.domain.game.BuildBonuses.critChanceBpBonus(player, game.definition)).coerceIn(0, 10_000)
         val isCrit = rng.rollBasisPoints(critBp)
         val defaultDefender = game.definition.attributes.associate { it.id to it.base }
         val rawProjDamage = game.rangedDamage(
             attacker = attrs,
             defender = defaultDefender,
-            weapon = (player.equipment.weaponBaseDamage(weaponStack, items, game.definition.brokenGearStatPercent) + player.equipment.rolledAttackDamage(items, game.definition.brokenGearStatPercent) + com.morgana.domain.game.BuildBonuses.attackDamageBonus(player, game.definition)).toLong(),
+            weapon = (player.equipment.weaponBaseDamage(weaponStack, items, game.definition.gearRules) + player.equipment.rolledAttackDamage(items, game.definition.gearRules) + com.morgana.domain.game.BuildBonuses.attackDamageBonus(player, game.definition)).toLong(),
             ammo = ammoBonusDmg.toLong(),
             armor = 0L,
             crit = isCrit
@@ -445,7 +445,7 @@ internal fun WorldSimulation.playerAttackImpl(characterId: String): List<WorldSi
     // Melee / Staff attack on facing tile(s) up to weapon range
     val reach = max(1, weaponDef?.rangeTiles ?: 1)
     val attackerAttrs = player.effectiveAttributes(game, items)
-    val weaponDamage = player.equipment.weaponBaseDamage(weaponStack, items, game.definition.brokenGearStatPercent) + player.equipment.rolledAttackDamage(items, game.definition.brokenGearStatPercent)
+    val weaponDamage = player.equipment.weaponBaseDamage(weaponStack, items, game.definition.gearRules) + player.equipment.rolledAttackDamage(items, game.definition.gearRules)
 
     for (step in 1..reach) {
         val targetTile = player.position.tileCoord.step(player.position.direction, step)
@@ -455,7 +455,7 @@ internal fun WorldSimulation.playerAttackImpl(characterId: String): List<WorldSi
         if (targetNpc != null) {
             val npcDef = npcs[targetNpc.npcId]
             if (npcDef != null && isHostileNpc(targetNpc)) {
-                val critBp = (game.critChanceBp(attackerAttrs).toInt() + player.equipment.totalCritBonusBp(items, game.definition.brokenGearStatPercent) + com.morgana.domain.game.BuildBonuses.critChanceBpBonus(player, game.definition)).coerceIn(0, 10_000)
+                val critBp = (game.critChanceBp(attackerAttrs).toInt() + player.equipment.totalCritBonusBp(items, game.definition.gearRules) + com.morgana.domain.game.BuildBonuses.critChanceBpBonus(player, game.definition)).coerceIn(0, 10_000)
                 val isCrit = rng.rollBasisPoints(critBp)
                 val npcAttrs = game.definition.attributes.associate { a ->
                     a.id to (npcDef.attributes[a.id] ?: a.base)
@@ -522,7 +522,7 @@ internal fun WorldSimulation.playerAttackImpl(characterId: String): List<WorldSi
             }
             val isCrit = rng.rollBasisPoints(game.critChanceBp(attackerAttrs).toInt())
             val defAttrs = targetPlayer.effectiveAttributes(game, items)
-            val defArmor = targetPlayer.equipment.totalArmorDefense(items, game.definition.brokenGearStatPercent)
+            val defArmor = targetPlayer.equipment.totalArmorDefense(items, game.definition.gearRules)
             val rawDmg = game.meleeDamage(
                 attacker = attackerAttrs,
                 defender = defAttrs,
@@ -577,7 +577,7 @@ internal fun WorldSimulation.playerCastSpellImpl(
         return listOf(tellPlayer(caster, classRestrictionMessage(spell.name, spell.classReqIds), "WARN"))
     }
     spellRefusal(caster, spell)?.let { return listOf(tellPlayer(caster, it, "WARN")) }
-    val equippedWeaponDef = caster.equipment.getActive(EquipmentSlot.WEAPON, game.definition.brokenGearStatPercent)?.let { items[it.itemId] }
+    val equippedWeaponDef = caster.equipment.getActive(EquipmentSlot.WEAPON, game.definition.gearRules)?.let { items[it.itemId] }
     val equippedWeaponType = equippedWeaponDef?.weaponType.orEmpty()
     if (spell.weaponTypeReqs.isNotEmpty() && equippedWeaponType !in spell.weaponTypeReqs) {
         val wpTypes = game.definition.weaponProficiency?.weaponTypes?.associateBy { it.id }.orEmpty()
@@ -897,9 +897,9 @@ private fun WorldSimulation.computeSpellDamageToNpc(
     }
     if (spell.baseDamagePercent > 0) {
         val spellLv = caster.spellLevel(spell.id)
-        val casterWeapon = caster.equipment.getActive(EquipmentSlot.WEAPON, game.definition.brokenGearStatPercent)
+        val casterWeapon = caster.equipment.getActive(EquipmentSlot.WEAPON, game.definition.gearRules)
         val weaponDef = casterWeapon?.let { items[it.itemId] }
-        val weaponDamage = (caster.equipment.weaponBaseDamage(casterWeapon, items, game.definition.brokenGearStatPercent) + caster.equipment.rolledAttackDamage(items, game.definition.brokenGearStatPercent)).toLong()
+        val weaponDamage = (caster.equipment.weaponBaseDamage(casterWeapon, items, game.definition.gearRules) + caster.equipment.rolledAttackDamage(items, game.definition.gearRules)).toLong()
         val ammoDmg = (weaponDef?.requiredAmmoItemId?.takeIf { it > 0 }?.let { items[it]?.attackDamage } ?: 0).toLong()
         val pct = (spell.baseDamagePercent + (spellLv - 1) * spell.baseDamagePercentPerLevel).coerceAtLeast(1)
         val baseDmg = if (weaponDef?.weaponStyle == WeaponStyle.RANGED_BOW) {
@@ -1194,7 +1194,7 @@ internal fun WorldSimulation.applyDamageToNpc(
 
     // Life leech from rolled gear affixes and boons
     if (damage > 0) {
-        val leechPct = attacker.equipment.totalLifeLeechPercent(items, game.definition.brokenGearStatPercent) + com.morgana.domain.game.BuildBonuses.lifeLeechPercentBonus(attacker, game.definition)
+        val leechPct = attacker.equipment.totalLifeLeechPercent(items, game.definition.gearRules) + com.morgana.domain.game.BuildBonuses.lifeLeechPercentBonus(attacker, game.definition)
         if (leechPct > 0) {
             val liveAttacker = players[attacker.id] ?: attacker
             val lifeId = game.lifeVitalId
@@ -1392,7 +1392,7 @@ internal fun WorldSimulation.awardPartyOrSoloExperience(
 
 /** [xp] plus the percent bonus from the gems socketed into [player]'s worn gear. */
 internal fun WorldSimulation.withGemXpBonus(player: CharacterState, xp: Long): Long {
-    val pct = (players[player.id] ?: player).equipment.totalGemXpPercent(items, game.definition.brokenGearStatPercent)
+    val pct = (players[player.id] ?: player).equipment.totalGemXpPercent(items, game.definition.gearRules)
     return if (pct <= 0) xp else xp * (100 + pct) / 100
 }
 
@@ -1793,13 +1793,13 @@ internal fun WorldSimulation.rollOffHandStrike(
     val dw = game.definition.dualWield ?: return null
     val player = players[characterId] ?: return null
     if (!dw.allows(player.classId)) return null
-    val offStack = player.equipment.getActiveOffHandWeapon(items, game.definition.brokenGearStatPercent) ?: return null
+    val offStack = player.equipment.getActiveOffHandWeapon(items, game.definition.gearRules) ?: return null
     val offDef = items[offStack.itemId] ?: return null
     if (!rng.rollBasisPoints(dw.strikeChancePercent * 100)) return null
     val raw = game.meleeDamage(
         attacker = attackerAttrs,
         defender = defenderAttrs,
-        weapon = player.equipment.weaponDamageOf(offStack, items, game.definition.brokenGearStatPercent).toLong(),
+        weapon = player.equipment.weaponDamageOf(offStack, items, game.definition.gearRules).toLong(),
         armor = armor,
         crit = false
     )

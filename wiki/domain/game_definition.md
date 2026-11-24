@@ -40,6 +40,26 @@ in `AuthResult`, `MapStateSnapshot` and `Pong`, so no clock packets are sent.
 season, 1..12 unique season names, start time 0..999. Plan for crops and homes that build on it: [ADR 0015](/decisions/0015_plots_crops_and_housing_plan.md).
 
 
+## Tuning (`tuning`, optional)
+`"tuning": { "harvestCooldownTicks": 10, "shopRangeTiles": 6, "pickupRangeTiles": 2, "unarmedDamage": 2, "plusWeaponDamage": 3, "plusArmorDefense": 2, "plusRingHp": 15, "plusPercentPerLevel": 0, "maxGuildMembers": 50, "maxPartySize": 0, "actionTargetRadiusPixels": 12 }`.
+Gameplay numbers a game sets without engine code (mandate 12 in `AGENTS.md`). Every field is optional and its default is the value the engine always used, so a game without the section, or leaving a field out, plays as before; the values below are the defaults.
+| Field | Meaning |
+| :--- | :--- |
+| `harvestCooldownTicks` (0..1200) | Ticks between resource-node swings (20 = 1 s). |
+| `shopRangeTiles`, `pickupRangeTiles` (1..50) | How far a player may walk from an open shop, and how near a ground item must be to pick it up. Applied on the server and in the client's auto-loot, loot pose and shop window. |
+| `unarmedDamage` (0..100000) | Damage of a bare-handed swing. |
+| `plusWeaponDamage`, `plusArmorDefense`, `plusRingHp` | What each `+` level adds, flat (weapons, armour/shields/helmets/boots, rings/amulets). |
+| `plusPercentPerLevel` (0..100) | Percent of a weapon's own damage or armour's own defence each `+` level adds on top of the flat amounts (`3` is +3% per level; `0` is off). Integer maths, rounded down. Set the flat values to 0 for a purely percentage system. |
+| `maxGuildMembers` (1..1000) | Guild size. |
+| `maxPartySize` (0..1000) | Party size; **0 means no limit** (the engine used to have none). Enforced when inviting and when accepting, so a stale invitation cannot overfill a party. |
+| `actionTargetRadiusPixels` (0..200) | How big a body counts for action-combat hitboxes. |
+
+The gear values reach `EquipmentLoadout` through one parameter object, `GearRules` (`GameDefinition.gearRules`, which also carries `durability.brokenStatPercent`), so the stat totals, the combat code and the bag tooltips all agree. Not tunable yet: the action-combat combo grace (its limit is checked when action skills are validated; see [hard-coded gameplay constants](/issues/hardcoded_gameplay_constants.md)). Tests: `TuningTest`, `PartySizeTest`.
+
+## Schedules (`schedules`, optional)
+`"schedules": [ { "id": "cleansing", "kind": "WEEKLY", "timezone": "America/New_York", "dayOfWeek": "SATURDAY", "time": "10:00", "warningsSeconds": [3600, 900, 60] } ]`.
+Real-world-time events run by the `scheduler` system: a weekly or daily time in a time zone, an interval, or a one-off date, each with advance warnings announced in chat and passed to Lua (`register.schedule`) and other systems. Full field list, rules and the determinism design are in [scheduler](/systems/scheduler.md). Validation: at most 64, unique ids, a real time zone, `HH:mm` times, 1 to 8 distinct warnings of 1 to 2,592,000 seconds.
+
 ## Gear wear (`durability`, optional)
 `"durability": { "enabled": true, "weaponWearChancePercent": 10, "armorWearChancePercent": 10, "wearPerHit": 1, "repairPricePercent": 20, "brokenStatPercent": 0 }`.
 Gear loses durability (100 down to 0) as it is used and is repaired by an event `repair_gear` step ([optional modules](/server/optional_modules.md), `durability`). A broken piece stays equipped and counts for `brokenStatPercent` of its bonuses: **0 (the default) means it adds nothing until repaired**; a game that wants a harsh-but-playable penalty sets, for example, 10, and a broken weapon then still swings at 10% of its damage. The percentage applies to attribute, vital, armour, damage, crit, leech and gem bonuses, rounded half up per piece; weapon range, speed and style are unchanged. Validation: 0..100. Tests: `DurabilityTest`.

@@ -12,6 +12,7 @@ import com.morgana.domain.item.ItemRollText
 import com.morgana.domain.item.ItemRolls
 import com.morgana.domain.item.LootRules
 import com.morgana.domain.item.ItemStack
+import com.morgana.domain.item.GearRules
 import com.morgana.domain.item.ItemType
 import com.morgana.domain.item.WeaponStyle
 
@@ -119,7 +120,8 @@ object ItemInfo {
         wearer: WearerInfo?,
         rolls: ItemRolls? = null,
         plus: Int = 0,
-        spells: Map<Int, SpellDefinition> = emptyMap()
+        spells: Map<Int, SpellDefinition> = emptyMap(),
+        rules: GearRules = GearRules.DEFAULT
     ): List<InfoLine> {
         val out = ArrayList<InfoLine>()
         val worn = equipped?.takeIf { it.id != def.id && it.type == def.type }
@@ -151,11 +153,11 @@ object ItemInfo {
         if (plus > 0) {
             when {
                 def.type == ItemType.WEAPON || def.attackDamage > 0 ->
-                    out += InfoLine("+${plus * com.morgana.domain.item.ItemStack.PLUS_WEAPON_DAMAGE} damage (+$plus)", Tone.GOOD)
+                    out += InfoLine("+${rules.plusDamage(def.attackDamage, plus)} damage (+$plus)", Tone.GOOD)
                 def.type in setOf(ItemType.ARMOR, ItemType.SHIELD, ItemType.HELMET, ItemType.BOOTS) ->
-                    out += InfoLine("+${plus * com.morgana.domain.item.ItemStack.PLUS_ARMOR_DEFENSE} defense (+$plus)", Tone.GOOD)
+                    out += InfoLine("+${rules.plusDefense(def.armorDefense, plus)} defense (+$plus)", Tone.GOOD)
                 def.type in setOf(ItemType.RING, ItemType.AMULET) ->
-                    out += InfoLine("+${plus * com.morgana.domain.item.ItemStack.PLUS_RING_HP} max ${names.vital("hp")} (+$plus)", Tone.GOOD)
+                    out += InfoLine("+${rules.plusHp(plus)} max ${names.vital("hp")} (+$plus)", Tone.GOOD)
             }
         }
         if (rolls != null) out += InfoLine("Item level ${rolls.itemLevel}", Tone.MUTED)
@@ -192,7 +194,7 @@ object ItemInfo {
     }
 
     /** The stats a piece of gear adds, in display order, with rolled affixes and plus levels counted (the base-only view hides them). */
-    private fun gearStats(def: ItemDefinition, rolls: ItemRolls?, plus: Int, names: StatNames): LinkedHashMap<String, Int> {
+    private fun gearStats(def: ItemDefinition, rolls: ItemRolls?, plus: Int, names: StatNames, rules: GearRules = GearRules.DEFAULT): LinkedHashMap<String, Int> {
         val out = LinkedHashMap<String, Int>()
         var damage = def.attackDamage
         var defense = def.armorDefense
@@ -201,9 +203,9 @@ object ItemInfo {
         def.attributeBonuses.forEach { (k, v) -> attrs[k] = (attrs[k] ?: 0) + v }
         def.vitalMaxBonuses.forEach { (k, v) -> vitals[k] = (vitals[k] ?: 0) + v }
         when {
-            def.type == ItemType.WEAPON || def.attackDamage > 0 -> damage += plus * ItemStack.PLUS_WEAPON_DAMAGE
-            def.type in setOf(ItemType.ARMOR, ItemType.SHIELD, ItemType.HELMET, ItemType.BOOTS) -> defense += plus * ItemStack.PLUS_ARMOR_DEFENSE
-            def.type in setOf(ItemType.RING, ItemType.AMULET) -> vitals["hp"] = (vitals["hp"] ?: 0) + plus * ItemStack.PLUS_RING_HP
+            def.type == ItemType.WEAPON || def.attackDamage > 0 -> damage += rules.plusDamage(def.attackDamage, plus)
+            def.type in setOf(ItemType.ARMOR, ItemType.SHIELD, ItemType.HELMET, ItemType.BOOTS) -> defense += rules.plusDefense(def.armorDefense, plus)
+            def.type in setOf(ItemType.RING, ItemType.AMULET) -> vitals["hp"] = (vitals["hp"] ?: 0) + rules.plusHp(plus).toInt()
         }
         for (a in rolls?.affixes.orEmpty()) when (a.stat) {
             AffixStat.ATTRIBUTE -> attrs[a.statId] = (attrs[a.statId] ?: 0) + a.value
@@ -231,15 +233,16 @@ object ItemInfo {
         rolls: ItemRolls?,
         plus: Int,
         worn: WornGear,
-        names: StatNames
+        names: StatNames,
+        rules: GearRules = GearRules.DEFAULT
     ): List<InfoLine> {
-        val mine = gearStats(def, rolls, plus, names)
+        val mine = gearStats(def, rolls, plus, names, rules)
         val wornStack = worn.stack
         val wornDef = worn.def
         if (wornStack == null || wornDef == null) {
             return listOf(InfoLine("Nothing worn in this slot: wearing this adds all of the above.", Tone.GOOD))
         }
-        val theirs = gearStats(wornDef, wornStack.rolls, wornStack.plus, names)
+        val theirs = gearStats(wornDef, wornStack.rolls, wornStack.plus, names, rules)
         val out = ArrayList<InfoLine>()
         for (key in (mine.keys + theirs.keys).distinct()) {
             val delta = (mine[key] ?: 0) - (theirs[key] ?: 0)
@@ -264,15 +267,15 @@ object ItemInfo {
         durability: Int = 100,
         sockets: List<Int> = emptyList(),
         worn: WornGear? = null,
-        brokenPercent: Int = 0
+        rules: GearRules = GearRules.DEFAULT
     ): ItemTip =
         ItemTip(
             title = ItemRollText.displayName(def, rolls, loot, plus),
             kind = rolledKind(def, rolls, loot) + if (amount > 1) "  x$amount" else "",
             description = def.description,
-            lines = describe(def, equipped, items, names, wearer, rolls, plus, spells) +
-                (worn?.let { compareLines(def, rolls, plus, it, names) } ?: emptyList()) +
-                durabilityLines(durability, brokenPercent) +
+            lines = describe(def, equipped, items, names, wearer, rolls, plus, spells, rules) +
+                (worn?.let { compareLines(def, rolls, plus, it, names, rules) } ?: emptyList()) +
+                durabilityLines(durability, rules.brokenPercent) +
                 socketLines(sockets, items, names) +
                 gemLines(def, names) +
                 InfoLine("Value ${ItemRollText.price(def.price, rolls, loot, plus)}" + if (amount > 1) " each" else "", Tone.MUTED),

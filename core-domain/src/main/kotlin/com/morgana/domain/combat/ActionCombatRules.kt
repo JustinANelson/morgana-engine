@@ -46,8 +46,8 @@ data class ActionState(
 
 /** The pure combo-graph and geometry rules of action combat: no simulation state, so every rule is unit-tested. */
 object ActionCombatRules {
-    /** A body is a disc this wide, in pixels. */
-    const val TARGET_RADIUS = 12
+    /** The default size of a body, a disc this wide in pixels; a game sets `tuning.actionTargetRadiusPixels`. */
+    const val TARGET_RADIUS = com.morgana.domain.game.GameplayTuning.DEFAULT_ACTION_TARGET_RADIUS_PIXELS
     const val DEFAULT_WINDOW = 8
 
     /** Ticks after a skill ends that its combo chain stays alive (`ActionCombatLimits.MAX_COMBO_GRACE_TICKS`). */
@@ -104,7 +104,7 @@ object ActionCombatRules {
      * Whether a body centred at ([tx], [ty]) is inside [hb] for a character centred at ([cx], [cy]) facing ([fx], [fy]).
      * Integer-friendly arithmetic with `StrictMath` for the one cosine, so the answer is the same on every machine.
      */
-    fun inShape(hb: SkillHitbox, cx: Double, cy: Double, fx: Double, fy: Double, tx: Double, ty: Double): Boolean {
+    fun inShape(hb: SkillHitbox, cx: Double, cy: Double, fx: Double, fy: Double, tx: Double, ty: Double, targetRadius: Int = TARGET_RADIUS): Boolean {
         val rx = -fy
         val ry = fx
         val ox = cx + fx * hb.forwardPixels + rx * hb.sidePixels
@@ -114,9 +114,9 @@ object ActionCombatRules {
         if (hb.shape == HitboxShape.RECT) {
             val l = dx * fx + dy * fy
             val s = dx * rx + dy * ry
-            return l >= -TARGET_RADIUS && l <= hb.lengthPixels + TARGET_RADIUS && StrictMath.abs(s) <= hb.widthPixels / 2.0 + TARGET_RADIUS
+            return l >= -targetRadius && l <= hb.lengthPixels + targetRadius && StrictMath.abs(s) <= hb.widthPixels / 2.0 + targetRadius
         }
-        val reach = (hb.radiusPixels + TARGET_RADIUS).toDouble()
+        val reach = (hb.radiusPixels + targetRadius).toDouble()
         val d2 = dx * dx + dy * dy
         if (d2 > reach * reach) return false
         if (hb.shape == HitboxShape.CIRCLE || hb.arcDegrees >= 360 || d2 == 0.0) return true
@@ -125,8 +125,8 @@ object ActionCombatRules {
     }
 
     /** How many tiles around the character a hitbox can reach, for picking candidates. */
-    fun reachTiles(hb: SkillHitbox, tileSize: Int): Int {
-        val reach = maxOf(hb.radiusPixels, hb.lengthPixels, hb.widthPixels) + StrictMath.abs(hb.forwardPixels) + StrictMath.abs(hb.sidePixels) + TARGET_RADIUS
+    fun reachTiles(hb: SkillHitbox, tileSize: Int, targetRadius: Int = TARGET_RADIUS): Int {
+        val reach = maxOf(hb.radiusPixels, hb.lengthPixels, hb.widthPixels) + StrictMath.abs(hb.forwardPixels) + StrictMath.abs(hb.sidePixels) + targetRadius
         return reach / tileSize + 1
     }
 

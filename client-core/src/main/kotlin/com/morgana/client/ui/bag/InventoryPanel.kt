@@ -209,7 +209,7 @@ class InventoryPanel(
             val stack = ch.inventory.getSlot(cell.key)
             val def = stack?.let { itemMap[it.itemId] }
             if (stack == null || def == null) null
-            else ItemInfo.tip(def, stack.amount, def.equipmentSlotOrNull()?.let { ch.equipment.getEquipped(it) }?.let { itemMap[it.itemId] }, itemMap, names(), wearer(ch), stack.rolls, worldState.gameDefinition?.loot, stack.plus, spells(), stack.durability, stack.sockets, ItemInfo.wornFor(def, ch.equipment, itemMap), worldState.gameDefinition?.brokenGearStatPercent ?: 0)
+            else ItemInfo.tip(def, stack.amount, def.equipmentSlotOrNull()?.let { ch.equipment.getEquipped(it) }?.let { itemMap[it.itemId] }, itemMap, names(), wearer(ch), stack.rolls, worldState.gameDefinition?.loot, stack.plus, spells(), stack.durability, stack.sockets, ItemInfo.wornFor(def, ch.equipment, itemMap), worldState.gameDefinition?.gearRules ?: com.morgana.domain.item.GearRules.DEFAULT)
         }
 
         capacityHolder.clearChildren()
@@ -287,8 +287,8 @@ class InventoryPanel(
         val me = wearer(ch)
         val spellMap = spells()
         val extraLines = ItemInfo.durabilityLines(stack.durability, worldState.gameDefinition?.brokenGearStatPercent ?: 0) + ItemInfo.socketLines(stack.sockets, itemMap, names()) + ItemInfo.gemLines(def, names())
-        val compare = ItemInfo.wornFor(def, ch.equipment, itemMap)?.let { ItemInfo.compareLines(def, stack.rolls, stack.plus, it, names()) }.orEmpty()
-        for (line in ItemInfo.describe(def, worn, itemMap, names(), me, stack.rolls, stack.plus, spellMap) + compare + extraLines) {
+        val compare = ItemInfo.wornFor(def, ch.equipment, itemMap)?.let { ItemInfo.compareLines(def, stack.rolls, stack.plus, it, names(), worldState.gameDefinition?.gearRules ?: com.morgana.domain.item.GearRules.DEFAULT) }.orEmpty()
+        for (line in ItemInfo.describe(def, worn, itemMap, names(), me, stack.rolls, stack.plus, spellMap, worldState.gameDefinition?.gearRules ?: com.morgana.domain.item.GearRules.DEFAULT) + compare + extraLines) {
             detail.add(BagUi.wrapped(line.text, line.tone)).width(textW).left().padLeft(4f).row()
         }
         detail.add(BagUi.label("Value ${ItemRollText.price(def.price, stack.rolls, loot, stack.plus)}" + if (stack.amount > 1) " each" else "", Tone.MUTED)).left().padLeft(4f).padTop(2f).row()

@@ -45,7 +45,7 @@ object ScriptCapability {
         is ScriptEffect.SpawnProjectile -> PROJECTILE
         is ScriptEffect.AwardExperience -> PROGRESSION
         is ScriptEffect.ConsumeVital -> VITAL
-        is ScriptEffect.SetState -> STATE
+        is ScriptEffect.SetState, is ScriptEffect.ScheduleOnce, is ScriptEffect.CancelSchedule -> STATE
     }
 }
 

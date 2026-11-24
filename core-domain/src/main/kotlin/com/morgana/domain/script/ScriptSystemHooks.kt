@@ -143,6 +143,33 @@ class ScriptCombatObserverHook(
     val afterStruck: ((victim: ScriptPlayerSnapshot, world: ScriptWorldView) -> List<ScriptEffect>)? = null
 )
 
+/**
+ * A scheduled warning or start as a plugin sees it. [phase] is `warning` or `fire`; [secondsBefore] is how long before the start a
+ * warning is (0 for the start); [occurrenceMillis] is the start time (epoch milliseconds); [data] is what a one-off was booked with.
+ */
+data class ScriptScheduleTrigger(
+    val scheduleId: String,
+    val name: String,
+    val phase: String,
+    val secondsBefore: Int,
+    val occurrenceMillis: Long,
+    val recurring: Boolean,
+    val data: Map<String, String>
+)
+
+/**
+ * A plugin reacting to the scheduler (`register.schedule`). [scheduleIds] limits it to those schedules (empty means all of them);
+ * [onWarning] and [onFire] may each be absent. They may cause effects, applied inline and replayed identically.
+ */
+class ScriptScheduleHook(
+    val moduleId: String,
+    val scheduleIds: Set<String> = emptySet(),
+    val onWarning: ((trigger: ScriptScheduleTrigger, world: ScriptWorldView) -> List<ScriptEffect>)? = null,
+    val onFire: ((trigger: ScriptScheduleTrigger, world: ScriptWorldView) -> List<ScriptEffect>)? = null
+) {
+    fun covers(scheduleId: String): Boolean = scheduleIds.isEmpty() || scheduleId in scheduleIds
+}
+
 /** A plugin sharing in a kill: [run] is told the killer and the experience the kill earned them, and may cause effects. */
 class ScriptKillHook(
     val moduleId: String,

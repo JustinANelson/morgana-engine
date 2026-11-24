@@ -158,8 +158,8 @@ internal fun WorldSimulation.playerInteractFacingImpl(characterId: String): List
     return out
 }
 
-/** Minimum ticks between resource-node harvest swings (10 ticks = 0.5 s at 20 TPS). */
-const val HARVEST_COOLDOWN_TICKS: Long = 10L
+/** The default minimum ticks between resource-node harvest swings (10 ticks = 0.5 s at 20 TPS); a game sets `tuning.harvestCooldownTicks`. */
+const val HARVEST_COOLDOWN_TICKS: Long = com.morgana.domain.game.GameplayTuning.DEFAULT_HARVEST_COOLDOWN_TICKS.toLong()
 
 internal fun WorldSimulation.harvestResourceAt(
     player: CharacterState,
@@ -220,7 +220,7 @@ internal fun WorldSimulation.harvestResourceAt(
     }
 
     val lastHarvest = lastHarvestTick[player.id]
-    if (lastHarvest != null && currentTick - lastHarvest < HARVEST_COOLDOWN_TICKS) return
+    if (lastHarvest != null && currentTick - lastHarvest < game.definition.gameplayTuning.harvestCooldownTicks) return
     lastHarvestTick[player.id] = currentTick
 
     val nextHealth = state.currentHealth - 1
@@ -289,7 +289,8 @@ internal fun WorldSimulation.harvestResourceAt(
     }
 }
 
-const val GROUND_PICKUP_RANGE_TILES = 2
+/** The default pickup reach in tiles; a game sets `tuning.pickupRangeTiles`. */
+const val GROUND_PICKUP_RANGE_TILES = com.morgana.domain.game.GameplayTuning.DEFAULT_PICKUP_RANGE_TILES
 
 internal fun WorldSimulation.pickupGroundItemImpl(characterId: String): List<WorldSimulationEvent> {
     val player = players[characterId] ?: return emptyList()
@@ -302,7 +303,7 @@ internal fun WorldSimulation.pickupGroundItemImpl(characterId: String): List<Wor
             val it = groundList[idx]
             val dx = kotlin.math.abs(it.tileX - player.position.tileX)
             val dy = kotlin.math.abs(it.tileY - player.position.tileY)
-            maxOf(dx, dy) <= GROUND_PICKUP_RANGE_TILES &&
+            maxOf(dx, dy) <= game.definition.gameplayTuning.pickupRangeTiles &&
                 (it.ownerCharacterId == null || it.ownerCharacterId == characterId || currentTick >= it.ownerProtectedUntilTick)
         }
         .minByOrNull { idx ->

@@ -142,6 +142,26 @@ sealed interface ScriptEffect {
     ) : ScriptEffect
 
     /**
+     * Books a one-off schedule (see `WorldSimulation.scheduleOnce`): it raises warnings and a start at [atMillis] (epoch
+     * milliseconds, from `world.now_ms`), announced in chat and passed to `register.schedule` hooks with [data]. Ignored if the
+     * scheduler is off, the time is not in the future, or [id] is a `game.json` schedule's.
+     */
+    @Serializable
+    data class ScheduleOnce(
+        val id: String,
+        val atMillis: Long,
+        val name: String = "",
+        val warningsSeconds: List<Int> = emptyList(),
+        val data: Map<String, String> = emptyMap(),
+        val warningMessage: String = com.morgana.domain.game.ScheduleDefinition.DEFAULT_WARNING_MESSAGE,
+        val fireMessage: String = com.morgana.domain.game.ScheduleDefinition.DEFAULT_FIRE_MESSAGE
+    ) : ScriptEffect
+
+    /** Cancels a one-off booked with [ScheduleOnce]. */
+    @Serializable
+    data class CancelSchedule(val id: String) : ScriptEffect
+
+    /**
      * Replaces the script state stored under [key] with [values]; an empty map deletes the key. Script state is how a
      * stateless Lua hook remembers things between ticks (an action-combat skill in progress, a buffered input). It is
      * kept in the simulation, hashed for replays and not saved. Values are strings: scripts convert with `tonumber`.

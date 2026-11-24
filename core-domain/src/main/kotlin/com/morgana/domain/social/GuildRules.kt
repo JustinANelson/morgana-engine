@@ -14,7 +14,8 @@ object GuildRules {
     const val OFFICER = "Officer"
     const val MEMBER = "Member"
 
-    const val MAX_MEMBERS = 50
+    /** The default guild size limit; a game sets `tuning.maxGuildMembers`. */
+    const val MAX_MEMBERS = com.morgana.domain.game.GameplayTuning.DEFAULT_MAX_GUILD_MEMBERS
     const val MIN_NAME = 2
     const val MAX_NAME = 24
     const val MAX_TAG = 5
@@ -54,9 +55,9 @@ object GuildRules {
     fun create(id: String, name: String, tag: String, founderId: String): GuildDocument =
         GuildDocument(id = id, name = name.trim(), tag = tag.trim().uppercase(), founderCharacterId = founderId, memberRanks = mapOf(founderId to FOUNDER))
 
-    fun join(guild: GuildDocument, characterId: String): Change = when {
+    fun join(guild: GuildDocument, characterId: String, maxMembers: Int = MAX_MEMBERS): Change = when {
         characterId in guild.memberRanks -> Change.Refused("You are already in that guild.")
-        guild.memberRanks.size >= MAX_MEMBERS -> Change.Refused("${guild.name} is full ($MAX_MEMBERS members).")
+        guild.memberRanks.size >= maxMembers -> Change.Refused("${guild.name} is full ($maxMembers members).")
         else -> Change.Updated(guild.copy(memberRanks = guild.memberRanks + (characterId to MEMBER)))
     }
 

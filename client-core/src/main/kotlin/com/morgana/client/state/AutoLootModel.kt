@@ -30,7 +30,8 @@ class AutoLootModel {
         ground: List<MapGroundItem>,
         inventory: Inventory?,
         items: Map<Int, ItemDefinition>,
-        nowMs: Long
+        nowMs: Long,
+        pickupRange: Int = GROUND_PICKUP_RANGE_TILES
     ): Boolean {
         if (!enabled || !alive || characterId == null || inventory == null) {
             lastSignature = ""
@@ -38,7 +39,7 @@ class AutoLootModel {
         }
         val takeable = ground.filter { g ->
             g.mapId == mapId &&
-                maxOf(abs(g.tileX - tileX), abs(g.tileY - tileY)) <= GROUND_PICKUP_RANGE_TILES &&
+                maxOf(abs(g.tileX - tileX), abs(g.tileY - tileY)) <= pickupRange &&
                 (g.ownerCharacterId == null || g.ownerCharacterId == characterId) &&
                 fits(g, inventory, items)
         }
@@ -63,10 +64,10 @@ class AutoLootModel {
          * True when the player could take something from the ground right now: loot on this map within pickup range that is
          * theirs or unowned. Ignores bag room (the pose plays for a try; the server decides). Used to play the gather pose.
          */
-        fun lootInReach(ground: List<MapGroundItem>, characterId: String?, mapId: Int, tileX: Int, tileY: Int): Boolean =
+        fun lootInReach(ground: List<MapGroundItem>, characterId: String?, mapId: Int, tileX: Int, tileY: Int, pickupRange: Int = GROUND_PICKUP_RANGE_TILES): Boolean =
             ground.any { g ->
                 g.mapId == mapId &&
-                    maxOf(abs(g.tileX - tileX), abs(g.tileY - tileY)) <= GROUND_PICKUP_RANGE_TILES &&
+                    maxOf(abs(g.tileX - tileX), abs(g.tileY - tileY)) <= pickupRange &&
                     (g.ownerCharacterId == null || g.ownerCharacterId == characterId)
             }
 

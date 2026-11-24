@@ -11,6 +11,9 @@ import java.nio.file.StandardCopyOption
  * Stored in `<data dir>/server-state.json`.
  *
  * @property worldEpochTicks Total elapsed simulation ticks across previous server runs.
+ * @property scheduleCursorMillis The wall-clock time (epoch milliseconds) up to which the scheduler has raised what was due.
+ * @property scheduleLastFired Schedule id to the due time of the last occurrence it started, so a restart never starts one twice.
+ * @property scheduleOneShots One-off schedules booked while the game ran (a siege window), by id, until they have started.
  */
 @Serializable
 data class ServerState(
@@ -18,7 +21,10 @@ data class ServerState(
     val worldEpochTicks: Long = 0L,
     val worldSwitches: Map<String, Boolean> = emptyMap(),
     val worldVariables: Map<String, Int> = emptyMap(),
-    val worldStringVariables: Map<String, String> = emptyMap()
+    val worldStringVariables: Map<String, String> = emptyMap(),
+    val scheduleCursorMillis: Long = 0L,
+    val scheduleLastFired: Map<String, Long> = emptyMap(),
+    val scheduleOneShots: Map<String, com.morgana.domain.game.ScheduledOneShot> = emptyMap()
 ) {
     companion object {
         const val CURRENT_SCHEMA_VERSION = 1

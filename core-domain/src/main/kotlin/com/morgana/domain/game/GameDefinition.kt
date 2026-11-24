@@ -88,11 +88,29 @@ data class GameDefinition(
     /** Optional roguelike boons / relics offered during runs (`/boon`). See [BoonDefinition]. */
     val boons: List<BoonDefinition> = emptyList(),
     /** Optional class skill / talent tree (`/skills`). See [SkillTreeDefinition]. */
-    val skillTree: SkillTreeDefinition? = null
+    val skillTree: SkillTreeDefinition? = null,
+    /** Wall-clock events (a weekly reset, a daily bonus, a launch) run by the `scheduler` system. See [ScheduleDefinition]. */
+    val schedules: List<ScheduleDefinition> = emptyList(),
+    /** Gameplay numbers a game may change without engine code (harvest cooldown, ranges, `+` level values, party size...). See [GameplayTuning]. */
+    val tuning: GameplayTuning? = null
 ) {
     /** The equipment slots this game has, in display order: [equipmentSlots] or the classic nine. */
     val slots: List<EquipmentSlotDefinition>
         get() = equipmentSlots ?: EquipmentSlotDefinition.CLASSIC
+
+    /** The game's [tuning], or the defaults when it has none. */
+    val gameplayTuning: GameplayTuning
+        get() = tuning ?: GameplayTuning()
+
+    /** How worn gear counts in this game: broken-gear percentage, unarmed damage and the value of `+` levels. See [com.morgana.domain.item.GearRules]. */
+    val gearRules: com.morgana.domain.item.GearRules
+        get() {
+            val t = gameplayTuning
+            return com.morgana.domain.item.GearRules(
+                brokenPercent = brokenGearStatPercent, unarmedDamage = t.unarmedDamage, plusWeaponDamage = t.plusWeaponDamage,
+                plusArmorDefense = t.plusArmorDefense, plusRingHp = t.plusRingHp, plusPercentPerLevel = t.plusPercentPerLevel
+            )
+        }
 
     /** The percent of its bonuses a broken piece of gear still gives in this game (0 when durability is off or not configured). */
     val brokenGearStatPercent: Int

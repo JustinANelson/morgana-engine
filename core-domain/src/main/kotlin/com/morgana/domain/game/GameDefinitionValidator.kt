@@ -71,6 +71,8 @@ object GameDefinitionValidator {
         }
 
         checkClock(definition, ::error)
+        checkSchedules(definition, ::error)
+        checkTuning(definition, ::error)
         checkWeather(definition, ::error)
         checkSprites(definition, ::error)
         checkOnboarding(definition, ::error)
@@ -414,6 +416,33 @@ object GameDefinitionValidator {
             error("/clock", "dawnStartPermille <= dayStartPermille <= duskStartPermille <= nightStartPermille must hold (the day runs midnight, dawn, day, dusk, night)")
         }
         if (clock.nightLight !in 0..1000) error("/clock/nightLight", "must be between 0 and 1000")
+    }
+
+    private fun checkTuning(definition: GameDefinition, error: (String, String) -> Unit) {
+        val t = definition.tuning ?: return
+        fun range(field: String, value: Int, min: Int, max: Int) {
+            if (value !in min..max) error("/tuning/$field", "must be $min to $max (got $value)")
+        }
+        range("harvestCooldownTicks", t.harvestCooldownTicks, 0, GameplayTuning.MAX_HARVEST_COOLDOWN_TICKS)
+        range("shopRangeTiles", t.shopRangeTiles, 1, GameplayTuning.MAX_RANGE_TILES)
+        range("pickupRangeTiles", t.pickupRangeTiles, 1, GameplayTuning.MAX_RANGE_TILES)
+        range("unarmedDamage", t.unarmedDamage, 0, GameplayTuning.MAX_DAMAGE)
+        range("plusWeaponDamage", t.plusWeaponDamage, 0, GameplayTuning.MAX_DAMAGE)
+        range("plusArmorDefense", t.plusArmorDefense, 0, GameplayTuning.MAX_DAMAGE)
+        range("plusRingHp", t.plusRingHp, 0, GameplayTuning.MAX_DAMAGE)
+        range("plusPercentPerLevel", t.plusPercentPerLevel, 0, GameplayTuning.MAX_PLUS_PERCENT)
+        range("maxGuildMembers", t.maxGuildMembers, 1, GameplayTuning.MAX_GUILD_MEMBERS)
+        range("maxPartySize", t.maxPartySize, 0, GameplayTuning.MAX_PARTY_SIZE)
+        range("actionTargetRadiusPixels", t.actionTargetRadiusPixels, 0, GameplayTuning.MAX_TARGET_RADIUS_PIXELS)
+    }
+
+    private fun checkSchedules(definition: GameDefinition, error: (String, String) -> Unit) {
+        val schedules = definition.schedules
+        if (schedules.size > ScheduleDefinition.MAX_SCHEDULES) error("/schedules", "has ${schedules.size} schedules; the limit is ${ScheduleDefinition.MAX_SCHEDULES}")
+        schedules.forEachIndexed { i, def ->
+            if (schedules.indexOfFirst { it.id == def.id } != i) error("/schedules/$i/id", "schedule id '${def.id}' is used twice")
+            for ((field, message) in ScheduleRules.problems(def)) error("/schedules/$i/$field", message)
+        }
     }
 
     private fun checkWeather(definition: GameDefinition, error: (String, String) -> Unit) {

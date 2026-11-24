@@ -106,6 +106,9 @@ sealed interface WorldSimulationEvent {
         val notice: String? = null
     ) : WorldSimulationEvent
 
+    /** The scheduler raised a warning or started an occurrence (see [ScheduleTrigger]); for the server and systems, not sent to clients. */
+    data class ScheduleTriggered(val trigger: ScheduleTrigger) : WorldSimulationEvent
+
     data class OpenUiRequested(
         val characterId: String,
         val windowType: String,

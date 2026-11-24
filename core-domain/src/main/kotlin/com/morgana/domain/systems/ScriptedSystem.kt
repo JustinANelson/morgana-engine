@@ -25,6 +25,10 @@ import com.morgana.domain.sim.MonsterBehavior
 import com.morgana.domain.sim.OptionalModule
 import com.morgana.domain.sim.PlayerActivity
 import com.morgana.domain.sim.RequirementGate
+import com.morgana.domain.sim.ScheduleHandler
+import com.morgana.domain.sim.ScheduleTrigger
+import com.morgana.domain.sim.SchedulePhase
+import com.morgana.domain.script.ScriptScheduleTrigger
 import com.morgana.domain.sim.TickParticipant
 import com.morgana.domain.sim.TickStage
 import com.morgana.domain.sim.WarpRoute
@@ -48,7 +52,8 @@ import com.morgana.domain.sim.tellPlayer
  * character are dropped, because the engine stores its own copy a moment later and would overwrite them.
  */
 object ScriptedSystem :
-    RequirementGate, MonsterBehavior, CombatArbiter, ActionGate, ActivityInterrupter, CombatObserver, KillObserver, ItemUseHandler, GameSystem {
+    RequirementGate, MonsterBehavior, CombatArbiter, ActionGate, ActivityInterrupter, CombatObserver, KillObserver, ItemUseHandler,
+    ScheduleHandler, GameSystem {
     override val key: String = OptionalModule.LUA_PLUGINS.configKey
 
     private fun WorldSimulation.active(moduleId: String): Boolean =
@@ -156,6 +161,22 @@ object ScriptedSystem :
         val view = sim.asScriptWorldView()
         val snapshot = view.getPlayer(killer.id) ?: return
         for (hook in hooks) sim.apply(hook.run(snapshot, xpReward, view), out)
+    }
+
+    // --- ScheduleHandler
+
+    override fun onSchedule(sim: WorldSimulation, trigger: ScheduleTrigger, out: MutableList<WorldSimulationEvent>) {
+        val hooks = sim.scripts.registry.scheduleHooks().filter { it.covers(trigger.scheduleId) && sim.active(it.moduleId) }
+        if (hooks.isEmpty()) return
+        val view = sim.asScriptWorldView()
+        val info = ScriptScheduleTrigger(
+            trigger.scheduleId, trigger.name, if (trigger.phase == SchedulePhase.WARNING) "warning" else "fire",
+            trigger.secondsBefore, trigger.occurrenceMillis, trigger.recurring, trigger.data
+        )
+        for (hook in hooks) {
+            val run = if (trigger.phase == SchedulePhase.WARNING) hook.onWarning else hook.onFire
+            if (run != null) sim.apply(run(info, view), out)
+        }
     }
 
     // --- ItemUseHandler

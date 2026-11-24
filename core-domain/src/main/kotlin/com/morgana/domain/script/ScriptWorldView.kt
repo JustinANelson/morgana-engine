@@ -88,6 +88,9 @@ data class ScriptMapSnapshot(
 interface ScriptWorldView {
     val currentTick: Long
 
+    /** The real-world time (epoch milliseconds, UTC) the server last reported, 0 before the first report. Exposed to Lua as `world.now_ms`. */
+    val wallClockMillis: Long get() = 0L
+
     /** The game's calendar right now, or null when the game declares no clock. Exposed to Lua as `world.clock`. */
     val clock: com.morgana.domain.game.ClockTime? get() = null
 

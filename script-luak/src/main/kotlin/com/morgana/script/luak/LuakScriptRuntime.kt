@@ -17,6 +17,7 @@ import com.morgana.domain.script.ScriptItemSubject
 import com.morgana.domain.script.ScriptItemUseHook
 import com.morgana.domain.script.ScriptItemUseResult
 import com.morgana.domain.script.ScriptKillHook
+import com.morgana.domain.script.ScriptScheduleHook
 import com.morgana.domain.script.ScriptTickHook
 import com.morgana.domain.script.ScriptWarpHook
 import com.morgana.domain.script.ScriptWarpRuling
@@ -452,6 +453,34 @@ class LuakScriptRuntime(
                         }
                     }
                 )
+                return LuaValue.NIL
+            }
+        })
+
+        // register.schedule{ id = "cleansing" (or ids = {...}; omit both for every schedule), on_warning = fn(info, world), on_fire = fn(info, world) }
+        reg.set("schedule", object : OneArgFunction() {
+            override fun call(arg: LuaValue?): LuaValue? {
+                val t = arg?.checktable() ?: return LuaValue.NIL
+                val ids = LinkedHashSet<String>()
+                t.get("id").let { if (it != null && !it.isnil()) ids += it.tojstring() }
+                t.get("ids").let { v ->
+                    if (v != null && !v.isnil()) {
+                        if (!v.istable()) throw LuaError("register.schedule: ids must be a list of schedule ids")
+                        for (i in 1..v.length()) ids += (v.get(i)?.tojstring() ?: "")
+                    }
+                }
+                fun fn(name: String): LuaFunction? = t.get(name).let { if (it != null && it.isfunction()) it as LuaFunction else null }
+                val onWarning = fn("on_warning")
+                val onFire = fn("on_fire")
+                if (onWarning == null && onFire == null) throw LuaError("register.schedule: give on_warning, on_fire or both")
+                fun runner(f: LuaFunction) = { trigger: com.morgana.domain.script.ScriptScheduleTrigger, view: ScriptWorldView ->
+                    val effects = mutableListOf<ScriptEffect>()
+                    runQuery(moduleId, budget.actionInstructions, emptyList(), view, effects) { w ->
+                        f.call(LuakSandbox.scheduleToTable(trigger), w)
+                        effects.toList()
+                    }
+                }
+                registry.registerScheduleHook(ScriptScheduleHook(moduleId, ids, onWarning?.let(::runner), onFire?.let(::runner)))
                 return LuaValue.NIL
             }
         })

@@ -136,6 +136,9 @@ private val MODERATION_USAGE = mapOf(
 /** The server ticks every 50 ms. */
 private const val TICKS_PER_SECOND = 20
 
+/** How often (in ticks; 20 is one second) the simulation is told the real-world time for the scheduler. */
+private const val WALL_CLOCK_INTERVAL_TICKS = 20L
+
 /** Failed logins allowed per connection before it is closed. */
 private const val MAX_AUTH_FAILURES = 5
 
@@ -161,7 +164,9 @@ class MorganaWorldCoordinator(
     /** Optional-module switches; null reads them from `server.json` in the data directory (default: all on). */
     modules: ModuleFlags? = null,
     /** Packet flood limits; null reads `limits` from `server.json` (default: on). */
-    packetLimits: PacketLimitSettings? = null
+    packetLimits: PacketLimitSettings? = null,
+    /** The real-world clock the simulation is told about (see [SimInput.WallClock]); tests pass a fixed or stepped one. */
+    private val wallClock: java.time.Clock = java.time.Clock.systemUTC()
 ) : AutoCloseable {
     /**
      * Per-connection flood protection. Time is measured in game ticks (20 per second), so limits are deterministic
@@ -269,6 +274,9 @@ class MorganaWorldCoordinator(
         simulation.worldSwitches.putAll(serverState.worldSwitches)
         simulation.worldVariables.putAll(serverState.worldVariables)
         simulation.worldStringVariables.putAll(serverState.worldStringVariables)
+        simulation.scheduleCursorMillis = serverState.scheduleCursorMillis
+        simulation.scheduleLastFired.putAll(serverState.scheduleLastFired)
+        simulation.scheduleOneShots.putAll(serverState.scheduleOneShots)
         if (dataStore.gameDir == dataStore.rootDir) {
             GameScaffolder.seedIfEmpty(dataStore.world)
         }
@@ -402,6 +410,7 @@ class MorganaWorldCoordinator(
         val startedNanos = System.nanoTime()
         val events = runInput(SimInput.Tick(deltaMs))
         dispatchEvents(events)
+        if (simulation.currentTick % WALL_CLOCK_INTERVAL_TICKS == 0L) reportWallClock()
         applyQueuedMoves()
         expireGhosts()
         if (simulation.currentTick % SeamViews.INTERVAL_TICKS == 0L) sendSeamViews()
@@ -416,6 +425,17 @@ class MorganaWorldCoordinator(
         if (simulation.currentTick % 1200L == 0L) expireMarketListings()
         if (simulation.currentTick % 10L == 0L) updateExploration()
         recordTick(startedNanos)
+    }
+
+    /**
+     * Tells the simulation the real-world time, as a recorded input (time is an input, so a replay raises the same scheduled events).
+     * When the scheduler raised something, the server state is saved at once so a crash cannot start the same occurrence twice.
+     */
+    private fun reportWallClock() {
+        val events = runInput(SimInput.WallClock(wallClock.millis()))
+        if (events.isEmpty()) return
+        dispatchEvents(events)
+        if (events.any { it is WorldSimulationEvent.ScheduleTriggered }) saveServerState()
     }
 
     /** Applies one waiting movement step per session whose rate limit allows it this tick (oldest session first). */
@@ -450,7 +470,10 @@ class MorganaWorldCoordinator(
             worldEpochTicks = simulation.effectiveWorldTick(),
             worldSwitches = simulation.worldSwitches.toMap(),
             worldVariables = simulation.worldVariables.toMap(),
-            worldStringVariables = simulation.worldStringVariables.toMap()
+            worldStringVariables = simulation.worldStringVariables.toMap(),
+            scheduleCursorMillis = simulation.scheduleCursorMillis,
+            scheduleLastFired = simulation.scheduleLastFired.toMap(),
+            scheduleOneShots = simulation.scheduleOneShots.toMap()
         )
 
     /** Saves runtime server state (e.g. cumulative world epoch ticks) to `<data dir>/server-state.json`. */
@@ -1997,6 +2020,11 @@ class MorganaWorldCoordinator(
                 if (target.id == charId) return
                 if (isIgnoredBy(target.id, player)) { sessionByCharacterId[charId]?.let { sendSystemMessage(it, "Invitation sent to ${target.name}.") }; return }
                 val partyId = player.partyId ?: "party-${UUID.randomUUID().toString().take(6)}"
+                val partyCap = simulation.game.definition.gameplayTuning.maxPartySize
+                if (partyCap > 0 && (simulation.parties[partyId]?.memberCharacterIds?.size ?: 1) >= partyCap) {
+                    sessionByCharacterId[charId]?.let { sendSystemMessage(it, "Your party is full ($partyCap members).") }
+                    return
+                }
                 val party = simulation.parties.getOrPut(partyId) {
                     PartyState(partyId, player.id, listOf(player.id))
                 }
@@ -2010,6 +2038,11 @@ class MorganaWorldCoordinator(
             PartyActionType.ACCEPT -> {
                 val partyId = simulation.pendingPartyInvites.remove(charId) ?: run { sessionByCharacterId[charId]?.let { sendSystemMessage(it, "You have no party invitation.") }; return }
                 val party = simulation.parties[partyId] ?: return
+                val acceptCap = simulation.game.definition.gameplayTuning.maxPartySize
+                if (acceptCap > 0 && charId !in party.memberCharacterIds && party.memberCharacterIds.size >= acceptCap) {
+                    sessionByCharacterId[charId]?.let { sendSystemMessage(it, "That party is full ($acceptCap members).") }
+                    return
+                }
                 val nextParty = party.copy(memberCharacterIds = (party.memberCharacterIds + charId).distinct())
                 simulation.parties[partyId] = nextParty
                 val updated = player.copy(partyId = partyId)
@@ -2142,7 +2175,7 @@ class MorganaWorldCoordinator(
             GuildActionType.ACCEPT -> {
                 if (guild != null) { say("Leave your current guild first."); return }
                 val invited = pendingGuildInvites.remove(charId)?.let { simulation.guilds[it] } ?: run { say("You have no guild invitation."); return }
-                when (val change = GuildRules.join(invited, charId)) {
+                when (val change = GuildRules.join(invited, charId, simulation.game.definition.gameplayTuning.maxGuildMembers)) {
                     is GuildRules.Change.Refused -> say(change.reason)
                     is GuildRules.Change.Updated -> {
                         saveGuild(change.guild)
@@ -2724,6 +2757,8 @@ class MorganaWorldCoordinator(
                     if (index !in superseded) broadcastPlayerUpdate(ev.character)
                     syncViewerArea(ev.character)
                 }
+                // For the server and systems only: players hear a schedule through the chat announcement it also emitted.
+                is WorldSimulationEvent.ScheduleTriggered -> Unit
                 is WorldSimulationEvent.BossTelegraph -> {
                     broadcastNear(ev.mapId, ev.centerX, ev.centerY, ServerPacket.BossTelegraph(ev.mapId, ev.centerX, ev.centerY, ev.radius, ev.windUpTicks, ev.label))
                 }

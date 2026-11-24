@@ -220,6 +220,9 @@ internal fun WorldSimulation.applyScriptEffectImpl(effect: ScriptEffect): List<W
         is ScriptEffect.AwardExperience -> {
             awardPartyOrSoloExperience(players[effect.playerId] ?: return emptyList(), effect.amount, out)
         }
+        is ScriptEffect.ScheduleOnce ->
+            scheduleOnce(effect.id, effect.atMillis, effect.name, effect.warningsSeconds, effect.data, effect.warningMessage, effect.fireMessage)
+        is ScriptEffect.CancelSchedule -> cancelSchedule(effect.id)
         is ScriptEffect.SetState -> {
             if (effect.values.isEmpty()) scriptState.remove(effect.key) else scriptState[effect.key] = effect.values.toSortedMap()
         }

@@ -401,7 +401,7 @@ internal fun WorldSimulation.tickNpcs(out: MutableList<WorldSimulationEvent>) {
                             npcList[idx] = npc
 
                             val playerAttrs = targetPlayer.effectiveAttributes(game, items)
-                            val playerArmor = targetPlayer.equipment.totalArmorDefense(items, game.definition.brokenGearStatPercent)
+                            val playerArmor = targetPlayer.equipment.totalArmorDefense(items, game.definition.gearRules)
                             val npcAttrs = game.definition.attributes.associate { a ->
                                 a.id to (npcDef.attributes[a.id] ?: a.base)
                             }

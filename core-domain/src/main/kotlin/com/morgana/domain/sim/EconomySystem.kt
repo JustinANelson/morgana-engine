@@ -18,8 +18,8 @@ import kotlin.math.max
 /** The most of one thing a single buy or sell request may move; keeps the arithmetic far from overflow. */
 private const val MAX_TRADE_QUANTITY = 999
 
-/** How far (in tiles) a player may walk from where they opened a shop and still use it. */
-const val SHOP_RANGE_TILES = 6
+/** The default for how far (in tiles) a player may walk from where they opened a shop and still use it; a game sets `tuning.shopRangeTiles`. */
+const val SHOP_RANGE_TILES = com.morgana.domain.game.GameplayTuning.DEFAULT_SHOP_RANGE_TILES
 
 /** The shop a player has open: recorded when the shop window is opened, checked on every buy and sell. */
 data class ShopSession(val shopId: Int, val mapId: Int, val tileX: Int, val tileY: Int)
@@ -64,7 +64,7 @@ private fun WorldSimulation.shopRefusal(player: com.morgana.domain.entity.Charac
     val session = shopSessions[player.id]
     if (session == null || session.shopId != shopId) return "Open the shop first."
     val p = player.position
-    if (session.mapId != p.mapId || maxOf(Math.abs(session.tileX - p.tileX), Math.abs(session.tileY - p.tileY)) > SHOP_RANGE_TILES) {
+    if (session.mapId != p.mapId || maxOf(Math.abs(session.tileX - p.tileX), Math.abs(session.tileY - p.tileY)) > game.definition.gameplayTuning.shopRangeTiles) {
         return "You are too far from the shop."
     }
     return null

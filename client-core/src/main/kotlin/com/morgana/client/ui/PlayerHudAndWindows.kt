@@ -2448,7 +2448,7 @@ class PlayerHudAndWindows(
         fun hasNearbyLoot(): Boolean {
             val ch = worldState.localCharacter ?: return false
             val pos = ch.position
-            val range = com.morgana.domain.sim.GROUND_PICKUP_RANGE_TILES
+            val range = worldState.gameDefinition?.gameplayTuning?.pickupRangeTiles ?: com.morgana.domain.sim.GROUND_PICKUP_RANGE_TILES
             return worldState.groundItemsOnMap.any {
                 it.mapId == pos.mapId && kotlin.math.abs(it.tileX - pos.tileX) <= range && kotlin.math.abs(it.tileY - pos.tileY) <= range
             }

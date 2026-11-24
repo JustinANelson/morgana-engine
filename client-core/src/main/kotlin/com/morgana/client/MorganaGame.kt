@@ -771,7 +771,8 @@ class MorganaGame(
             ground = worldState.groundItemsOnMap,
             inventory = ch?.inventory,
             items = worldState.catalog.items.associateBy { it.id },
-            nowMs = nowMs
+            nowMs = nowMs,
+            pickupRange = worldState.gameDefinition?.gameplayTuning?.pickupRangeTiles ?: com.morgana.domain.sim.GROUND_PICKUP_RANGE_TILES
         )
         if (send && worldState.actionReady("pickup", nowMs, 250L)) {
             sendPickup()

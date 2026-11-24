@@ -20,6 +20,10 @@ sealed interface SimInput {
     @Serializable data class Tick(val deltaMs: Int = 50) : SimInput {
         override fun applyTo(sim: WorldSimulation) = sim.stepTick(deltaMs)
     }
+    /** The real-world time, as the server read it (epoch milliseconds, UTC). Time is an input, so replays agree on what was due. */
+    @Serializable data class WallClock(val millis: Long) : SimInput {
+        override fun applyTo(sim: WorldSimulation) = sim.advanceWallClock(millis)
+    }
     @Serializable data class SpawnPlayer(val character: CharacterState) : SimInput {
         override fun applyTo(sim: WorldSimulation) = sim.spawnOrUpdatePlayer(character)
     }

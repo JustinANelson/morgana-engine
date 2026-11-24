@@ -50,6 +50,7 @@ These are installed through the [kernel seams](/systems/system_seams.md) (each i
 | `threat` | Threat table | monsters turn on whoever hit them last; taunts only force the target |
 | `instancing` | Instanced maps | *(listed in the first table; it is also an installed system now)* an instanced map is one shared map; no private copies, generated floors, tiers or scaling; `warpedPlayer` follows the map the warp named |
 | `bossEncounters` | Boss encounters | bosses act like ordinary monsters: no phases, ground attacks, adds or lockout, and they may roll elite variants |
+| `scheduler` | Scheduler | no schedule or booked window is ever raised; `/schedule` is skipped; the wall clock is still recorded ([scheduler](/systems/scheduler.md)) |
 | `luaPlugins` | Lua plugins | every plugin hook is silent (a kill switch for all of a game's Lua extensions) |
 
 Each row also carries genre `tags` and `requires` (`guildWar` and `guildBank` need `guilds`; the F1 Systems panel warns when a required system is off).

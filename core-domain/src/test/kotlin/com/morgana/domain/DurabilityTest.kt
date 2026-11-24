@@ -8,6 +8,7 @@ import com.morgana.domain.game.GameDefinitionValidator
 import com.morgana.domain.game.MorganaClassic
 import com.morgana.domain.item.EquipmentLoadout
 import com.morgana.domain.item.EquipmentSlot
+import com.morgana.domain.item.GearRules
 import com.morgana.domain.item.Inventory
 import com.morgana.domain.item.ItemDefinition
 import com.morgana.domain.item.ItemStack
@@ -86,21 +87,21 @@ class DurabilityTest {
         // Default (0): the original rule, a broken piece adds nothing and is not "active".
         assertEquals(0, gear.totalArmorDefense(items))
         assertEquals(null, gear.getActive(EquipmentSlot.WEAPON))
-        assertEquals(EquipmentLoadout.UNARMED_DAMAGE, gear.weaponBaseDamage(gear.getActive(EquipmentSlot.WEAPON), items))
+        assertEquals(GearRules.DEFAULT.unarmedDamage, gear.weaponBaseDamage(gear.getActive(EquipmentSlot.WEAPON), items))
 
         // 10%: plate 7 -> 1 (0.7 rounds half up), sword 10 -> 1, and the pieces count as worn.
-        assertEquals(1, gear.totalArmorDefense(items, 10))
-        assertEquals(brokenSword, gear.getActive(EquipmentSlot.WEAPON, 10))
-        assertEquals(1, gear.weaponBaseDamage(gear.getActive(EquipmentSlot.WEAPON, 10), items, 10))
+        assertEquals(1, gear.totalArmorDefense(items, GearRules(brokenPercent = 10)))
+        assertEquals(brokenSword, gear.getActive(EquipmentSlot.WEAPON, GearRules(brokenPercent = 10)))
+        assertEquals(1, gear.weaponBaseDamage(gear.getActive(EquipmentSlot.WEAPON, GearRules(brokenPercent = 10)), items, GearRules(brokenPercent = 10)))
 
         // 50%: 7 -> 4 (3.5 rounds up), sword 10 -> 5. 100% is as good as new.
-        assertEquals(4, gear.totalArmorDefense(items, 50))
-        assertEquals(5, gear.weaponBaseDamage(gear.getActive(EquipmentSlot.WEAPON, 50), items, 50))
-        assertEquals(7, gear.totalArmorDefense(items, 100))
+        assertEquals(4, gear.totalArmorDefense(items, GearRules(brokenPercent = 50)))
+        assertEquals(5, gear.weaponBaseDamage(gear.getActive(EquipmentSlot.WEAPON, GearRules(brokenPercent = 50)), items, GearRules(brokenPercent = 50)))
+        assertEquals(7, gear.totalArmorDefense(items, GearRules(brokenPercent = 100)))
 
         // Unbroken gear is never scaled, whatever the setting.
         val fresh = EquipmentLoadout(mapOf(EquipmentSlot.ARMOR to ItemStack(3)))
-        assertEquals(7, fresh.totalArmorDefense(items, 10))
+        assertEquals(7, fresh.totalArmorDefense(items, GearRules(brokenPercent = 10)))
     }
 
     @Test

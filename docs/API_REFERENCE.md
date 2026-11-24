@@ -295,6 +295,16 @@ register.on_kill(function(killer, xp, world)
 end)
 ```
 
+#### `register.schedule{ id, ids, on_warning, on_fire }`
+Reacts to the scheduler (`schedules` in `game.json`, or one-offs booked with `world.schedule_once`). `id` (or a list `ids`) limits it to those schedules; omit both to hear every schedule. Give `on_warning`, `on_fire` or both; each is `function(info, world)`, may cause effects (action budget) and runs once per warning or start. `info` is `{ id, name, phase ("warning" or "fire"), seconds_before, occurrence_ms, recurring, data }`; `data` holds what a one-off was booked with.
+```lua
+register.schedule{ id = "cleansing",
+  on_fire = function(info, world)
+    world.broadcast("The Cleansing sweeps the Wildlands.")
+    world.schedule_once("aftermath", world.now_ms + 3600 * 1000, { name = "Aftermath", warnings = { 60 }, data = { arc = "7" } })
+  end }
+```
+
 #### `register.warp(function(player, warp, world))`
 Rules on warps: every way a player is moved to a map (warp tiles, warp spells and scrolls, the event warp step, a script warp) asks this first. `warp` is `{ map_id, name, x, y, instanced }`. Return `false` to refuse the warp (optionally `false, "Why."` to tell the player), return a map id to send the player to **that map instead** (same tile; the new target is routed again, so a redirect to an instanced map gets its private copy), or return nothing to leave the warp alone. Pure query, formula budget. A warp hook is asked before the engine's own instancing, so it sees the warp as it was made. A plugin that wants a different rule for instanced maps replaces the system: `register.plugin{ id = "shared-crypts", replaces = { "instancing" } }` makes an instanced map one shared map.
 ```lua
@@ -317,6 +327,7 @@ end)
 | activity interrupters | `register.on_interrupt` |
 | combat observers | `register.combat_observer` |
 | kill observers | `register.on_kill` |
+| schedule handlers | `register.schedule` |
 | warp routers | `register.warp` |
 | chat commands | `register.command` |
 | event commands | `register.event_command` (and `register.event_condition`) |
@@ -354,6 +365,8 @@ These functions emit declarative `ScriptEffect` mutations that are validated aga
 | `world.spawn_projectile` | `(mapId, sourceId, isPlayer, x, y, dir, range, spriteId, dmg, speed, spellId)` | Launches physical or magical projectile. |
 | `world.award_xp` | `(playerId, amount)` | Grants experience points to a player. |
 | `world.consume_vital` | `(playerId, vitalId, amount)` | Deducts points from a player's vital pool. |
+| `world.schedule_once` | `(id, atMs, [{ name, warnings = {seconds...}, data = {k = v}, warning_message, fire_message }])` | Books a one-off with the scheduler, `atMs` in epoch milliseconds (use `world.now_ms + ...`). Ignored if the scheduler is off, the time is not in the future, or `id` belongs to a `game.json` schedule. Needs the `state` capability. |
+| `world.cancel_schedule` | `(id)` | Cancels a one-off booked with `world.schedule_once`. Needs the `state` capability. |
 | `world.set_state` | `(key, table)` | Stores `table` (string, number and boolean values, kept as strings) under `key` in the simulation's script state; `nil` or `{}` deletes the key. Hooks are stateless, so this is how a script remembers anything between ticks. Hashed for replays, not saved. |
 
 ### Content and State Queries (action combat)

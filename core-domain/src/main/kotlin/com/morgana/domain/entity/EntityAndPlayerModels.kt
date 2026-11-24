@@ -169,7 +169,7 @@ data class CharacterState(
      * Computes effective attributes (base + equipment + active status buffs/debuffs) clamped to floor/cap.
      */
     fun effectiveAttributes(game: CompiledGame, itemCatalog: Map<Int, ItemDefinition>): Map<String, Int> {
-        val equipBonus = equipment.totalAttributeBonuses(itemCatalog, game.definition.brokenGearStatPercent)
+        val equipBonus = equipment.totalAttributeBonuses(itemCatalog, game.definition.gearRules)
         val buildBonus = com.morgana.domain.game.BuildBonuses.attributeBonuses(this, game.definition)
         val statusBonus = mutableMapOf<String, Int>()
         for (effect in statusEffects) {
@@ -193,7 +193,7 @@ data class CharacterState(
         val eff = effectiveAttributes(game, itemCatalog)
         val newVitals = mutableMapOf<String, VitalState>()
         for (vDef in game.definition.vitals) {
-            val bonus = equipment.totalVitalMaxBonuses(vDef.id, itemCatalog, game.definition.brokenGearStatPercent)
+            val bonus = equipment.totalVitalMaxBonuses(vDef.id, itemCatalog, game.definition.gearRules)
             val maxVal = game.vitalMax(vDef.id, level, eff, bonus).toInt().coerceAtLeast(if (vDef.role == VitalRole.LIFE) 1 else 0)
             val existingCur = vitals[vDef.id]?.cur
             val curVal = if (refill || existingCur == null) maxVal else existingCur.coerceIn(0, maxVal)

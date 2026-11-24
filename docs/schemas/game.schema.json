@@ -359,6 +359,22 @@
                             "type": "null"
                         }
                     ]
+                },
+                "schedules": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.game.ScheduleDefinition"
+                    }
+                },
+                "tuning": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.game.GameplayTuning"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
                 }
             },
             "required": [
@@ -1992,6 +2008,106 @@
                 "id",
                 "name"
             ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.ScheduleDefinition": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "kind": {
+                    "type": "string",
+                    "enum": [
+                        "DAILY",
+                        "WEEKLY",
+                        "INTERVAL",
+                        "ONCE"
+                    ]
+                },
+                "timezone": {
+                    "type": "string"
+                },
+                "dayOfWeek": {
+                    "type": "string"
+                },
+                "time": {
+                    "type": "string"
+                },
+                "intervalSeconds": {
+                    "type": "integer"
+                },
+                "at": {
+                    "type": "string"
+                },
+                "warningsSeconds": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "warningMessage": {
+                    "type": "string"
+                },
+                "fireMessage": {
+                    "type": "string"
+                },
+                "messageColorHex": {
+                    "type": "string"
+                },
+                "lateGraceSeconds": {
+                    "type": "integer"
+                },
+                "enabled": {
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "id"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.GameplayTuning": {
+            "type": "object",
+            "properties": {
+                "harvestCooldownTicks": {
+                    "type": "integer"
+                },
+                "shopRangeTiles": {
+                    "type": "integer"
+                },
+                "pickupRangeTiles": {
+                    "type": "integer"
+                },
+                "unarmedDamage": {
+                    "type": "integer"
+                },
+                "plusWeaponDamage": {
+                    "type": "integer"
+                },
+                "plusArmorDefense": {
+                    "type": "integer"
+                },
+                "plusRingHp": {
+                    "type": "integer"
+                },
+                "plusPercentPerLevel": {
+                    "type": "integer"
+                },
+                "maxGuildMembers": {
+                    "type": "integer"
+                },
+                "maxPartySize": {
+                    "type": "integer"
+                },
+                "actionTargetRadiusPixels": {
+                    "type": "integer"
+                }
+            },
+            "required": [],
             "additionalProperties": false
         }
     }

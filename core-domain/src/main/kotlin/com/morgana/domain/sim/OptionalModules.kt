@@ -11,6 +11,7 @@ object SystemTags {
     const val FARMING = "farming"
     const val ROLEPLAY = "roleplay"
     const val ACTION = "action"
+    const val SURVIVAL = "survival"
 
     /** Every tag, with the name shown to people. */
     val TITLES: Map<String, String> = linkedMapOf(
@@ -18,7 +19,8 @@ object SystemTags {
         ROGUELIKE to "Roguelike and dungeon crawler",
         FARMING to "Farming and life sim",
         ROLEPLAY to "Role-play",
-        ACTION to "Action"
+        ACTION to "Action",
+        SURVIVAL to "Survival and crafting"
     )
 }
 
@@ -70,7 +72,8 @@ enum class OptionalModule(
     LUA_PLUGINS("luaPlugins", "Lua plugins", "Lua plugins in the game's scripts that add to or replace the engine's systems.", SystemTags.TITLES.keys),
     RUN_LIFECYCLE("runLifecycle", "Dungeon runs", "Track dungeon runs with timers, custom seeds, extraction or ephemeral runs, and optional permadeath (needs a runs section in the game rules).", setOf(SystemTags.ROGUELIKE), setOf("instancing")),
     BOONS("boons", "Roguelike boons", "Offer and stack roguelike boon upgrades (/boon) that can clear when a run ends (needs boons in the game rules).", setOf(SystemTags.ROGUELIKE)),
-    SKILL_TREES("skillTrees", "Skill trees", "Per-class skill and talent trees (/skills) spending points earned on level-up (needs skillTree in the game rules).", setOf(SystemTags.ROGUELIKE, SystemTags.RPG));
+    SKILL_TREES("skillTrees", "Skill trees", "Per-class skill and talent trees (/skills) spending points earned on level-up (needs skillTree in the game rules).", setOf(SystemTags.ROGUELIKE, SystemTags.RPG)),
+    SCHEDULER("scheduler", "Scheduler", "Real-world-time events: weekly resets, daily bonuses, timed windows with advance warnings in chat and for Lua plugins (needs schedules in the game rules).", setOf(SystemTags.SURVIVAL, SystemTags.RPG, SystemTags.ROLEPLAY));
 
     companion object {
         fun fromConfigKey(key: String): OptionalModule? = entries.firstOrNull { it.configKey == key }

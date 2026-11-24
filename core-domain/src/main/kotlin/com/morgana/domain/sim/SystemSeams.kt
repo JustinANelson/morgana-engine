@@ -81,6 +81,39 @@ interface CombatObserver {
     fun afterStruck(sim: WorldSimulation, victim: CharacterState, out: MutableList<WorldSimulationEvent>): CharacterState = victim
 }
 
+/**
+ * A system that follows real-world time. The simulation has no clock of its own (it counts ticks), so the server tells it the wall
+ * clock now and then through the recorded `SimInput.WallClock` input; replays feed the same times back and agree. Games and systems
+ * that only need "something at 10:00 on Saturday" use the `scheduler` system and its [ScheduleHandler] instead.
+ */
+interface WallClockListener {
+    /** The wall clock is now [nowMillis] (epoch milliseconds, UTC). Called about once a second, never with a time before the last call's. */
+    fun onWallClock(sim: WorldSimulation, nowMillis: Long, out: MutableList<WorldSimulationEvent>)
+}
+
+/** Which end of a scheduled occurrence a [ScheduleTrigger] is. */
+enum class SchedulePhase { WARNING, FIRE }
+
+/**
+ * One thing the scheduler raised: a warning [secondsBefore] seconds ahead of an occurrence, or the occurrence itself ([SchedulePhase.FIRE]).
+ * [occurrenceMillis] is when the occurrence is due (epoch milliseconds). [recurring] is false for a one-off. [data] is what a
+ * one-off was created with (see `WorldSimulation.scheduleOnce`), empty for schedules from `game.json`.
+ */
+data class ScheduleTrigger(
+    val scheduleId: String,
+    val name: String,
+    val phase: SchedulePhase,
+    val secondsBefore: Int,
+    val occurrenceMillis: Long,
+    val recurring: Boolean,
+    val data: Map<String, String> = emptyMap()
+)
+
+/** A system that reacts to the scheduler: a weekly reset begins, a warning goes out. Lua plugins use `register.schedule`. */
+interface ScheduleHandler {
+    fun onSchedule(sim: WorldSimulation, trigger: ScheduleTrigger, out: MutableList<WorldSimulationEvent>)
+}
+
 /** A system that gives some items a use of their own (a pet item adopts its pet instead of being eaten). */
 interface ItemUseHandler {
     /** Carries out the use of [item] from bag slot [slotIndex] and returns true, or returns false to let the item be used normally. */
@@ -156,6 +189,15 @@ fun WorldSimulation.systemStatus(): List<SystemStatus> = OptionalModule.entries.
         replacedBy = pluginReplacing(m.configKey)?.id,
         installed = systems.any { it is GameSystem && it.key == m.configKey }
     )
+}
+
+internal fun WorldSimulation.notifyWallClock(nowMillis: Long, out: MutableList<WorldSimulationEvent>) {
+    for (listener in wallClockListeners) if (isOn(listener)) listener.onWallClock(this, nowMillis, out)
+}
+
+internal fun WorldSimulation.notifySchedule(trigger: ScheduleTrigger, out: MutableList<WorldSimulationEvent>) {
+    out.add(WorldSimulationEvent.ScheduleTriggered(trigger))
+    for (handler in scheduleHandlers) if (isOn(handler)) handler.onSchedule(this, trigger, out)
 }
 
 internal fun WorldSimulation.tickSystems(stage: TickStage, out: MutableList<WorldSimulationEvent>) {

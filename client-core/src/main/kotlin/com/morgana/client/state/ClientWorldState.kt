@@ -1494,7 +1494,7 @@ class ClientWorldState {
         if (vis.actionState != null) return false
         // Only games whose sprite sheets have a harvest column: without one the pose would fall back to a walk cycle.
         if ((gameDefinition?.sprites?.stateFrames?.get(SpriteState.HARVEST) ?: 0) <= 0) return false
-        if (!AutoLootModel.lootInReach(groundItemsOnMap, ch.id, ch.position.mapId, ch.position.tileX, ch.position.tileY)) return false
+        if (!AutoLootModel.lootInReach(groundItemsOnMap, ch.id, ch.position.mapId, ch.position.tileX, ch.position.tileY, gameDefinition?.gameplayTuning?.pickupRangeTiles ?: com.morgana.domain.sim.GROUND_PICKUP_RANGE_TILES)) return false
         vis.triggerAction(SpriteState.HARVEST, PICKUP_POSE_SECONDS)
         return true
     }

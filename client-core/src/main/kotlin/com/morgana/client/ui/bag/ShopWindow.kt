@@ -84,7 +84,7 @@ class ShopWindow(
         super.act(delta)
         val ch = worldState.localCharacter ?: return
         val p = ch.position
-        if (p.mapId != openedMap || maxOf(Math.abs(p.tileX - openedX), Math.abs(p.tileY - openedY)) > SHOP_RANGE_TILES) {
+        if (p.mapId != openedMap || maxOf(Math.abs(p.tileX - openedX), Math.abs(p.tileY - openedY)) > (worldState.gameDefinition?.gameplayTuning?.shopRangeTiles ?: SHOP_RANGE_TILES)) {
             remove()
             return
         }

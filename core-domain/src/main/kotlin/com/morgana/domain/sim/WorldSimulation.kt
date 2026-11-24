@@ -1,6 +1,9 @@
 package com.morgana.domain.sim
 
 import com.morgana.domain.systems.ArenaMatch
+import com.morgana.domain.systems.SchedulerSystem
+import com.morgana.domain.game.ScheduleDefinition
+import com.morgana.domain.game.ScheduledOneShot
 import com.morgana.domain.systems.BossEncounterSystem
 import com.morgana.domain.systems.ThreatSystem
 import com.morgana.domain.systems.DurabilitySystem
@@ -283,6 +286,25 @@ class WorldSimulation(
     /** Systems that give some items a use of their own ([ItemUseHandler]). */
     val itemUseHandlers: MutableList<ItemUseHandler> = mutableListOf()
 
+    /** Systems that follow real-world time ([WallClockListener]). */
+    val wallClockListeners: MutableList<WallClockListener> = mutableListOf()
+
+    /** Systems that react to scheduled warnings and occurrences ([ScheduleHandler]). */
+    val scheduleHandlers: MutableList<ScheduleHandler> = mutableListOf()
+
+    /** The wall-clock time (epoch milliseconds, UTC) the server last reported through `SimInput.WallClock`; 0 before the first. */
+    var wallClockMillis: Long = 0L
+        internal set
+
+    /** The wall-clock time up to which the scheduler has already raised what was due; 0 until the first `WallClock`. Saved with the server state. */
+    var scheduleCursorMillis: Long = 0L
+
+    /** Schedule id to the due time of the last occurrence the scheduler started, so a restart never starts one twice. Saved with the server state. */
+    val scheduleLastFired: MutableMap<String, Long> = linkedMapOf()
+
+    /** One-off schedules created while the game runs (a siege window a player booked), by id; each is removed when it has started. Saved with the server state. */
+    val scheduleOneShots: MutableMap<String, ScheduledOneShot> = linkedMapOf()
+
     /**
      * Installs [system] in every seam it implements. A game or add-on installs its own before ticking; installing the same
      * object twice does nothing. Systems that keep state keep it in the kernel's state fields, so a replay agrees.
@@ -302,6 +324,8 @@ class WorldSimulation(
         if (system is WarpRouter) warpRouters += system
         if (system is ChatCommandHandler) chatCommandHandlers += system
         if (system is ItemUseHandler) itemUseHandlers += system
+        if (system is WallClockListener) wallClockListeners += system
+        if (system is ScheduleHandler) scheduleHandlers += system
     }
 
     init {
@@ -309,7 +333,7 @@ class WorldSimulation(
         listOf(
             RebirthSystem, PromotionSystem, ArenaSystem, GuildWarSystem, PetSystem,
             StallSystem, DurabilitySystem, GearUpgradeSystem, RespecSystem,
-            ThreatSystem, BossEncounterSystem, RunLifecycleSystem, BoonSystem, SkillTreeSystem,
+            ThreatSystem, BossEncounterSystem, RunLifecycleSystem, BoonSystem, SkillTreeSystem, SchedulerSystem,
             ScriptedWarps, // before instancing: a plugin sees a warp as it was made, and its redirect is routed again
             InstancingSystem,
             ScriptedSystem, // last: the engine's own systems give their opinion before a game's Lua plugins
@@ -863,6 +887,31 @@ class WorldSimulation(
 
     fun applyScriptEffect(effect: ScriptEffect): List<WorldSimulationEvent> = applyScriptEffectImpl(effect)
 
+    /**
+     * Tells the simulation the real-world time (epoch milliseconds, UTC). The server does this about once a second through the
+     * recorded `SimInput.WallClock`; systems that follow wall-clock time (the scheduler) run from it.
+     */
+    fun advanceWallClock(nowMillis: Long): List<WorldSimulationEvent> {
+        if (nowMillis <= 0L) return emptyList()
+        wallClockMillis = nowMillis
+        val out = mutableListOf<WorldSimulationEvent>()
+        notifyWallClock(nowMillis, out)
+        return out
+    }
+
+    /**
+     * Schedules a one-off at [atMillis] (epoch milliseconds), with optional advance [warningsSeconds]. It raises the same triggers as
+     * a `game.json` schedule and is removed once it has started; [data] comes back on each trigger. False when the scheduler is off,
+     * the time is not in the future, or [id] is a configured schedule's. Booking the same [id] again replaces it.
+     */
+    fun scheduleOnce(
+        id: String, atMillis: Long, name: String = "", warningsSeconds: List<Int> = emptyList(), data: Map<String, String> = emptyMap(),
+        warningMessage: String = ScheduleDefinition.DEFAULT_WARNING_MESSAGE, fireMessage: String = ScheduleDefinition.DEFAULT_FIRE_MESSAGE
+    ): Boolean = SchedulerSystem.scheduleOnce(this, id, atMillis, name, warningsSeconds, data, warningMessage, fireMessage)
+
+    /** Cancels a one-off made with [scheduleOnce]; false if there was none. */
+    fun cancelSchedule(id: String): Boolean = scheduleOneShots.remove(id) != null
+
     /** The game's calendar, or null when its `game.json` has no `clock` section. */
     val clock: com.morgana.domain.game.WorldClock? get() = game.definition.clock?.let { com.morgana.domain.game.WorldClock(it) }
 
@@ -873,6 +922,8 @@ class WorldSimulation(
         override val currentTick: Long get() = this@WorldSimulation.effectiveWorldTick()
 
         override val clock: com.morgana.domain.game.ClockTime? get() = clockNow()
+
+        override val wallClockMillis: Long get() = this@WorldSimulation.wallClockMillis
 
         override fun random(min: Int, max: Int): Int {
             return rng.nextIntInclusive(min, max)

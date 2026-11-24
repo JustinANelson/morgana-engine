@@ -249,7 +249,8 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
                 }
                 return@forEachIndexed
             }
-            val reach = ActionCombatRules.reachTiles(hb, ts)
+            val targetRadius = sim.game.definition.gameplayTuning.actionTargetRadiusPixels
+            val reach = ActionCombatRules.reachTiles(hb, ts, targetRadius)
             val candidates = (sim.mapNpcs[player.position.mapId] ?: emptyList<MapNpcInstance>()).filter {
                 it.isAlive && sim.isHostileNpc(it) && StrictMath.abs(it.tileX - player.position.tileX) <= reach && StrictMath.abs(it.tileY - player.position.tileY) <= reach
             }
@@ -257,7 +258,7 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
                 val key = "${hb.hitGroup}:${npc.instanceId}"
                 val count = st.groupCounts[hb.hitGroup] ?: 0
                 if (key in st.hits || (hb.maxTargets > 0 && count >= hb.maxTargets)) continue
-                if (!ActionCombatRules.inShape(hb, cx, cy, st.fx, st.fy, npc.tileX * ts + ts / 2.0, npc.tileY * ts + ts / 2.0)) continue
+                if (!ActionCombatRules.inShape(hb, cx, cy, st.fx, st.fy, npc.tileX * ts + ts / 2.0, npc.tileY * ts + ts / 2.0, targetRadius)) continue
                 st = st.copy(hits = st.hits + key, groupCounts = st.groupCounts + (hb.hitGroup to count + 1), hit = true)
                 hitNpc(sim, sim.players[player.id] ?: player, npc, hb.hit, st, out)
                 bestStop = maxOf(bestStop, hb.hit.hitStopTicks)
@@ -267,7 +268,7 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
     }
 
     private fun weaponDamage(sim: WorldSimulation, player: CharacterState): Long {
-        val broken = sim.game.definition.brokenGearStatPercent
+        val broken = sim.game.definition.gearRules
         val weapon = player.equipment.getActive(EquipmentSlot.WEAPON, broken)
         return (player.equipment.weaponBaseDamage(weapon, sim.items, broken) + player.equipment.rolledAttackDamage(sim.items, broken) + com.morgana.domain.game.BuildBonuses.attackDamageBonus(player, sim.game.definition)).toLong()
     }
@@ -277,7 +278,7 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         val attrs = player.effectiveAttributes(sim.game, sim.items)
         val def = npc?.let { sim.npcs[it.npcId] }
         val defender = sim.game.definition.attributes.associate { a -> a.id to (def?.attributes?.get(a.id) ?: a.base) }
-        val critBp = (sim.game.critChanceBp(attrs).toInt() + player.equipment.totalCritBonusBp(sim.items, sim.game.definition.brokenGearStatPercent) + com.morgana.domain.game.BuildBonuses.critChanceBpBonus(player, sim.game.definition)).coerceIn(0, 10_000)
+        val critBp = (sim.game.critChanceBp(attrs).toInt() + player.equipment.totalCritBonusBp(sim.items, sim.game.definition.gearRules) + com.morgana.domain.game.BuildBonuses.critChanceBpBonus(player, sim.game.definition)).coerceIn(0, 10_000)
         val crit = sim.rng.rollBasisPoints(critBp)
         val weapon = weaponDamage(sim, player)
         val raw = when (hit.damageKind) {

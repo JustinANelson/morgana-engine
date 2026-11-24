@@ -134,6 +134,41 @@ object LuakSandbox {
 
         world.set("tick", LuaValue.valueOf(worldView.currentTick))
 
+        // world.now_ms: the real-world time in epoch milliseconds (0 until the server has reported it). A Lua number holds it exactly.
+        world.set("now_ms", LuaValue.valueOf(worldView.wallClockMillis.toDouble()))
+
+        // world.schedule_once(id, at_ms, { name=, warnings={seconds,...}, data={k=v}, warning_message=, fire_message= }): book a one-off.
+        world.set("schedule_once", object : VarArgFunction() {
+            override fun invoke(args: Varargs): Varargs {
+                val id = args.checkjstring(1)
+                val atMs = args.checkdouble(2).toLong()
+                val opts = args.arg(3)
+                var name = ""
+                var warnings = emptyList<Int>()
+                var data = emptyMap<String, String>()
+                var warningMessage = com.morgana.domain.game.ScheduleDefinition.DEFAULT_WARNING_MESSAGE
+                var fireMessage = com.morgana.domain.game.ScheduleDefinition.DEFAULT_FIRE_MESSAGE
+                if (opts != null && opts.istable()) {
+                    opts.get("name").let { if (it != null && it.isstring()) name = it.tojstring() }
+                    opts.get("warning_message").let { if (it != null && it.isstring()) warningMessage = it.tojstring() }
+                    opts.get("fire_message").let { if (it != null && it.isstring()) fireMessage = it.tojstring() }
+                    opts.get("warnings").let { w ->
+                        if (w != null && w.istable()) warnings = (1..w.length()).mapNotNull { i -> w.get(i).let { v -> if (v != null && v.isnumber()) v.toint() else null } }
+                    }
+                    opts.get("data").let { d -> if (d != null && d.istable()) data = tableToStringMap(d) }
+                }
+                effectsOut.add(ScriptEffect.ScheduleOnce(id, atMs, name, warnings, data, warningMessage, fireMessage))
+                return LuaValue.NIL
+            }
+        })
+
+        world.set("cancel_schedule", object : OneArgFunction() {
+            override fun call(arg: LuaValue?): LuaValue? {
+                effectsOut.add(ScriptEffect.CancelSchedule(arg?.checkjstring() ?: return LuaValue.NIL))
+                return LuaValue.NIL
+            }
+        })
+
         // world.clock: the game's calendar (nil when game.json has no clock section).
         worldView.clock?.let { c ->
             val clock = LuaValue.tableOf()
@@ -441,6 +476,39 @@ object LuakSandbox {
         is Int -> LuaValue.valueOf(tree)
         is Number -> LuaValue.valueOf(tree.toDouble())
         else -> LuaValue.valueOf(tree.toString())
+    }
+
+    /** A Lua table of string, number and boolean values as the string map scripts store (numbers and booleans become text). */
+    fun tableToStringMap(table: LuaValue): Map<String, String> {
+        val values = java.util.TreeMap<String, String>()
+        var k: LuaValue = LuaValue.NIL
+        while (true) {
+            val n = table.next(k) ?: break
+            k = n.arg1() ?: break
+            if (k.isnil()) break
+            val v = n.arg(2) ?: LuaValue.NIL
+            values[k.tojstring()] = when {
+                v.isboolean() -> if (v.toboolean()) "1" else "0"
+                v.isnumber() -> v.todouble().let { d -> if (d == Math.floor(d) && Math.abs(d) < 1e15) d.toLong().toString() else d.toString() }
+                else -> v.tojstring()
+            }
+        }
+        return values
+    }
+
+    /** What `register.schedule` hooks receive: `id`, `name`, `phase` ("warning" or "fire"), `seconds_before`, `occurrence_ms`, `recurring`, `data`. */
+    fun scheduleToTable(s: com.morgana.domain.script.ScriptScheduleTrigger): LuaTable {
+        val t = LuaValue.tableOf()
+        t.set("id", LuaValue.valueOf(s.scheduleId))
+        t.set("name", LuaValue.valueOf(s.name))
+        t.set("phase", LuaValue.valueOf(s.phase))
+        t.set("seconds_before", LuaValue.valueOf(s.secondsBefore))
+        t.set("occurrence_ms", LuaValue.valueOf(s.occurrenceMillis.toDouble()))
+        t.set("recurring", LuaValue.valueOf(s.recurring))
+        val data = LuaValue.tableOf()
+        for ((k, v) in s.data) data.set(k, LuaValue.valueOf(v))
+        t.set("data", data)
+        return t
     }
 
     fun playerToTable(p: ScriptPlayerSnapshot): LuaTable {
