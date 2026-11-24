@@ -115,3 +115,8 @@ damage is `(3*base + 1)/2`, which equals `round(base * 1.5)` for whole numbers. 
 (`ClassicOracle`) over tens of thousands of generated inputs, every XP level and every small critical-damage case.
 
 Tests: `FormulaTest`, `GameDefinitionValidatorTest`, `MorganaClassicOracleTest` (`:core-domain`), `GameDefinitionLoaderTest` (`:server-persistence`), `GameCommandTest` (`:server-app`).
+
+## Population scaling (`populationScaling`, optional)
+`"populationScaling": { "playersForFull": 10, "floorPercent": 25, "scaleMonsters": true, "scaleResources": true, "exemptMapIds": [], "exemptNpcIds": [] }`.
+A map's density (floor with nobody on it, 100 at `playersForFull` players) decides how many of its monster slots respawn and how fast resource nodes regrow. See [population scaling](/systems/population_scaling.md).
+

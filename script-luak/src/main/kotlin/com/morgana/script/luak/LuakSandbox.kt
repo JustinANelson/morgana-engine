@@ -269,6 +269,11 @@ object LuakSandbox {
             }
         })
 
+        // world.population_percent(map_id): how fully the map is supplied by its player count (25 to 100 with `populationScaling`, else 100).
+        world.set("population_percent", object : OneArgFunction() {
+            override fun call(arg: LuaValue?): LuaValue? = LuaValue.valueOf(worldView.populationPercent(arg?.checkint() ?: return LuaValue.NIL))
+        })
+
         world.set("get_map", object : OneArgFunction() {
             override fun call(arg: LuaValue?): LuaValue? {
                 val mapId = arg?.checkint() ?: return LuaValue.NIL

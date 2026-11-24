@@ -62,6 +62,7 @@ Maintenance knowledge base for Morgana ORPG, written for human and AI contributo
 * [NPC AI](/systems/npc_ai.md) - How NPCs respawn, acquire targets, attack, leash, and wander.
 * [New-Player Tips (Onboarding)](/systems/onboarding.md) - Short hints shown once per account as they become relevant: a welcome, equipping, stat points, skills, gear repair, ghosts, low health and level milestones; built in, rewritable per game in game.json.
 * [Pets](/systems/pets.md) - Companions a player adopts with an item, summons with /pet, who follow across maps, fight for the owner and grow with their XP.
+* [Population scaling](/systems/population_scaling.md) - How fully a map is supplied by the number of players on it: quiet maps refill only part of their monsters and regrow resource nodes more slowly. Opt-in, deterministic, configured in game.json.
 * [Procedural Dungeon Floors](/systems/procedural_floors.md) - Seeded rooms-and-corridors floors for roguelike runs: the FloorGenerator recipe on an instanced map, how each party copy is generated, stairs, the boss and exit, validation.
 * [Role-Play Chat](/systems/roleplay_chat.md) - The rolePlayChat module: /me actions, out-of-character talk, shouts, quiet speech and staff narration, speech range, and how older clients see it.
 * [Scheduler](/systems/scheduler.md) - Real-world-time events (a weekly reset, a daily bonus, a booked window) with advance warnings, announced in chat and passed to Lua and other systems, deterministic through a recorded wall-clock input.

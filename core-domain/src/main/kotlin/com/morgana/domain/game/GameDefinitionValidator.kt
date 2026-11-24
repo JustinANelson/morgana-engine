@@ -77,6 +77,7 @@ object GameDefinitionValidator {
         checkWorldObjects(definition, ::error)
         checkTerritory(definition, ::error)
         checkCombatStance(definition, ::error)
+        checkPopulationScaling(definition, ::error)
         checkWeather(definition, ::error)
         checkSprites(definition, ::error)
         checkOnboarding(definition, ::error)
@@ -438,6 +439,14 @@ object GameDefinitionValidator {
             }
             if (c.maxPerOwner !in 1..TerritoryDefinition.MAX_PER_OWNER) error("$at/maxPerOwner", "must be 1 to ${TerritoryDefinition.MAX_PER_OWNER} (got ${c.maxPerOwner})")
         }
+    }
+
+    private fun checkPopulationScaling(definition: GameDefinition, error: (String, String) -> Unit) {
+        val p = definition.populationScaling ?: return
+        if (p.playersForFull !in 1..PopulationScalingDefinition.MAX_PLAYERS_FOR_FULL) error("/populationScaling/playersForFull", "must be 1 to ${PopulationScalingDefinition.MAX_PLAYERS_FOR_FULL} (got ${p.playersForFull})")
+        if (p.floorPercent !in 1..100) error("/populationScaling/floorPercent", "must be 1 to 100 (got ${p.floorPercent})")
+        if (p.exemptMapIds.any { it <= 0 }) error("/populationScaling/exemptMapIds", "map ids are 1 or more")
+        if (p.exemptNpcIds.any { it <= 0 }) error("/populationScaling/exemptNpcIds", "npc ids are 1 or more")
     }
 
     private fun checkCombatStance(definition: GameDefinition, error: (String, String) -> Unit) {

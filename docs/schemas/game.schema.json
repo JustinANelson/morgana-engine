@@ -411,6 +411,16 @@
                             "type": "null"
                         }
                     ]
+                },
+                "populationScaling": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.game.PopulationScalingDefinition"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
                 }
             },
             "required": [
@@ -2351,6 +2361,37 @@
                         "OPTIONAL",
                         "FORCED"
                     ]
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.PopulationScalingDefinition": {
+            "type": "object",
+            "properties": {
+                "playersForFull": {
+                    "type": "integer"
+                },
+                "floorPercent": {
+                    "type": "integer"
+                },
+                "scaleMonsters": {
+                    "type": "boolean"
+                },
+                "scaleResources": {
+                    "type": "boolean"
+                },
+                "exemptMapIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "exemptNpcIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 }
             },
             "required": [],

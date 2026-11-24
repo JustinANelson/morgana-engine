@@ -21,6 +21,14 @@ import kotlin.math.max
  * the public API is exposed by thin delegating methods on [WorldSimulation].
  */
 
+/** A resource node's regrowth time on [mapId]: longer on a quiet map (`populationScaling`), unchanged otherwise. */
+internal fun WorldSimulation.scaledResourceRespawn(mapId: Int, baseTicks: Int): Int {
+    val scaling = game.definition.populationScaling ?: return baseTicks
+    if (!scaling.scaleResources) return baseTicks
+    val percent = populationPercent(mapId).coerceAtLeast(1)
+    return if (percent >= 100) baseTicks else (baseTicks.toLong() * 100L / percent).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+}
+
 internal fun WorldSimulation.playerInteractFacingImpl(characterId: String): List<WorldSimulationEvent> {
     var player = players[characterId] ?: return emptyList()
     if (!player.isAlive(game.lifeVitalId)) return emptyList()
@@ -237,7 +245,7 @@ internal fun WorldSimulation.harvestResourceAt(
         val depletedState = state.copy(
             currentHealth = 0,
             depleted = true,
-            respawnAtTick = currentTick + max(10, resDef.respawnTicks)
+            respawnAtTick = currentTick + max(10, scaledResourceRespawn(mapId, resDef.respawnTicks))
         )
         mapNodeStates[coord] = depletedState
         out.add(WorldSimulationEvent.ResourceNodeChanged(depletedState))

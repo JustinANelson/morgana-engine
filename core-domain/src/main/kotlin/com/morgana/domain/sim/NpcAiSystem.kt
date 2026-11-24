@@ -21,6 +21,22 @@ import kotlin.math.max
  * the public API is exposed by thin delegating methods on [WorldSimulation].
  */
 
+/**
+ * Whether a monster due to respawn may do so now: true without `populationScaling`, for a monster that is not from a spawn slot or is
+ * exempt, and otherwise when its slot is among the first `density` percent of the map's slots (by slot number, rounded up).
+ */
+internal fun WorldSimulation.slotIsSupplied(map: com.morgana.domain.map.MapDefinition, npc: com.morgana.domain.entity.MapNpcInstance): Boolean {
+    val scaling = game.definition.populationScaling ?: return true
+    if (!scaling.scaleMonsters || npc.spawnSlotIndex < 0 || npc.npcId in scaling.exemptNpcIds) return true
+    val percent = populationPercent(map.id)
+    if (percent >= 100) return true
+    val slots = map.npcSpawns.map { it.slotIndex }.sorted()
+    val ordinal = slots.indexOf(npc.spawnSlotIndex)
+    if (ordinal < 0) return true
+    val supplied = (slots.size * percent + 99) / 100
+    return ordinal < supplied
+}
+
 internal fun WorldSimulation.tickNpcs(out: MutableList<WorldSimulationEvent>) {
     val npcRules = game.definition.combat.npcs
     // How many live monsters already hunt each player (for combat.npcs.maxAttackersPerTarget).
@@ -43,6 +59,8 @@ internal fun WorldSimulation.tickNpcs(out: MutableList<WorldSimulationEvent>) {
             // Respawn check
             if (!npc.isAlive) {
                 if (npc.respawnAtTick > 0L && currentTick >= npc.respawnAtTick) {
+                    // A quiet map refills only part of its slots (see `populationScaling`); the rest wait until more players arrive.
+                    if (!slotIsSupplied(map, npc)) continue
                     val newVariant = rollVariantForNpc(npcDef)
                     val vMap = spawnVitalsForNpc(npcDef, newVariant, npc.scale)
                     npc = npc.copy(

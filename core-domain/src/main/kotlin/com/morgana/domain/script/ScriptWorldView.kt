@@ -120,6 +120,9 @@ interface ScriptWorldView {
      */
     fun getContent(kind: String, id: Int): Any? = null
 
+    /** How fully the map is supplied, 25 to 100 (see `populationScaling` in `game.json`); 100 when the game does not scale. Exposed to Lua as `world.population_percent(map_id)`. */
+    fun populationPercent(mapId: Int): Int = 100
+
     /** Every player on [mapId], by id. Exposed to Lua as `world.players_on_map(map_id)`. */
     fun playersOnMap(mapId: Int): List<ScriptPlayerSnapshot> = emptyList()
 

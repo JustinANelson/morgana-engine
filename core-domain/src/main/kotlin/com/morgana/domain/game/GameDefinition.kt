@@ -100,7 +100,9 @@ data class GameDefinition(
     /** Claiming land: who may build where, claim spacing and size, safe zones. Needs `worldObjects`. See [TerritoryDefinition]. */
     val territory: TerritoryDefinition? = null,
     /** A SAFE / PvE / PvP stance each character chooses, over the PK mode. See [CombatStanceDefinition]. */
-    val combatStance: CombatStanceDefinition? = null
+    val combatStance: CombatStanceDefinition? = null,
+    /** How much a map keeps supplied (monster respawns, resource regrowth) by how many players are on it. See [PopulationScalingDefinition]. */
+    val populationScaling: PopulationScalingDefinition? = null
 ) {
     /** The passive of class [classId], or none. */
     fun passiveOf(classId: Int): ClassPassive = classPassives[classId] ?: ClassPassive.NONE

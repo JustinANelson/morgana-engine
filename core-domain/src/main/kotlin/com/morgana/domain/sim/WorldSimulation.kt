@@ -390,6 +390,16 @@ class WorldSimulation(
     // Map & World Initialization
     // -------------------------------------------------------------------------
 
+    /**
+     * How fully [mapId] is kept supplied, in percent: 100 unless the game defines `populationScaling` and the map is not exempt, then
+     * the density for the players on it now (see [com.morgana.domain.game.PopulationScalingDefinition]). Instance copies are never scaled.
+     */
+    fun populationPercent(mapId: Int): Int {
+        val scaling = game.definition.populationScaling ?: return 100
+        if (mapId in scaling.exemptMapIds || MapInstances.isInstanceId(mapId)) return 100
+        return scaling.densityPercent(players.values.count { it.position.mapId == mapId })
+    }
+
     /** Removes the monsters of [npcId] (all when 0) from [mapId] without loot or experience; returns how many went. */
     fun despawnNpcs(mapId: Int, npcId: Int = 0, out: MutableList<WorldSimulationEvent> = mutableListOf()): Int {
         val list = mapNpcs[mapId] ?: return 0
@@ -1117,6 +1127,8 @@ class WorldSimulation(
                 pixelY = (p.position.pixelY + com.morgana.domain.script.PIXELS_PER_TILE / 2).toInt()
             )
         }
+
+        override fun populationPercent(mapId: Int): Int = this@WorldSimulation.populationPercent(mapId)
 
         override fun playersOnMap(mapId: Int): List<ScriptPlayerSnapshot> =
             players.values.filter { it.position.mapId == mapId }.sortedBy { it.id }.mapNotNull { getPlayer(it.id) }
