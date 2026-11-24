@@ -43,7 +43,10 @@ data class RarityDefinition(
     val name: String,
     /** `#rrggbb`: the item's name is drawn in this colour in tooltips and on the ground. */
     val color: String = "#ffffff",
-    /** Relative chance among the rarities an item may roll (1 or more). */
+    /**
+     * Relative chance among the rarities an item may roll. **0 means this rarity never drops** but still exists, for example as
+     * a quality only a crafter's upgrade reaches (the order of the list is the quality ladder).
+     */
     val weight: Int,
     /** This rarity only rolls on items of at least this level (for example no rares on the first floor). */
     val minItemLevel: Int = 1,

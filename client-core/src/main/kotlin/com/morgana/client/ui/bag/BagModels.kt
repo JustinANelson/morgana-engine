@@ -263,7 +263,8 @@ object ItemInfo {
         spells: Map<Int, SpellDefinition> = emptyMap(),
         durability: Int = 100,
         sockets: List<Int> = emptyList(),
-        worn: WornGear? = null
+        worn: WornGear? = null,
+        brokenPercent: Int = 0
     ): ItemTip =
         ItemTip(
             title = ItemRollText.displayName(def, rolls, loot, plus),
@@ -271,7 +272,7 @@ object ItemInfo {
             description = def.description,
             lines = describe(def, equipped, items, names, wearer, rolls, plus, spells) +
                 (worn?.let { compareLines(def, rolls, plus, it, names) } ?: emptyList()) +
-                durabilityLines(durability) +
+                durabilityLines(durability, brokenPercent) +
                 socketLines(sockets, items, names) +
                 gemLines(def, names) +
                 InfoLine("Value ${ItemRollText.price(def.price, rolls, loot, plus)}" + if (amount > 1) " each" else "", Tone.MUTED),
@@ -300,8 +301,12 @@ object ItemInfo {
         return parts.joinToString(", ")
     }
 
-    /** A tooltip line for worn gear: broken pieces give no bonuses, so say so. Nothing for gear in perfect shape. */
-    fun durabilityLines(durability: Int): List<InfoLine> = when {
+    /**
+     * A tooltip line for worn gear: a broken piece gives no bonuses (or only [brokenPercent] of them, in a game that sets
+     * `durability.brokenStatPercent`), so say so. Nothing for gear in perfect shape.
+     */
+    fun durabilityLines(durability: Int, brokenPercent: Int = 0): List<InfoLine> = when {
+        durability <= 0 && brokenPercent > 0 -> listOf(InfoLine("Broken: only $brokenPercent% of its bonuses until repaired", Tone.BAD))
         durability <= 0 -> listOf(InfoLine("Broken: gives no bonuses until repaired", Tone.BAD))
         durability < 100 -> listOf(InfoLine("Durability $durability%", if (durability <= 10) Tone.BAD else Tone.MUTED))
         else -> emptyList()

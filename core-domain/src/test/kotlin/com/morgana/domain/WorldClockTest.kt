@@ -97,5 +97,52 @@ class WorldClockTest {
         assertTrue("/clock/seasons" in problems(ClockDefinition(seasons = listOf("Dup", "Dup"))))
         assertTrue("/clock/seasons/0" in problems(ClockDefinition(seasons = listOf(" "))))
         assertTrue("/clock/startTimePermille" in problems(ClockDefinition(startTimePermille = 1000)))
+        assertTrue("/clock" in problems(ClockDefinition(dawnStartPermille = 400, dayStartPermille = 300)), "boundaries out of order")
+        assertTrue("/clock" in problems(ClockDefinition(duskStartPermille = 800, nightStartPermille = 700)), "boundaries out of order")
+        assertTrue("/clock/dawnStartPermille" in problems(ClockDefinition(dawnStartPermille = -1)))
+        assertTrue("/clock/nightStartPermille" in problems(ClockDefinition(nightStartPermille = 1001)))
+        assertTrue("/clock/nightLight" in problems(ClockDefinition(nightLight = 1001)))
+    }
+
+    @Test
+    fun `a game sets its own day and night lengths in data`() {
+        // A 60-minute day at 20 ticks a second: 48 minutes of day (dawn and dusk included), 12 of night.
+        val sixtyMinutes = ClockDefinition(
+            dayLengthTicks = 72_000, startTimePermille = 0,
+            dawnStartPermille = 100, dayStartPermille = 150, duskStartPermille = 850, nightStartPermille = 900, nightLight = 80
+        )
+        val clock = WorldClock(sixtyMinutes)
+        assertTrue(GameDefinitionValidator.validate(MorganaClassic.definition.copy(clock = sixtyMinutes)).isEmpty(), "valid in the validator")
+
+        val darkTicks = (0 until 72_000 step 20).count { clock.at(it.toLong()).phase == DayPhase.NIGHT } * 20
+        assertEquals(12 * 60 * 20, darkTicks, "12 minutes of night")
+        assertEquals(DayPhase.NIGHT, clock.at(0).phase)
+        assertEquals(80, clock.at(0).light, "the night brightness is configurable")
+        assertEquals(DayPhase.DAWN, clock.at(125L * 72).phase)
+        assertEquals(DayPhase.DAY, clock.at(500L * 72).phase)
+        assertEquals(DayPhase.DUSK, clock.at(875L * 72).phase)
+        assertEquals(DayPhase.NIGHT, clock.at(950L * 72).phase)
+    }
+
+    @Test
+    fun `leaving the phase boundaries out keeps the original cycle exactly`() {
+        val original = ClockDefinition()
+        assertEquals(230, original.dawnStartPermille)
+        assertEquals(300, original.dayStartPermille)
+        assertEquals(700, original.duskStartPermille)
+        assertEquals(770, original.nightStartPermille)
+        assertEquals(WorldClock.NIGHT_LIGHT, original.nightLight)
+        for (permille in 0..999) {
+            assertEquals(WorldClock.phaseAt(permille), original.phaseAt(permille))
+            assertEquals(WorldClock.lightAt(permille), original.lightAt(permille))
+        }
+    }
+
+    @Test
+    fun `zero-width ramps do not divide by zero`() {
+        val abrupt = ClockDefinition(dawnStartPermille = 250, dayStartPermille = 250, duskStartPermille = 750, nightStartPermille = 750)
+        for (permille in 0..999) assertTrue(abrupt.lightAt(permille) in abrupt.nightLight..1000)
+        assertEquals(DayPhase.DAY, abrupt.phaseAt(250))
+        assertEquals(DayPhase.NIGHT, abrupt.phaseAt(750))
     }
 }

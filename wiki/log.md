@@ -1,5 +1,12 @@
 # Directory Update Log
 
+## 2026-11-24
+
+* **Add** - **Day and night lengths are game data** ([game definition](/domain/game_definition.md)): `ClockDefinition` gains `dawnStartPermille`, `dayStartPermille`, `duskStartPermille`, `nightStartPermille` and `nightLight`, validated and defaulting to the old hard-coded cycle, so a game sets its own night length without touching the engine (a 60-minute day with 12 minutes of night is `dawn 100, day 150, dusk 850, night 900`). `WorldClock.phaseAt/lightAt` stay as default-cycle helpers. Tests: `WorldClockTest`.
+* **Add** - **Broken gear can keep a percentage of its stats** ([game definition](/domain/game_definition.md)): `durability.brokenStatPercent` (0 to 100, default 0 = the old "adds nothing"). `EquipmentLoadout` takes a `brokenPercent` on its stat totals and `getActive`, fed from `GameDefinition.brokenGearStatPercent` by combat, spells, NPC hits, dual-wield, gem XP and character attributes and vitals; the bag tooltip says "only N% of its bonuses". Tests: `DurabilityTest`.
+* **Change** - **A rarity may have weight 0** ([loot and affixes](/systems/loot_and_affixes.md)): the validator required 1 or more although the roller already skipped weight 0, so a quality that exists but never drops (reached only by upgrades) could not be declared. Tests: `ItemRollsTest`.
+* **Add** - **Rule: no hard-coded gameplay numbers** (`AGENTS.md` mandate 12) and a known-issue page listing the constants found by an audit ([hard-coded gameplay constants](/issues/hardcoded_gameplay_constants.md)).
+
 ## 2026-11-23
 
 * **Add** - **A cart for the horse** ([tilegen](/architecture/tilegen.md)): `CartSprite` hitches a two-wheeled cart (plank box, iron straps, sacks and a crate, shafts and a chest strap, turning spokes) behind the horse, with or without a rider, in front, side and back views on a 96 x 64 canvas. `mount --cart` writes a preview sheet. Art only. Tests: `CartSpriteTest`.

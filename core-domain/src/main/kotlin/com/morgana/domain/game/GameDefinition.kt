@@ -94,6 +94,10 @@ data class GameDefinition(
     val slots: List<EquipmentSlotDefinition>
         get() = equipmentSlots ?: EquipmentSlotDefinition.CLASSIC
 
+    /** The percent of its bonuses a broken piece of gear still gives in this game (0 when durability is off or not configured). */
+    val brokenGearStatPercent: Int
+        get() = durability?.takeIf { it.enabled }?.brokenStatPercent?.coerceIn(0, 100) ?: 0
+
     /** True when [slot] is one of this game's equipment slots. */
     fun hasSlot(slot: com.morgana.domain.item.EquipmentSlot): Boolean = slots.any { it.id == slot.id }
 

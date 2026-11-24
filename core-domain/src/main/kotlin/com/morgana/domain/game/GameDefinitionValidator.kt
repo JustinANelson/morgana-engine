@@ -155,6 +155,7 @@ object GameDefinitionValidator {
             if (d.armorWearChancePercent !in 0..100) error("/durability/armorWearChancePercent", "must be 0 to 100 (got ${d.armorWearChancePercent})")
             if (d.wearPerHit !in 1..100) error("/durability/wearPerHit", "must be 1 to 100 (got ${d.wearPerHit})")
             if (d.repairPricePercent !in 0..10_000) error("/durability/repairPricePercent", "must be 0 to 10000 (got ${d.repairPricePercent})")
+            if (d.brokenStatPercent !in 0..100) error("/durability/brokenStatPercent", "must be 0 to 100 (got ${d.brokenStatPercent})")
         }
         definition.xpGauge?.let { g ->
             if (definition.vitals.none { it.id == g.vitalId }) error("/xpGauge/vitalId", "no vital with id \"${g.vitalId}\"")
@@ -315,7 +316,7 @@ object GameDefinitionValidator {
             if (loot.rarities.indexOfFirst { it.id == r.id } != i) error("$at/id", "rarity '${r.id}' is defined twice")
             if (r.name.isBlank() || r.name.length > 24) error("$at/name", "must be 1 to 24 characters")
             if (!GameDefinition.COLOR_PATTERN.matches(r.color)) error("$at/color", "must be a #rrggbb colour")
-            if (r.weight !in 1..LootRules.MAX_WEIGHT) error("$at/weight", "must be 1 to ${LootRules.MAX_WEIGHT}")
+            if (r.weight !in 0..LootRules.MAX_WEIGHT) error("$at/weight", "must be 0 to ${LootRules.MAX_WEIGHT} (0 never drops)")
             if (r.minItemLevel !in 1..maxLevel) error("$at/minItemLevel", "must be 1 to $maxLevel")
             if (r.affixesMin !in 0..LootRules.MAX_AFFIXES_PER_ITEM) error("$at/affixesMin", "must be 0 to ${LootRules.MAX_AFFIXES_PER_ITEM}")
             if (r.affixesMax !in 0..LootRules.MAX_AFFIXES_PER_ITEM) error("$at/affixesMax", "must be 0 to ${LootRules.MAX_AFFIXES_PER_ITEM}")
@@ -404,6 +405,15 @@ object GameDefinitionValidator {
         }
         if (clock.seasons.toSet().size != clock.seasons.size) error("/clock/seasons", "season names must be unique")
         if (clock.startTimePermille !in 0..999) error("/clock/startTimePermille", "must be between 0 and 999")
+        val bounds = listOf(
+            "dawnStartPermille" to clock.dawnStartPermille, "dayStartPermille" to clock.dayStartPermille,
+            "duskStartPermille" to clock.duskStartPermille, "nightStartPermille" to clock.nightStartPermille
+        )
+        bounds.forEach { (name, value) -> if (value !in 0..1000) error("/clock/$name", "must be between 0 and 1000") }
+        if (bounds.zipWithNext().any { (a, b) -> a.second > b.second }) {
+            error("/clock", "dawnStartPermille <= dayStartPermille <= duskStartPermille <= nightStartPermille must hold (the day runs midnight, dawn, day, dusk, night)")
+        }
+        if (clock.nightLight !in 0..1000) error("/clock/nightLight", "must be between 0 and 1000")
     }
 
     private fun checkWeather(definition: GameDefinition, error: (String, String) -> Unit) {

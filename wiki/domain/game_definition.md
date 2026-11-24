@@ -29,15 +29,20 @@ editable `game.json` from the built-in definition. Schema: `docs/schemas/game.sc
 `"onboarding": { "enabled": true, "defaults": true, "tips": [ ... ] }`: rewrite, remove or add the short hints shown once per account (welcome, equip, stat points, skills, repairs, ghosts, low health, level milestones). Without the section the built-in tips apply. Format, triggers and delivery: [new-player tips](/systems/onboarding.md).
 
 ## The clock (`clock`, optional)
-`"clock": { "dayLengthTicks": 1200, "daysPerSeason": 7, "seasons": ["Spring","Summer","Autumn","Winter"], "startTimePermille": 350, "dayNight": false }`.
+`"clock": { "dayLengthTicks": 1200, "daysPerSeason": 7, "seasons": ["Spring","Summer","Autumn","Winter"], "startTimePermille": 350, "dayNight": false, "dawnStartPermille": 230, "dayStartPermille": 300, "duskStartPermille": 700, "nightStartPermille": 770, "nightLight": 150 }` (the last five are optional; the values shown are the defaults).
 A game with a `clock` section has a calendar; without it there is none (Morgana Classic has none, so it looks exactly as before). Time is the
 simulation tick: `WorldClock.at(tick)` gives day, day of season, season, year, time of day (thousandths of a day, 0 = midnight), a phase
 (night, dawn, day, dusk) and a light level (150 at night to 1000 by day), all in integers so replays agree. Defaults: 1200 ticks per day
 (one minute), 7 days per season, 4 seasons, tick 0 at 08:24. `dayNight: true` opts in to the visual cycle: the client darkens outdoor maps
 after dusk. Scripts read it as `world.clock` ([scripting](/systems/scripting.md)); the client computes the same clock from the `serverTick`
-in `AuthResult`, `MapStateSnapshot` and `Pong`, so no clock packets are sent. Validation: `dayLengthTicks` 200..1,000,000, 1..365 days per
+in `AuthResult`, `MapStateSnapshot` and `Pong`, so no clock packets are sent.
+**Day and night lengths are data.** A game picks how long a day is (`dayLengthTicks`) and where each part of it starts, in thousandths of a day: the world is dark from `nightStartPermille` through midnight to `dawnStartPermille`, brightens through dawn to `dayStartPermille`, is fully lit until `duskStartPermille`, and darkens through dusk to `nightStartPermille`; `nightLight` (0..1000) is the darkest it gets. A 60-minute day (`dayLengthTicks` 72000) with `dawn 100, day 150, dusk 850, night 900` is 12 minutes of night and 48 of day. The boundaries must be in order, each 0..1000. The client reads the same definition, so it needs no code change; a script reads the result as `world.clock.phase`/`light` (the schedule itself is data, not script state, because the client draws it without asking the server). Validation: `dayLengthTicks` 200..1,000,000, 1..365 days per
 season, 1..12 unique season names, start time 0..999. Plan for crops and homes that build on it: [ADR 0015](/decisions/0015_plots_crops_and_housing_plan.md).
 
+
+## Gear wear (`durability`, optional)
+`"durability": { "enabled": true, "weaponWearChancePercent": 10, "armorWearChancePercent": 10, "wearPerHit": 1, "repairPricePercent": 20, "brokenStatPercent": 0 }`.
+Gear loses durability (100 down to 0) as it is used and is repaired by an event `repair_gear` step ([optional modules](/server/optional_modules.md), `durability`). A broken piece stays equipped and counts for `brokenStatPercent` of its bonuses: **0 (the default) means it adds nothing until repaired**; a game that wants a harsh-but-playable penalty sets, for example, 10, and a broken weapon then still swings at 10% of its damage. The percentage applies to attribute, vital, armour, damage, crit, leech and gem bonuses, rounded half up per piece; weapon range, speed and style are unchanged. Validation: 0..100. Tests: `DurabilityTest`.
 
 ## Weather zones (`weather`, optional)
 `"weather": { "zones": [ { "id": 0, "name": "Valley", "periodTicks": 2400, "seed": 11, "states": [ { "type": "NONE", "weight": 5 }, { "type": "RAIN", "intensity": 0.5, "weight": 2 } ] } ] }`.

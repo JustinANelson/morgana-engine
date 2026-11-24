@@ -579,23 +579,50 @@ data class EquipmentLoadout(
     fun mountSpeedPercent(items: Map<Int, ItemDefinition>): Int =
         active.maxOfOrNull { items[it.itemId]?.mountSpeedPercent ?: 0 }?.takeIf { it > 100 } ?: 100
 
-    /** Worn gear that still counts: a broken piece (durability 0) stays equipped but adds nothing until repaired. */
+    /** Worn gear that still counts in full: a broken piece (durability 0) stays equipped but is left out here. */
     val active: Collection<ItemStack> get() = equipped.values.filter { it.durability > 0 }
 
-    /** Like [getEquipped] but null when the piece is broken. */
-    fun getActive(slot: EquipmentSlot): ItemStack? = equipped[slot]?.takeIf { it.durability > 0 }
+    /**
+     * The percent of its bonuses a worn piece counts for: 100 while it has durability, and [brokenPercent] (0 to 100) once it is
+     * broken. The `brokenPercent` parameters below take the game's `durability.brokenStatPercent`; 0, the default, keeps the
+     * original rule that a broken piece adds nothing until repaired.
+     */
+    fun shareOf(stack: ItemStack, brokenPercent: Int = 0): Int = if (stack.durability > 0) 100 else brokenPercent.coerceIn(0, 100)
 
-    fun totalAttributeBonuses(itemCatalog: Map<Int, ItemDefinition>): Map<String, Int> {
+    /** [value] scaled to what [stack] counts for, rounded half up (so a +5 at 10% still counts for 1). */
+    fun scaled(value: Int, stack: ItemStack, brokenPercent: Int): Int {
+        val share = shareOf(stack, brokenPercent)
+        return if (share >= 100) value else Math.floorDiv(value * share + 50, 100)
+    }
+
+    private fun scaledLong(value: Long, stack: ItemStack, brokenPercent: Int): Long {
+        val share = shareOf(stack, brokenPercent)
+        return if (share >= 100) value else Math.floorDiv(value * share + 50L, 100L)
+    }
+
+    /** Worn pieces that count for something: unbroken ones, plus broken ones when [brokenPercent] is above 0. */
+    private fun counted(brokenPercent: Int): List<ItemStack> = equipped.values.filter { shareOf(it, brokenPercent) > 0 }
+
+    /** Like [getEquipped] but null when the piece is broken and [brokenPercent] is 0. */
+    fun getActive(slot: EquipmentSlot, brokenPercent: Int = 0): ItemStack? = equipped[slot]?.takeIf { shareOf(it, brokenPercent) > 0 }
+
+    /** The base damage of the worn main-hand weapon [stack] (`null` = fists), scaled when it is broken. */
+    fun weaponBaseDamage(stack: ItemStack?, itemCatalog: Map<Int, ItemDefinition>, brokenPercent: Int = 0): Int {
+        val def = stack?.let { itemCatalog[it.itemId] } ?: return UNARMED_DAMAGE
+        return scaled(def.attackDamage, stack, brokenPercent)
+    }
+
+    fun totalAttributeBonuses(itemCatalog: Map<Int, ItemDefinition>, brokenPercent: Int = 0): Map<String, Int> {
         val out = mutableMapOf<String, Int>()
-        for (stack in active) {
+        for (stack in counted(brokenPercent)) {
             val def = itemCatalog[stack.itemId] ?: continue
-            for ((attr, bonus) in def.attributeBonuses) {
-                out[attr] = (out[attr] ?: 0) + bonus
-            }
-            for (r in rolledOf(stack, AffixStat.ATTRIBUTE)) out[r.statId] = (out[r.statId] ?: 0) + r.value
+            val piece = mutableMapOf<String, Int>()
+            for ((attr, bonus) in def.attributeBonuses) piece[attr] = (piece[attr] ?: 0) + bonus
+            for (r in rolledOf(stack, AffixStat.ATTRIBUTE)) piece[r.statId] = (piece[r.statId] ?: 0) + r.value
             for (gem in gemsOf(stack, itemCatalog)) {
-                for ((attr, bonus) in gem.attributeBonuses) out[attr] = (out[attr] ?: 0) + bonus
+                for ((attr, bonus) in gem.attributeBonuses) piece[attr] = (piece[attr] ?: 0) + bonus
             }
+            for ((attr, bonus) in piece) out[attr] = (out[attr] ?: 0) + scaled(bonus, stack, brokenPercent)
         }
         return out
     }
@@ -605,49 +632,55 @@ data class EquipmentLoadout(
         stack.sockets.mapNotNull { id -> if (id > 0) itemCatalog[id]?.gem else null }
 
     /** Percent extra kill experience from every gem socketed into unbroken worn gear. */
-    fun totalGemXpPercent(itemCatalog: Map<Int, ItemDefinition>): Int =
-        active.sumOf { s -> gemsOf(s, itemCatalog).sumOf { it.xpPercent } }
+    fun totalGemXpPercent(itemCatalog: Map<Int, ItemDefinition>, brokenPercent: Int = 0): Int =
+        counted(brokenPercent).sumOf { s -> scaled(gemsOf(s, itemCatalog).sumOf { it.xpPercent }, s, brokenPercent) }
 
     /** How many gems are socketed into unbroken worn gear. */
     fun socketedGemCount(): Int = active.sumOf { s -> s.sockets.count { it > 0 } }
 
-    fun totalArmorDefense(itemCatalog: Map<Int, ItemDefinition>): Int =
-        active.sumOf { stack ->
+    fun totalArmorDefense(itemCatalog: Map<Int, ItemDefinition>, brokenPercent: Int = 0): Int =
+        counted(brokenPercent).sumOf { stack ->
             val def = itemCatalog[stack.itemId] ?: return@sumOf 0
             val plusBonus = if (def.armorDefense > 0 || def.type in setOf(ItemType.ARMOR, ItemType.SHIELD, ItemType.HELMET, ItemType.BOOTS)) {
                 stack.plus * ItemStack.PLUS_ARMOR_DEFENSE
             } else 0
-            def.armorDefense + plusBonus + rolledOf(stack, AffixStat.ARMOR_DEFENSE).sumOf { it.value } +
-                gemsOf(stack, itemCatalog).sumOf { it.armorDefense }
+            scaled(
+                def.armorDefense + plusBonus + rolledOf(stack, AffixStat.ARMOR_DEFENSE).sumOf { it.value } +
+                    gemsOf(stack, itemCatalog).sumOf { it.armorDefense },
+                stack, brokenPercent
+            )
         }
 
-    fun totalVitalMaxBonuses(vitalId: String, itemCatalog: Map<Int, ItemDefinition>): Long =
-        active.sumOf { stack ->
+    fun totalVitalMaxBonuses(vitalId: String, itemCatalog: Map<Int, ItemDefinition>, brokenPercent: Int = 0): Long =
+        counted(brokenPercent).sumOf { stack ->
             val def = itemCatalog[stack.itemId] ?: return@sumOf 0L
             val plusBonus = if (vitalId == "hp" && def.type in setOf(ItemType.RING, ItemType.AMULET)) {
                 stack.plus.toLong() * ItemStack.PLUS_RING_HP
             } else 0L
-            (def.vitalMaxBonuses[vitalId] ?: 0).toLong() +
-                plusBonus +
-                rolledOf(stack, AffixStat.VITAL_MAX).filter { it.statId == vitalId }.sumOf { it.value.toLong() }
+            scaledLong(
+                (def.vitalMaxBonuses[vitalId] ?: 0).toLong() +
+                    plusBonus +
+                    rolledOf(stack, AffixStat.VITAL_MAX).filter { it.statId == vitalId }.sumOf { it.value.toLong() },
+                stack, brokenPercent
+            )
         }
 
     /** Extra weapon damage rolled on worn gear ([AffixStat.ATTACK_DAMAGE] affixes in any slot) plus weapon +N bonuses. */
-    fun rolledAttackDamage(itemCatalog: Map<Int, ItemDefinition>): Int =
-        equipped.entries.filter { (slot, stack) -> stack.durability > 0 && !isOffHandWeapon(slot, stack, itemCatalog) }
-            .sumOf { (_, stack) -> extraAttackDamageOf(stack, itemCatalog) }
+    fun rolledAttackDamage(itemCatalog: Map<Int, ItemDefinition>, brokenPercent: Int = 0): Int =
+        equipped.entries.filter { (slot, stack) -> shareOf(stack, brokenPercent) > 0 && !isOffHandWeapon(slot, stack, itemCatalog) }
+            .sumOf { (_, stack) -> scaled(extraAttackDamageOf(stack, itemCatalog), stack, brokenPercent) }
 
     /** True for a weapon worn in the off-hand slot (dual-wielding): its damage belongs to the off-hand strike, not the main swing. */
     private fun isOffHandWeapon(slot: EquipmentSlot, stack: ItemStack, itemCatalog: Map<Int, ItemDefinition>): Boolean =
         slot == EquipmentSlot.SHIELD && itemCatalog[stack.itemId]?.type == ItemType.WEAPON
 
     /** The unbroken weapon worn in the off-hand slot, or null when the slot is empty, broken or holds a shield. */
-    fun getActiveOffHandWeapon(itemCatalog: Map<Int, ItemDefinition>): ItemStack? =
-        getActive(EquipmentSlot.SHIELD)?.takeIf { isOffHandWeapon(EquipmentSlot.SHIELD, it, itemCatalog) }
+    fun getActiveOffHandWeapon(itemCatalog: Map<Int, ItemDefinition>, brokenPercent: Int = 0): ItemStack? =
+        getActive(EquipmentSlot.SHIELD, brokenPercent)?.takeIf { isOffHandWeapon(EquipmentSlot.SHIELD, it, itemCatalog) }
 
     /** A weapon stack's own damage: the item's `attackDamage` plus its + level, rolled damage affixes and socketed gems. */
-    fun weaponDamageOf(stack: ItemStack, itemCatalog: Map<Int, ItemDefinition>): Int =
-        (itemCatalog[stack.itemId]?.attackDamage ?: 0) + extraAttackDamageOf(stack, itemCatalog)
+    fun weaponDamageOf(stack: ItemStack, itemCatalog: Map<Int, ItemDefinition>, brokenPercent: Int = 0): Int =
+        scaled((itemCatalog[stack.itemId]?.attackDamage ?: 0) + extraAttackDamageOf(stack, itemCatalog), stack, brokenPercent)
 
     private fun extraAttackDamageOf(stack: ItemStack, itemCatalog: Map<Int, ItemDefinition>): Int {
         val def = itemCatalog[stack.itemId] ?: return 0
@@ -658,13 +691,18 @@ data class EquipmentLoadout(
     }
 
     /** Sum of all worn, unbroken rolled affixes matching [stat]. */
-    fun rolledStatTotal(stat: AffixStat, itemCatalog: Map<Int, ItemDefinition>): Int =
-        active.sumOf { stack -> rolledOf(stack, stat).sumOf { it.value } }
+    fun rolledStatTotal(stat: AffixStat, itemCatalog: Map<Int, ItemDefinition>, brokenPercent: Int = 0): Int =
+        counted(brokenPercent).sumOf { stack -> scaled(rolledOf(stack, stat).sumOf { it.value }, stack, brokenPercent) }
 
-    fun totalCritBonusBp(itemCatalog: Map<Int, ItemDefinition>): Int = rolledStatTotal(AffixStat.CRIT_CHANCE_BP, itemCatalog)
-    fun totalDodgeBonusBp(itemCatalog: Map<Int, ItemDefinition>): Int = rolledStatTotal(AffixStat.DODGE_CHANCE_BP, itemCatalog)
-    fun totalLifeLeechPercent(itemCatalog: Map<Int, ItemDefinition>): Int = rolledStatTotal(AffixStat.LIFE_LEECH_PERCENT, itemCatalog).coerceAtLeast(0)
-    fun totalMagicFindPercent(itemCatalog: Map<Int, ItemDefinition>): Int = rolledStatTotal(AffixStat.MAGIC_FIND_PERCENT, itemCatalog).coerceAtLeast(0)
+    fun totalCritBonusBp(itemCatalog: Map<Int, ItemDefinition>, brokenPercent: Int = 0): Int = rolledStatTotal(AffixStat.CRIT_CHANCE_BP, itemCatalog, brokenPercent)
+    fun totalDodgeBonusBp(itemCatalog: Map<Int, ItemDefinition>, brokenPercent: Int = 0): Int = rolledStatTotal(AffixStat.DODGE_CHANCE_BP, itemCatalog, brokenPercent)
+    fun totalLifeLeechPercent(itemCatalog: Map<Int, ItemDefinition>, brokenPercent: Int = 0): Int = rolledStatTotal(AffixStat.LIFE_LEECH_PERCENT, itemCatalog, brokenPercent).coerceAtLeast(0)
+    fun totalMagicFindPercent(itemCatalog: Map<Int, ItemDefinition>, brokenPercent: Int = 0): Int = rolledStatTotal(AffixStat.MAGIC_FIND_PERCENT, itemCatalog, brokenPercent).coerceAtLeast(0)
+
+    companion object {
+        /** Damage of a bare-handed swing (no weapon worn): the engine's long-standing default. */
+        const val UNARMED_DAMAGE: Int = 2
+    }
 
     private fun rolledOf(stack: ItemStack, stat: AffixStat): List<RolledAffix> =
         stack.rolls?.affixes.orEmpty().filter { it.stat == stat }

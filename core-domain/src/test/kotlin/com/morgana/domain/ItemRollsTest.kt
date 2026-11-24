@@ -113,6 +113,20 @@ class ItemRollsTest {
     }
 
     @Test
+    fun `a rarity with weight 0 exists and validates but never drops`() {
+        val ladder = LootRules(rarities = listOf(
+            RarityDefinition("common", "Common", weight = 90),
+            RarityDefinition("fine", "Fine", weight = 10),
+            RarityDefinition("masterwork", "Masterwork", weight = 0, priceMultiplierPercent = 120)
+        ))
+        assertEquals(emptyList<Any>(), GameDefinitionValidator.validate(MorganaClassic.definition.copy(loot = ladder)), "weight 0 is valid")
+        assertNotNull(ladder.rarity("masterwork"), "it is still a rarity a crafter can reach")
+        val rng = SeededRandomSource(5L)
+        val seen = List(2000) { ItemRoller.roll(sword, 10, ladder, rng)!!.rarity }.toSet()
+        assertEquals(setOf("common", "fine"), seen, "2000 drops never include the weight-0 rarity")
+    }
+
+    @Test
     fun `a rolled item is named by its first prefix and suffix and priced by its rarity`() {
         val rolls = ItemRolls("magic", 3, listOf(RolledAffix("cruel", AffixStat.ATTACK_DAMAGE, value = 3), RolledAffix("of_the_bear", AffixStat.VITAL_MAX, "hp", 10)))
         assertEquals("Cruel Sword of the Bear", ItemRollText.displayName(sword, rolls, rules))
@@ -296,7 +310,7 @@ class ItemRollsTest {
         val bad = MorganaClassic.definition.copy(
             loot = LootRules(
                 rarities = listOf(
-                    RarityDefinition("magic", "Magic", "blue", weight = 0, minItemLevel = 2, affixesMin = 3, affixesMax = 1),
+                    RarityDefinition("magic", "Magic", "blue", weight = -1, minItemLevel = 2, affixesMin = 3, affixesMax = 1),
                     RarityDefinition("magic", "Again", weight = 1, minItemLevel = 2)
                 ),
                 affixes = listOf(

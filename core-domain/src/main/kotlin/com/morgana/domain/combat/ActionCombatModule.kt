@@ -267,8 +267,9 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
     }
 
     private fun weaponDamage(sim: WorldSimulation, player: CharacterState): Long {
-        val weapon = player.equipment.getActive(EquipmentSlot.WEAPON)?.let { sim.items[it.itemId] }
-        return ((weapon?.attackDamage ?: 2) + player.equipment.rolledAttackDamage(sim.items) + com.morgana.domain.game.BuildBonuses.attackDamageBonus(player, sim.game.definition)).toLong()
+        val broken = sim.game.definition.brokenGearStatPercent
+        val weapon = player.equipment.getActive(EquipmentSlot.WEAPON, broken)
+        return (player.equipment.weaponBaseDamage(weapon, sim.items, broken) + player.equipment.rolledAttackDamage(sim.items, broken) + com.morgana.domain.game.BuildBonuses.attackDamageBonus(player, sim.game.definition)).toLong()
     }
 
     private fun damageOf(sim: WorldSimulation, player: CharacterState, npc: MapNpcInstance?, hit: SkillHit): Pair<Int, Boolean> {
@@ -276,7 +277,7 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         val attrs = player.effectiveAttributes(sim.game, sim.items)
         val def = npc?.let { sim.npcs[it.npcId] }
         val defender = sim.game.definition.attributes.associate { a -> a.id to (def?.attributes?.get(a.id) ?: a.base) }
-        val critBp = (sim.game.critChanceBp(attrs).toInt() + player.equipment.totalCritBonusBp(sim.items) + com.morgana.domain.game.BuildBonuses.critChanceBpBonus(player, sim.game.definition)).coerceIn(0, 10_000)
+        val critBp = (sim.game.critChanceBp(attrs).toInt() + player.equipment.totalCritBonusBp(sim.items, sim.game.definition.brokenGearStatPercent) + com.morgana.domain.game.BuildBonuses.critChanceBpBonus(player, sim.game.definition)).coerceIn(0, 10_000)
         val crit = sim.rng.rollBasisPoints(critBp)
         val weapon = weaponDamage(sim, player)
         val raw = when (hit.damageKind) {

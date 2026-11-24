@@ -696,6 +696,21 @@
                 },
                 "dayNight": {
                     "type": "boolean"
+                },
+                "dawnStartPermille": {
+                    "type": "integer"
+                },
+                "dayStartPermille": {
+                    "type": "integer"
+                },
+                "duskStartPermille": {
+                    "type": "integer"
+                },
+                "nightStartPermille": {
+                    "type": "integer"
+                },
+                "nightLight": {
+                    "type": "integer"
                 }
             },
             "required": [],
@@ -1193,6 +1208,9 @@
                     "type": "integer"
                 },
                 "repairPricePercent": {
+                    "type": "integer"
+                },
+                "brokenStatPercent": {
                     "type": "integer"
                 }
             },

@@ -20,9 +20,47 @@ data class ClockDefinition(
     /** Time of day when tick 0 happens, in thousandths of a day (0 = midnight, 500 = noon). New worlds start in the morning. */
     val startTimePermille: Int = 350,
     /** Opt in to the visual day and night cycle: outdoor maps darken at night. Off by default so existing games look the same. */
-    val dayNight: Boolean = false
+    val dayNight: Boolean = false,
+    /**
+     * Where each part of the day starts, in thousandths of a day (0 = midnight, 500 = noon). The world is dark from
+     * [nightStartPermille] through midnight to [dawnStartPermille], brightens through dawn until [dayStartPermille], is fully lit
+     * until [duskStartPermille], and darkens through dusk until [nightStartPermille]. They must be in that order, from 0 to 1000.
+     * The defaults give the original cycle (night about 46% of the day); a game sets its own to make long or short nights without
+     * touching the engine. With a 60-minute day, `dawn 100, day 150, dusk 850, night 900` is 12 minutes of night and 48 of day.
+     */
+    val dawnStartPermille: Int = DEFAULT_DAWN_START,
+    val dayStartPermille: Int = DEFAULT_DAY_START,
+    val duskStartPermille: Int = DEFAULT_DUSK_START,
+    val nightStartPermille: Int = DEFAULT_NIGHT_START,
+    /** How bright the world is at its darkest, as light out of 1000 (0 = pitch black). */
+    val nightLight: Int = DEFAULT_NIGHT_LIGHT
 ) {
+    /** Rough part of the day at [permille] (0..999). */
+    fun phaseAt(permille: Int): DayPhase = when {
+        permille < dawnStartPermille -> DayPhase.NIGHT
+        permille < dayStartPermille -> DayPhase.DAWN
+        permille < duskStartPermille -> DayPhase.DAY
+        permille < nightStartPermille -> DayPhase.DUSK
+        else -> DayPhase.NIGHT
+    }
+
+    /** Light level [nightLight]..1000: dark at night, ramping up through dawn, full by day, ramping down through dusk. */
+    fun lightAt(permille: Int): Int = when {
+        permille < dawnStartPermille -> nightLight
+        permille < dayStartPermille -> nightLight + (1000 - nightLight) * (permille - dawnStartPermille) / (dayStartPermille - dawnStartPermille)
+        permille < duskStartPermille -> 1000
+        permille < nightStartPermille -> 1000 - (1000 - nightLight) * (permille - duskStartPermille) / (nightStartPermille - duskStartPermille)
+        else -> nightLight
+    }
+
     companion object {
+        /** The original cycle: night until 22.9% of the day (about 05:30), dawn to 30%, day to 70%, dusk to 77%, then night. */
+        const val DEFAULT_DAWN_START = 230
+        const val DEFAULT_DAY_START = 300
+        const val DEFAULT_DUSK_START = 700
+        const val DEFAULT_NIGHT_START = 770
+        const val DEFAULT_NIGHT_LIGHT = 150
+
         const val DEFAULT_DAY_LENGTH_TICKS = 1200
         const val DEFAULT_DAYS_PER_SEASON = 7
         val DEFAULT_SEASONS = listOf("Spring", "Summer", "Autumn", "Winter")
@@ -78,36 +116,19 @@ class WorldClock(val definition: ClockDefinition) {
             seasonName = definition.seasons[seasonIndex],
             year = seasonNumber / seasons,
             timeOfDayPermille = permille,
-            phase = phaseAt(permille),
-            light = lightAt(permille)
+            phase = definition.phaseAt(permille),
+            light = definition.lightAt(permille)
         )
     }
 
     companion object {
-        /** Night until 22.9% of the day (about 05:30), dawn to 30%, day to 70%, dusk to 77%, then night. */
-        private const val DAWN_START = 230
-        private const val DAY_START = 300
-        private const val DUSK_START = 700
-        private const val NIGHT_START = 770
+        /** The darkest the world gets in a game that does not set its own `nightLight`, as light out of 1000. */
+        const val NIGHT_LIGHT = ClockDefinition.DEFAULT_NIGHT_LIGHT
 
-        /** The darkest the world gets, as light out of 1000. */
-        const val NIGHT_LIGHT = 150
+        /** [phaseAt] for the default cycle; a game with its own boundaries asks its [ClockDefinition]. */
+        fun phaseAt(permille: Int): DayPhase = ClockDefinition().phaseAt(permille)
 
-        fun phaseAt(permille: Int): DayPhase = when {
-            permille < DAWN_START -> DayPhase.NIGHT
-            permille < DAY_START -> DayPhase.DAWN
-            permille < DUSK_START -> DayPhase.DAY
-            permille < NIGHT_START -> DayPhase.DUSK
-            else -> DayPhase.NIGHT
-        }
-
-        /** Light level 150..1000: dark at night, ramping up through dawn, full by day, ramping down through dusk. */
-        fun lightAt(permille: Int): Int = when {
-            permille < DAWN_START -> NIGHT_LIGHT
-            permille < DAY_START -> NIGHT_LIGHT + (1000 - NIGHT_LIGHT) * (permille - DAWN_START) / (DAY_START - DAWN_START)
-            permille < DUSK_START -> 1000
-            permille < NIGHT_START -> 1000 - (1000 - NIGHT_LIGHT) * (permille - DUSK_START) / (NIGHT_START - DUSK_START)
-            else -> NIGHT_LIGHT
-        }
+        /** [lightAt] for the default cycle; a game with its own boundaries asks its [ClockDefinition]. */
+        fun lightAt(permille: Int): Int = ClockDefinition().lightAt(permille)
     }
 }
