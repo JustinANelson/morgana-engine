@@ -80,4 +80,26 @@ class LuaWorldStateTest {
         assertEquals(mapOf("tier" to "3", "hp" to "25", "by_id" to "wall"), sim.scriptState.getValue("after").toMap())
         assertNull(sim.worldObjectAt(1, 8, 8), "removed in the last step")
     }
+
+    @Test
+    fun `register object_use refuses with a reason or carries out the use with effects`() {
+        val sim = world()
+        sim.spawnOrUpdatePlayer(com.morgana.domain.entity.CharacterState(
+            id = "p", accountId = "a", name = "Pat", position = com.morgana.domain.spatial.WorldPosition.fromTile(1, 2, 2, com.morgana.domain.spatial.Direction.RIGHT)
+        ))
+        val placed = sim.placeWorldObject("wall", 1, 3, 2, "pat") as WorldObjectResult.Placed
+        assertTrue(sim.load("use.lua", """
+            register.object_use{ kinds = { "wall" },
+              gate = function(player, obj, world) if obj.data.locked == "yes" then return false, "It is locked." end end,
+              use = function(player, obj, world) world.set_object_data(obj.id, { used_by = player.id }) end }""") is ScriptCompilationResult.Success)
+
+        sim.playerInteractFacing("p")
+        assertEquals("p", sim.worldObject(placed.obj.id)!!.data["used_by"])
+
+        sim.setWorldObjectData(placed.obj.id, mapOf("locked" to "yes"))
+        val events = sim.playerInteractFacing("p")
+        assertTrue(events.any { it is com.morgana.domain.sim.WorldSimulationEvent.ChatEmitted && it.message == "It is locked." })
+        assertEquals(null, sim.worldObject(placed.obj.id)!!.data["used_by"], "the data was replaced by the lock and the use did not run")
+        assertTrue(sim.load("bad.lua", "register.object_use{ kinds = { \"wall\" } }") is ScriptCompilationResult.Error)
+    }
 }

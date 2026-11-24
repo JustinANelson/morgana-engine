@@ -99,6 +99,7 @@ class SystemSeamsTest {
         assertEquals(listOf(SchedulerSystem), s.wallClockListeners)
         assertEquals(listOf(TerritorySystem, ScriptedSystem), s.scheduleHandlers)
         assertEquals(listOf(TerritorySystem, ScriptedSystem), s.worldObjectGates)
+        assertEquals(listOf(ScriptedSystem), s.worldObjectInteractions)
         assertEquals(listOf(ArenaSystem, GuildWarSystem, RunLifecycleSystem, TerritorySystem, ScriptedSystem), s.combatArbiters)
         assertEquals(listOf(ArenaSystem, GuildWarSystem, PetSystem, RunLifecycleSystem), s.tickParticipants.take(4))
         assertEquals(listOf("ScriptedTicks", "ScriptedTicks"), names(s.tickParticipants.drop(4)))

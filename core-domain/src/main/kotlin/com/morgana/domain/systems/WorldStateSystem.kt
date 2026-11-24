@@ -125,6 +125,31 @@ object WorldStateSystem : ItemUseHandler, ChatCommandHandler, GameSystem {
         return true
     }
 
+    /**
+     * The character uses the object in front of them (the facing interaction). A system may refuse ([com.morgana.domain.sim.WorldObjectInteraction.interactionRefusal],
+     * told to the player) or carry it out; returns true when the use was settled here, so the tile's own interaction is skipped.
+     * An object nobody has a rule for does nothing and lets the interaction fall through.
+     */
+    internal fun interact(sim: WorldSimulation, player: CharacterState, obj: WorldObject, out: MutableList<WorldSimulationEvent>): Boolean {
+        if (!sim.systemOn(key)) return false
+        val kind = sim.game.definition.worldObjects?.kind(obj.kind) ?: return false
+        for (system in sim.worldObjectInteractions) {
+            if (!sim.isOn(system)) continue
+            val refusal = system.interactionRefusal(sim, player, obj, kind)
+            if (refusal != null) {
+                out.add(sim.tellPlayer(player, refusal, "WARNING"))
+                return true
+            }
+        }
+        for (system in sim.worldObjectInteractions) {
+            if (!sim.isOn(system)) continue
+            // A system may have changed the player; give the next one the current state.
+            val current = sim.players[player.id] ?: return true
+            if (system.interact(sim, current, obj, kind, out)) return true
+        }
+        return false
+    }
+
     // ---- /object ----------------------------------------------------------------------------------------------------------------
 
     override fun handle(sim: WorldSimulation, player: CharacterState, parts: List<String>, out: MutableList<WorldSimulationEvent>): Boolean {

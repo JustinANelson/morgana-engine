@@ -4,7 +4,7 @@ title: "World State (placed objects)"
 description: "Things placed on a map that stay there (walls, chests, totems): deterministic, saved per map, and open to Kotlin systems and Lua through a placement gate and an observer."
 tags: [systems, world-state, building, replay, lua, persistence]
 code: ["core-domain/src/main/kotlin/com/morgana/domain/systems/WorldStateSystem.kt", "core-domain/src/main/kotlin/com/morgana/domain/entity/WorldObject.kt", "core-domain/src/main/kotlin/com/morgana/domain/game/WorldObjects.kt", "core-domain/src/main/kotlin/com/morgana/domain/sim/SystemSeams.kt", "server-persistence/src/main/kotlin/com/morgana/persistence/WorldObjectRepository.kt", "server-app/src/main/kotlin/com/morgana/server/MorganaWorldCoordinator.kt", "core-domain/src/test/kotlin/com/morgana/domain/WorldStateTest.kt", "script-luak/src/test/kotlin/com/morgana/script/luak/LuaWorldStateTest.kt", "server-app/src/test/kotlin/com/morgana/server/WorldStatePersistenceTest.kt"]
-symbols: ["WorldStateSystem", "WorldObject", "WorldObjectKind", "WorldObjectsDefinition", "WorldObjectGate", "WorldObjectObserver", "WorldObjectResult", "placeWorldObject", "WorldObjectRepository", "WorldObjectsChanged"]
+symbols: ["WorldStateSystem", "WorldObject", "WorldObjectKind", "WorldObjectsDefinition", "WorldObjectGate", "WorldObjectObserver", "WorldObjectInteraction", "WorldObjectResult", "placeWorldObject", "WorldObjectRepository", "WorldObjectsChanged"]
 generated: { by: claude-code/claude-sonnet-5-5, at: 2026-11-24T22:00:00Z }
 stale_after: 2027-05-23T00:00:00Z
 ---
@@ -28,6 +28,9 @@ Everything goes through the simulation so it is an event and is recorded:
 | :--- | :--- |
 | Kotlin systems | implement `WorldObjectGate.refusal(...)` to veto a placement, and `WorldObjectObserver.onWorldObject(...)` to hear every `PLACED`, `CHANGED` and `REMOVED` (with a reason such as `placed`, `damaged`, `data`, `decayed`, `destroyed`) ([system seams](/systems/system_seams.md)) |
 | Lua | `register.object_gate{ kinds, check }` for rules; `world.get_object`, `world.objects_near` to read; `world.place_object`, `remove_object`, `damage_object`, `set_object_data` as effects (the `state` capability) ([API reference](/../docs/API_REFERENCE.md)) |
+
+## Using an object
+Facing a placed object and interacting (the same input as opening a door or harvesting a node, `InteractFacing`) asks the `WorldObjectInteraction` seam before the tile's own interaction. `interactionRefusal` can veto (the reason is told to the player, nothing else runs: a damaged structure refuses storage or crafting); then `interact` lets a system carry the use out and settle it. An object nobody has a rule for does nothing and the interaction carries on as before. Lua: `register.object_use{ kinds, gate, use }`. The engine ships no object that does anything when used; chests, stations and doors are rules of a game or a later system.
 
 ## Walking
 `isTileBlockedByObject` is checked where players step (including the slide along a wall in free movement) and where monsters choose a tile (`canNpcStepTo`). Non-blocking kinds (a sign) are walked over. Projectiles and line of sight do not look at objects yet.

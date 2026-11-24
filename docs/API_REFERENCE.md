@@ -315,6 +315,14 @@ register.object_gate{ kinds = { "wall" }, check = function(info, world)
 end }
 ```
 
+#### `register.object_use{ kinds, gate, use }`
+Rules for using a placed object: what happens when a character faces it and interacts (needs `worldState`). `gate(player, obj, world)` is a pure query (formula budget): return `false, "Why."` to refuse (shown to the player; default "You cannot use that."). `use(player, obj, world)` may cause effects (`world.set_object_data`, `give_item`...) and, when present, settles the use so the tile's own interaction does not run. Give a gate, a use or both; `kinds` limits it to those kinds. `obj` is the same table as `world.get_object` returns.
+```lua
+register.object_use{ kinds = { "chest" },
+  gate = function(player, obj, world) if obj.data.damaged == "yes" then return false, "It is too damaged to use." end end,
+  use = function(player, obj, world) world.set_object_data(obj.id, { last_user = player.id }) end }
+```
+
 #### `register.warp(function(player, warp, world))`
 Rules on warps: every way a player is moved to a map (warp tiles, warp spells and scrolls, the event warp step, a script warp) asks this first. `warp` is `{ map_id, name, x, y, instanced }`. Return `false` to refuse the warp (optionally `false, "Why."` to tell the player), return a map id to send the player to **that map instead** (same tile; the new target is routed again, so a redirect to an instanced map gets its private copy), or return nothing to leave the warp alone. Pure query, formula budget. A warp hook is asked before the engine's own instancing, so it sees the warp as it was made. A plugin that wants a different rule for instanced maps replaces the system: `register.plugin{ id = "shared-crypts", replaces = { "instancing" } }` makes an instanced map one shared map.
 ```lua
@@ -339,6 +347,7 @@ end)
 | kill observers | `register.on_kill` |
 | schedule handlers | `register.schedule` |
 | world object gates | `register.object_gate` |
+| world object interaction | `register.object_use` |
 | warp routers | `register.warp` |
 | chat commands | `register.command` |
 | event commands | `register.event_command` (and `register.event_condition`) |

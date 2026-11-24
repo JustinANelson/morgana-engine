@@ -132,6 +132,23 @@ interface WorldObjectObserver {
     fun onWorldObject(sim: WorldSimulation, obj: com.morgana.domain.entity.WorldObject, change: WorldObjectChange, reason: String, out: MutableList<WorldSimulationEvent>)
 }
 
+/**
+ * A system with a say in what happens when a character uses (faces and interacts with) a placed world object: a storage chest
+ * opens, a crafting station starts work, a damaged structure refuses. Lua plugins use `register.object_use`.
+ */
+interface WorldObjectInteraction {
+    /** Why [player] may not use [obj] (fit to show them), or null to allow it. Asked first; the first refusal wins and ends the use. */
+    fun interactionRefusal(
+        sim: WorldSimulation, player: CharacterState, obj: com.morgana.domain.entity.WorldObject, kind: com.morgana.domain.game.WorldObjectKind
+    ): String? = null
+
+    /** Carries out the use and returns true, or returns false to leave it to the next system. */
+    fun interact(
+        sim: WorldSimulation, player: CharacterState, obj: com.morgana.domain.entity.WorldObject, kind: com.morgana.domain.game.WorldObjectKind,
+        out: MutableList<WorldSimulationEvent>
+    ): Boolean = false
+}
+
 /** A system that gives some items a use of their own (a pet item adopts its pet instead of being eaten). */
 interface ItemUseHandler {
     /** Carries out the use of [item] from bag slot [slotIndex] and returns true, or returns false to let the item be used normally. */

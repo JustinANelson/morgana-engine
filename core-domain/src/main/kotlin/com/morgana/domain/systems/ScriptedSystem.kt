@@ -55,7 +55,7 @@ import com.morgana.domain.sim.tellPlayer
  */
 object ScriptedSystem :
     RequirementGate, MonsterBehavior, CombatArbiter, ActionGate, ActivityInterrupter, CombatObserver, KillObserver, ItemUseHandler,
-    ScheduleHandler, WorldObjectGate, GameSystem {
+    ScheduleHandler, WorldObjectGate, com.morgana.domain.sim.WorldObjectInteraction, GameSystem {
     override val key: String = OptionalModule.LUA_PLUGINS.configKey
 
     private fun WorldSimulation.active(moduleId: String): Boolean =
@@ -173,6 +173,32 @@ object ScriptedSystem :
         val view = sim.asScriptWorldView()
         val request = ScriptObjectRequest(kind.id, mapId, tileX, tileY, ownerCharacterId)
         return hooks.firstNotNullOfOrNull { it.check(request, view) }
+    }
+
+    // --- WorldObjectInteraction
+
+    override fun interactionRefusal(
+        sim: WorldSimulation, player: CharacterState, obj: com.morgana.domain.entity.WorldObject, kind: com.morgana.domain.game.WorldObjectKind
+    ): String? {
+        val hooks = sim.scripts.registry.objectUseHooks().filter { it.gate != null && it.covers(kind.id) && sim.active(it.moduleId) }
+        if (hooks.isEmpty()) return null
+        val view = sim.asScriptWorldView()
+        val who = view.getPlayer(player.id) ?: return null
+        val what = view.getWorldObject(obj.id) ?: return null
+        return hooks.firstNotNullOfOrNull { it.gate!!(who, what, view) }
+    }
+
+    override fun interact(
+        sim: WorldSimulation, player: CharacterState, obj: com.morgana.domain.entity.WorldObject, kind: com.morgana.domain.game.WorldObjectKind,
+        out: MutableList<WorldSimulationEvent>
+    ): Boolean {
+        val hooks = sim.scripts.registry.objectUseHooks().filter { it.use != null && it.covers(kind.id) && sim.active(it.moduleId) }
+        if (hooks.isEmpty()) return false
+        val view = sim.asScriptWorldView()
+        val who = view.getPlayer(player.id) ?: return false
+        val what = view.getWorldObject(obj.id) ?: return false
+        for (hook in hooks) sim.apply(hook.use!!(who, what, view), out)
+        return true
     }
 
     // --- ScheduleHandler

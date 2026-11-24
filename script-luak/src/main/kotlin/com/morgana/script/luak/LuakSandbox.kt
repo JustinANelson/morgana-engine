@@ -162,21 +162,6 @@ object LuakSandbox {
             }
         })
 
-        fun objectToTable(o: com.morgana.domain.script.ScriptObjectSnapshot): LuaTable {
-            val t = LuaValue.tableOf()
-            t.set("id", LuaValue.valueOf(o.id))
-            t.set("kind", LuaValue.valueOf(o.kind))
-            t.set("map_id", LuaValue.valueOf(o.mapId))
-            t.set("x", LuaValue.valueOf(o.x))
-            t.set("y", LuaValue.valueOf(o.y))
-            o.ownerId?.let { t.set("owner_id", LuaValue.valueOf(it)) }
-            o.guildId?.let { t.set("guild_id", LuaValue.valueOf(it)) }
-            t.set("hp", LuaValue.valueOf(o.hp))
-            val data = LuaValue.tableOf()
-            for ((k, v) in o.data) data.set(k, LuaValue.valueOf(v))
-            t.set("data", data)
-            return t
-        }
 
         // world.get_object(id) and world.objects_near(map_id, x, y, radius): what has been built.
         world.set("get_object", object : OneArgFunction() {
@@ -564,6 +549,22 @@ object LuakSandbox {
         t.set("recurring", LuaValue.valueOf(s.recurring))
         val data = LuaValue.tableOf()
         for ((k, v) in s.data) data.set(k, LuaValue.valueOf(v))
+        t.set("data", data)
+        return t
+    }
+
+    fun objectToTable(o: com.morgana.domain.script.ScriptObjectSnapshot): LuaTable {
+        val t = LuaValue.tableOf()
+        t.set("id", LuaValue.valueOf(o.id))
+        t.set("kind", LuaValue.valueOf(o.kind))
+        t.set("map_id", LuaValue.valueOf(o.mapId))
+        t.set("x", LuaValue.valueOf(o.x))
+        t.set("y", LuaValue.valueOf(o.y))
+        o.ownerId?.let { t.set("owner_id", LuaValue.valueOf(it)) }
+        o.guildId?.let { t.set("guild_id", LuaValue.valueOf(it)) }
+        t.set("hp", LuaValue.valueOf(o.hp))
+        val data = LuaValue.tableOf()
+        for ((k, v) in o.data) data.set(k, LuaValue.valueOf(v))
         t.set("data", data)
         return t
     }

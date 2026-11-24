@@ -300,6 +300,7 @@ class WorldSimulation(
 
     /** Systems that may refuse a placement in the world ([WorldObjectGate]). */
     val worldObjectGates: MutableList<WorldObjectGate> = mutableListOf()
+    val worldObjectInteractions: MutableList<WorldObjectInteraction> = mutableListOf()
 
     /** Systems that hear every world object placed, changed or removed ([WorldObjectObserver]). */
     val worldObjectObservers: MutableList<WorldObjectObserver> = mutableListOf()
@@ -358,6 +359,7 @@ class WorldSimulation(
         if (system is WallClockListener) wallClockListeners += system
         if (system is ScheduleHandler) scheduleHandlers += system
         if (system is WorldObjectGate) worldObjectGates += system
+        if (system is WorldObjectInteraction) worldObjectInteractions += system
         if (system is WorldObjectObserver) worldObjectObservers += system
     }
 

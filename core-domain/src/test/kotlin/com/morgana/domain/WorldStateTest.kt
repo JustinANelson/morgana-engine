@@ -26,6 +26,7 @@ import com.morgana.domain.sim.OptionalModule
 import com.morgana.domain.sim.SeededRandomSource
 import com.morgana.domain.sim.WorldObjectChange
 import com.morgana.domain.sim.WorldObjectGate
+import com.morgana.domain.sim.WorldObjectInteraction
 import com.morgana.domain.sim.WorldObjectObserver
 import com.morgana.domain.sim.WorldSimulation
 import com.morgana.domain.sim.WorldSimulationEvent
@@ -272,5 +273,47 @@ class WorldStateTest {
         val result = ReplayPlayer.replay(fresh(), log)
         assertTrue(result.ok, "the replay agrees with the live run: $result")
         assertEquals(StateHasher.hash(live), result.finalHash)
+    }
+
+    @Test
+    fun `facing a placed object, a system can refuse the use or carry it out, and an unruled object falls through`() {
+        val s = sim()
+        val placed = s.placeWorldObject("wall", 1, 3, 2) as WorldObjectResult.Placed // Pat at (2,2) faces right
+        val calls = mutableListOf<String>()
+        s.install(object : WorldObjectInteraction {
+            override fun interactionRefusal(sim: WorldSimulation, player: CharacterState, obj: WorldObject, kind: WorldObjectKind): String? =
+                if (obj.data["damaged"] == "yes") "It is too damaged to use." else null
+
+            override fun interact(sim: WorldSimulation, player: CharacterState, obj: WorldObject, kind: WorldObjectKind, out: MutableList<WorldSimulationEvent>): Boolean {
+                calls += "${player.name}:${obj.id}"
+                return true
+            }
+        })
+        s.playerInteractFacing("p")
+        assertEquals(listOf("Pat:${placed.obj.id}"), calls)
+
+        s.setWorldObjectData(placed.obj.id, mapOf("damaged" to "yes"))
+        val events = s.playerInteractFacing("p")
+        assertEquals(1, calls.size, "a refusal ends the use before any handler runs")
+        assertTrue(events.any { it is WorldSimulationEvent.ChatEmitted && it.message == "It is too damaged to use." })
+    }
+
+    @Test
+    fun `an object with no interaction rule does nothing, and switching worldState off disables the seam`() {
+        val s = sim()
+        s.placeWorldObject("sign", 1, 3, 2)
+        assertTrue(s.playerInteractFacing("p").isEmpty(), "nothing handles it, so the facing interaction carries on as before")
+        var used = 0
+        s.install(object : WorldObjectInteraction {
+            override fun interact(sim: WorldSimulation, player: CharacterState, obj: WorldObject, kind: WorldObjectKind, out: MutableList<WorldSimulationEvent>): Boolean { used++; return true }
+        })
+        val off = sim(modules = ModuleFlags(disabled = setOf(OptionalModule.WORLD_STATE)))
+        off.install(object : WorldObjectInteraction {
+            override fun interact(sim: WorldSimulation, player: CharacterState, obj: WorldObject, kind: WorldObjectKind, out: MutableList<WorldSimulationEvent>): Boolean { used += 100; return true }
+        })
+        off.playerInteractFacing("p")
+        assertEquals(0, used)
+        s.playerInteractFacing("p")
+        assertEquals(1, used)
     }
 }

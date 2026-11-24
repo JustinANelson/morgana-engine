@@ -18,6 +18,7 @@ import com.morgana.domain.script.ScriptItemUseHook
 import com.morgana.domain.script.ScriptItemUseResult
 import com.morgana.domain.script.ScriptKillHook
 import com.morgana.domain.script.ScriptObjectGateHook
+import com.morgana.domain.script.ScriptObjectUseHook
 import com.morgana.domain.script.ScriptScheduleHook
 import com.morgana.domain.script.ScriptTickHook
 import com.morgana.domain.script.ScriptWarpHook
@@ -522,6 +523,50 @@ class LuakScriptRuntime(
                             } else null
                         }
                     }
+                )
+                return LuaValue.NIL
+            }
+        })
+
+        // register.object_use{ kinds = {"chest"}, gate = fn(player, obj, world) -> false, "Why." , use = fn(player, obj, world) }
+        // Runs when a character faces a placed object and interacts. gate is a pure query; use may cause effects and, when present, settles the use.
+        reg.set("object_use", object : OneArgFunction() {
+            override fun call(arg: LuaValue?): LuaValue? {
+                val t = arg?.checktable() ?: throw LuaError("register.object_use: give a table")
+                fun fn(name: String): LuaFunction? = t.get(name).let { if (it != null && it.isfunction()) it as LuaFunction else null }
+                val gate = fn("gate")
+                val use = fn("use")
+                if (gate == null && use == null) throw LuaError("register.object_use: give a gate, a use or both")
+                val kinds = LinkedHashSet<String>()
+                val list = t.get("kinds")
+                if (list != null && !list.isnil()) {
+                    if (!list.istable()) throw LuaError("register.object_use: kinds must be a list of kind ids")
+                    for (i in 1..list.length()) kinds += (list.get(i)?.tojstring() ?: "")
+                }
+                registry.registerObjectUseHook(
+                    ScriptObjectUseHook(
+                        moduleId, kinds,
+                        gate = gate?.let { g ->
+                            { player, obj, view ->
+                                runQuery(moduleId, budget.formulaInstructions, null, view) { world ->
+                                    val result = g.invoke(LuaValue.varargsOf(arrayOf(LuakSandbox.playerToTable(player), LuakSandbox.objectToTable(obj), world)))
+                                    val first = result.arg1()
+                                    if (first != null && first.isboolean() && !first.toboolean()) {
+                                        result.arg(2)?.takeIf { it.isstring() }?.tojstring() ?: "You cannot use that."
+                                    } else null
+                                }
+                            }
+                        },
+                        use = use?.let { u ->
+                            { player, obj, view ->
+                                val effects = mutableListOf<ScriptEffect>()
+                                runQuery(moduleId, budget.actionInstructions, emptyList(), view, effects) { w ->
+                                    u.invoke(LuaValue.varargsOf(arrayOf(LuakSandbox.playerToTable(player), LuakSandbox.objectToTable(obj), w)))
+                                    effects.toList()
+                                }
+                            }
+                        }
+                    )
                 )
                 return LuaValue.NIL
             }

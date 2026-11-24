@@ -198,6 +198,20 @@ class ScriptObjectGateHook(
     fun covers(kind: String): Boolean = kinds.isEmpty() || kind in kinds
 }
 
+/**
+ * A plugin taking part in the use of a placed object (`register.object_use`): [kinds] limits it to those kinds (empty means every kind).
+ * [gate] returns the reason the character may not use the object (shown to them), or null; a pure query. [use] may carry the use out
+ * (effects, applied inline and replayed identically); when it is present the use counts as handled.
+ */
+class ScriptObjectUseHook(
+    val moduleId: String,
+    val kinds: Set<String> = emptySet(),
+    val gate: ((player: ScriptPlayerSnapshot, obj: ScriptObjectSnapshot, world: ScriptWorldView) -> String?)? = null,
+    val use: ((player: ScriptPlayerSnapshot, obj: ScriptObjectSnapshot, world: ScriptWorldView) -> List<ScriptEffect>)? = null
+) {
+    fun covers(kind: String): Boolean = kinds.isEmpty() || kind in kinds
+}
+
 /** A plugin sharing in a kill: [run] is told the killer and the experience the kill earned them, and may cause effects. */
 class ScriptKillHook(
     val moduleId: String,

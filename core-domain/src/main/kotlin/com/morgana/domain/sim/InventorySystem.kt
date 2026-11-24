@@ -30,6 +30,11 @@ internal fun WorldSimulation.playerInteractFacingImpl(characterId: String): List
     val facingTile = player.position.tileCoord.step(player.position.direction)
     val out = mutableListOf<WorldSimulationEvent>()
 
+    // 0. A placed world object in front of the character (a chest, a station, a door of a base) has its own interaction.
+    worldObjectAt(mapId, facingTile.x, facingTile.y)?.let { obj ->
+        if (com.morgana.domain.systems.WorldStateSystem.interact(this, player, obj, out)) return out
+    }
+
     // 1. Check facing tile attributes (KeyDoor, ResourceNode, ShopTile, BankTile)
     val cell = map.getCell(facingTile)
     if (cell != null) {
