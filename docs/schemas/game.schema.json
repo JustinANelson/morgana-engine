@@ -2172,6 +2172,12 @@
                 },
                 "maxPerMap": {
                     "type": "integer"
+                },
+                "siegeWeaponTypes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             },
             "required": [],
@@ -2190,6 +2196,15 @@
                     "type": "boolean"
                 },
                 "maxHp": {
+                    "type": "integer"
+                },
+                "attackable": {
+                    "type": "boolean"
+                },
+                "weaponDamagePercent": {
+                    "type": "integer"
+                },
+                "siegeDamagePercent": {
                     "type": "integer"
                 },
                 "tags": {

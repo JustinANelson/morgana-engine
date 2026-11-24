@@ -264,6 +264,22 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
                 hitNpc(sim, sim.players[player.id] ?: player, npc, hb.hit, st, out)
                 bestStop = maxOf(bestStop, hb.hit.hitStopTicks)
             }
+            if (sim.game.definition.worldObjects != null) {
+                val structures = sim.worldObjectsOn(player.position.mapId).filter {
+                    StrictMath.abs(it.tileX - player.position.tileX) <= reach && StrictMath.abs(it.tileY - player.position.tileY) <= reach &&
+                        sim.game.definition.worldObjects?.kind(it.kind)?.attackable == true
+                }.sortedBy { it.id }
+                for (obj in structures) {
+                    val key = "${hb.hitGroup}:${obj.id}"
+                    val count = st.groupCounts[hb.hitGroup] ?: 0
+                    if (key in st.hits || (hb.maxTargets > 0 && count >= hb.maxTargets)) continue
+                    if (!ActionCombatRules.inShape(hb, cx, cy, st.fx, st.fy, obj.tileX * ts + ts / 2.0, obj.tileY * ts + ts / 2.0, targetRadius)) continue
+                    st = st.copy(hits = st.hits + key, groupCounts = st.groupCounts + (hb.hitGroup to count + 1), hit = true)
+                    val (damage, _) = damageOf(sim, sim.players[player.id] ?: player, null, hb.hit)
+                    com.morgana.domain.systems.WorldStateSystem.strike(sim, sim.players[player.id] ?: player, obj, damage, out)
+                    bestStop = maxOf(bestStop, hb.hit.hitStopTicks)
+                }
+            }
         }
         return if (bestStop > 0) st.copy(freeze = st.freeze + bestStop) else st
     }

@@ -40,11 +40,14 @@ Placing a claim is an ordinary placement: an item whose `placesObject` names the
 ## Reading and changing claims
 `TerritorySystem.claimAt`, `claimsOn`, `levelOf`, `radiusOf`, `piecesIn`, `mayBuildIn`, `isWindowOpen`, and `upgradeClaim` (one level up; **costs are the game's to charge**). `/claim` shows the claim you stand on, `/claim abandon` gives it up (what was built stays), and a server maintainer may abandon any. A claim's `data` holds `level`, `allow` (character ids) and `window` (`open` while an attack window is on).
 
+## Protected structures
+Everything inside a safe-zone claim is protected like its people: `territory` is a `WorldObjectDamageGate` that refuses blows on structures there ("This land is protected right now.") unless an attack window is open on the claim or the attacker may build in it ([world state](/systems/world_state.md)). Damage amounts and the siege rule come from the object kinds' `weaponDamagePercent` and `siegeDamagePercent`.
+
 ## What a game builds on top
 Upkeep, decay, a weekly wipe, raids on a schedule, siege damage and "no claims in the safe ring" are rules of a particular game. They are built from these parts: `register.schedule` (a daily upkeep check), `register.object_gate` (a ring rule), `world.objects_near`/`set_object_data`/`remove_object` (decay), and `bookWindow` (the attack window). The engine ships none of those numbers.
 
 ## Not built yet
 - **Combat lockout**: a character who fought in the last N minutes cannot place a claim. Needs a record of recent combat; PvP-only tracking exists, general combat does not. A Lua gate on a `register.on_kill`/`combat_observer` timestamp can do it today.
 - **Clients are not told about objects**, so players cannot see claims or their borders yet ([world state](/systems/world_state.md)); `/claim` is the only view.
-- Structure damage (weapons, siege engines), a claim's own hit points and what happens when it is destroyed, an upgrade cost, and shared storage permissions.
+- What happens when a claim object is destroyed (an observer on `REMOVED` can do it in Lua; the engine just removes it), an upgrade cost, and shared storage permissions.
 - Claim limits are per map; a game with several maps per region needs its own gate for a per-region limit.

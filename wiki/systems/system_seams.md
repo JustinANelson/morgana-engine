@@ -28,6 +28,7 @@ stale_after: 2027-05-20T00:00:00Z
 | `ChatCommandHandler` | own slash commands (`/arena`, `/pet`, `/guildwar`, `/stall`) | `executeAdminSlashCommand`, before the kernel's own commands |
 | `WallClockListener` | follow real-world time: told the wall clock about once a second (the scheduler runs from it) | `WorldSimulation.advanceWallClock`, from the recorded `SimInput.WallClock` |
 | `WorldObjectGate` | refuse a placement in the world (a claim system keeps builders out of someone's land) | `WorldSimulation.placeWorldObject`, after the world state's own checks |
+| `WorldObjectDamageGate` | refuse a blow on a placed object (a protected claim) | `WorldStateSystem.strike`, from melee, action hitboxes and projectiles |
 | `WorldObjectInteraction` | refuse or carry out the use of a placed object (a damaged structure refuses storage; a chest opens) | the facing interaction (`InteractFacing`), before the tile's own interaction |
 | `WorldObjectObserver` | hear every world object placed, changed or removed | the world state system |
 | `ScheduleHandler` | react to a scheduled warning or start | the scheduler, for each trigger it raises |

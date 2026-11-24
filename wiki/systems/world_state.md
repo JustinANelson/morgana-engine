@@ -4,7 +4,7 @@ title: "World State (placed objects)"
 description: "Things placed on a map that stay there (walls, chests, totems): deterministic, saved per map, and open to Kotlin systems and Lua through a placement gate and an observer."
 tags: [systems, world-state, building, replay, lua, persistence]
 code: ["core-domain/src/main/kotlin/com/morgana/domain/systems/WorldStateSystem.kt", "core-domain/src/main/kotlin/com/morgana/domain/entity/WorldObject.kt", "core-domain/src/main/kotlin/com/morgana/domain/game/WorldObjects.kt", "core-domain/src/main/kotlin/com/morgana/domain/sim/SystemSeams.kt", "server-persistence/src/main/kotlin/com/morgana/persistence/WorldObjectRepository.kt", "server-app/src/main/kotlin/com/morgana/server/MorganaWorldCoordinator.kt", "core-domain/src/test/kotlin/com/morgana/domain/WorldStateTest.kt", "script-luak/src/test/kotlin/com/morgana/script/luak/LuaWorldStateTest.kt", "server-app/src/test/kotlin/com/morgana/server/WorldStatePersistenceTest.kt"]
-symbols: ["WorldStateSystem", "WorldObject", "WorldObjectKind", "WorldObjectsDefinition", "WorldObjectGate", "WorldObjectObserver", "WorldObjectInteraction", "WorldObjectResult", "placeWorldObject", "WorldObjectRepository", "WorldObjectsChanged"]
+symbols: ["WorldStateSystem", "WorldObject", "WorldObjectKind", "WorldObjectsDefinition", "WorldObjectGate", "WorldObjectObserver", "WorldObjectInteraction", "WorldObjectDamageGate", "WorldObjectResult", "placeWorldObject", "WorldObjectRepository", "WorldObjectsChanged"]
 generated: { by: claude-code/claude-sonnet-5-5, at: 2026-11-24T22:00:00Z }
 stale_after: 2027-05-23T00:00:00Z
 ---
@@ -32,6 +32,9 @@ Everything goes through the simulation so it is an event and is recorded:
 ## Using an object
 Facing a placed object and interacting (the same input as opening a door or harvesting a node, `InteractFacing`) asks the `WorldObjectInteraction` seam before the tile's own interaction. `interactionRefusal` can veto (the reason is told to the player, nothing else runs: a damaged structure refuses storage or crafting); then `interact` lets a system carry the use out and settle it. An object nobody has a rule for does nothing and the interaction carries on as before. Lua: `register.object_use{ kinds, gate, use }`. The engine ships no object that does anything when used; chests, stations and doors are rules of a game or a later system.
 
+## Hurting objects
+A kind with `"attackable": true` can be hurt by characters: a melee swing (realtime), an action-combat hitbox and a player's projectile all land on the object on the tile they reach, through `WorldStateSystem.strike`. The blow is the attacker's ordinary weapon damage against a default defender, scaled by the kind's `weaponDamagePercent` (the GDD's 5% rule is `5`) or, when the equipped weapon's type is listed in `worldObjects.siegeWeaponTypes`, by `siegeDamagePercent` (at least 1 damage; both 1 to 1000, default 100). Objects at 0 HP are removed (reason `destroyed`) and reported to observers. A `WorldObjectDamageGate` (Kotlin) can refuse a blow: `territory` refuses it on anything inside a safe-zone claim unless an attack window is open or the attacker may build there. Spells, monsters and area effects do not hurt objects yet, and a projectile only stops on an object it can hurt.
+
 ## Walking
 `isTileBlockedByObject` is checked where players step (including the slide along a wall in free movement) and where monsters choose a tile (`canNpcStepTo`). Non-blocking kinds (a sign) are walked over. Projectiles and line of sight do not look at objects yet.
 
@@ -44,5 +47,5 @@ Objects are state the simulation owns: `StateHasher` includes them (only when th
 ## Not built yet
 - **Clients are not told.** `WorldSimulationEvent.WorldObjectsChanged` is raised, but there is no packet (and so no area-of-interest broadcast, no protocol capability) and no renderer, so players cannot see placed objects. This is the next piece, and needs a client placement preview.
 - Objects are one tile. Larger pieces, rotation, and a per-kind build cost or tool are not modelled.
-- Damage to objects by weapons and siege engines, decay and upkeep, claims: the `territory` system, built on this.
+- Damage by spells, monsters and area effects; siege engines as placed machines (a siege weapon is a weapon type for now); decay and upkeep (a game's Lua plugin).
 - Refunding an item when a player takes an object down; an F1 editor form for kinds.

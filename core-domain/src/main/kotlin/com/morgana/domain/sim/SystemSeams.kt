@@ -127,6 +127,12 @@ interface WorldObjectGate {
     fun refusal(sim: WorldSimulation, kind: com.morgana.domain.game.WorldObjectKind, mapId: Int, tileX: Int, tileY: Int, ownerCharacterId: String?): String?
 }
 
+/** A system with a say in whether a placed object may be hurt (a claim in its protected state shrugs off blows). */
+interface WorldObjectDamageGate {
+    /** Why [attacker] may not hurt [obj] now (a short reason; nothing is shown when it is blank), or null to allow it. The first refusal wins. */
+    fun damageRefusal(sim: WorldSimulation, attacker: CharacterState, obj: com.morgana.domain.entity.WorldObject, kind: com.morgana.domain.game.WorldObjectKind): String?
+}
+
 /** A system that hears every world object placed, changed or removed (a claim tracks its pieces; a quest counts builds). */
 interface WorldObjectObserver {
     fun onWorldObject(sim: WorldSimulation, obj: com.morgana.domain.entity.WorldObject, change: WorldObjectChange, reason: String, out: MutableList<WorldSimulationEvent>)

@@ -443,12 +443,16 @@ object GameDefinitionValidator {
         val w = definition.worldObjects ?: return
         if (w.maxPerMap !in 1..WorldObjectsDefinition.MAX_PER_MAP) error("/worldObjects/maxPerMap", "must be 1 to ${WorldObjectsDefinition.MAX_PER_MAP} (got ${w.maxPerMap})")
         if (w.kinds.size > WorldObjectsDefinition.MAX_KINDS) error("/worldObjects/kinds", "has ${w.kinds.size} kinds; the limit is ${WorldObjectsDefinition.MAX_KINDS}")
+        if (w.siegeWeaponTypes.size > 16 || w.siegeWeaponTypes.any { it.isBlank() || it.length > 32 }) error("/worldObjects/siegeWeaponTypes", "at most 16 weapon types of 1 to 32 characters")
         w.kinds.forEachIndexed { i, k ->
             val at = "/worldObjects/kinds/$i"
             if (!WorldObjectKind.ID_PATTERN.matches(k.id)) error("$at/id", "must be 1 to 32 characters: lower-case letters, digits or _")
             if (w.kinds.indexOfFirst { it.id == k.id } != i) error("$at/id", "kind id '${k.id}' is used twice")
             if (k.name.length > 40) error("$at/name", "must be at most 40 characters")
             if (k.maxHp !in 1..WorldObjectKind.MAX_HP) error("$at/maxHp", "must be 1 to ${WorldObjectKind.MAX_HP} (got ${k.maxHp})")
+            for ((field, value) in listOf("weaponDamagePercent" to k.weaponDamagePercent, "siegeDamagePercent" to k.siegeDamagePercent)) {
+                if (value !in 1..WorldObjectKind.MAX_DAMAGE_PERCENT) error("$at/$field", "must be 1 to ${WorldObjectKind.MAX_DAMAGE_PERCENT} (got $value)")
+            }
             if (k.tags.size > 16 || k.tags.any { it.isBlank() || it.length > 24 }) error("$at/tags", "at most 16 tags of 1 to 24 characters")
         }
     }

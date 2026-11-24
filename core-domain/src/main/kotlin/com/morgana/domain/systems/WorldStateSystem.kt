@@ -115,6 +115,40 @@ object WorldStateSystem : ItemUseHandler, ChatCommandHandler, GameSystem {
         return true
     }
 
+    /**
+     * A character's blow of [rawDamage] lands on [obj]: refused when the kind is not attackable or a [com.morgana.domain.sim.WorldObjectDamageGate]
+     * says no, otherwise scaled by the kind's weapon or siege percentage (at least 1) and applied. Returns true when the object took the blow (or
+     * was protected), so the attack counts as landed on it. Floating text shows the damage dealt.
+     */
+    fun strike(sim: WorldSimulation, attacker: CharacterState, obj: WorldObject, rawDamage: Int, out: MutableList<WorldSimulationEvent>): Boolean {
+        if (!sim.systemOn(key) || rawDamage <= 0) return false
+        val definition = sim.game.definition.worldObjects ?: return false
+        val kind = definition.kind(obj.kind)?.takeIf { it.attackable } ?: return false
+        for (gate in sim.worldObjectDamageGates) {
+            if (!sim.isOn(gate)) continue
+            val refusal = gate.damageRefusal(sim, attacker, obj, kind) ?: continue
+            if (refusal.isNotBlank()) out.add(sim.tellPlayer(attacker, refusal, "WARNING"))
+            return true
+        }
+        val weaponType = sim.items[attacker.equipment.getActive(com.morgana.domain.item.EquipmentSlot.WEAPON, sim.game.definition.gearRules)?.itemId ?: 0]?.weaponType.orEmpty()
+        val percent = if (weaponType.isNotBlank() && weaponType in definition.siegeWeaponTypes) kind.siegeDamagePercent else kind.weaponDamagePercent
+        val dealt = (rawDamage.toLong() * percent / 100L).toInt().coerceAtLeast(1)
+        out.add(WorldSimulationEvent.FloatingTextEmitted(obj.mapId, obj.tileX, obj.tileY, "-$dealt", "DAMAGE", "#F59E0B"))
+        damage(sim, obj.id, dealt, out)
+        return true
+    }
+
+    /** The damage a plain hit by [player] would do to a structure before the kind's percentage: their weapon against a default defender. */
+    fun plainHitDamage(sim: WorldSimulation, player: CharacterState): Int {
+        val attrs = player.effectiveAttributes(sim.game, sim.items)
+        val rules = sim.game.definition.gearRules
+        val weapon = player.equipment.getActive(com.morgana.domain.item.EquipmentSlot.WEAPON, rules)
+        val weaponDamage = player.equipment.weaponBaseDamage(weapon, sim.items, rules) + player.equipment.rolledAttackDamage(sim.items, rules) +
+            com.morgana.domain.game.BuildBonuses.attackDamageBonus(player, sim.game.definition)
+        val defender = sim.game.definition.attributes.associate { it.id to it.base }
+        return sim.game.meleeDamage(attrs, defender, weaponDamage.toLong(), 0L, false).toInt().coerceAtLeast(1)
+    }
+
     internal fun setData(sim: WorldSimulation, id: String, data: Map<String, String>, out: MutableList<WorldSimulationEvent>): Boolean {
         val obj = sim.worldObject(id) ?: return false
         val changed = obj.copy(data = data.toSortedMap())

@@ -36,7 +36,7 @@ import com.morgana.domain.spatial.TileCoord
  * What the GDD of a particular game adds (upkeep, decay, weekly wipes, raids, siege damage) is built from the same parts: schedules, Lua
  * hooks (`register.schedule`, `register.object_gate`) and the claim data (`data` on the claim object).
  */
-object TerritorySystem : WorldObjectGate, CombatArbiter, ScheduleHandler, ChatCommandHandler, GameSystem {
+object TerritorySystem : WorldObjectGate, com.morgana.domain.sim.WorldObjectDamageGate, CombatArbiter, ScheduleHandler, ChatCommandHandler, GameSystem {
     override val key: String = OptionalModule.TERRITORY.configKey
 
     private const val KEY_LEVEL = "level"
@@ -162,6 +162,18 @@ object TerritorySystem : WorldObjectGate, CombatArbiter, ScheduleHandler, ChatCo
     /** Nobody may attack anybody while either stands in a protected claim; no opinion otherwise. */
     override fun mayFight(sim: WorldSimulation, attacker: CharacterState, defender: CharacterState): Boolean? =
         if (sim.game.definition.territory == null) null else if (protectedAt(sim, attacker) || protectedAt(sim, defender)) false else null
+
+    /**
+     * Structures inside a protected (safe zone) claim cannot be hurt unless an attack window is open on it, except by those who may build there.
+     * The claim itself counts as inside its own reach.
+     */
+    override fun damageRefusal(sim: WorldSimulation, attacker: CharacterState, obj: WorldObject, kind: WorldObjectKind): String? {
+        if (sim.game.definition.territory == null) return null
+        val claim = claimAt(sim, obj.mapId, obj.tileX, obj.tileY) ?: return null
+        if (kindOf(sim, claim)?.safeZone != true || isWindowOpen(claim)) return null
+        if (mayBuildIn(sim, claim, attacker.id)) return null
+        return "This land is protected right now."
+    }
 
     // ---- attack windows ---------------------------------------------------------------------------------------------------------
 

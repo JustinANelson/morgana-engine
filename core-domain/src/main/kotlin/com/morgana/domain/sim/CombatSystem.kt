@@ -72,6 +72,11 @@ internal fun WorldSimulation.tickProjectiles(out: MutableList<WorldSimulationEve
                     if (proj.pierce) hitIds = hitIds + targetNpc.instanceId
                     hitSomething = true
                 }
+                if (!hitSomething && attacker != null) {
+                    worldObjectAt(mapId, nextCoord.x, nextCoord.y)?.let { obj ->
+                        if (com.morgana.domain.systems.WorldStateSystem.strike(this, attacker, obj, proj.damage, out)) hitSomething = true
+                    }
+                }
                 if ((!hitSomething || proj.pierce) && map.moral.pvpEnabled && attacker != null) {
                     val matchingPlayers = players.values.filter {
                         it.id != proj.sourceEntityId &&
@@ -542,6 +547,14 @@ internal fun WorldSimulation.playerAttackImpl(characterId: String): List<WorldSi
                 }
             }
             return out
+        }
+
+        // A structure in reach (a wall, a totem): the blow lands on it when its kind can be attacked
+        worldObjectAt(mapId, targetTile.x, targetTile.y)?.let { obj ->
+            if (com.morgana.domain.systems.WorldStateSystem.strike(this, player, obj, com.morgana.domain.systems.WorldStateSystem.plainHitDamage(this, player), out)) {
+                if (weaponDef != null) registerWeaponHit(characterId, weaponDef.weaponType, out)
+                return out
+            }
         }
     }
 

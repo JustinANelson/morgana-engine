@@ -24,6 +24,7 @@ import com.morgana.domain.spatial.Direction
 import com.morgana.domain.spatial.WorldPosition
 import com.morgana.domain.systems.TerritorySystem
 import com.morgana.domain.systems.WorldObjectResult
+import com.morgana.domain.systems.WorldStateSystem
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
@@ -69,6 +70,10 @@ class TerritoryTest {
 
     private fun WorldSimulation.put(kind: String, x: Int, y: Int, by: String?) = placeWorldObject(kind, 1, x, y, by, players[by]?.guildId)
     private fun refusal(r: WorldObjectResult) = (r as WorldObjectResult.Refused).reason
+    private fun WorldSimulation.swing(id: String): List<WorldSimulationEvent> {
+        players[id] = players.getValue(id).copy(lastAttackTick = -1000)
+        return playerAttack(id)
+    }
     private fun WorldSimulation.stand(id: String, x: Int, y: Int) { players[id] = players.getValue(id).copy(position = WorldPosition.fromTile(1, x, y, Direction.DOWN)) }
     private fun List<WorldSimulationEvent>.chat() = filterIsInstance<WorldSimulationEvent.ChatEmitted>().map { it.message }
 
@@ -235,5 +240,83 @@ class TerritoryTest {
             s.stand("p1", 10, 11); s.stand("p2", 11, 10)
             assertTrue(s.canAttackPlayer(s.players.getValue("p2"), s.players.getValue("p1")), "no safe zone")
         }
+    }
+
+    // ---- hurting structures ---------------------------------------------------------------------------------------------------
+
+    private fun siegeSim(safe: Boolean = true): WorldSimulation {
+        val kinds = listOf(
+            WorldObjectKind("totem", "Totem", maxHp = 500),
+            WorldObjectKind("wall", "Wall", maxHp = 1000, attackable = true, weaponDamagePercent = 10, siegeDamagePercent = 100),
+            WorldObjectKind("sign", "Sign", maxHp = 10)
+        )
+        val t = TerritoryDefinition(listOf(ClaimKindDefinition("totem", levels = listOf(ClaimLevel(5, 50)), safeZone = safe)))
+        val s = WorldSimulation(SeededRandomSource(4L), game = CompiledGame.compile(MorganaClassic.definition.copy(worldObjects = WorldObjectsDefinition(kinds), territory = t)))
+        s.registerMap(MapDefinition(id = 1, name = "Wilds", width = 60, height = 60))
+        for (id in listOf("p1", "p2")) {
+            s.spawnOrUpdatePlayer(CharacterState(id = id, accountId = "a-$id", name = id, position = WorldPosition.fromTile(1, 10, 10, Direction.RIGHT)))
+        }
+        return s
+    }
+
+    @Test
+    fun `a blow on an attackable structure takes its weapon percentage, and a sign cannot be hurt`() {
+        val s = siegeSim(safe = false)
+        s.placeWorldObject("totem", 1, 12, 12, "p1")
+        val wall = (s.placeWorldObject("wall", 1, 11, 10, "p1") as WorldObjectResult.Placed).obj
+        s.placeWorldObject("sign", 1, 11, 11, "p1")
+        val raw = WorldStateSystem.plainHitDamage(s, s.players.getValue("p2"))
+        s.swing("p2")
+        assertEquals(1000 - (raw * 10 / 100).coerceAtLeast(1), s.worldObject(wall.id)!!.hp, "10% of the blow")
+        s.stand("p2", 10, 11)
+        s.swing("p2")
+        assertEquals(10, s.worldObjectAt(1, 11, 11)!!.hp, "a sign is not attackable")
+    }
+
+    @Test
+    fun `structures in a protected claim shrug off blows from outsiders until a window opens, and the owner may always strike`() {
+        val s = siegeSim()
+        val t0 = ms("2026-11-27T12:00:00Z")
+        s.advanceWallClock(t0)
+        val claim = (s.placeWorldObject("totem", 1, 12, 10, "p1") as WorldObjectResult.Placed).obj
+        val wall = (s.placeWorldObject("wall", 1, 11, 10, "p1") as WorldObjectResult.Placed).obj
+        val before = s.worldObject(wall.id)!!.hp
+        val events = s.swing("p2")
+        assertEquals(before, s.worldObject(wall.id)!!.hp)
+        assertTrue(events.chat().contains("This land is protected right now."))
+
+        assertTrue(TerritorySystem.bookWindow(s, claim.id, t0 + 1000, 600))
+        s.advanceWallClock(t0 + 2000)
+        s.swing("p2")
+        assertTrue(s.worldObject(wall.id)!!.hp < before, "open to attack")
+
+        s.advanceWallClock(t0 + 700_000)
+        val mid = s.worldObject(wall.id)!!.hp
+        s.swing("p1")
+        assertTrue(s.worldObject(wall.id)!!.hp < mid, "an owner can tear down their own wall")
+    }
+
+    @Test
+    fun `siege weapon types take the siege percentage`() {
+        val kinds = listOf(WorldObjectKind("wall", "Wall", maxHp = 1000, attackable = true, weaponDamagePercent = 5, siegeDamagePercent = 100))
+        val def = MorganaClassic.definition.copy(worldObjects = WorldObjectsDefinition(kinds, siegeWeaponTypes = listOf("ram")))
+        assertTrue(GameDefinitionValidator.validate(def).isEmpty())
+        assertTrue("/worldObjects/kinds/0/weaponDamagePercent" in GameDefinitionValidator.validate(
+            def.copy(worldObjects = WorldObjectsDefinition(listOf(kinds[0].copy(weaponDamagePercent = 0))))
+        ).map { it.pointer })
+    }
+
+    @Test
+    fun `a player's projectile hurts an attackable structure and stops there`() {
+        val s = siegeSim(safe = false)
+        val wall = (s.placeWorldObject("wall", 1, 14, 10, "p1") as WorldObjectResult.Placed).obj
+        val shot = com.morgana.domain.entity.MapProjectile(
+            projectileId = "pr1", sourceEntityId = "p2", isFromPlayer = true, mapId = 1, currentTileX = 10, currentTileY = 10,
+            direction = Direction.RIGHT, remainingTiles = 8, spriteId = 1, damage = 200, ticksPerTile = 1, nextStepTick = 0L
+        )
+        s.mapProjectiles.getOrPut(1) { mutableListOf() }.add(shot)
+        repeat(8) { s.stepTick() }
+        assertEquals(1000 - 20, s.worldObject(wall.id)!!.hp, "10% of 200")
+        assertTrue(s.mapProjectiles[1].orEmpty().isEmpty(), "it was spent on the wall")
     }
 }
