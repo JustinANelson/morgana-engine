@@ -14,25 +14,25 @@ import kotlin.math.hypot
  * only the bottom row is the footprint.
  */
 object CitadelProps {
-    private fun hex(s: String): Int {
+    internal fun hex(s: String): Int {
         val v = s.removePrefix("#").toInt(16)
         return PaletteRamp.rgba((v shr 16) and 255, (v shr 8) and 255, v and 255)
     }
 
-    private fun ramp(vararg h: String) = PaletteRamp(IntArray(h.size) { hex(h[it]) })
+    internal fun ramp(vararg h: String) = PaletteRamp(IntArray(h.size) { hex(h[it]) })
 
-    private val stone = ramp("#3a3d48", "#5d6270", "#818999", "#a9b0bc", "#cdd3dc")
-    private val slate = ramp("#1f2840", "#324270", "#4a62a0", "#6a86c6", "#98b4e6")
-    private val gold = ramp("#6a4a14", "#b98a24", "#e8b83c", "#f8d868", "#fff0a8")
-    private val wood = ramp("#2e1c10", "#4e3320", "#704c30", "#946840", "#b88a58")
-    private val glassBlue = ramp("#1c2c52", "#2e4a86", "#4a72b8", "#7aa2dc", "#b4d0f2")
-    private val glassWarm = ramp("#7a2c1c", "#c0502c", "#e8883c", "#ffc060", "#fff0b0")
-    private val dark = ramp("#0e0f16", "#1a1c28", "#2a2d3c", "#3c4054", "#52586c")
-    private val banner = ramp("#4a1c1c", "#7e2a26", "#a83c30", "#cc5a46", "#e88a68")
+    internal val stone = ramp("#3a3d48", "#5d6270", "#818999", "#a9b0bc", "#cdd3dc")
+    internal val slate = ramp("#1f2840", "#324270", "#4a62a0", "#6a86c6", "#98b4e6")
+    internal val gold = ramp("#6a4a14", "#b98a24", "#e8b83c", "#f8d868", "#fff0a8")
+    internal val wood = ramp("#2e1c10", "#4e3320", "#704c30", "#946840", "#b88a58")
+    internal val glassBlue = ramp("#1c2c52", "#2e4a86", "#4a72b8", "#7aa2dc", "#b4d0f2")
+    internal val glassWarm = ramp("#7a2c1c", "#c0502c", "#e8883c", "#ffc060", "#fff0b0")
+    internal val dark = ramp("#0e0f16", "#1a1c28", "#2a2d3c", "#3c4054", "#52586c")
+    internal val banner = ramp("#4a1c1c", "#7e2a26", "#a83c30", "#cc5a46", "#e88a68")
 
-    private fun tone(r: PaletteRamp, i: Int): Int = r.colors[i.coerceIn(0, r.colors.lastIndex)]
+    internal fun tone(r: PaletteRamp, i: Int): Int = r.colors[i.coerceIn(0, r.colors.lastIndex)]
 
-    private class Cv(val img: TileImage, val seed: Long) {
+    internal class Cv(val img: TileImage, val seed: Long) {
         fun px(x: Int, y: Int, c: Int) {
             if (x in 0 until img.width && y in 0 until img.height) img.setPixel(x, y, c)
         }
@@ -59,7 +59,7 @@ object CitadelProps {
     // ---- parts ---------------------------------------------------------------------------------------------------
 
     /** Coursed masonry lit from the left, shaded on the right, outlined at the sides. */
-    private fun masonry(c: Cv, x0: Int, x1: Int, top: Int, bot: Int) {
+    internal fun masonry(c: Cv, x0: Int, x1: Int, top: Int, bot: Int) {
         for (y in top..bot) for (x in x0..x1) {
             val t = (x - x0).toFloat() / (x1 - x0).coerceAtLeast(1)
             var i = if (t < 0.4f) 3 else 2
@@ -74,7 +74,7 @@ object CitadelProps {
     }
 
     /** A pointed (lancet) window: frame, glass, mullion. */
-    private fun lancet(c: Cv, cx: Int, yTop: Int, yBot: Int, halfW: Int, glass: PaletteRamp) {
+    internal fun lancet(c: Cv, cx: Int, yTop: Int, yBot: Int, halfW: Int, glass: PaletteRamp) {
         for (y in yTop..yBot) {
             val rel = (y - yTop).toFloat()
             val half = (halfW * minOf(1f, (rel + 1) / (halfW * 1.7f))).toInt()
@@ -123,7 +123,7 @@ object CitadelProps {
         }
     }
 
-    private fun pointedDoor(c: Cv, cx: Int, yBase: Int, halfW: Int, h: Int) {
+    internal fun pointedDoor(c: Cv, cx: Int, yBase: Int, halfW: Int, h: Int) {
         // Recessed arch rings, then planks with iron bands.
         for (ring in 0..2) {
             val hw = halfW + 6 - ring * 3
@@ -147,7 +147,7 @@ object CitadelProps {
         for (k in 0..3) c.rect(x0 + k / 2, top - 4 + k, x1 - k / 2, top - 4 + k, if (k == 0) tone(stone, 0) else tone(stone, 3))
     }
 
-    private fun merlons(c: Cv, x0: Int, x1: Int, y: Int) {
+    internal fun merlons(c: Cv, x0: Int, x1: Int, y: Int) {
         var mx = x0
         while (mx + 6 <= x1) {
             c.rect(mx, y - 9, mx + 6, y, tone(stone, 3))
@@ -250,7 +250,7 @@ object CitadelProps {
 
 
     /** Shared cylinder body: light on the left, shaded right, coursed brick, outlined. */
-    private fun cylinder(c: Cv, x0: Int, x1: Int, top: Int, bot: Int) {
+    internal fun cylinder(c: Cv, x0: Int, x1: Int, top: Int, bot: Int) {
         val cx = (x0 + x1) / 2f
         val r = (x1 - x0) / 2f
         for (y in top..bot) for (x in x0..x1) {

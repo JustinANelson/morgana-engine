@@ -849,3 +849,7 @@ Added `structure/CitadelProps.kt` and prop kinds `CATHEDRAL` (14x9), `BELL_TOWER
 ## 2026-11-25 - tilegen: ashlar and furrowed-soil patterns, bigger turret
 
 New `MaterialPattern.ASHLAR` (coursed grey blocks) and `FURROWED_SOIL` (dark tilled rows); `TURRET` is now 3x4.
+
+## 2026-11-25 - tilegen: castle-town kit
+
+New `CastleKit` (`structure/CastleKit.kt`) with prop kinds `STONE_HOUSE_S/M/L`, `LONG_HALL`, `SLATE_TOWER`, `SQUARE_TOWER`, `GREAT_GATE` (open lower arch), `GREAT_KEEP`, `HUNTER_LODGE`, `HUNTER_GATE`, `PALISADE`: slate-roofed stone and half-timber buildings and roofed towers that share the curtain wall palette. `CitadelProps` helpers are now `internal` so the kit reuses them.

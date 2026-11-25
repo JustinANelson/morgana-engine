@@ -282,7 +282,20 @@ enum class PropKind(val widthTiles: Int, val heightTiles: Int) {
     GRAND_STAIRS(6, 3),
     CLOISTER(6, 3),
     ROUND_TOWER(3, 4),
-    TURRET(3, 4)
+    TURRET(3, 4),
+
+    /** Castle-town kit (see `CastleKit`): palettes are ignored. */
+    STONE_HOUSE_S(4, 4),
+    STONE_HOUSE_M(5, 4),
+    STONE_HOUSE_L(7, 5),
+    LONG_HALL(8, 5),
+    SLATE_TOWER(4, 6),
+    SQUARE_TOWER(4, 5),
+    GREAT_GATE(8, 5),
+    GREAT_KEEP(10, 8),
+    HUNTER_LODGE(5, 4),
+    HUNTER_GATE(6, 3),
+    PALISADE(1, 2)
 }
 
 /**
@@ -335,9 +348,9 @@ class PropGenerator(
         val roof = primaryPalette ?: PalettePresets.TERRACOTTA_BRICK
 
         // Kinds with a smooth version (calm, chunky, outlined) are drawn by SmoothProps and skip the older drawings.
-        val citadelDone = kind in CitadelProps.kinds
+        val citadelDone = kind in CitadelProps.kinds || kind in CastleKit.kinds
         if (citadelDone) {
-            val built = CitadelProps.draw(kind, s)
+            val built = if (kind in CastleKit.kinds) CastleKit.draw(kind, s) else CitadelProps.draw(kind, s)
             if (built.width == w && built.height == h) canvas.drawImage(built, 0, 0, w, h, 0, 0)
             else for (y in 0 until h) for (x in 0 until w) canvas.setPixel(x, y, built.getPixel(x * built.width / w, y * built.height / h))
         }
@@ -513,7 +526,9 @@ class PropGenerator(
             PropKind.SEALED_GATE -> MountainProps.sealedGate(canvas, w, h, primaryPalette ?: PalettePresets.SLATE_STONE, secondaryPalette ?: PalettePresets.ARCANE_VIOLET, s)
             PropKind.COTTAGE_LARGE, PropKind.INN, PropKind.SMITHY, PropKind.SHOP, PropKind.CHAPEL, PropKind.GUARDHOUSE, PropKind.GREAT_HALL ->
                 drawBuilding(canvas, w, h, kind, buildingRoof, buildingTheme, s)
-            PropKind.CATHEDRAL, PropKind.BELL_TOWER, PropKind.KEEP_TOWER, PropKind.GRAND_STAIRS, PropKind.CLOISTER, PropKind.ROUND_TOWER, PropKind.TURRET -> Unit
+            PropKind.CATHEDRAL, PropKind.BELL_TOWER, PropKind.KEEP_TOWER, PropKind.GRAND_STAIRS, PropKind.CLOISTER, PropKind.ROUND_TOWER, PropKind.TURRET,
+            PropKind.STONE_HOUSE_S, PropKind.STONE_HOUSE_M, PropKind.STONE_HOUSE_L, PropKind.LONG_HALL, PropKind.SLATE_TOWER, PropKind.SQUARE_TOWER,
+            PropKind.GREAT_GATE, PropKind.GREAT_KEEP, PropKind.HUNTER_LODGE, PropKind.HUNTER_GATE, PropKind.PALISADE -> Unit
             }
         }
 
