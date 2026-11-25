@@ -244,6 +244,8 @@ class MorganaGame(
         )
     }
 
+    private var postFx: com.morgana.client.render.WorldPostProcessor? = null
+
     override fun create() {
         if (!VisUI.isLoaded()) {
             VisUI.load()
@@ -260,6 +262,7 @@ class MorganaGame(
 
         assets = ProceduralRetroAssets().also { it.loadAll() }
         worldRenderer = MorganaWorldRenderer(assets, font)
+        postFx = com.morgana.client.render.WorldPostProcessor()
         adminPanel = F1LiveAdminPanel(stage, worldState, netClient, assets, onStepWorldZoom = ::stepWorldZoom, onPickPngFile = pickPngFile,
             worldZoomLabel = { WorldZoom.percentLabel(effectiveWorldScale()) })
         hud = PlayerHudAndWindows(
@@ -323,6 +326,19 @@ class MorganaGame(
                 if (accessibility.isCapturing) {
                     accessibility.captureKey(keycode)?.let { hud.accessibilityMessage(it) }
                     return true
+                }
+                if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) || Gdx.input.isKeyPressed(Input.Keys.CONTROL_RIGHT)) {
+                    val fx = com.morgana.client.render.VisualFx
+                    val note: String? = when (keycode) {
+                        Input.Keys.F6 -> { fx.lighting = !fx.lighting; "Lighting and mist: " + if (fx.lighting) "on" else "off" }
+                        Input.Keys.F7 -> { fx.shadows = !fx.shadows; "Cast shadows: " + if (fx.shadows) "on" else "off" }
+                        Input.Keys.F8 -> { fx.hd2d = !fx.hd2d; "HD-2D look: " + if (fx.hd2d) "on" else "off" }
+                        else -> null
+                    }
+                    if (note != null) {
+                        worldState.toasts.add(note, com.morgana.client.ui.ToastKind.INFO, com.morgana.client.ui.ToastClock.now())
+                        return true
+                    }
                 }
                 if (keycode == Input.Keys.F1) {
                     // The editor edits the world you are standing in, so it needs a login first.
@@ -1309,7 +1325,23 @@ class MorganaGame(
             val ky = Gdx.graphics.height / stage.height
             com.morgana.client.editor.dock.ViewInsets(covered.left * kx, covered.right * kx, covered.top * ky, covered.bottom * ky)
         }
-        if (!artLoading) worldRenderer.renderWorld(batch, camera, worldState, delta)
+        if (!artLoading) {
+            val fxMap = worldState.activeMap
+            val clockDef = worldState.gameDefinition?.clock
+            val clock = worldState.dayNightClock()
+            com.morgana.client.render.VisualFx.sky =
+                if (clock != null && clockDef != null && fxMap != null && !fxMap.isIndoors) {
+                    com.morgana.client.render.VisualSky.at(clockDef, clock.timeOfDayPermille)
+                } else null
+            val fx = postFx
+            if (fx != null && fxMap != null && com.morgana.client.render.VisualFx.postProcessing) {
+                fx.render(batch, camera, fxMap, com.morgana.client.render.VisualFx.sky, delta) {
+                    worldRenderer.renderWorld(batch, camera, worldState, delta)
+                }
+            } else {
+                worldRenderer.renderWorld(batch, camera, worldState, delta)
+            }
+        }
 
         hud.refreshHud()
         stage.act(delta)
@@ -1348,6 +1380,7 @@ class MorganaGame(
         netClient.close()
         if (::hud.isInitialized) hud.dispose()
         audio.dispose()
+        postFx?.dispose()
         assets.dispose()
         batch.dispose()
         font.dispose()

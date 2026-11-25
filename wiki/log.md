@@ -1,5 +1,9 @@
 # Directory Update Log
 
+## 2026-11-25
+
+* **Add** - **Experimental visual upgrades: light map, cast shadows, HD-2D grade** ([rendering](/client/rendering.md)): the client can draw the world through `WorldPostProcessor` (offscreen scene, low-resolution light map of sky ambient plus `LightSource` tiles and a night lantern, one composite shader with split-toned palette, tilt-shift depth of field, mist and vignette) and draw characters' shadows as the sprite silhouette leaned away from the sun or moon (`VisualSky`, driven by the game clock). Sky colour, the light map's ambient floor and cast shadows need the game's `clock.dayNight` and an outdoor map; the HD-2D grade does not. Ctrl+F6, F7 and F8 toggle lighting, shadows and the HD-2D look. A device that cannot make framebuffers or compile the shader falls back to the plain renderer. Test: `VisualSkyTest`.
+
 ## 2026-11-24
 
 * **Add** - **Tilegen: RPG Maker / Time Fantasy export layout** ([tilegen](/architecture/tilegen.md)): `GameTilesetExporter.export(..., layout = Layout.RPG_MAKER)` and `gametilesets --layout rpgmaker` write each spec as a pack of role sheets (A1 water, A2 ground and autotile blocks, A4 3 x 3 wall sets, A5 floors, B nature, C structures, D objects, E buildings) at fixed ids ten apart, with autotile blocks packed into the A sheets and a `packs` list in `tilesets.index.json`. The default per-spec layout is unchanged. Test: `RpgMakerLayoutTest`.

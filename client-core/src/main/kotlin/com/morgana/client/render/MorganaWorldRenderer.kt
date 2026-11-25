@@ -632,8 +632,46 @@ class MorganaWorldRenderer(
         batch.color = Color.WHITE
     }
 
+    /**
+     * A sun or moon shadow: the character's own silhouette flipped about its feet, squashed and leaned away from the light.
+     * The lean and length follow the game clock, so shadows swing across the ground through the day. Drawn black with the sprite's
+     * alpha, so it needs no extra art and follows every paperdoll layer for free.
+     */
+    private fun drawCastShadow(
+        batch: SpriteBatch,
+        region: com.badlogic.gdx.graphics.g2d.TextureRegion,
+        box: SpriteDrawBox,
+        sky: SkyState,
+        alphaScale: Float
+    ) {
+        val fade = (1f - box.lift / 60f).coerceIn(0.3f, 1f)
+        val h = box.drawHeight * sky.shadowLength * 0.55f
+        val lean = sky.shadowShear * box.drawHeight * sky.shadowLength * 0.9f
+        val rootY = box.drawY - box.lift + box.drawHeight * 0.04f
+        val left = box.drawX
+        val right = box.drawX + box.drawWidth
+        val color = Color.toFloatBits(0f, 0f, 0f, sky.shadowAlpha * fade * alphaScale)
+        val v = shadowVertices
+        // Bottom-left, top-left, top-right, bottom-right of the sprite: the feet stay put, the head swings out along the ground.
+        fun put(i: Int, x: Float, y: Float, u: Float, vv: Float) {
+            v[i] = x; v[i + 1] = y; v[i + 2] = color; v[i + 3] = u; v[i + 4] = vv
+        }
+        put(0, left, rootY, region.u, region.v2)
+        put(5, left + lean, rootY - h, region.u, region.v)
+        put(10, right + lean, rootY - h, region.u2, region.v)
+        put(15, right, rootY, region.u2, region.v2)
+        batch.draw(region.texture, v, 0, 20)
+    }
+
+    private val shadowVertices = FloatArray(20)
+
+    /** The cast-shadow sky for this frame, or null when the oval blob should be used (no clock, indoors, or the effect is off). */
+    private fun castShadowSky(): SkyState? = if (VisualFx.shadows) VisualFx.sky else null
+
     private fun drawEntityCharacter(batch: SpriteBatch, entity: DrawableCharacter, tileSizePx: Float) {
-        drawGroundShadow(batch, entity.box, tileSizePx, entity.tint.a)
+        val castSky = castShadowSky()
+        // Under a cast shadow the oval shrinks to a small contact shadow so feet still sit on the ground.
+        drawGroundShadow(batch, entity.box, tileSizePx, entity.tint.a * if (castSky != null) 0.55f else 1f)
         entity.aura?.let { drawVariantAura(batch, entity.box, tileSizePx, it) }
         batch.color = entity.tint
         if (entity.paperdollLayers.isNotEmpty()) {
@@ -648,6 +686,7 @@ class MorganaWorldRenderer(
                 actionProgress = entity.actionProgress
             )
             if (composed != null) {
+                castSky?.let { drawCastShadow(batch, composed, entity.box, it, entity.tint.a) }
                 batch.draw(composed, entity.box.drawX, entity.box.drawY, entity.box.drawWidth, entity.box.drawHeight)
                 return
             }
@@ -700,6 +739,7 @@ class MorganaWorldRenderer(
             elapsedSeconds = elapsedSeconds,
             actionProgress = entity.actionProgress
         )
+        castShadowSky()?.let { drawCastShadow(batch, region, entity.box, it, entity.tint.a) }
         batch.draw(region, entity.box.drawX, entity.box.drawY, entity.box.drawWidth, entity.box.drawHeight)
     }
 
