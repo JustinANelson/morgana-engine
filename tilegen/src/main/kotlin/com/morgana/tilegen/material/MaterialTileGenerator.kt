@@ -95,7 +95,13 @@ enum class MaterialPattern {
      * Smooth wooden planks: flat horizontal boards with a dark seam, a lit top edge, per-board tint, staggered butt
      * joints and a few grain flecks. `scale` sets the boards per tile (about 4 at 1.0).
      */
-    FLAT_PLANKS
+    FLAT_PLANKS,
+
+    /** Coursed grey ashlar blocks: dark mortar, lit top-left edges, per-block tint and weathering specks (castle walls, flagstones). */
+    ASHLAR,
+
+    /** Dark tilled soil in horizontal furrows with lit ridges and clods (fields). */
+    FURROWED_SOIL
 }
 
 /**
@@ -167,11 +173,13 @@ class MaterialTileGenerator(
             MaterialPattern.FLAT_WATER -> drawFlatWater(out, effectiveSpec, s)
             MaterialPattern.FLAT_PAVER -> drawFlatPaver(out, effectiveSpec, s)
             MaterialPattern.FLAT_PLANKS -> drawFlatPlanks(out, effectiveSpec, s)
+            MaterialPattern.ASHLAR -> drawAshlar(out, effectiveSpec, s)
+            MaterialPattern.FURROWED_SOIL -> drawFurrowedSoil(out, effectiveSpec, s)
         }
         // Hand-pixelled patterns are already flat and posterised; dithering them only adds static (8-bit still limits colours).
         val handPixelled = spec.pattern == MaterialPattern.TUFTED_GROUND || spec.pattern == MaterialPattern.ROUNDED_STONES ||
             spec.pattern == MaterialPattern.FLAT_WATER || spec.pattern == MaterialPattern.FLAT_PAVER ||
-            spec.pattern == MaterialPattern.FLAT_PLANKS
+            spec.pattern == MaterialPattern.FLAT_PLANKS || spec.pattern == MaterialPattern.ASHLAR || spec.pattern == MaterialPattern.FURROWED_SOIL
         if (handPixelled && spec.style != PixelStyle.RETRO_8BIT) return out
         return PixelDither.applyStyle(out, spec.style, spec.palette)
     }
@@ -406,6 +414,58 @@ class MaterialTileGenerator(
                     ly == bh - 1 -> tone(1)
                     TileNoise.hash(px / 3, py, s + 41L) > 0.91f -> tone(base - 1)
                     else -> tone(base)
+                }
+                pm.setPixel(px, py, color)
+            }
+        }
+    }
+
+
+    private fun drawAshlar(pm: TileImage, spec: MaterialSpec, s: Long) {
+        val c = spec.palette.colors
+        fun tone(i: Int) = c[i.coerceIn(0, c.lastIndex)]
+        val hi = c.lastIndex
+        val courses = (4 * spec.scale).roundToInt().coerceIn(2, tileSize / 4)
+        val ch = tileSize / courses
+        val bw = tileSize / 2
+        for (py in 0 until tileSize) {
+            val row = py / ch
+            val ly = py % ch
+            val shift = if (row % 2 == 0) 0 else bw / 2
+            for (px in 0 until tileSize) {
+                val x = (px + shift) % tileSize
+                val col = x / bw
+                val lx = x % bw
+                val tint = TileNoise.hash(row, col, s + 7L)
+                val base = if (tint > 0.7f) hi - 1 else if (tint > 0.3f) hi - 2 else hi - 3
+                val grain = TileNoise.hash(px, py, s + 19L)
+                val color = when {
+                    ly == 0 || lx == 0 -> tone(0)
+                    ly == 1 || lx == 1 -> tone(base + 1)
+                    ly == ch - 1 || lx == bw - 1 -> tone(base - 1)
+                    grain > 0.93f -> tone(base - 1)
+                    grain < 0.05f -> tone(base + 1)
+                    else -> tone(base)
+                }
+                pm.setPixel(px, py, color)
+            }
+        }
+    }
+
+    private fun drawFurrowedSoil(pm: TileImage, spec: MaterialSpec, s: Long) {
+        val c = spec.palette.colors
+        fun tone(i: Int) = c[i.coerceIn(0, c.lastIndex)]
+        val period = (tileSize / 4).coerceAtLeast(4)
+        for (py in 0 until tileSize) {
+            val ly = py % period
+            for (px in 0 until tileSize) {
+                val grain = TileNoise.hash(px, py, s + 3L)
+                val color = when {
+                    ly == 0 -> tone(0)
+                    ly == 1 -> tone(1)
+                    ly < period / 2 + 1 -> if (grain > 0.8f) tone(3) else tone(2)
+                    ly < period - 1 -> if (grain > 0.85f) tone(2) else if (grain < 0.1f) tone(0) else tone(1)
+                    else -> tone(0)
                 }
                 pm.setPixel(px, py, color)
             }

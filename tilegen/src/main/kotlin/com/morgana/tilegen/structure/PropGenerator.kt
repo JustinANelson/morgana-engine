@@ -282,7 +282,7 @@ enum class PropKind(val widthTiles: Int, val heightTiles: Int) {
     GRAND_STAIRS(6, 3),
     CLOISTER(6, 3),
     ROUND_TOWER(3, 4),
-    TURRET(2, 3)
+    TURRET(3, 4)
 }
 
 /**

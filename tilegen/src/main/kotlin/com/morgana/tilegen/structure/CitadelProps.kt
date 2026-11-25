@@ -302,12 +302,12 @@ object CitadelProps {
     private fun turret(c: Cv, w: Int, h: Int) {
         val base = h - 5
         c.shadow(w / 2, h - 3, w / 2 - 4, 3)
-        cylinder(c, 6, w - 6, 26, base)
+        cylinder(c, 8, w - 8, 32, base)
         // Open top: a rim ellipse with an inner well and merlons.
         val cx = w / 2f
-        for (y in 10..40) for (x in 2..w - 3) {
-            val nx = (x + 0.5f - cx) / (w / 2f - 2)
-            val ny = (y + 0.5f - 25f) / 14f
+        for (y in 12..48) for (x in 3..w - 4) {
+            val nx = (x + 0.5f - cx) / (w / 2f - 3)
+            val ny = (y + 0.5f - 30f) / 17f
             val d = nx * nx + ny * ny
             if (d <= 1f) {
                 val col = when {
@@ -321,11 +321,12 @@ object CitadelProps {
         }
         for (k in 0 until 7) {
             val a = Math.PI * (0.1 + k * 0.13)
-            val mx = (cx - Math.cos(a) * (w / 2f - 5)).toInt()
-            val my = (25 + 12 * Math.sin(a) * 0.9).toInt()
-            if (my < 36) { c.rect(mx - 2, my - 6, mx + 2, my, tone(stone, 4)); c.rect(mx - 2, my - 6, mx + 2, my - 6, tone(stone, 0)); c.rect(mx + 2, my - 6, mx + 2, my, tone(stone, 1)) }
+            val mx = (cx - Math.cos(a) * (w / 2f - 6)).toInt()
+            val my = (30 + 14 * Math.sin(a) * 0.9).toInt()
+            if (my < 44) { c.rect(mx - 2, my - 6, mx + 2, my, tone(stone, 4)); c.rect(mx - 2, my - 6, mx + 2, my - 6, tone(stone, 0)); c.rect(mx + 2, my - 6, mx + 2, my, tone(stone, 1)) }
         }
-        c.rect(w / 2 - 1, 48, w / 2, 62, tone(dark, 1))
+        c.rect(w / 2 - 1, 60, w / 2, 76, tone(dark, 1))
+        c.rect(w / 2 - 9, 84, w / 2 - 8, 98, tone(dark, 1)); c.rect(w / 2 + 8, 84, w / 2 + 9, 98, tone(dark, 1))
     }
 
     private fun grandStairs(c: Cv, w: Int, h: Int) {

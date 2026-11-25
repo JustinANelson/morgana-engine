@@ -845,3 +845,7 @@ Added `structure/CitadelProps.kt` and prop kinds `CATHEDRAL` (14x9), `BELL_TOWER
 ## 2026-11-25 - tilegen: castle rampart walls, round towers
 
 `CastleWalls` (`structure/CastleWalls.kt`) draws an `a4Layout` wall set as a rampart (flagstone walkway, merlon row, brick face with arrow slit) when the cliff spec has `"castle": true` (new `CliffLayerSpec.castle`). New prop kinds `ROUND_TOWER` (3x4, red cone roof) and `TURRET` (2x3, open crenellated top).
+
+## 2026-11-25 - tilegen: ashlar and furrowed-soil patterns, bigger turret
+
+New `MaterialPattern.ASHLAR` (coursed grey blocks) and `FURROWED_SOIL` (dark tilled rows); `TURRET` is now 3x4.
