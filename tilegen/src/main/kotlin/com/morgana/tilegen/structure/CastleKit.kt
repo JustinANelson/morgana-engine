@@ -23,7 +23,12 @@ object CastleKit {
     private val glassWarm get() = CitadelProps.glassWarm
     private fun tone(r: PaletteRamp, i: Int) = CitadelProps.tone(r, i)
 
-    private val roof = CitadelProps.ramp("#232733", "#3a4152", "#566077", "#78839b", "#9ea9c0")
+    private val slateRoof = CitadelProps.ramp("#232733", "#3a4152", "#566077", "#78839b", "#9ea9c0")
+    private val russetRoof = CitadelProps.ramp("#3a1c1a", "#5e2a24", "#8a3e30", "#b0583e", "#d27c5a")
+    private val mossRoof = CitadelProps.ramp("#1e2e2c", "#2f4a44", "#476a60", "#68907f", "#90b8a4")
+
+    /** The roof colour of the prop being drawn: slate, or russet (`_r`) or moss (`_g`) when the prop name ends that way. */
+    private var roof = slateRoof
     private val shake = CitadelProps.ramp("#2a1a10", "#46301c", "#654526", "#86603a", "#a8805a")
     private val plaster = CitadelProps.ramp("#6b6554", "#9a9278", "#c2b99c", "#ddd4b8", "#f0e8cc")
     private val bone = CitadelProps.ramp("#6a604c", "#a89c80", "#d8ccae", "#efe6cc", "#fff8e4")
@@ -383,7 +388,13 @@ object CastleKit {
     }
 
     /** Draws [kind] at 32 px per tile. */
-    fun draw(kind: PropKind, seed: Long): TileImage {
+    @Synchronized
+    fun draw(kind: PropKind, seed: Long, name: String = ""): TileImage {
+        roof = when {
+            name.endsWith("_r") -> russetRoof
+            name.endsWith("_g") -> mossRoof
+            else -> slateRoof
+        }
         val w = kind.widthTiles * 32
         val h = kind.heightTiles * 32
         val canvas = TileImage(w, h)

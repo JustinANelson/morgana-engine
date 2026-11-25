@@ -857,3 +857,7 @@ New `CastleKit` (`structure/CastleKit.kt`) with prop kinds `STONE_HOUSE_S/M/L`, 
 ## 2026-11-25 - tilegen: CORNER_TOWER
 
 `CastleKit` gains `CORNER_TOWER` (5x6): battered plinth, banded drum, corbelled machicolation ring and a deep-eaved slate cone.
+
+## 2026-11-25 - tilegen: roof variants
+
+`CastleKit.draw` takes the prop name: names ending `_r` get a russet roof and `_g` a moss roof; others stay slate.

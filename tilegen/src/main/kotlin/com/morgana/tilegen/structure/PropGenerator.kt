@@ -351,7 +351,7 @@ class PropGenerator(
         // Kinds with a smooth version (calm, chunky, outlined) are drawn by SmoothProps and skip the older drawings.
         val citadelDone = kind in CitadelProps.kinds || kind in CastleKit.kinds
         if (citadelDone) {
-            val built = if (kind in CastleKit.kinds) CastleKit.draw(kind, s) else CitadelProps.draw(kind, s)
+            val built = if (kind in CastleKit.kinds) CastleKit.draw(kind, s, name) else CitadelProps.draw(kind, s)
             if (built.width == w && built.height == h) canvas.drawImage(built, 0, 0, w, h, 0, 0)
             else for (y in 0 until h) for (x in 0 until w) canvas.setPixel(x, y, built.getPixel(x * built.width / w, y * built.height / h))
         }
