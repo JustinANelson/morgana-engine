@@ -389,6 +389,7 @@ These functions emit declarative `ScriptEffect` mutations that are validated aga
 | `world.cancel_schedule` | `(id)` | Cancels a one-off booked with `world.schedule_once`. Needs the `state` capability. |
 | `world.population_percent` | `(mapId)` | How fully the map is supplied by its player count: 25 to 100 with `populationScaling` in `game.json`, else 100. A query. |
 | `world.players_on_map` | `(mapId)` | Every player on the map, each as `world.get_player` returns, by id. A query (works in any hook). |
+| `world.item_count` | `(playerId, itemId)` | How many of the item the player carries in the bag (equipped items are not counted); 0 for an unknown player. A query: lets a plugin check a player can pay before it calls `world.remove_item` (which is skipped when the player has too few, with no signal back to Lua). |
 | `world.npcs_on_map` | `(mapId)` | Every monster instance on the map (dead ones too: check `is_alive`), each as `world.get_npc` returns, by instance id. A query. |
 | `world.despawn_npcs` | `(mapId, [npcId])` | Removes the monsters of that kind (all when omitted) from the map, with no loot or experience; nothing respawns them until `world.reset_map` or the map is swapped. Clients get a fresh snapshot. Needs the `state` capability. |
 | `world.reset_map` | `(mapId)` | Puts the map's monsters (at their spawn slots, full vitals), resource nodes, ground loot and projectiles back to a fresh start; players and world objects are untouched. Needs the `state` capability. |

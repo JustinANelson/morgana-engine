@@ -1133,6 +1133,8 @@ class WorldSimulation(
 
         override fun populationPercent(mapId: Int): Int = this@WorldSimulation.populationPercent(mapId)
 
+        override fun itemCount(playerId: String, itemId: Int): Int = players[playerId]?.inventory?.totalCountOf(itemId) ?: 0
+
         override fun playersOnMap(mapId: Int): List<ScriptPlayerSnapshot> =
             players.values.filter { it.position.mapId == mapId }.sortedBy { it.id }.mapNotNull { getPlayer(it.id) }
 

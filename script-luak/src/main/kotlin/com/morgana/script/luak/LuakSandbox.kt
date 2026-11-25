@@ -277,6 +277,12 @@ object LuakSandbox {
             }
         })
 
+        // world.item_count(player_id, item_id): how many of an item the player carries in the bag (0 for an unknown player).
+        world.set("item_count", object : TwoArgFunction() {
+            override fun call(arg1: LuaValue?, arg2: LuaValue?): LuaValue? =
+                LuaValue.valueOf(worldView.itemCount(arg1?.checkjstring() ?: return LuaValue.NIL, arg2?.checkint() ?: return LuaValue.NIL))
+        })
+
         // world.population_percent(map_id): how fully the map is supplied by its player count (25 to 100 with `populationScaling`, else 100).
         world.set("population_percent", object : OneArgFunction() {
             override fun call(arg: LuaValue?): LuaValue? = LuaValue.valueOf(worldView.populationPercent(arg?.checkint() ?: return LuaValue.NIL))

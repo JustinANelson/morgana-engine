@@ -5,6 +5,9 @@ import com.morgana.domain.content.NpcDefinition
 import com.morgana.domain.entity.CharacterState
 import com.morgana.domain.game.CompiledGame
 import com.morgana.domain.game.MorganaClassic
+import com.morgana.domain.item.Inventory
+import com.morgana.domain.item.ItemDefinition
+import com.morgana.domain.item.ItemType
 import com.morgana.domain.map.MapCell
 import com.morgana.domain.map.MapDefinition
 import com.morgana.domain.map.MapNpcSpawnSlot
@@ -80,5 +83,19 @@ class LuaMapApiTest {
         assertEquals(fresh.vitals.getValue(life).max, fresh.vitals.getValue(life).cur)
         assertEquals(5, fresh.tileX)
         assertTrue(!sim.resetMapRuntime(99), "no such map")
+    }
+
+    @Test
+    fun `a plugin can count what a player carries before it charges for it`() {
+        val sim = world()
+        val plank = ItemDefinition(id = 7, name = "Plank", type = ItemType.MATERIAL, stackable = true, maxStack = 99)
+        sim.items[7] = plank
+        sim.players["a"] = sim.players.getValue("a").copy(inventory = Inventory().addItem(plank, 5).updatedInventory)
+        assertTrue(sim.load("count.lua", """
+            register.tick{ every = 1, run = function(world)
+              world.set_state("counts", { has = tostring(world.item_count("a", 7)), none = tostring(world.item_count("b", 7)), ghost = tostring(world.item_count("nobody", 7)), other = tostring(world.item_count("a", 8)) })
+            end }""") is ScriptCompilationResult.Success)
+        sim.stepTick()
+        assertEquals(mapOf("has" to "5", "none" to "0", "ghost" to "0", "other" to "0"), sim.scriptState.getValue("counts").toMap())
     }
 }

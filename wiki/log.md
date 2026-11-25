@@ -2,6 +2,8 @@
 
 ## 2026-11-24
 
+* **Add** - **`world.item_count(player_id, item_id)`** ([API reference](/../docs/API_REFERENCE.md), [scripting](/systems/scripting.md)): a read-only Lua query for how many of an item a player carries in the bag. `world.remove_item` is skipped when the player has too few and gives Lua no signal, so a plugin that charges a player (Trevena's Border Gate repair) checks with this first.
+
 * **Add** - **`world.objects_on_map(map_id)` and `max_hp` on object tables** ([API reference](/../docs/API_REFERENCE.md)): a plugin can read every world object on a map and each kind's maximum health, which a zone-wide structure rule (Trevena's Cleansing) needs.
 
 * **Add** - **Population scaling** ([population scaling](/systems/population_scaling.md), [game definition](/domain/game_definition.md)): opt-in `game.json` `populationScaling` (`playersForFull`, `floorPercent`, exempt maps and monsters): a map's density, from the players on it, decides how many monster slots respawn and how fast resource nodes regrow; `world.population_percent(map_id)` for plugins. Deterministic; without the section nothing changes. Trevena's engine item S8. Tests: `PopulationScalingTest`.
