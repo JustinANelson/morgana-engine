@@ -4,6 +4,7 @@ import com.github.xpenatan.gdx.teavm.backends.web.WebApplication
 import com.github.xpenatan.gdx.teavm.backends.web.WebApplicationConfiguration
 import com.morgana.client.MorganaGame
 import com.morgana.client.net.portFromQuery
+import com.morgana.client.render.applyList
 import com.morgana.client.preview.DemoLocalWorldHost
 import com.morgana.client.realms.DEFAULT_CLASSES
 import com.morgana.client.realms.InMemoryRealmDirectoryClient
@@ -138,6 +139,8 @@ fun main() {
     val direct = com.morgana.client.net.DirectConnect.fromQuery(location.search ?: "", pageHost, queryPort, secure)
     val port = direct?.port ?: queryPort
     if (direct?.ticket != null) scrubAddressQuery()
+    // `?fx=none` / `?fx=lighting,shadows,hd2d` / `?fx=all` picks the experimental visual effects (default: all on).
+    com.morgana.client.render.VisualFx.applyList(com.morgana.client.render.fxFromQuery(location.search ?: ""))
     val touch = prepareTouchPage()
     val config = WebApplicationConfiguration().apply {
         // 0 = fill the browser window (the stage resizes with it).

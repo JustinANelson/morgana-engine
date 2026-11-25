@@ -22,3 +22,20 @@ object VisualFx {
 
     val postProcessing: Boolean get() = available && (lighting || hd2d)
 }
+
+/**
+ * Sets the toggles from a comma list such as `lighting,shadows` (only those on), `all` or `none`, so a launch address
+ * (`?fx=none`) or command line can compare looks without keyboard shortcuts. Unknown words are ignored; null changes nothing.
+ */
+fun VisualFx.applyList(list: String?) {
+    if (list == null) return
+    val on = list.split(',').map { it.trim().lowercase() }.filter { it.isNotEmpty() }.toSet()
+    val all = "all" in on
+    lighting = all || "lighting" in on
+    shadows = all || "shadows" in on
+    hd2d = all || "hd2d" in on
+}
+
+/** The `fx` value in a page address's query string, or null when there is none. */
+fun fxFromQuery(search: String): String? =
+    search.removePrefix("?").split('&').firstNotNullOfOrNull { p -> p.split('=', limit = 2).takeIf { it.size == 2 && it[0] == "fx" }?.get(1) }

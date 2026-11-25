@@ -1,6 +1,7 @@
 package com.morgana.client
 
 import com.morgana.client.render.VisualSky
+import com.morgana.client.render.applyList
 import com.morgana.domain.game.ClockDefinition
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -45,5 +46,21 @@ class VisualSkyTest {
             val s = VisualSky.at(clock, p)
             assertTrue(s.shadowLength.isFinite() && s.shadowShear.isFinite() && s.ambientR in 0f..1.01f, "permille $p")
         }
+    }
+}
+
+class VisualFxListTest {
+    @org.junit.jupiter.api.Test
+    fun `an fx list turns exactly the named effects on`() {
+        val fx = com.morgana.client.render.VisualFx
+        fx.applyList("lighting, shadows")
+        org.junit.jupiter.api.Assertions.assertTrue(fx.lighting && fx.shadows && !fx.hd2d)
+        fx.applyList("none")
+        org.junit.jupiter.api.Assertions.assertTrue(!fx.lighting && !fx.shadows && !fx.hd2d)
+        fx.applyList("all")
+        org.junit.jupiter.api.Assertions.assertTrue(fx.lighting && fx.shadows && fx.hd2d)
+        fx.applyList(null)
+        org.junit.jupiter.api.Assertions.assertTrue(fx.lighting && fx.shadows && fx.hd2d, "null leaves them alone")
+        org.junit.jupiter.api.Assertions.assertEquals("none", com.morgana.client.render.fxFromQuery("?a=1&fx=none"))
     }
 }
