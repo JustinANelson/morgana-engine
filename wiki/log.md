@@ -2,6 +2,8 @@
 
 ## 2026-11-24
 
+* **Add** - **Tilegen: RPG Maker / Time Fantasy export layout** ([tilegen](/architecture/tilegen.md)): `GameTilesetExporter.export(..., layout = Layout.RPG_MAKER)` and `gametilesets --layout rpgmaker` write each spec as a pack of role sheets (A1 water, A2 ground and autotile blocks, A4 3 x 3 wall sets, A5 floors, B nature, C structures, D objects, E buildings) at fixed ids ten apart, with autotile blocks packed into the A sheets and a `packs` list in `tilesets.index.json`. The default per-spec layout is unchanged. Test: `RpgMakerLayoutTest`.
+
 * **Change** - **Tilegen: houses and small props redrawn in the smooth style** ([tilegen](/architecture/tilegen.md)): `HouseProps` replaces `BuildingGenerator` as the drawing behind the seven building `PropKind`s (rounded shingle roofs, readable walls, windows with shutters, doors, chimneys); `SmoothProps` redraws barrels, crates, chests, urns, tents, wagons, fences, bridges, archways, sarcophagi, skull piles, weapon racks, ballistae, torches, pillars, waypoint pillars, shrines, portals and the rift altar. The classic ruins grid test now covers only stairs, gargoyle plaque and wall banner.
 
 * **Add** - **Tilegen: barrier, graveyard and town props, smooth paving and planks, evergreen** ([tilegen](/architecture/tilegen.md)): new `PropKind`s `MOUNTAIN_PEAK`, `ROCK_SPIRE` (optional snow caps), `TOMBSTONE`, `SEALED_GATE`, `EVERGREEN_TREE` and the seven `BuildingGenerator` kits (`COTTAGE_LARGE`, `INN`, `SMITHY`, `SHOP`, `CHAPEL`, `GUARDHOUSE`, `GREAT_HALL`) usable from specs with optional `roof` and `buildingTheme` fields; new hand-pixelled materials `FLAT_PAVER` and `FLAT_PLANKS`. Tests: `MountainPropsTest`, `HandPixelledMaterialsTest`.

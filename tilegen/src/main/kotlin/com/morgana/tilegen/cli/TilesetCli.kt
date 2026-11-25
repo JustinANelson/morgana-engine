@@ -321,7 +321,8 @@ object TilesetCli {
                         if (Files.isDirectory(p)) Files.list(p).use { st -> st.filter { it.toString().endsWith(".json") }.sorted().toList() } else listOf(p)
                     }
                     require(files.isNotEmpty()) { "No spec files found in '$specArg'" }
-                    val result = GameTilesetExporter.export(Paths.get(game), files, flags["first-id"]?.toInt() ?: 100)
+                    val layout = if (flags["layout"].equals("rpgmaker", ignoreCase = true)) GameTilesetExporter.Layout.RPG_MAKER else GameTilesetExporter.Layout.PER_SPEC
+                    val result = GameTilesetExporter.export(Paths.get(game), files, flags["first-id"]?.toInt() ?: 100, layout)
                     out.println("Wrote ${result.written.size} tilesets (ids ${result.written.firstOrNull()?.fileName ?: "-"} ..) into $game/assets/tilesets and $game/tilesets.index.json")
                     if (result.removed.isNotEmpty()) out.println("Removed ${result.removed.size} stale owned tilesets")
                     out.println("${result.tiles.size} tiles, ${result.props.size} props, ${result.autotiles.size} autotiles indexed; next free id ${result.nextFreeId}")
@@ -711,7 +712,7 @@ object TilesetCli {
               dungeon [crypt|ember_forge|mossy_ruins] [--seed 1337] [--out <dir>] [--split]   (high-craft 2.5D dungeon tileset, sculpted props & showcase room)
               paperdoll <jobs|monsters|all|pack|spec|jobName> [--size 32] [--frames 2] [--directions] [--layers] [--theme <name>] [--ancestry <name>] [--actions <list|all|lpc>] [--attachments <list>] [--style painted_25d|jrpg_32bit] [--seed 1337] [--out <dir>] [--split]
               spec <file.json> [--out <dir>] [--split]
-              gametilesets --game <game folder> --specs <folder|a.json,b.json> [--first-id 100]   (writes owned tilesets from the id up, plus tilesets.index.json)
+              gametilesets --game <game folder> --specs <folder|a.json,b.json> [--first-id 100] [--layout rpgmaker]   (writes owned tilesets from the id up, plus tilesets.index.json; rpgmaker writes A1 to E role sheets per spec, ten ids apart)
               schema
             """.trimIndent()
         )

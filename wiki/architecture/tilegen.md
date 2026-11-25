@@ -103,3 +103,20 @@ Still to do toward the samples: flower decals, and putting the new props into ma
 ## Houses and small props redrawn in the smooth style (2026-11-24)
 * **`HouseProps`** now draws the building props (`COTTAGE_LARGE`, `INN`, `SMITHY`, `SHOP`, `CHAPEL`, `GUARDHOUSE`, `GREAT_HALL`) instead of `BuildingGenerator`: a roof of rounded outlined shingles lit from the upper left (calm, no dither), plaster or stone walls with a stone foundation and optional timber frame, large windows with shutters and sills, a plank door, chimneys with smoke, dormers on the inn, an awning and sign on the shop, a forge opening on the smithy, a tower and cross on the chapel, a crenellated tower on the guardhouse and a flag on the great hall. Drawn at 32 px per tile and scaled for other tile sizes. `BuildingGenerator` is unchanged and still drives its own CLI sheets.
 * **`SmoothProps`** redraws small props that had the older look and routes them ahead of the classic pixel-grid drawings: `BARREL`, `CRATE`, `CHEST_CLOSED`, `URN`, `MEDIEVAL_TENT`, `TRADE_WAGON`, `WOOD_FENCE`, `WOOD_BRIDGE`, `STONE_ARCHWAY`, `SARCOPHAGUS`, `SKULL_PILE`, `WEAPON_RACK`, `SIEGE_BALLISTA`, `TORCH_SCONCE`, `PILLAR`, `WAYPOINT_PILLAR`, `SHRINE`, `PORTAL`, `DARK_RIFT_ALTAR`. Palette meaning per kind follows the older drawings (primary stone or cloth, secondary wood or glow). Kinds not listed (campfire, market stall, flags, fountain, stairs, gargoyle, excavation, tufts) keep their earlier drawings. Tests: `MountainPropsTest`.
+
+## RPG Maker / Time Fantasy export layout (2026-11-24)
+`GameTilesetExporter.export(..., layout = Layout.RPG_MAKER)` (CLI `gametilesets ... --layout rpgmaker`) writes each spec as a **pack** of role sheets instead of one sheet per spec plus one per autotile. Pack *n* (the spec's position in the list, from 0) owns ten ids from `firstId + 10 n` (`PACK_STRIDE`), and each role has a fixed slot, so a pack's sheet ids never move when its contents change.
+
+| Slot | Role | Holds | Width (tiles) |
+| :-: | :--- | :--- | :-: |
+| +0 | `A1` | `FLAT_WATER` tiles (animated frames side by side) and autotiles whose foreground is water | 16 |
+| +1 | `A2` | `TUFTED_GROUND` tiles, then the other autotiles as 8 x 6 blocks, two across | 16 |
+| +2 | `A3` | reserved | 16 |
+| +3 | `A4` | cliff and wall sets as 3 x 3 blocks, five across | 15 |
+| +4 | `A5` | every other material tile (paving, planks, stone) | 8 |
+| +5 | `B` | nature props: trees, bushes, flowers, rocks, stumps, logs, mountains | 16 |
+| +6 | `C` | structures: ruins, towers, gates, archways, landmarks, shrines, bridges, tombstones | 16 |
+| +7 | `D` | objects: containers, camps, tents, signs, fences, wagons, stalls, flags and the rest | 16 |
+| +8 | `E` | buildings: the town building props | 16 |
+
+Within a sheet, 1 x 1 tiles come first in reading order, then autotile blocks (A1, A2), then multi-tile props packed in shelves (B to E). The index lists absolute grid cells for each autotile mask, so the engine and map tools need no change, and adds `"layout": "rpgmaker"` and a `"packs"` list (spec name, first id, role to id). The default layout (one sheet per spec) is unchanged. Tests: `RpgMakerLayoutTest`.
