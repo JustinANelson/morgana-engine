@@ -171,9 +171,9 @@ object GameTilesetExporter {
         PropKind.DARK_RIFT_ALTAR, PropKind.GARGOYLE_SPIRE, PropKind.GARGOYLE_PLAQUE, PropKind.ANCIENT_EXCAVATION,
         PropKind.SARCOPHAGUS, PropKind.TOMBSTONE, PropKind.WOOD_BRIDGE, PropKind.ROPE_BRIDGE, PropKind.PIER,
         PropKind.RUNE_CRYSTAL_FOUNTAIN, PropKind.STAIRS_DOWN, PropKind.STAIRS_UP, PropKind.PAGODA_ROOF, PropKind.PAIFANG_GATE,
-        PropKind.JADE_LION_STATUE -> Role.C
+        PropKind.JADE_LION_STATUE, PropKind.BELL_TOWER, PropKind.KEEP_TOWER, PropKind.GRAND_STAIRS, PropKind.CLOISTER -> Role.C
         PropKind.COTTAGE, PropKind.COTTAGE_LARGE, PropKind.INN, PropKind.SMITHY, PropKind.SHOP, PropKind.CHAPEL,
-        PropKind.GUARDHOUSE, PropKind.GREAT_HALL, PropKind.HALF_TIMBER_HOUSE -> Role.E
+        PropKind.GUARDHOUSE, PropKind.GREAT_HALL, PropKind.HALF_TIMBER_HOUSE, PropKind.CATHEDRAL -> Role.E
         else -> Role.D
     }
 

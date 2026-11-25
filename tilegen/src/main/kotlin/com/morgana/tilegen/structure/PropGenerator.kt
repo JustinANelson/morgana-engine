@@ -273,7 +273,14 @@ enum class PropKind(val widthTiles: Int, val heightTiles: Int) {
     SHOP(4, 3),
     CHAPEL(3, 4),
     GUARDHOUSE(3, 3),
-    GREAT_HALL(6, 4)
+    GREAT_HALL(6, 4),
+
+    /** Castle-church kit (see `CitadelProps`): palettes are ignored. */
+    CATHEDRAL(14, 9),
+    BELL_TOWER(3, 6),
+    KEEP_TOWER(3, 5),
+    GRAND_STAIRS(6, 3),
+    CLOISTER(6, 3)
 }
 
 /**
@@ -326,7 +333,13 @@ class PropGenerator(
         val roof = primaryPalette ?: PalettePresets.TERRACOTTA_BRICK
 
         // Kinds with a smooth version (calm, chunky, outlined) are drawn by SmoothProps and skip the older drawings.
-        val smoothDone = SmoothProps.draw(kind, canvas, w, h, primaryPalette, secondaryPalette, s)
+        val citadelDone = kind in CitadelProps.kinds
+        if (citadelDone) {
+            val built = CitadelProps.draw(kind, s)
+            if (built.width == w && built.height == h) canvas.drawImage(built, 0, 0, w, h, 0, 0)
+            else for (y in 0 until h) for (x in 0 until w) canvas.setPixel(x, y, built.getPixel(x * built.width / w, y * built.height / h))
+        }
+        val smoothDone = citadelDone || SmoothProps.draw(kind, canvas, w, h, primaryPalette, secondaryPalette, s)
         val handledByClassic = smoothDone || (style == PixelStyle.CLASSIC_RPG && renderClassicRuinsProp(
             canvas, w, h, kind, stone, secondaryPalette, roof
         ))
@@ -498,6 +511,7 @@ class PropGenerator(
             PropKind.SEALED_GATE -> MountainProps.sealedGate(canvas, w, h, primaryPalette ?: PalettePresets.SLATE_STONE, secondaryPalette ?: PalettePresets.ARCANE_VIOLET, s)
             PropKind.COTTAGE_LARGE, PropKind.INN, PropKind.SMITHY, PropKind.SHOP, PropKind.CHAPEL, PropKind.GUARDHOUSE, PropKind.GREAT_HALL ->
                 drawBuilding(canvas, w, h, kind, buildingRoof, buildingTheme, s)
+            PropKind.CATHEDRAL, PropKind.BELL_TOWER, PropKind.KEEP_TOWER, PropKind.GRAND_STAIRS, PropKind.CLOISTER -> Unit
             }
         }
 
