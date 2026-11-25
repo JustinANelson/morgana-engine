@@ -261,6 +261,10 @@ class MorganaWorldCoordinator(
     @Volatile
     var assetBaseUrl: String? = null
 
+    /** One-time login tickets for automation (see [DevTickets]); null unless the server was started with `--dev-login`. */
+    @Volatile
+    var devTickets: DevTickets? = null
+
     /** Tokens that let a dropped client resume its character without the password (see [ResumeTokens]). */
     val resumeTokens: ResumeTokens = ResumeTokens(graceMs = sessionConfig.graceMinutes * 60_000L)
 
@@ -881,6 +885,22 @@ class MorganaWorldCoordinator(
         }
         if (session.characterId != null) {
             session.send(ServerPacket.AuthResult(false, "Already logged in on this connection."))
+            return
+        }
+        val tickets = devTickets
+        if (tickets != null && packet.token.startsWith(DevTickets.PREFIX)) {
+            // A one-time dev ticket stands in for the password; it is never accepted unless the operator started the server with --dev-login.
+            val ticketAccount = tickets.redeem(packet.token)?.let { dataStore.accounts.findByUsername(it) }
+            if (ticketAccount == null) {
+                rejectLogin(session, "That login ticket is invalid, expired or already used.")
+                return
+            }
+            banMessage(ticketAccount)?.let { why ->
+                session.send(ServerPacket.AuthResult(false, why))
+                return
+            }
+            org.slf4j.LoggerFactory.getLogger("Security").warn("Dev ticket login for account '{}' from {}", ticketAccount.username, session.sessionId)
+            completeLogin(session, ticketAccount, null)
             return
         }
         if (!sessionConfig.resume) {

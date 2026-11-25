@@ -55,6 +55,7 @@ registerContentTool("validateContent", "Validate all world content files (exit 1
 registerContentTool("exportContentSchemas", "Export JSON Schemas for all content collections to docs/schemas", "schema")
 registerContentTool("seedWorld", "Write the blank game's content into server-data/ if it has none", "seed")
 registerContentTool("grantOwner", "List a username as a server Owner: -PcontentArgs=\"--user Alice\"", "owner")
+registerContentTool("devTicket", "Mint a one-time login ticket for automation (server needs --dev-login): -PcontentArgs=\"--user Alice [--ttl 600] [--dir server-data]\"", "dev-ticket")
 registerContentTool("replayLog", "Replay a recorded session: -PcontentArgs=\"--file replays/session.json\"", "replay")
 registerContentTool("exportWorldPack", "Export a validated world pack: -PcontentArgs=\"--out packs/mine.zip --name MyWorld\"", "pack-export")
 registerContentTool("importWorldPack", "Import a world pack: -PcontentArgs=\"--file packs/mine.zip --mode merge\"", "pack-import")

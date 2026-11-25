@@ -79,6 +79,7 @@ Maintenance knowledge base for Morgana ORPG, written for human and AI contributo
 * [Characters per Account](/server/characters.md) - How one account holds several characters: the list after login, creating, choosing and deleting, the rules, and what older clients see.
 * [Connection Limits and IP Bans](/server/connection_limits.md) - Per-address connection caps, connection-rate limits, strikes and temporary bans, the pre-login timeout, and operator commands.
 * [World Coordinator](/server/coordinator.md) - The single synchronized authority: sessions, authentication, packet handling, persistence triggers, and event dispatch.
+* [Dev Login Tickets](/server/dev_login.md) - One-time login tickets so automation (an LLM driving a client, a test script) can enter the world without typing a password; opt-in per server.
 * [Game-Owned Art](/server/game_assets.md) - A game ships its own tileset and sprite PNGs in its assets/ folder; the server validates, advertises and serves them.
 * [Game Wiki: a Browsable Wiki Generated from the Data Files](/server/game_wiki.md) - A cross-linked wiki of every item, monster, spell, quest, recipe, shop, resource, map and class, with a Balance report, built from game.json and the content JSON; static files or served live at /wiki/.
 * [Kotlin Hook API](/server/hook_api.md) - Typed server plugin callbacks (login, items, spells, kills, deaths, chat, custom events) and where game rules now live.

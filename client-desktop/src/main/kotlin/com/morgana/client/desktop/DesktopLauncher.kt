@@ -168,8 +168,12 @@ internal class EmbeddedWorldHost(
  * authoritative 20 TPS server on this machine. Connecting to a remote host works as before.
  */
 fun main(args: Array<String>) {
-    val host = args.getOrNull(0) ?: "127.0.0.1"
-    val port = args.getOrNull(1)?.toIntOrNull() ?: 7001
+    val positionalHost = args.getOrNull(0)?.takeIf { !it.startsWith("--") } ?: "127.0.0.1"
+    val positionalPort = args.getOrNull(1)?.toIntOrNull() ?: 7001
+    // `--connect host:port [--tls] [--ticket dev_...]` (ticket also from MORGANA_TICKET) skips the login screen for automation.
+    val direct = com.morgana.client.net.DirectConnect.fromArgs(args, System::getenv, positionalHost, positionalPort)
+    val host = direct?.host ?: positionalHost
+    val port = direct?.port ?: positionalPort
     val worldHost = EmbeddedWorldHost(WorldLibrary(Paths.get("worlds"), Paths.get("server-data")), port)
 
     val monitor = Lwjgl3ApplicationConfiguration.getDisplayMode()
@@ -191,6 +195,7 @@ fun main(args: Array<String>) {
         perRealmStore = FilePerRealmStore(Paths.get("client-data", "realms_storage.json").toFile()),
         assetCache = FileAssetCache(Paths.get("client-data", "cache", "assets").toFile()),
         resumeStore = FileResumeStore(Paths.get("client-data", "resume.json").toFile()),
+        directLogin = direct?.asResumeInfo(),
         pickPngFile = ::pickDesktopPngFile,
         autoUiScale = {
             val mode = Gdx.graphics.displayMode

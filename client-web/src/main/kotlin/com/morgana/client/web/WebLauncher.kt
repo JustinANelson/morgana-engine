@@ -123,13 +123,21 @@ private fun pickBrowserPngFile(onPicked: (ByteArray?) -> Unit) {
     })
 }
 
+/** Removes the query string from the address bar so a one-time ticket does not stay in the history or get copied around. */
+@JSBody(script = "try { history.replaceState(null, '', location.pathname); } catch (e) {}")
+private external fun scrubAddressQuery()
+
 /** Browser entry point. The login window defaults to the server that served this page (see [com.morgana.client.net.webDefaultPort]). */
 fun main() {
     val location = Window.current().location
     val pageHost = location.hostName.takeIf { it.isNotBlank() } ?: "127.0.0.1"
     val secure = location.protocol == "https:"
-    val port = portFromQuery(location.search ?: "")
+    val queryPort = portFromQuery(location.search ?: "")
         ?: com.morgana.client.net.webDefaultPort(location.port ?: "", secure, DEFAULT_WEB_PORT)
+    // `?connect=host:port&ticket=dev_...` goes straight to that server and logs in with the one-time ticket (automation).
+    val direct = com.morgana.client.net.DirectConnect.fromQuery(location.search ?: "", pageHost, queryPort, secure)
+    val port = direct?.port ?: queryPort
+    if (direct?.ticket != null) scrubAddressQuery()
     val touch = prepareTouchPage()
     val config = WebApplicationConfiguration().apply {
         // 0 = fill the browser window (the stage resizes with it).
@@ -140,7 +148,7 @@ fun main() {
         MorganaGame(
             transport = BrowserWebSocketTransport(),
             soundLoader = BrowserSoundLoader(),
-            defaultHost = pageHost,
+            defaultHost = direct?.host ?: pageHost,
             defaultPort = port,
             // `?fakeRealms=200` previews the realm browser with a made-up directory of that size; otherwise the bundled one.
             directoryClient = fakeRealmsFromQuery(Window.current().location.search ?: "")
@@ -159,7 +167,8 @@ fun main() {
             pickPngFile = ::pickBrowserPngFile,
             textEntry = BrowserTextEntry(),
             systemReducedMotion = prefersReducedMotion(),
-            device = BrowserDeviceFeatures()
+            device = BrowserDeviceFeatures(),
+            directLogin = direct?.asResumeInfo()
         )
     installPwaSupport(touch)
     installBrowserLifecycle(

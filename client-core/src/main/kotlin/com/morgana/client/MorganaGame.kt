@@ -98,7 +98,9 @@ class MorganaGame(
     /** Phone conveniences the platform may offer: a buzz for hits, keeping the screen awake, a last-resort error screen. */
     private val device: com.morgana.client.net.DeviceFeatures = com.morgana.client.net.DeviceFeatures.NONE,
     /** The interface size the "Auto" setting stands for on this platform; desktop picks one from the monitor (see [com.morgana.client.access.UiScales.auto]). */
-    private val autoUiScale: () -> Float = { 1f }
+    private val autoUiScale: () -> Float = { 1f },
+    /** A one-time login ticket to redeem at launch instead of showing the password screen (see [com.morgana.client.net.DirectConnect]). */
+    private val directLogin: ResumeInfo? = null
 ) : KtxApplicationAdapter {
 
     /** Accessibility settings (keys, colours, motion, interface size): loaded in [create], saved on every change. */
@@ -664,7 +666,7 @@ class MorganaGame(
 
     /** If an earlier run left a resume token, try to return to that character straight away. */
     private fun resumeSavedSession() {
-        val info = resumeStore.load() ?: return
+        val info = directLogin ?: resumeStore.load() ?: return
         val plan = ConnectionPlanner.plan(info.host, info.port.toString(), info.tls, knownHosts, defaultPort)
         if (plan.error != null) {
             resumeStore.clear()
