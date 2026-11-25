@@ -197,6 +197,24 @@ object NatureProps {
         skirt(img, fw * 0.50f, fh * 0.92f, fw * 0.27f, fh * 0.025f, leaf, s + 77L, 0.8f)
     }
 
+    /** A rounded evergreen (2 x 3 tiles): a stack of tapering lobes on a short root-flared trunk, grass skirt. */
+    fun evergreen(img: TileImage, w: Int, hh: Int, leaf: PaletteRamp, wood: PaletteRamp, s: Long) {
+        val fw = w.toFloat()
+        val fh = hh.toFloat()
+        groundShadow(img, fw * 0.50f, fh * 0.92f, fw * 0.28f, fh * 0.04f)
+        skirt(img, fw * 0.50f, fh * 0.92f, fw * 0.32f, fh * 0.04f, leaf, s)
+        trunk(img, fw * 0.50f, (fh * 0.78f).toInt(), (fh * 0.92f).toInt(), (fw * 0.14f).toInt().coerceAtLeast(3), wood)
+        val lobes = listOf(
+            Lobe(fw * 0.50f, fh * 0.70f, fw * 0.40f, fh * 0.15f),
+            Lobe(fw * 0.50f, fh * 0.55f, fw * 0.34f, fh * 0.15f),
+            Lobe(fw * 0.50f, fh * 0.40f, fw * 0.27f, fh * 0.14f),
+            Lobe(fw * 0.50f, fh * 0.26f, fw * 0.20f, fh * 0.13f),
+            Lobe(fw * 0.50f, fh * 0.13f, fw * 0.11f, fh * 0.09f)
+        )
+        paintCrown(img, lobes, leaf, s)
+        skirt(img, fw * 0.50f, fh * 0.93f, fw * 0.24f, fh * 0.02f, leaf, s + 77L, 0.8f)
+    }
+
     /** A rounded bush (2 x 2 tiles) dotted with blooms or berries in [bloom]. */
     fun bloomBush(img: TileImage, w: Int, hh: Int, leaf: PaletteRamp, bloom: PaletteRamp, s: Long) {
         val fw = w.toFloat()

@@ -2,6 +2,10 @@
 
 ## 2026-11-24
 
+* **Change** - **Tilegen: houses and small props redrawn in the smooth style** ([tilegen](/architecture/tilegen.md)): `HouseProps` replaces `BuildingGenerator` as the drawing behind the seven building `PropKind`s (rounded shingle roofs, readable walls, windows with shutters, doors, chimneys); `SmoothProps` redraws barrels, crates, chests, urns, tents, wagons, fences, bridges, archways, sarcophagi, skull piles, weapon racks, ballistae, torches, pillars, waypoint pillars, shrines, portals and the rift altar. The classic ruins grid test now covers only stairs, gargoyle plaque and wall banner.
+
+* **Add** - **Tilegen: barrier, graveyard and town props, smooth paving and planks, evergreen** ([tilegen](/architecture/tilegen.md)): new `PropKind`s `MOUNTAIN_PEAK`, `ROCK_SPIRE` (optional snow caps), `TOMBSTONE`, `SEALED_GATE`, `EVERGREEN_TREE` and the seven `BuildingGenerator` kits (`COTTAGE_LARGE`, `INN`, `SMITHY`, `SHOP`, `CHAPEL`, `GUARDHOUSE`, `GREAT_HALL`) usable from specs with optional `roof` and `buildingTheme` fields; new hand-pixelled materials `FLAT_PAVER` and `FLAT_PLANKS`. Tests: `MountainPropsTest`, `HandPixelledMaterialsTest`.
+
 * **Add** - **`world.item_count(player_id, item_id)`** ([API reference](/../docs/API_REFERENCE.md), [scripting](/systems/scripting.md)): a read-only Lua query for how many of an item a player carries in the bag. `world.remove_item` is skipped when the player has too few and gives Lua no signal, so a plugin that charges a player (Trevena's Border Gate repair) checks with this first.
 
 * **Add** - **`world.objects_on_map(map_id)` and `max_hp` on object tables** ([API reference](/../docs/API_REFERENCE.md)): a plugin can read every world object on a map and each kind's maximum health, which a zone-wide structure rule (Trevena's Cleansing) needs.

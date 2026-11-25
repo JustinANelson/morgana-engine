@@ -9,6 +9,7 @@ import com.morgana.tilegen.material.MaterialSpec
 import com.morgana.tilegen.material.MaterialTileGenerator
 import com.morgana.tilegen.material.PaletteRamp
 import com.morgana.tilegen.material.TileDecals
+import com.morgana.tilegen.structure.BuildingTheme
 import com.morgana.tilegen.structure.GeneratedProp
 import com.morgana.tilegen.structure.PropGenerator
 import com.morgana.tilegen.structure.StructureGenerator
@@ -148,7 +149,9 @@ object TilesetSpecRenderer {
                 kind = prop.kind,
                 style = prop.style ?: spec.style,
                 primaryPalette = primary,
-                secondaryPalette = secondary
+                secondaryPalette = secondary,
+                buildingRoof = prop.roof,
+                buildingTheme = prop.buildingTheme ?: BuildingTheme.DEFAULT
             )
             renderedProps[prop.name] = generated
             tiles += generated.slicedTiles

@@ -640,6 +640,8 @@ object TilesetCli {
         MaterialPattern.TUFTED_GROUND -> "meadow_grass"
         MaterialPattern.ROUNDED_STONES -> "earth_dirt"
         MaterialPattern.FLAT_WATER -> "calm_water"
+        MaterialPattern.FLAT_PAVER -> "slate_stone"
+        MaterialPattern.FLAT_PLANKS -> "timber_wood"
     }
 
     private fun parseFlags(tokens: List<String>): Map<String, String> {

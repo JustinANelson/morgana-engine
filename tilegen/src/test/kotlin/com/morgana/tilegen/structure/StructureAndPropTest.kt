@@ -235,10 +235,10 @@ class StructureAndPropTest {
 
     @Test
     fun `classic ruins props use 16x16 pixel grid with 2x nearest-neighbor scaling`() {
+        // PILLAR, SHRINE, URN and SKULL_PILE moved to the smooth style (SmoothProps); these still use the grid.
         val ruinsKinds = listOf(
-            PropKind.PILLAR, PropKind.SHRINE, PropKind.URN,
             PropKind.STAIRS_DOWN, PropKind.STAIRS_UP,
-            PropKind.GARGOYLE_PLAQUE, PropKind.WALL_BANNER, PropKind.SKULL_PILE
+            PropKind.GARGOYLE_PLAQUE, PropKind.WALL_BANNER
         )
         val gen16 = PropGenerator(seed = 10L, tileSize = 16)
         val gen32 = PropGenerator(seed = 10L, tileSize = 32)

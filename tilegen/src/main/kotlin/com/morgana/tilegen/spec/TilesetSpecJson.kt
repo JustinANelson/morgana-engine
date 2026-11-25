@@ -6,6 +6,8 @@ import com.morgana.tilegen.autotile.TerrainPair
 import com.morgana.tilegen.material.DecalKind
 import com.morgana.tilegen.material.MaterialPattern
 import com.morgana.tilegen.material.PixelStyle
+import com.morgana.tilegen.structure.BuildingRoof
+import com.morgana.tilegen.structure.BuildingTheme
 import com.morgana.tilegen.structure.PropKind
 
 /**
@@ -195,7 +197,9 @@ object TilesetSpecJson {
           "kind": { "type": "string", "enum": [$propEnums] },
           "primaryPalette": { "type": "string" },
           "secondaryPalette": { "type": "string" },
-          "style": { "type": "string", "enum": [$styleEnums] }
+          "style": { "type": "string", "enum": [$styleEnums] },
+          "roof": { "type": "string", "enum": ["RED", "BROWN", "SLATE", "GREEN", "THATCH"] },
+          "buildingTheme": { "type": "string", "enum": ["DEFAULT", "DESERT", "EMBER", "PORT"] }
         }
       }
     }
@@ -326,7 +330,9 @@ object TilesetSpecJson {
         val primary = obj.optString("primaryPalette")
         val secondary = obj.optString("secondaryPalette")
         val style = obj.optString("style")?.let { parseEnum<PixelStyle>(it, "$path.style") }
-        return PropLayerSpec(name, kind, primary, secondary, style)
+        val roof = obj.optString("roof")?.let { parseEnum<BuildingRoof>(it, "$path.roof") }
+        val buildingTheme = obj.optString("buildingTheme")?.let { parseEnum<BuildingTheme>(it, "$path.buildingTheme") }
+        return PropLayerSpec(name, kind, primary, secondary, style, roof, buildingTheme)
     }
 
     private fun paletteToJson(p: PaletteSpec): String = buildString {
@@ -403,6 +409,8 @@ object TilesetSpecJson {
         if (p.primaryPalette != null) parts += "\"primaryPalette\": ${quote(p.primaryPalette)}"
         if (p.secondaryPalette != null) parts += "\"secondaryPalette\": ${quote(p.secondaryPalette)}"
         if (p.style != null) parts += "\"style\": ${quote(p.style.name)}"
+        if (p.roof != null) parts += "\"roof\": ${quote(p.roof.name)}"
+        if (p.buildingTheme != null) parts += "\"buildingTheme\": ${quote(p.buildingTheme.name)}"
         append("{${parts.joinToString(", ")}}")
     }
 

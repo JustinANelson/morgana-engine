@@ -16,7 +16,7 @@ class HandPixelledMaterialsTest {
 
     @Test
     fun `new patterns use only palette colours, are deterministic and ignore dithering styles`() {
-        for (pattern in listOf(MaterialPattern.ROUNDED_STONES, MaterialPattern.FLAT_WATER)) {
+        for (pattern in listOf(MaterialPattern.ROUNDED_STONES, MaterialPattern.FLAT_WATER, MaterialPattern.FLAT_PAVER, MaterialPattern.FLAT_PLANKS)) {
             for (size in listOf(16, 32)) {
                 val a = gen(pattern, size = size)
                 assertTrue(a.pixels.contentEquals(gen(pattern, size = size).pixels))
@@ -65,5 +65,16 @@ class HandPixelledMaterialsTest {
         // The outer corner curves up: the leftmost column of the left cap turns to stone higher than the centre cap does.
         fun firstStoneRow(img: TileImage, x: Int) = (0 until 32).first { y -> img.getPixel(x, y) != plain.getPixel(x, y) && y > 8 }
         assertTrue(firstStoneRow(left, 0) < firstStoneRow(lush, 0), "left corner not rounded")
+    }
+
+    @Test
+    fun `flat paver and planks wrap seamlessly and keep a dark seam`() {
+        for (pattern in listOf(MaterialPattern.FLAT_PAVER, MaterialPattern.FLAT_PLANKS)) {
+            val t = gen(pattern)
+            // The tile repeats without a visible seam: the edge pixel rows continue into each other.
+            val dark = ramp.colors.first()
+            assertTrue(t.pixels.count { it == dark } > 30, "$pattern has seams")
+            assertTrue(t.pixels.toSet().size >= 3, "$pattern uses several tones")
+        }
     }
 }

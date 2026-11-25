@@ -83,7 +83,19 @@ enum class MaterialPattern {
      * Flat, hand-pixelled water: a calm posterised base with a few deeper patches and short light streaks that
      * drift sideways with `frameIndex` (four frames loop seamlessly). Calmer than [WATER_CAUSTICS].
      */
-    FLAT_WATER
+    FLAT_WATER,
+
+    /**
+     * Smooth paving in the same hand-pixelled style: flat, outlined flagstones laid in running bond, each with a lit
+     * upper-left edge, a shaded lower-right edge and its own tint. `scale` sets the stones per tile (about 3 at 1.0).
+     */
+    FLAT_PAVER,
+
+    /**
+     * Smooth wooden planks: flat horizontal boards with a dark seam, a lit top edge, per-board tint, staggered butt
+     * joints and a few grain flecks. `scale` sets the boards per tile (about 4 at 1.0).
+     */
+    FLAT_PLANKS
 }
 
 /**
@@ -153,10 +165,13 @@ class MaterialTileGenerator(
             MaterialPattern.TUFTED_GROUND -> drawTuftedGround(out, effectiveSpec, s)
             MaterialPattern.ROUNDED_STONES -> drawRoundedStones(out, effectiveSpec, s)
             MaterialPattern.FLAT_WATER -> drawFlatWater(out, effectiveSpec, s)
+            MaterialPattern.FLAT_PAVER -> drawFlatPaver(out, effectiveSpec, s)
+            MaterialPattern.FLAT_PLANKS -> drawFlatPlanks(out, effectiveSpec, s)
         }
         // Hand-pixelled patterns are already flat and posterised; dithering them only adds static (8-bit still limits colours).
         val handPixelled = spec.pattern == MaterialPattern.TUFTED_GROUND || spec.pattern == MaterialPattern.ROUNDED_STONES ||
-            spec.pattern == MaterialPattern.FLAT_WATER
+            spec.pattern == MaterialPattern.FLAT_WATER || spec.pattern == MaterialPattern.FLAT_PAVER ||
+            spec.pattern == MaterialPattern.FLAT_PLANKS
         if (handPixelled && spec.style != PixelStyle.RETRO_8BIT) return out
         return PixelDither.applyStyle(out, spec.style, spec.palette)
     }
@@ -334,6 +349,65 @@ class MaterialTileGenerator(
                 for (px in 0 until tileSize) {
                     if (pm.getPixel(px, py) == tone(0) && TileNoise.hash(px, py, s + 71L) > 0.7f) pm.setPixel(px, py, accent)
                 }
+            }
+        }
+    }
+
+    private fun drawFlatPaver(pm: TileImage, spec: MaterialSpec, s: Long) {
+        val c = spec.palette.colors
+        fun tone(i: Int) = c[i.coerceIn(0, c.lastIndex)]
+        val hi = c.lastIndex
+        val cells = (3 * spec.scale).roundToInt().coerceIn(2, tileSize / 4)
+        val cw = tileSize / cells
+        val rows = tileSize / cw
+        for (py in 0 until tileSize) {
+            val row = py / cw
+            val ly = py % cw
+            // Running bond: every other row is shifted half a stone; the tile still wraps because the shift is half a cell.
+            val shift = if (row % 2 == 1) cw / 2 else 0
+            for (px in 0 until tileSize) {
+                val sx = (px + shift) % tileSize
+                val col = sx / cw
+                val lx = sx % cw
+                val tint = TileNoise.hash(col, row, s)
+                val base = if (tint > 0.66f) hi - 2 else if (tint > 0.30f) hi - 3 else hi - 3
+                val color = when {
+                    lx == 0 || ly == 0 -> tone(0)
+                    lx == 1 || ly == 1 -> tone(if (tint > 0.5f) hi else hi - 1)
+                    lx == cw - 1 || ly == cw - 1 -> tone(1)
+                    TileNoise.hash(px, py, s + 17L) > 0.965f -> tone(hi - 1)
+                    TileNoise.hash(px / 2, py / 2, s + 29L) > 0.93f -> tone(base - 1)
+                    else -> tone(base)
+                }
+                pm.setPixel(px, py, color)
+            }
+        }
+        check(rows >= 1)
+    }
+
+    private fun drawFlatPlanks(pm: TileImage, spec: MaterialSpec, s: Long) {
+        val c = spec.palette.colors
+        fun tone(i: Int) = c[i.coerceIn(0, c.lastIndex)]
+        val hi = c.lastIndex
+        val boards = (4 * spec.scale).roundToInt().coerceIn(2, tileSize / 4)
+        val bh = tileSize / boards
+        for (py in 0 until tileSize) {
+            val row = py / bh
+            val ly = py % bh
+            val cut = (TileNoise.hash(row, 3, s) * tileSize).toInt()
+            for (px in 0 until tileSize) {
+                val seg = if (((px - cut) % tileSize + tileSize) % tileSize < tileSize / 2) 0 else 1
+                val tint = TileNoise.hash(row, seg, s + 5L)
+                val base = if (tint > 0.62f) hi - 1 else if (tint > 0.28f) hi - 2 else hi - 3
+                val joint = px == cut || px == (cut + tileSize / 2) % tileSize
+                val color = when {
+                    ly == 0 || joint -> tone(0)
+                    ly == 1 -> tone(hi)
+                    ly == bh - 1 -> tone(1)
+                    TileNoise.hash(px / 3, py, s + 41L) > 0.91f -> tone(base - 1)
+                    else -> tone(base)
+                }
+                pm.setPixel(px, py, color)
             }
         }
     }

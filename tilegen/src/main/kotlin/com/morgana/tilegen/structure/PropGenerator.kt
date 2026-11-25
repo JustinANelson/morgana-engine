@@ -256,7 +256,24 @@ enum class PropKind(val widthTiles: Int, val heightTiles: Int) {
     FALLEN_LOG(3, 2),
     RUIN_TOWER(3, 3),
     RUIN_PILLAR(1, 2),
-    CRYSTAL_BLOOM(2, 2)
+    CRYSTAL_BLOOM(2, 2),
+
+    /** Barrier and graveyard props (see `MountainProps`): primary palette is the rock or stone, secondary the snow cap, moss or seal glow. */
+    /** 2x3 rounded evergreen in the hand-pixelled style (primary palette the needles, secondary the trunk). */
+    EVERGREEN_TREE(2, 3),
+    MOUNTAIN_PEAK(4, 4),
+    ROCK_SPIRE(2, 3),
+    TOMBSTONE(1, 1),
+    SEALED_GATE(4, 3),
+
+    /** Town buildings (see `BuildingGenerator`): palettes are ignored, the spec's `roof` and `buildingTheme` pick the colours. */
+    COTTAGE_LARGE(4, 3),
+    INN(5, 4),
+    SMITHY(4, 3),
+    SHOP(4, 3),
+    CHAPEL(3, 4),
+    GUARDHOUSE(3, 3),
+    GREAT_HALL(6, 4)
 }
 
 /**
@@ -293,7 +310,9 @@ class PropGenerator(
         kind: PropKind,
         style: PixelStyle = PixelStyle.STANDARD,
         primaryPalette: PaletteRamp? = null,
-        secondaryPalette: PaletteRamp? = null
+        secondaryPalette: PaletteRamp? = null,
+        buildingRoof: BuildingRoof? = null,
+        buildingTheme: BuildingTheme = BuildingTheme.DEFAULT
     ): GeneratedProp {
         require(name.isNotBlank()) { "Prop name must not be blank" }
         val w = kind.widthTiles * tileSize
@@ -306,9 +325,11 @@ class PropGenerator(
         val stone = primaryPalette ?: if (style == PixelStyle.CLASSIC_RPG) PalettePresets.CLASSIC_RPG_STONE else PalettePresets.SLATE_STONE
         val roof = primaryPalette ?: PalettePresets.TERRACOTTA_BRICK
 
-        val handledByClassic = style == PixelStyle.CLASSIC_RPG && renderClassicRuinsProp(
+        // Kinds with a smooth version (calm, chunky, outlined) are drawn by SmoothProps and skip the older drawings.
+        val smoothDone = SmoothProps.draw(kind, canvas, w, h, primaryPalette, secondaryPalette, s)
+        val handledByClassic = smoothDone || (style == PixelStyle.CLASSIC_RPG && renderClassicRuinsProp(
             canvas, w, h, kind, stone, secondaryPalette, roof
-        )
+        ))
         if (!handledByClassic) {
             when (kind) {
             PropKind.OAK_TREE -> drawOakTree(canvas, w, h, foliage, wood, style, s)
@@ -470,6 +491,13 @@ class PropGenerator(
             PropKind.RUIN_PILLAR -> NatureProps.ruinPillar(canvas, w, h, primaryPalette ?: PalettePresets.DUNE_SANDSTONE, secondaryPalette ?: PalettePresets.ANCIENT_LEAF, s)
             PropKind.CRYSTAL_BLOOM -> NatureProps.crystalBloom(canvas, w, h, foliage, secondaryPalette ?: PalettePresets.PASTEL_PINK, s)
             PropKind.RUIN_WALL -> NatureProps.ruinWall(canvas, w, h, primaryPalette ?: PalettePresets.DUNE_SANDSTONE, secondaryPalette ?: PalettePresets.ANCIENT_LEAF, s)
+            PropKind.EVERGREEN_TREE -> NatureProps.evergreen(canvas, w, h, foliage, secondaryPalette ?: PalettePresets.WARM_TIMBER, s)
+            PropKind.MOUNTAIN_PEAK -> MountainProps.mountainPeak(canvas, w, h, primaryPalette ?: PalettePresets.SLATE_STONE, secondaryPalette, s)
+            PropKind.ROCK_SPIRE -> MountainProps.rockSpire(canvas, w, h, primaryPalette ?: PalettePresets.SLATE_STONE, secondaryPalette, s)
+            PropKind.TOMBSTONE -> MountainProps.tombstone(canvas, w, h, primaryPalette ?: PalettePresets.SLATE_STONE, secondaryPalette ?: PalettePresets.MEADOW_GRASS, s)
+            PropKind.SEALED_GATE -> MountainProps.sealedGate(canvas, w, h, primaryPalette ?: PalettePresets.SLATE_STONE, secondaryPalette ?: PalettePresets.ARCANE_VIOLET, s)
+            PropKind.COTTAGE_LARGE, PropKind.INN, PropKind.SMITHY, PropKind.SHOP, PropKind.CHAPEL, PropKind.GUARDHOUSE, PropKind.GREAT_HALL ->
+                drawBuilding(canvas, w, h, kind, buildingRoof, buildingTheme, s)
             }
         }
 
@@ -502,6 +530,18 @@ class PropGenerator(
             fullImage = styled,
             slicedTiles = slices
         )
+    }
+
+    /** Draws a [HouseProps] building, scaled to the canvas when the tile size is not 32 (nearest neighbour). */
+    private fun drawBuilding(img: TileImage, w: Int, h: Int, kind: PropKind, roof: BuildingRoof?, theme: BuildingTheme, s: Long) {
+        val built = HouseProps.draw(BuildingKind.valueOf(kind.name), roof, theme, s)
+        if (built.width == w && built.height == h) {
+            img.drawImage(built, 0, 0, w, h, 0, 0)
+            return
+        }
+        for (y in 0 until h) for (x in 0 until w) {
+            img.setPixel(x, y, built.getPixel(x * built.width / w, y * built.height / h))
+        }
     }
 
     private fun drawOakTree(

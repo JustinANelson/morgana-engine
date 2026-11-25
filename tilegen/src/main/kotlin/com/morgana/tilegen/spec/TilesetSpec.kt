@@ -9,6 +9,8 @@ import com.morgana.tilegen.material.MaterialPattern
 import com.morgana.tilegen.material.PalettePresets
 import com.morgana.tilegen.material.PaletteRamp
 import com.morgana.tilegen.material.PixelStyle
+import com.morgana.tilegen.structure.BuildingRoof
+import com.morgana.tilegen.structure.BuildingTheme
 import com.morgana.tilegen.structure.PropKind
 
 /**
@@ -279,7 +281,11 @@ data class PropLayerSpec(
     val kind: PropKind,
     val primaryPalette: String? = null,
     val secondaryPalette: String? = null,
-    val style: PixelStyle? = null
+    val style: PixelStyle? = null,
+    /** Roof colour for a building kind (`INN`, `SMITHY`...); ignored by other kinds. */
+    val roof: BuildingRoof? = null,
+    /** Wall colours for a building kind; ignored by other kinds. */
+    val buildingTheme: BuildingTheme? = null
 ) {
     init {
         if (name.isBlank()) throw SpecException("PropLayerSpec 'name' must not be blank")
