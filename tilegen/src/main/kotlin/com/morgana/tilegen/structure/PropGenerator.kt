@@ -280,7 +280,9 @@ enum class PropKind(val widthTiles: Int, val heightTiles: Int) {
     BELL_TOWER(3, 6),
     KEEP_TOWER(3, 5),
     GRAND_STAIRS(6, 3),
-    CLOISTER(6, 3)
+    CLOISTER(6, 3),
+    ROUND_TOWER(3, 4),
+    TURRET(2, 3)
 }
 
 /**
@@ -511,7 +513,7 @@ class PropGenerator(
             PropKind.SEALED_GATE -> MountainProps.sealedGate(canvas, w, h, primaryPalette ?: PalettePresets.SLATE_STONE, secondaryPalette ?: PalettePresets.ARCANE_VIOLET, s)
             PropKind.COTTAGE_LARGE, PropKind.INN, PropKind.SMITHY, PropKind.SHOP, PropKind.CHAPEL, PropKind.GUARDHOUSE, PropKind.GREAT_HALL ->
                 drawBuilding(canvas, w, h, kind, buildingRoof, buildingTheme, s)
-            PropKind.CATHEDRAL, PropKind.BELL_TOWER, PropKind.KEEP_TOWER, PropKind.GRAND_STAIRS, PropKind.CLOISTER -> Unit
+            PropKind.CATHEDRAL, PropKind.BELL_TOWER, PropKind.KEEP_TOWER, PropKind.GRAND_STAIRS, PropKind.CLOISTER, PropKind.ROUND_TOWER, PropKind.TURRET -> Unit
             }
         }
 

@@ -112,6 +112,7 @@ object TilesetSpecRenderer {
                     windowGlow = cliff.castShadow,
                     timberColor = trimRgba ?: PaletteRamp.rgba(104, 58, 38)
                 )
+                cliff.a4Layout && cliff.castle -> com.morgana.tilegen.structure.CastleWalls.generate(cliff.name, spec.tileSize)
                 cliff.a4Layout -> structureGen.generateA4WallSet(
                     name = cliff.name,
                     topMaterial = top,

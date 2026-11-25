@@ -320,7 +320,8 @@ object TilesetSpecJson {
         val a4Layout = obj.optBool("a4Layout") ?: false
         val townFacade = obj.optBool("townFacade") ?: false
         val lush = obj.optBool("lush") ?: false
-        return CliffLayerSpec(name, top, face, castShadow, trimColor, style, a4Layout, townFacade, lush)
+        val castle = obj.optBool("castle") ?: false
+        return CliffLayerSpec(name, top, face, castShadow, trimColor, style, a4Layout, townFacade, lush, castle)
     }
 
     private fun parseProp(obj: JsonValue.Obj, idx: Int): PropLayerSpec {
@@ -398,6 +399,7 @@ object TilesetSpecJson {
         if (c.a4Layout) parts += "\"a4Layout\": true"
         if (c.townFacade) parts += "\"townFacade\": true"
         if (c.lush) parts += "\"lush\": true"
+        if (c.castle) parts += "\"castle\": true"
         append("{${parts.joinToString(", ")}}")
     }
 

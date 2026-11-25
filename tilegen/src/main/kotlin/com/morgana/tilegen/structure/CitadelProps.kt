@@ -248,6 +248,86 @@ object CitadelProps {
         c.rect(w / 2 + 1, 3, w / 2 + 14, 3, tone(banner, 0))
     }
 
+
+    /** Shared cylinder body: light on the left, shaded right, coursed brick, outlined. */
+    private fun cylinder(c: Cv, x0: Int, x1: Int, top: Int, bot: Int) {
+        val cx = (x0 + x1) / 2f
+        val r = (x1 - x0) / 2f
+        for (y in top..bot) for (x in x0..x1) {
+            val t = (x - cx) / r
+            val course = (y - top) / 7
+            val off = if (course % 2 == 0) 0 else 6
+            val joint = (y - top) % 7 == 0 || (x + off) % 12 == 0
+            var i = if (t < -0.35f) 4 else if (t < 0.15f) 3 else if (t < 0.6f) 2 else 1
+            val h = c.hash((x + off) / 12, course, 21L)
+            if (h > 0.8f && i < 4) i++
+            val edge = x == x0 || x == x1
+            c.px(x, y, if (edge) tone(stone, 0) else if (joint) tone(stone, maxOf(0, i - 2)) else tone(stone, i))
+        }
+    }
+
+    private fun roundTower(c: Cv, w: Int, h: Int) {
+        val base = h - 5
+        c.shadow(w / 2, h - 3, w / 2 - 6, 4)
+        cylinder(c, 14, w - 14, 56, base)
+        // Rounded foot.
+        for (x in 14..w - 14) c.px(x, base + 1, tone(stone, 0))
+        // Cone roof with overhang and scalloped shingles.
+        val apexY = 2
+        val eave = 62
+        val half0 = w / 2 - 2
+        for (y in apexY..eave) {
+            val half = ((y - apexY).toFloat() / (eave - apexY) * half0).toInt()
+            for (x in w / 2 - half..w / 2 + half) {
+                val t = (x - (w / 2 - half)).toFloat() / (2 * half).coerceAtLeast(1)
+                val band = (y - apexY) / 7
+                val scallop = ((x + band * 5) % 10) < 2 && (y - apexY) % 7 == 6
+                val edge = x == w / 2 - half || x == w / 2 + half
+                c.px(x, y, if (edge || y == eave) tone(banner, 0) else if (scallop) tone(banner, 1) else tone(banner, if (t < 0.3f) 4 else if (t < 0.6f) 3 else 2))
+            }
+        }
+        for (x in w / 2 - half0..w / 2 + half0) { c.px(x, eave + 1, tone(banner, 1)); c.px(x, eave + 2, tone(stone, 1)) }
+        c.rect(w / 2, 0, w / 2, 6, tone(gold, 2))
+        // Slit and arched door.
+        c.rect(w / 2 - 1, 74, w / 2, 86, tone(dark, 1))
+        for (y in base - 22..base) {
+            val inset = when (y - (base - 22)) { 0 -> 4; 1 -> 2; 2 -> 1; else -> 0 }
+            for (x in w / 2 - 7 + inset..w / 2 + 7 - inset) {
+                val edge = x == w / 2 - 7 + inset || x == w / 2 + 7 - inset || y == base - 22
+                c.px(x, y, if (edge) tone(stone, 0) else tone(wood, if ((x - w / 2) % 4 == 0) 2 else 3))
+            }
+        }
+    }
+
+    private fun turret(c: Cv, w: Int, h: Int) {
+        val base = h - 5
+        c.shadow(w / 2, h - 3, w / 2 - 4, 3)
+        cylinder(c, 6, w - 6, 26, base)
+        // Open top: a rim ellipse with an inner well and merlons.
+        val cx = w / 2f
+        for (y in 10..40) for (x in 2..w - 3) {
+            val nx = (x + 0.5f - cx) / (w / 2f - 2)
+            val ny = (y + 0.5f - 25f) / 14f
+            val d = nx * nx + ny * ny
+            if (d <= 1f) {
+                val col = when {
+                    d > 0.9f -> tone(stone, 0)
+                    d > 0.55f -> tone(stone, if (nx < 0f) 4 else 3)
+                    d > 0.5f -> tone(stone, 1)
+                    else -> tone(dark, if (ny < 0f) 3 else 2)
+                }
+                c.px(x, y, col)
+            }
+        }
+        for (k in 0 until 7) {
+            val a = Math.PI * (0.1 + k * 0.13)
+            val mx = (cx - Math.cos(a) * (w / 2f - 5)).toInt()
+            val my = (25 + 12 * Math.sin(a) * 0.9).toInt()
+            if (my < 36) { c.rect(mx - 2, my - 6, mx + 2, my, tone(stone, 4)); c.rect(mx - 2, my - 6, mx + 2, my - 6, tone(stone, 0)); c.rect(mx + 2, my - 6, mx + 2, my, tone(stone, 1)) }
+        }
+        c.rect(w / 2 - 1, 48, w / 2, 62, tone(dark, 1))
+    }
+
     private fun grandStairs(c: Cv, w: Int, h: Int) {
         for (y in 0 until h) {
             val step = y / 12
@@ -301,11 +381,13 @@ object CitadelProps {
             PropKind.BELL_TOWER -> bellTower(c, w, h)
             PropKind.KEEP_TOWER -> keepTower(c, w, h)
             PropKind.GRAND_STAIRS -> grandStairs(c, w, h)
+            PropKind.ROUND_TOWER -> roundTower(c, w, h)
+            PropKind.TURRET -> turret(c, w, h)
             PropKind.CLOISTER -> cloister(c, w, h)
             else -> throw IllegalArgumentException("not a citadel prop: $kind")
         }
         return SpriteFinish.softOutline(canvas)
     }
 
-    val kinds = setOf(PropKind.CATHEDRAL, PropKind.BELL_TOWER, PropKind.KEEP_TOWER, PropKind.GRAND_STAIRS, PropKind.CLOISTER)
+    val kinds = setOf(PropKind.CATHEDRAL, PropKind.BELL_TOWER, PropKind.KEEP_TOWER, PropKind.GRAND_STAIRS, PropKind.CLOISTER, PropKind.ROUND_TOWER, PropKind.TURRET)
 }

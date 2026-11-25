@@ -264,7 +264,9 @@ data class CliffLayerSpec(
     val a4Layout: Boolean = false,
     val townFacade: Boolean = false,
     /** Plain 6-tile cliffs only: the cap overhangs the face with a ragged, outlined grass lip. */
-    val lush: Boolean = false
+    val lush: Boolean = false,
+    /** `a4Layout` only: draw the set as a castle rampart (flagstone, merlons, brick face) instead of the dark-void wall. */
+    val castle: Boolean = false
 ) {
     init {
         if (name.isBlank()) throw SpecException("CliffLayerSpec 'name' must not be blank")

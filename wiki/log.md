@@ -841,3 +841,7 @@
 ## 2026-11-25 - tilegen: castle-church kit
 
 Added `structure/CitadelProps.kt` and prop kinds `CATHEDRAL` (14x9), `BELL_TOWER` (3x6), `KEEP_TOWER` (3x5), `GRAND_STAIRS` (6x3), `CLOISTER` (6x3): tall stone architecture in the calm outlined style (spires, rose window, pointed portal, buttresses, crenellation, balustraded stair, arcade). Exporter roles: cathedral on E, the rest on C. Test: `CitadelPropsTest`.
+
+## 2026-11-25 - tilegen: castle rampart walls, round towers
+
+`CastleWalls` (`structure/CastleWalls.kt`) draws an `a4Layout` wall set as a rampart (flagstone walkway, merlon row, brick face with arrow slit) when the cliff spec has `"castle": true` (new `CliffLayerSpec.castle`). New prop kinds `ROUND_TOWER` (3x4, red cone roof) and `TURRET` (2x3, open crenellated top).
