@@ -1700,6 +1700,186 @@ class MorganaWorldCoordinator(
         return AdminResult(result.applied, result.summary)
     }
 
+    // ---- Admin API: accounts, characters, tickets, live player changes and content (see AdminApi) ----
+
+    private fun accountByName(name: String): AccountDocument? = dataStore.accounts.findByUsername(name.trim())
+
+    @Synchronized
+    fun adminAccounts(): List<com.morgana.server.admin.AdminAccount> = dataStore.accounts.findAll().sortedBy { it.username.lowercase() }
+        .map { com.morgana.server.admin.AdminAccount(it.id, it.username, it.accessLevel.name, it.characterIds.size, it.banned) }
+
+    /**
+     * Creates an account without anyone typing a password. With a blank [password] a random one nobody knows is set, so the account
+     * can only be entered with a dev ticket (or a password an operator sets later). An account named in the owner list starts as Owner.
+     */
+    @Synchronized
+    fun adminCreateAccount(username: String, password: String, actor: String): AdminResult {
+        val name = username.trim()
+        if (name.length !in 2..20) return AdminResult(false, "Username must be 2-20 characters.")
+        if (accountByName(name) != null) return AdminResult(false, "An account named $name already exists.")
+        val secret = password.ifBlank { com.morgana.server.admin.AdminToken.generate() }
+        val access = if (ownerPolicy.isConfiguredOwner(name)) AccessLevel.OWNER else AccessLevel.PLAYER
+        dataStore.accounts.save(
+            AccountDocument(
+                id = "acc-${UUID.randomUUID().toString().take(8)}",
+                username = name,
+                passwordHash = AccountRepository.hashPassword(secret),
+                accessLevel = access
+            )
+        )
+        moderation.audit(actor, "create_account", name, access.name)
+        val how = if (password.isBlank()) " with no usable password: enter it with a dev ticket" else ""
+        return AdminResult(true, "Created account $name ($access)$how.")
+    }
+
+    /** Sets an account's access level. Owner is never granted here (that is the owner list's job) and an Owner is never changed. */
+    @Synchronized
+    fun adminSetAccess(username: String, access: String, actor: String): AdminResult {
+        val account = accountByName(username) ?: return AdminResult(false, "No account named $username.")
+        val level = AccessLevel.values().firstOrNull { it.name.equals(access, ignoreCase = true) }
+            ?: return AdminResult(false, "access must be one of: ${AccessLevel.values().filter { it != AccessLevel.OWNER }.joinToString { it.name }}.")
+        if (level == AccessLevel.OWNER) return AdminResult(false, "Owner is granted only through the owner list (owners.txt or MORGANA_OWNERS).")
+        if (account.accessLevel == AccessLevel.OWNER) return AdminResult(false, "${account.username} is an Owner; edit the owner list instead.")
+        if (account.characterIds.any { sessionByCharacterId.containsKey(it) }) return AdminResult(false, "${account.username} is online; kick them first so the change applies cleanly.")
+        dataStore.inTransaction {
+            dataStore.accounts.save(account.copy(accessLevel = level))
+            account.characterIds.mapNotNull { dataStore.characters.findById(it) }.forEach { dataStore.characters.save(it.copy(accessLevel = level)) }
+        }
+        moderation.audit(actor, "set_access", account.username, level.name)
+        return AdminResult(true, "${account.username} is now ${level.name}.")
+    }
+
+    @Synchronized
+    fun adminCharacters(account: String?): List<com.morgana.server.admin.AdminCharacter> {
+        val owner = account?.let { accountByName(it) ?: dataStore.accounts.findById(it) ?: return emptyList() }
+        val chars = if (owner == null) dataStore.characters.findAll() else owner.characterIds.mapNotNull { dataStore.characters.findById(it) }
+        return chars.sortedBy { it.name.lowercase() }.map {
+            val live = simulation.players[it.id] ?: it
+            com.morgana.server.admin.AdminCharacter(
+                it.id, it.name, it.accountId, it.classId, live.level, live.position.mapId, live.position.tileX, live.position.tileY,
+                online = sessionByCharacterId.containsKey(it.id)
+            )
+        }
+    }
+
+    /** Makes a character on an existing account, by the same rules as the character screen (name, class, character limit). */
+    @Synchronized
+    fun adminCreateCharacter(account: String, name: String, classId: Int, spriteId: Int, actor: String): AdminResult {
+        val acc = accountByName(account) ?: return AdminResult(false, "No account named $account.")
+        val clean = com.morgana.protocol.CharacterNames.clean(name)
+        val classDef = simulation.classes[if (classId > 0) classId else simulation.classes.keys.minOrNull() ?: 0]
+        val problem = com.morgana.protocol.CharacterNames.problem(clean) ?: when {
+            acc.characterIds.size >= sessionConfig.maxCharacters -> "${acc.username} already has the most characters this realm allows (${sessionConfig.maxCharacters})."
+            dataStore.characters.findByName(clean) != null || dataStore.accounts.findByUsername(clean)?.let { it.id != acc.id } == true -> "That name is taken."
+            classDef == null -> "No such class. Known classes: ${simulation.classes.keys.sorted().joinToString()}."
+            else -> null
+        }
+        if (problem != null || classDef == null) return AdminResult(false, problem ?: "No such class.")
+        val newId = "char-${UUID.randomUUID().toString().take(8)}"
+        val character = buildNewCharacter(newId, acc.id, clean, classDef, spriteId, acc.accessLevel)
+        dataStore.inTransaction {
+            dataStore.characters.save(character)
+            dataStore.accounts.save(acc.copy(characterIds = acc.characterIds + newId))
+        }
+        moderation.audit(actor, "create_character", acc.username, "$clean (class ${classDef.id})")
+        return AdminResult(true, "Created $clean (class ${classDef.id}) on ${acc.username}.")
+    }
+
+    /** A one-time login ticket for an existing account, or null when dev login is off or the account does not exist. */
+    @Synchronized
+    fun adminMintTicket(username: String, ttlSeconds: Long, actor: String): com.morgana.server.admin.AdminTicket? {
+        val tickets = devTickets ?: return null
+        val account = accountByName(username) ?: return null
+        val ticket = tickets.mint(account.username, ttlSeconds)
+        moderation.audit(actor, "mint_ticket", account.username, "${ttlSeconds}s")
+        return com.morgana.server.admin.AdminTicket(ticket, account.username, ttlSeconds)
+    }
+
+    private fun onlinePlayerByName(name: String) = simulation.players.values
+        .firstOrNull { it.name.equals(name.trim(), ignoreCase = true) && sessionByCharacterId.containsKey(it.id) }
+
+    @Synchronized
+    fun adminWarp(name: String, mapId: Int, x: Int, y: Int, actor: String): AdminResult {
+        val player = onlinePlayerByName(name) ?: return AdminResult(false, "$name is not online.")
+        val map = simulation.maps[mapId] ?: return AdminResult(false, "No map $mapId.")
+        if (x !in 0 until map.width || y !in 0 until map.height) return AdminResult(false, "($x, $y) is outside map $mapId (${map.width} x ${map.height}).")
+        recorder?.markGap("admin warp")
+        dispatchEvents(simulation.applyScriptEffect(com.morgana.domain.script.ScriptEffect.WarpPlayer(player.id, mapId, x, y)))
+        moderation.audit(actor, "warp", player.name, "map $mapId ($x, $y)")
+        return AdminResult(true, "Warped ${player.name} to map $mapId ($x, $y).")
+    }
+
+    @Synchronized
+    fun adminGive(name: String, itemId: Int, amount: Int, actor: String): AdminResult {
+        val player = onlinePlayerByName(name) ?: return AdminResult(false, "$name is not online.")
+        val item = simulation.items[itemId] ?: return AdminResult(false, "No item $itemId.")
+        recorder?.markGap("admin give")
+        dispatchEvents(simulation.applyScriptEffect(com.morgana.domain.script.ScriptEffect.GiveItem(player.id, itemId, amount)))
+        moderation.audit(actor, "give", player.name, "$amount x item $itemId")
+        return AdminResult(true, "Gave ${player.name} $amount x ${item.name}.")
+    }
+
+    private fun collectionNamed(name: String?): ContentCollection? = ContentCollection.values().firstOrNull { it.directoryName == name }
+
+    private fun contentFile(collection: ContentCollection, id: Int): java.nio.file.Path {
+        val root = dataStore.contentDir.toAbsolutePath().normalize()
+        val file = root.resolve(collection.directoryName).resolve(collection.fileStem(id) + ".json").normalize()
+        check(file.startsWith(root)) { "path escapes the content folder" }
+        return file
+    }
+
+    @Synchronized
+    fun adminContentList(collection: String?): List<com.morgana.server.admin.AdminContentEntry> {
+        val wanted = if (collection == null) ContentCollection.values().toList() else listOfNotNull(collectionNamed(collection))
+        val out = mutableListOf<com.morgana.server.admin.AdminContentEntry>()
+        for (col in wanted) {
+            val dir = dataStore.contentDir.resolve(col.directoryName)
+            if (!java.nio.file.Files.isDirectory(dir)) continue
+            java.nio.file.Files.list(dir).use { files ->
+                files.map { it.fileName.toString() }
+                    .filter { it.startsWith(col.filePrefix + "_") && it.endsWith(".json") }
+                    .forEach { f -> f.removePrefix(col.filePrefix + "_").removeSuffix(".json").toIntOrNull()?.let { out += com.morgana.server.admin.AdminContentEntry(col.directoryName, it, "${col.directoryName}/$f") } }
+            }
+        }
+        return out.sortedWith(compareBy({ it.collection }, { it.id }))
+    }
+
+    @Synchronized
+    fun adminContentGet(collection: String, id: Int): String? {
+        val col = collectionNamed(collection) ?: return null
+        val file = contentFile(col, id)
+        return if (java.nio.file.Files.isRegularFile(file)) java.nio.file.Files.readString(file) else null
+    }
+
+    /**
+     * Writes one content document through the same pipeline as a hand edit or the F1 editor: the file is saved, the whole set is
+     * validated and hot-swapped, and if that refuses the document the previous file is put back (or the new one removed) and the
+     * world is reloaded from it again, so a bad edit never stays on disk.
+     */
+    @Synchronized
+    fun adminContentPut(collection: String, id: Int, json: String, actor: String): AdminResult {
+        val col = collectionNamed(collection) ?: return AdminResult(false, "Unknown collection '$collection'. Known: ${ContentCollection.values().joinToString { it.directoryName }}.")
+        val parsed = try { kotlinx.serialization.json.Json.parseToJsonElement(json) } catch (e: Exception) { return AdminResult(false, "Not valid JSON: ${e.message?.take(120)}") }
+        val obj = parsed as? kotlinx.serialization.json.JsonObject ?: return AdminResult(false, "A document must be a JSON object.")
+        val declaredId = (obj["id"] as? kotlinx.serialization.json.JsonPrimitive)?.content?.toIntOrNull()
+        if (declaredId != null && declaredId != id) return AdminResult(false, "The document's id ($declaredId) does not match the address ($id).")
+        val file = contentFile(col, id)
+        val previous = if (java.nio.file.Files.isRegularFile(file)) java.nio.file.Files.readAllBytes(file) else null
+        java.nio.file.Files.createDirectories(file.parent)
+        java.nio.file.Files.writeString(file, json)
+        val result = reloadContent()
+        val errors = result.report.forDocument(col, id).errors
+        if (!result.applied || errors.isNotEmpty()) {
+            if (previous != null) java.nio.file.Files.write(file, previous) else java.nio.file.Files.deleteIfExists(file)
+            reloadContent()
+            val why = errors.take(5).joinToString("; ") { "${it.pointer} [${it.code}] ${it.message}" }.ifBlank { result.summary }
+            moderation.audit(actor, "content_put_rejected", "${col.directoryName}/$id", why.take(200))
+            return AdminResult(false, "Rejected, nothing changed: $why")
+        }
+        moderation.audit(actor, "content_put", "${col.directoryName}/$id", result.summary.take(200))
+        return AdminResult(true, "Saved ${col.directoryName}/${col.fileStem(id)}.json. ${result.summary}")
+    }
+
     /** Finds a player by character name, online or not. */
     private fun findModTarget(name: String): ModTarget? {
         simulation.players.values.firstOrNull { it.name.equals(name, ignoreCase = true) }?.let { p ->

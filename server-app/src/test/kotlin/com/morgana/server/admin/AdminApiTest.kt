@@ -28,6 +28,17 @@ class AdminApiTest {
         override fun audit(name: String?, limit: Int): List<AuditEntry> { calls += "audit $name|$limit"; return listOf(AuditEntry(1L, "x", "kick", "y")) }
         override fun reloadContent(actor: String): AdminResult { calls += "reload $actor"; return AdminResult(true, "Reloaded") }
         override fun broadcast(message: String, actor: String): AdminResult { calls += "broadcast $message|$actor"; return AdminResult(true, "sent") }
+        override fun accounts() = listOf(AdminAccount("a1", "Alpha", "PLAYER", 1, false))
+        override fun createAccount(username: String, password: String, actor: String): AdminResult { calls += "createAccount $username|${password.length}|$actor"; return AdminResult(true, "Created $username") }
+        override fun setAccess(username: String, access: String, actor: String): AdminResult { calls += "setAccess $username|$access"; return AdminResult(true, "ok") }
+        override fun characters(account: String?): List<AdminCharacter> { calls += "characters $account"; return listOf(AdminCharacter("c1", "Alpha", "a1", 1, 3, 1, 4, 5, true)) }
+        override fun createCharacter(account: String, name: String, classId: Int, spriteId: Int, actor: String): AdminResult { calls += "createCharacter $account|$name|$classId|$spriteId"; return AdminResult(true, "made") }
+        override fun mintTicket(username: String, ttlSeconds: Long, actor: String): AdminTicket? { calls += "ticket $username|$ttlSeconds"; return if (username == "Ghost") null else AdminTicket("dev_abc", username, ttlSeconds) }
+        override fun warp(name: String, mapId: Int, x: Int, y: Int, actor: String): AdminResult { calls += "warp $name|$mapId|$x|$y"; return AdminResult(true, "warped") }
+        override fun give(name: String, itemId: Int, amount: Int, actor: String): AdminResult { calls += "give $name|$itemId|$amount"; return AdminResult(true, "given") }
+        override fun contentList(collection: String?) = listOf(AdminContentEntry("items", 1, "items/item_001.json"))
+        override fun contentGet(collection: String, id: Int): String? = if (id == 1) "{\"id\":1}" else null
+        override fun contentPut(collection: String, id: Int, json: String, actor: String): AdminResult { calls += "put $collection/$id ${json.length}"; return AdminResult(true, "saved") }
     }
 
     private val token = "secret-token-1234567890"
@@ -171,5 +182,56 @@ class AdminApiTest {
         assertEquals(first, AdminToken.loadOrCreate(dir, env = null), "kept between runs")
         assertEquals("an-environment-secret-123", AdminToken.loadOrCreate(dir, env = "an-environment-secret-123"))
         assertNotNull(runCatching { AdminToken.loadOrCreate(dir, env = "short") }.exceptionOrNull())
+    }
+
+    @Test
+    fun `accounts, characters and tickets are reached through the api with their requests validated`() {
+        assertEquals(200, call("GET", "/api/accounts").status)
+        assertEquals(200, call("POST", "/api/accounts", """{"username":"Bot","password":""}""").status)
+        assertTrue("createAccount Bot|0|web-admin" in backend.calls)
+        assertEquals(400, call("POST", "/api/accounts", "{}").status, "a name is required")
+        assertEquals(400, call("POST", "/api/accounts", """{"username":"Bot","password":"${"x".repeat(200)}"}""").status)
+        assertEquals(405, call("DELETE", "/api/accounts").status)
+        assertEquals(200, call("POST", "/api/accounts/access", """{"username":"Bot","access":"moderator"}""").status)
+        assertEquals(200, call("GET", "/api/characters?account=Bot").status)
+        assertTrue("characters Bot" in backend.calls)
+        assertEquals(200, call("POST", "/api/characters", """{"account":"Bot","name":"Hero","classId":1}""").status)
+        val ticket = call("POST", "/api/tickets", """{"username":"Bot","ttlSeconds":999999}""")
+        assertEquals(200, ticket.status)
+        assertTrue(ticket.text().contains("dev_abc"))
+        assertTrue("ticket Bot|86400" in backend.calls, "the lifetime is capped at a day")
+        assertEquals(400, call("POST", "/api/tickets", """{"username":"Ghost"}""").status, "no ticket: dev login off or no such account")
+    }
+
+    @Test
+    fun `warp and give validate before reaching the world`() {
+        assertEquals(200, call("POST", "/api/players/warp", """{"name":"Alpha","mapId":2,"x":3,"y":4}""").status)
+        assertTrue("warp Alpha|2|3|4" in backend.calls)
+        assertEquals(200, call("POST", "/api/players/give", """{"name":"Alpha","itemId":5,"amount":3}""").status)
+        assertEquals(400, call("POST", "/api/players/give", """{"name":"Alpha","itemId":5,"amount":0}""").status)
+        assertEquals(400, call("POST", "/api/players/give", """{"name":"Alpha","itemId":5,"amount":100000}""").status)
+    }
+
+    @Test
+    fun `content is read and written only at collection and id addresses`() {
+        assertEquals(200, call("GET", "/api/content").status)
+        assertEquals("{\"id\":1}", call("GET", "/api/content/items/1").text())
+        assertEquals(404, call("GET", "/api/content/items/2").status)
+        assertEquals(200, call("PUT", "/api/content/items/1", """{"id":1}""").status)
+        assertTrue("put items/1 8" in backend.calls)
+        for (bad in listOf("/api/content/items", "/api/content/items/x", "/api/content/items/0", "/api/content/../x/1", "/api/content/Items/1", "/api/content/items/1/2")) {
+            assertEquals(400, call("GET", bad).status, bad)
+        }
+        assertEquals(400, call("PUT", "/api/content/items/1", " ").status)
+        assertEquals(405, call("DELETE", "/api/content/items/1").status)
+    }
+
+    @Test
+    fun `only content documents may be large and every route still needs the token`() {
+        assertEquals(413, call("POST", "/api/broadcast", "x".repeat(AdminApi.MAX_BODY + 1)).status)
+        assertEquals(200, call("PUT", "/api/content/maps/1", """{"id":1,"pad":"${"x".repeat(100_000)}"}""").status)
+        for ((m, u) in listOf("GET" to "/api/accounts", "POST" to "/api/tickets", "PUT" to "/api/content/items/1", "POST" to "/api/players/warp")) {
+            assertEquals(401, call(m, u, "{}", auth = null).status, u)
+        }
     }
 }

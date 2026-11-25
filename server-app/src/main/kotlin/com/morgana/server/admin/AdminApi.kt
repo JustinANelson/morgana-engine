@@ -28,6 +28,11 @@ import java.security.MessageDigest
  * | `GET /api/audit?name=&limit=` | the moderation audit log, newest last |
  * | `POST /api/reload` | reload the world content from disk |
  * | `POST /api/broadcast` `{message}` | a server announcement to everyone online |
+ * | `GET /api/accounts`, `POST /api/accounts` `{username, password?}`, `POST /api/accounts/access` `{username, access}` | list, create (no password = one nobody knows, log in with a ticket), set access below Owner |
+ * | `GET /api/characters?account=`, `POST /api/characters` `{account, name, classId, spriteId?}` | list, create |
+ * | `POST /api/tickets` `{username, ttlSeconds?}` | a one-time login ticket (server started with `--dev-login`) |
+ * | `POST /api/players/warp` `{name, mapId, x, y}`, `POST /api/players/give` `{name, itemId, amount}` | move an online player, give them an item |
+ * | `GET /api/content?collection=`, `GET/PUT /api/content/<collection>/<id>` | list, read and write (validated, hot-reloaded, rolled back on error) a content document |
  *
  * A refused request answers with `{"error": "..."}` and a 4xx status. A rejected token is counted per client address;
  * after [MAX_AUTH_FAILURES] in a minute that address gets 429 until the minute passes.
@@ -57,7 +62,7 @@ class AdminApi(
             recordFailure(remote)
             return error(401, "A valid token is required.")
         }
-        if (body.length > MAX_BODY) return error(413, "Request too large.")
+        if (body.length > if (path.startsWith("/api/content/")) MAX_CONTENT_BODY else MAX_BODY) return error(413, "Request too large.")
         return try {
             route(verb, path, query, body)
         } catch (e: kotlinx.serialization.SerializationException) {
@@ -114,7 +119,62 @@ class AdminApi(
                 if (message.length > MAX_MESSAGE) throw IllegalArgumentException("the message is too long (max $MAX_MESSAGE characters)")
                 result(backend.broadcast(message, ACTOR))
             }
-            else -> error(404, "Not found")
+            "/api/accounts" -> when (verb) {
+                "GET" -> ok(ListSerializer(AdminAccount.serializer()), backend.accounts())
+                "POST" -> {
+                    val r = parse(CreateAccountRequest.serializer(), body)
+                    if (r.password.length > MAX_PASSWORD) throw IllegalArgumentException("the password is too long")
+                    result(backend.createAccount(name(r.username), r.password, ACTOR))
+                }
+                else -> error(405, "Use GET or POST for $path")
+            }
+            "/api/accounts/access" -> needs("POST") ?: run {
+                val r = parse(SetAccessRequest.serializer(), body)
+                result(backend.setAccess(name(r.username), r.access.trim(), ACTOR))
+            }
+            "/api/characters" -> when (verb) {
+                "GET" -> ok(ListSerializer(AdminCharacter.serializer()), backend.characters(query["account"]?.takeIf { it.isNotBlank() }?.take(MAX_NAME)))
+                "POST" -> {
+                    val r = parse(CreateCharacterRequest.serializer(), body)
+                    result(backend.createCharacter(name(r.account), r.name.trim(), r.classId, r.spriteId, ACTOR))
+                }
+                else -> error(405, "Use GET or POST for $path")
+            }
+            "/api/tickets" -> needs("POST") ?: run {
+                val r = parse(TicketRequest.serializer(), body)
+                val ticket = backend.mintTicket(name(r.username), r.ttlSeconds.coerceIn(1, 86_400), ACTOR)
+                    ?: return error(400, "Dev login is off: start the server with --dev-login (or MORGANA_DEV_LOGIN=1), or the account does not exist.")
+                ok(AdminTicket.serializer(), ticket)
+            }
+            "/api/players/warp" -> needs("POST") ?: run {
+                val r = parse(WarpRequest.serializer(), body)
+                result(backend.warp(name(r.name), r.mapId, r.x, r.y, ACTOR))
+            }
+            "/api/players/give" -> needs("POST") ?: run {
+                val r = parse(GiveRequest.serializer(), body)
+                if (r.amount !in 1..MAX_GIVE) throw IllegalArgumentException("amount must be 1 to $MAX_GIVE")
+                result(backend.give(name(r.name), r.itemId, r.amount, ACTOR))
+            }
+            "/api/content" -> needs("GET") ?: ok(ListSerializer(AdminContentEntry.serializer()), backend.contentList(query["collection"]?.takeIf { it.isNotBlank() }))
+            else -> if (path.startsWith("/api/content/")) content(verb, path.removePrefix("/api/content/"), body) else error(404, "Not found")
+        }
+    }
+
+    /** `/api/content/<collection>/<id>`: read or write one document. The collection and id are checked before they touch a file name. */
+    private fun content(verb: String, rest: String, body: String): AdminResponse {
+        val parts = rest.split('/')
+        val id = parts.getOrNull(1)?.toIntOrNull()
+        if (parts.size != 2 || id == null || id <= 0 || !parts[0].matches(Regex("[a-z_]{1,24}"))) throw IllegalArgumentException("use /api/content/<collection>/<id>")
+        return when (verb) {
+            "GET" -> {
+                val json = backend.contentGet(parts[0], id) ?: return error(404, "No such document.")
+                AdminResponse(200, "application/json; charset=utf-8", json.toByteArray(StandardCharsets.UTF_8), SECURITY_HEADERS)
+            }
+            "PUT" -> {
+                if (body.isBlank()) throw IllegalArgumentException("a JSON document is required")
+                result(backend.contentPut(parts[0], id, body, ACTOR))
+            }
+            else -> error(405, "Use GET or PUT for /api/content/${parts[0]}/$id")
         }
     }
 
@@ -167,6 +227,11 @@ class AdminApi(
         /** The name the audit log shows for actions taken through the panel or API. */
         const val ACTOR = "web-admin"
         const val MAX_BODY = 8 * 1024
+
+        /** Content documents (a 240 x 240 map is a few MB) get a larger limit than every other request. */
+        const val MAX_CONTENT_BODY = 8 * 1024 * 1024
+        const val MAX_PASSWORD = 128
+        const val MAX_GIVE = 9999
         const val MAX_NAME = 32
         const val MAX_MESSAGE = 300
         const val DEFAULT_AUDIT = 50

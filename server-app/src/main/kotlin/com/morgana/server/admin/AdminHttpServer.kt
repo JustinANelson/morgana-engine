@@ -52,7 +52,7 @@ class AdminHttpServer(
                     ch.pipeline()
                         .addLast(ReadTimeoutHandler(READ_TIMEOUT_SECONDS))
                         .addLast(HttpServerCodec())
-                        .addLast(HttpObjectAggregator(AdminApi.MAX_BODY + 2048))
+                        .addLast(HttpObjectAggregator(AdminApi.MAX_CONTENT_BODY + 2048))
                         .addLast(handlers, RequestHandler())
                 }
             })

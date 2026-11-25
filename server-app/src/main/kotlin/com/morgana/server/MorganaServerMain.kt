@@ -14,6 +14,8 @@ import java.nio.file.Paths
  *                          Without a folder: web/ next to the server (the SDK) or this repository's built client-web.
  *                          Turns the WebSocket port on (7002 unless --ws-port or MORGANA_WS_PORT says otherwise).
  *   --ws-port <n>          WebSocket port for browser clients (default: the MORGANA_WS_PORT environment variable, else off)
+ *   --admin-port <n>       Turn the admin REST API on at this loopback port (token in <data dir>/admin-token.txt); see `tools/morgana-ctl`.
+ *   --agent                For an LLM or script driving the server: --dev-login plus --admin-port 7003. Never on a public server.
  *   --dev-login            Accept one-time login tickets from the `dev-ticket` tool (automation; also MORGANA_DEV_LOGIN=1). Off by default.
  *
  * Plugin jars in `<data dir>/plugins/` are loaded at start (trusted code; see `PluginManager`).
@@ -29,6 +31,7 @@ fun main(args: Array<String>) {
     var webDir: Path? = null
     var wsPort: Int? = System.getenv(MorganaNettyServer.WEBSOCKET_PORT_ENV)?.toIntOrNull()
     var devLogin = DevTickets.enabledByEnvironment()
+    var adminPort: Int? = null
 
     var i = 0
     while (i < args.size) {
@@ -49,6 +52,15 @@ fun main(args: Array<String>) {
                 web = true
                 val next = args.getOrNull(i + 1)
                 if (next != null && !next.startsWith("-")) { webDir = Paths.get(next); i += 2 } else i++
+            }
+            "--admin-port" -> {
+                args.getOrNull(i + 1)?.toIntOrNull()?.let { adminPort = it }
+                i += 2
+            }
+            "--agent" -> {
+                devLogin = true
+                if (adminPort == null) adminPort = com.morgana.persistence.AdminConfig.DEFAULT_PORT
+                i++
             }
             "--dev-login" -> {
                 devLogin = true
@@ -77,7 +89,7 @@ fun main(args: Array<String>) {
     if (web && wsPort == null) wsPort = DEFAULT_WEB_PORT
     val runtime = MorganaServerRuntime.start(
         dataDir = dataDir, port = port, gameDir = resolvedGameDir, pluginsDir = dataDir.resolve("plugins"),
-        webSocketPort = wsPort, webClientDir = webClientDir, devLogin = devLogin
+        webSocketPort = wsPort, webClientDir = webClientDir, devLogin = devLogin, adminPort = adminPort
     )
     Runtime.getRuntime().addShutdownHook(Thread { runtime.close() })
     Thread.currentThread().join()

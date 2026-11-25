@@ -38,6 +38,7 @@ All answer JSON; a refused request is `{"error": "..."}` with 400, 401, 404, 405
 | `GET /api/metrics` | one sample a minute for the last three hours: players online and average tick time |
 | `GET /api/players` | who is online: character and account ids, level, map, tile, access level |
 | `POST /api/players/kick` `{name, reason}` | disconnect them |
+| accounts, characters, tickets, warp, give, content | see [agent control](/server/agent_control.md) |
 | `POST /api/players/mute` `{name, duration, reason}`; `.../unmute` `{name}` | mute (`30m`, `12h`, `7d`, `perm`) |
 | `POST /api/players/ban` `{name, duration?, reason}`; `.../unban` `{name}` | ban (no duration = permanent); an online player is disconnected |
 | `GET /api/sanctions?kind=ban\|mute` | active bans or mutes |
