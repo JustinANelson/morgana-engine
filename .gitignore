@@ -62,3 +62,6 @@ TREVANA_OPS.md
 
 # Written by every content reload (see wiki/content/hot_reload.md)
 **/.reload-status.json
+
+# One-time login tickets (see wiki/server/dev_login.md), wherever the data folder is.
+dev-tickets/
