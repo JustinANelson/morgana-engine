@@ -295,7 +295,8 @@ enum class PropKind(val widthTiles: Int, val heightTiles: Int) {
     GREAT_KEEP(10, 8),
     HUNTER_LODGE(5, 4),
     HUNTER_GATE(6, 3),
-    PALISADE(1, 2)
+    PALISADE(1, 2),
+    CORNER_TOWER(5, 6)
 }
 
 /**
@@ -528,7 +529,7 @@ class PropGenerator(
                 drawBuilding(canvas, w, h, kind, buildingRoof, buildingTheme, s)
             PropKind.CATHEDRAL, PropKind.BELL_TOWER, PropKind.KEEP_TOWER, PropKind.GRAND_STAIRS, PropKind.CLOISTER, PropKind.ROUND_TOWER, PropKind.TURRET,
             PropKind.STONE_HOUSE_S, PropKind.STONE_HOUSE_M, PropKind.STONE_HOUSE_L, PropKind.LONG_HALL, PropKind.SLATE_TOWER, PropKind.SQUARE_TOWER,
-            PropKind.GREAT_GATE, PropKind.GREAT_KEEP, PropKind.HUNTER_LODGE, PropKind.HUNTER_GATE, PropKind.PALISADE -> Unit
+            PropKind.GREAT_GATE, PropKind.GREAT_KEEP, PropKind.HUNTER_LODGE, PropKind.HUNTER_GATE, PropKind.PALISADE, PropKind.CORNER_TOWER -> Unit
             }
         }
 

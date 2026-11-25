@@ -853,3 +853,7 @@ New `MaterialPattern.ASHLAR` (coursed grey blocks) and `FURROWED_SOIL` (dark til
 ## 2026-11-25 - tilegen: castle-town kit
 
 New `CastleKit` (`structure/CastleKit.kt`) with prop kinds `STONE_HOUSE_S/M/L`, `LONG_HALL`, `SLATE_TOWER`, `SQUARE_TOWER`, `GREAT_GATE` (open lower arch), `GREAT_KEEP`, `HUNTER_LODGE`, `HUNTER_GATE`, `PALISADE`: slate-roofed stone and half-timber buildings and roofed towers that share the curtain wall palette. `CitadelProps` helpers are now `internal` so the kit reuses them.
+
+## 2026-11-25 - tilegen: CORNER_TOWER
+
+`CastleKit` gains `CORNER_TOWER` (5x6): battered plinth, banded drum, corbelled machicolation ring and a deep-eaved slate cone.

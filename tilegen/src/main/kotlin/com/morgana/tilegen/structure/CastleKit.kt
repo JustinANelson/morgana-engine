@@ -334,6 +334,54 @@ object CastleKit {
         c.rect(0, h - 4, w - 1, h - 3, tone(wood, 0))
     }
 
+    /**
+     * The curtain-wall corner tower: a battered (flared) plinth, a banded drum with a lit left flank, arrow slits and a
+     * lancet, a corbelled machicolation ring with dark openings, and a deep-eaved slate cone with a flag.
+     */
+    private fun cornerTower(c: Cv, w: Int, h: Int) {
+        val base = h - 6
+        val cx = w / 2
+        c.shadow(cx, h - 4, w / 2 - 6, 5)
+        val x0 = 16
+        val x1 = w - 16
+        // Drum.
+        CitadelProps.cylinder(c, x0, x1, 92, base - 14)
+        // Stone banding every 36 px.
+        for (by in intArrayOf(120, 154)) {
+            for (x in x0..x1) {
+                val t = (x - (x0 + x1) / 2f) / ((x1 - x0) / 2f)
+                c.px(x, by, tone(stone, if (t < -0.2f) 4 else 2)); c.px(x, by + 1, tone(stone, 1))
+            }
+        }
+        // Battered plinth: flares out and is darker, with a coursed top edge.
+        for (y in base - 14..base) {
+            val flare = (y - (base - 14)) / 4
+            for (x in x0 - flare..x1 + flare) {
+                val t = (x - cx).toFloat() / (w / 2)
+                val course = (y - (base - 14)) / 5
+                val joint = (y - (base - 14)) % 5 == 0 || (x + course * 7) % 14 == 0
+                val i = if (t < -0.25f) 3 else if (t < 0.3f) 2 else 1
+                c.px(x, y, if (x == x0 - flare || x == x1 + flare || y == base) tone(stone, 0) else if (joint) tone(stone, maxOf(0, i - 2)) else tone(stone, i))
+            }
+        }
+        c.rect(x0 - 3, base - 16, x1 + 3, base - 15, tone(stone, 4)); c.rect(x0 - 3, base - 14, x1 + 3, base - 14, tone(stone, 1))
+        // Corbelled ring with machicolation openings.
+        c.rect(x0 - 6, 82, x1 + 6, 93, tone(stone, 3)); c.rect(x0 - 6, 82, x1 + 6, 82, tone(stone, 4)); c.rect(x0 - 6, 93, x1 + 6, 94, tone(stone, 1))
+        for (x in x0 - 2..x1 + 2 step 10) { c.rect(x, 86, x + 4, 92, tone(dark, 1)); c.rect(x, 95, x + 4, 98, tone(stone, 1)) }
+        // Openings: slits above, a lancet in the middle, a slit and a barred loop below.
+        c.rect(cx - 15, 106, cx - 14, 118, tone(dark, 1)); c.rect(cx + 14, 106, cx + 15, 118, tone(dark, 1))
+        CitadelProps.lancet(c, cx, 126, 150, 5, glassWarm)
+        c.rect(cx - 1, 168, cx, 182, tone(dark, 1))
+        // Cone roof with a deep eave, scalloped courses and a finial.
+        hipRoof(c, cx, 14, 84, 0, w / 2 - 2, roof)
+        c.rect(cx - (w / 2 - 2), 83, cx + (w / 2 - 2), 84, tone(roof, 0))
+        for (x in cx - (w / 2 - 4)..cx + (w / 2 - 4) step 6) c.rect(x, 85, x + 2, 87, tone(dark, 2))
+        c.rect(cx - 1, 7, cx, 16, tone(gold, 2))
+        finial(c, cx, 9)
+        // A hanging pennant on the lit flank.
+        c.rect(x0 + 8, 100, x0 + 14, 104, tone(banner, 3))
+    }
+
     /** Draws [kind] at 32 px per tile. */
     fun draw(kind: PropKind, seed: Long): TileImage {
         val w = kind.widthTiles * 32
@@ -352,6 +400,7 @@ object CastleKit {
             PropKind.HUNTER_LODGE -> hunterLodge(c, w, h)
             PropKind.HUNTER_GATE -> hunterGate(c, w, h)
             PropKind.PALISADE -> palisade(c, w, h)
+            PropKind.CORNER_TOWER -> cornerTower(c, w, h)
             else -> throw IllegalArgumentException("not a castle-kit prop: $kind")
         }
         return SpriteFinish.softOutline(canvas)
@@ -359,6 +408,6 @@ object CastleKit {
 
     val kinds = setOf(
         PropKind.STONE_HOUSE_S, PropKind.STONE_HOUSE_M, PropKind.STONE_HOUSE_L, PropKind.LONG_HALL, PropKind.SLATE_TOWER,
-        PropKind.SQUARE_TOWER, PropKind.GREAT_GATE, PropKind.GREAT_KEEP, PropKind.HUNTER_LODGE, PropKind.HUNTER_GATE, PropKind.PALISADE
+        PropKind.SQUARE_TOWER, PropKind.GREAT_GATE, PropKind.GREAT_KEEP, PropKind.HUNTER_LODGE, PropKind.HUNTER_GATE, PropKind.PALISADE, PropKind.CORNER_TOWER
     )
 }
