@@ -128,7 +128,7 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
             if (upgraded && set.empowerOnCrit && started != null) {
                 // A crit-armed transformation is spent when it is cast.
                 out.add(WorldSimulationEvent.MomentumChanged(player.id, 0, 0))
-                return started.copy(empoweredUntil = 0L)
+                return started.copy(empoweredUntil = 0L, armReadyAt = now + set.empowerCooldownTicks)
             }
             return started
         }
@@ -255,7 +255,7 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         if (!player.isAlive(sim.game.lifeVitalId) || player.isGhost) { sim.actionStates.remove(charId); return }
         // Momentum fades if it is not fed, and an empowerment ends when its time is up.
         if (st.empoweredUntil != 0L && now >= st.empoweredUntil) {
-            st = st.copy(empoweredUntil = 0L)
+            st = st.copy(empoweredUntil = 0L, armReadyAt = now + (sim.weaponSets[st.setId]?.empowerCooldownTicks ?: 0))
             out.add(WorldSimulationEvent.MomentumChanged(charId, st.momentum, 0))
         }
         if (st.momentum > 0 && now >= st.momentumExpires) {
@@ -435,6 +435,10 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         val set = sim.weaponSets[st.setId] ?: return st
         val now = sim.currentTick
         if (!set.empowerOnCrit || set.empowerSkillId == 0 || set.empoweredSkillId == 0 || st.empoweredUntil > now || st.skillId == set.empoweredSkillId) return st
+        // One roll per use of a skill, and none while the last transformation is still cooling off.
+        if (now < st.armReadyAt || st.armRolledFor == st.start) return st
+        val rolled = st.copy(armRolledFor = st.start)
+        if (set.empowerChancePercent < 100 && sim.rng.nextInt(100) >= set.empowerChancePercent) return rolled
         val ts = sim.maps[player.position.mapId]?.tileSize ?: 32
         val cx = (player.position.pixelX + ts / 2.0).toFloat()
         val cy = (player.position.pixelY + ts / 2.0).toFloat()
@@ -442,7 +446,7 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         val name = sim.actionSkills[set.empoweredSkillId]?.name ?: "Upgrade"
         out.add(WorldSimulationEvent.FloatingTextEmitted(player.position.mapId, player.position.tileX, player.position.tileY, "$name ready!", "SPELL", "#FBBF24"))
         out.add(WorldSimulationEvent.MomentumChanged(player.id, 0, set.empowerTicks))
-        return st.copy(empoweredUntil = now + set.empowerTicks)
+        return rolled.copy(empoweredUntil = now + set.empowerTicks)
     }
 
     /** A crit by a free-flight arrow (resolved outside the character's own tick) arms the transformation the same way. */

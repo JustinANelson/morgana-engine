@@ -302,6 +302,12 @@ data class WeaponSetDefinition(
      * [empowerSkillId] becomes [empoweredSkillId], and using it spends the transformation. The player chooses when to cast it.
      */
     val empowerOnCrit: Boolean = false,
+    /**
+     * With [empowerOnCrit]: the chance, in percent, that the first critical hit of a skill's use arms the transformation (one roll per use,
+     * so many small hits do not roll again and again), and the ticks after one is spent or runs out before another can be armed.
+     */
+    val empowerChancePercent: Int = 100,
+    val empowerCooldownTicks: Int = 0,
     /** On-disk document schema version; see [ContentSchema]. */
     val schemaVersion: Int = ContentSchema.CURRENT_VERSION
 )

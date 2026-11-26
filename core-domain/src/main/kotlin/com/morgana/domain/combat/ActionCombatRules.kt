@@ -56,7 +56,10 @@ data class ActionState(
     /** The tick until which the character is empowered (an upgraded skill is in effect); 0 when not. */
     val empoweredUntil: Long = 0L,
     /** True once a critical hit has electrified the skill in progress (see `SkillHit.critElectrifies`). */
-    val electrified: Boolean = false
+    val electrified: Boolean = false,
+    /** The skill use (by its start tick) that has already rolled for a crit-armed transformation, and when a new one may be armed. */
+    val armRolledFor: Long = -1L,
+    val armReadyAt: Long = 0L
 ) {
     val idle: Boolean get() = skillId == 0
 }

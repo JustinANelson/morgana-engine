@@ -70,6 +70,12 @@
                 },
                 "empowerOnCrit": {
                     "type": "boolean"
+                },
+                "empowerChancePercent": {
+                    "type": "integer"
+                },
+                "empowerCooldownTicks": {
+                    "type": "integer"
                 }
             },
             "required": [

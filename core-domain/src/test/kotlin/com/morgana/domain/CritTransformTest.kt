@@ -33,8 +33,8 @@ class CritTransformTest {
 
     private val seen = ArrayList<WorldSimulationEvent>()
 
-    private fun world(critBp: Int): WorldSimulation {
-        val sim = WorldSimulation(SeededRandomSource(6L), game = MorganaClassic.COMPILED)
+    private fun world(critBp: Int, chance: Int = 100, cooldown: Int = 0, seed: Long = 6L): WorldSimulation {
+        val sim = WorldSimulation(SeededRandomSource(seed), game = MorganaClassic.COMPILED)
         sim.modules = ModuleFlags.ALL_ENABLED
         sim.combat = ActionCombatModule()
         sim.npcs[9] = dummy
@@ -43,7 +43,7 @@ class CritTransformTest {
         sim.actionSkills[3] = skill(3, "Thunder Volley", SkillHit(damagePercent = 300, critScalePercent = 0, critBonusBp = 10_000))
         sim.weaponSets[1] = WeaponSetDefinition(
             id = 1, name = "Set", skillIds = listOf(1, 2, 3), entries = listOf(ComboEntry("LMB", 1), ComboEntry("RMB", 2)),
-            empowerSkillId = 2, empoweredSkillId = 3, empowerTicks = 100, empowerOnCrit = true
+            empowerSkillId = 2, empoweredSkillId = 3, empowerTicks = 100, empowerOnCrit = true, empowerChancePercent = chance, empowerCooldownTicks = cooldown
         )
         sim.registerMap(MapDefinition(id = 1, name = "Arena", width = 16, height = 12, npcSpawns = listOf(MapNpcSpawnSlot(0, 9, 6, 5))))
         sim.spawnOrUpdatePlayer(CharacterState(id = "ann", accountId = "a", name = "Ann", level = 10, position = WorldPosition.fromTile(1, 5, 5, Direction.RIGHT)))
@@ -98,5 +98,33 @@ class CritTransformTest {
         sim.press("LMB"); sim.step(10)
         sim.press("RMB"); sim.step(10)
         assertFalse(sim.armed(), "Thunder Volley crits for certain but does not arm another")
+    }
+
+    @Test
+    fun `a crit with a zero chance never arms, and a partial chance arms only some uses`() {
+        val never = world(critBp = 10_000, chance = 0)
+        never.press("LMB"); never.step(8)
+        assertFalse(never.armed())
+        var armed = 0
+        repeat(40) {
+            val sim = world(critBp = 10_000, chance = 25, seed = it + 1L)
+            sim.press("LMB"); sim.step(8)
+            if (sim.armed()) armed++
+        }
+        assertTrue(armed in 3..20, "about a quarter of the uses armed it: $armed of 40")
+    }
+
+    @Test
+    fun `after a transformation is spent there is a cool-off before another can arm`() {
+        val sim = world(critBp = 10_000, cooldown = 200)
+        sim.press("LMB"); sim.step(10)
+        assertTrue(sim.armed())
+        sim.press("RMB"); sim.step(14)
+        assertFalse(sim.armed())
+        sim.press("LMB"); sim.step(10)
+        assertFalse(sim.armed(), "the cool-off holds even with a certain crit")
+        sim.step(220)
+        sim.press("LMB"); sim.step(10)
+        assertTrue(sim.armed(), "armed again once the cool-off has passed")
     }
 }
