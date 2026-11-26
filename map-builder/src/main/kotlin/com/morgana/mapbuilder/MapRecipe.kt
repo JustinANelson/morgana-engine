@@ -107,6 +107,13 @@ data class NoiseOp(
     val smooth: Int = 1,
     /** Painted areas (per terrain, 4-connected) smaller than this many tiles are undone, so no speckle of one-tile ponds is left. */
     val minArea: Int = 0,
+    /**
+     * Tilts the field across [region] so values rise from one side to the other: [tiltX] is added at the east edge and taken away at the
+     * west edge of the region (half each), [tiltY] likewise south and north. Low values on one side and high on the other is a coast:
+     * sea on the west, rock, then land, with the noise making the shoreline wander.
+     */
+    val tiltX: Float = 0f,
+    val tiltY: Float = 0f,
     val salt: Int = 0
 ) : MapOp
 

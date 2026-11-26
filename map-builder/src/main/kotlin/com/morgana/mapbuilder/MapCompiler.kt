@@ -148,6 +148,9 @@ object MapCompiler {
             is NoiseOp -> {
                 val region = op.region ?: listOf(0, 0, w, h)
                 val f = NoiseField.smooth(NoiseField.field(w, h, recipe.seed + op.salt * 131L, op.scale, op.octaves, op.persistence, op.warp), w, h, op.smooth)
+                if (op.tiltX != 0f || op.tiltY != 0f) for (y in maxOf(0, region[1]) until minOf(region[1] + region[3], h)) for (x in maxOf(0, region[0]) until minOf(region[0] + region[2], w)) {
+                    f[y * w + x] += op.tiltX * ((x - region[0]).toFloat() / region[2].coerceAtLeast(1) - 0.5f) + op.tiltY * ((y - region[1]).toFloat() / region[3].coerceAtLeast(1) - 0.5f)
+                }
                 if (op.edge > 0f) NoiseField.applyEdge(f, w, h, op.edge, op.edgeBias)
                 op.store?.let { fields[it] = f }
                 val before = IntArray(w * h) { grid[it].terrain }

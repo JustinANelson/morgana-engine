@@ -228,4 +228,14 @@ class MapCompilerTest {
         assertEquals('.', a.blocked[0][0])
         assertEquals(listOf(listOf(4, 1, 1)), a.spawns)
     }
+
+    @Test
+    fun `a tilted noise field makes a coast, with rock on one side and land on the other and a wandering shoreline`() {
+        val m = MapCompiler.build(recipe("""{"op": "noise", "scale": 12, "salt": 2, "tiltX": 2.0, "bands": [{"below": 0.4, "terrain": "rock"}]}""", 80, 60), index)
+        val b = m.analysis.blocked
+        val shore = (0 until 60).map { y -> b[y].lastIndexOf('#') }
+        assertTrue(shore.all { it < 60 }, "no rock on the far east side: $shore")
+        assertTrue(b.sumOf { r -> r.substring(0, 20).count { it == '#' } } > b.sumOf { r -> r.substring(60).count { it == '#' } } * 5, "rock lies mostly on the west")
+        assertTrue(shore.toSet().size > 4, "the shoreline wanders instead of running straight: ${shore.toSet()}")
+    }
 }
