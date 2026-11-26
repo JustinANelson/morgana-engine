@@ -48,6 +48,21 @@ class CombatTargetingTest {
     }
 
     @Test
+    fun `an area skill goes to the biggest cluster in reach, not the nearest lone enemy`() {
+        val lone = c("lone", 40f, 0f)
+        val pack = listOf(c("p1", 160f, 20f), c("p2", 175f, 40f), c("p3", 150f, 55f))
+        val centre = CombatTargeting.clusterCenter(0f, 0f, listOf(lone) + pack, reach = 260f, radius = 64f)
+        assertNotNull(centre)
+        assertTrue(centre!!.first in 140f..190f && centre.second in 10f..60f, "the pack's centre: $centre")
+    }
+
+    @Test
+    fun `an area skill with nothing in reach has no cluster`() {
+        assertNull(CombatTargeting.clusterCenter(0f, 0f, listOf(c("far", 900f)), reach = 260f, radius = 64f))
+        assertNull(CombatTargeting.clusterCenter(0f, 0f, emptyList(), reach = 260f, radius = 64f))
+    }
+
+    @Test
     fun `a tap picks the enemy under it within a radius`() {
         val list = listOf(c("a", 100f, 100f), c("b", 300f, 100f))
         assertEquals("a", CombatTargeting.nearestTo(110f, 95f, list)?.id)

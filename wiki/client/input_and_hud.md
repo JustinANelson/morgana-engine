@@ -79,6 +79,8 @@ Every HUD window is a `HudWindow`: a `-`/`+` button in the title bar (or a doubl
 
 **Free aim and auto-lock** (2026-11-26): using a skill with enemies in reach locks on to the one it picked when nothing was locked (`MorganaGame.resolveAim`), so following skills keep going at it until it falls. A drag on a ground-targeted skill (`SkillHitbox.groundTarget`) sets how far out it lands (a full drag, `GROUND_DRAG_FULL` stage units, reaches the skill's `maxRangePixels`) and the aim preview also draws the ring it will hit (`aimRadius`).
 
+**Area skills and the minimap** (2026-11-26): a skill with a ground-targeted hitbox or a leap (`areaInfo`) is aimed by dragging (drag length sets how far out it lands) and, when tapped, lands on the centre of the largest cluster of enemies in reach (`CombatTargeting.clusterCenter`) instead of locking one enemy. Ring skill slots treat only skills with a `guard` as held. The minimap shows no ordinary monsters, only rare, legendary and other variant ones, as larger dots in the variant's colour.
+
 **Dodge direction**: the dodge backs away from the enemy being fought (the locked one, else the nearest in reach) whichever way the stick points; a back-step skill, which already moves opposite its aim, aims at the enemy instead. With no enemy in reach it goes the way the stick points.
 
 **Chat views and activity** (`ChatView`, `ChatActivity`): the default view is All. A new message in the view being read brings the chat up, and it fades again after 6 quiet seconds; on All, system lines (XP, loot, notices) do not wake it. Lines in other views, and quiet system lines, show when the chat is up and count as unread on the chat button while it is hidden. A new protocol channel (trade) is one more `ChatView` entry.

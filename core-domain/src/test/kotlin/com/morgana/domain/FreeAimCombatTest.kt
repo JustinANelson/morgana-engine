@@ -8,6 +8,7 @@ import com.morgana.domain.content.NpcBehavior
 import com.morgana.domain.content.NpcDefinition
 import com.morgana.domain.content.SkillHit
 import com.morgana.domain.content.SkillHitbox
+import com.morgana.domain.content.SkillMove
 import com.morgana.domain.content.SkillProjectile
 import com.morgana.domain.content.WeaponSetDefinition
 import com.morgana.domain.entity.CharacterState
@@ -120,5 +121,61 @@ class FreeAimCombatTest {
         assertEquals(listOf("BACK+SPACE", "SPACE"), com.morgana.domain.combat.ActionCombatRules.tokenFallbacks("BACK+SPACE"))
         assertEquals(listOf("SHIFT+BACK+LMB", "SHIFT+LMB", "LMB"), com.morgana.domain.combat.ActionCombatRules.tokenFallbacks("SHIFT+BACK+LMB"))
         assertEquals(listOf("LMB"), com.morgana.domain.combat.ActionCombatRules.tokenFallbacks("LMB"))
+    }
+
+    private fun cyclone(range: Int) = ActionSkillDefinition(
+        id = 9, name = "Cyclone", startupTicks = 1, activeTicks = 12, recoveryTicks = 2,
+        moves = listOf(SkillMove(1, 6, toAim = true, maxPixels = range)),
+        hitboxes = listOf(SkillHitbox(8, 9, HitboxShape.CIRCLE, radiusPixels = 70, hit = SkillHit(damagePercent = 100)))
+    )
+
+    @Test
+    fun `a leap carries the character to the aimed point and the spin hits what is there`() {
+        val sim = world(cyclone(range = 200), 9 to 5) // 5 tiles away: inside the leap's range
+        val startX = sim.players.getValue("ann").position.pixelX
+        sim.fire(9, 5)
+        val endX = sim.players.getValue("ann").position.pixelX
+        assertTrue(endX - startX in 140f..170f, "leapt about 5 tiles, to ${endX - startX}")
+        assertTrue(sim.dummyHp() < 100_000, "the spin hit the dummy it landed beside")
+    }
+
+    @Test
+    fun `a leap is held within its range, so a far target is not reached`() {
+        val sim = world(cyclone(range = 96), 15 to 5) // 11 tiles away, leap limited to 3 tiles
+        val startX = sim.players.getValue("ann").position.pixelX
+        sim.fire(15, 5)
+        val moved = sim.players.getValue("ann").position.pixelX - startX
+        assertTrue(moved in 80f..100f, "leapt only its range: $moved")
+        assertEquals(100_000, sim.dummyHp())
+    }
+
+    @Test
+    fun `a chain-lightning hit also strikes the monsters near the one it hit`() {
+        val strike = ActionSkillDefinition(
+            id = 10, name = "Strike", startupTicks = 1, activeTicks = 3, recoveryTicks = 2,
+            hitboxes = listOf(SkillHitbox(1, 2, HitboxShape.ARC, radiusPixels = 70, arcDegrees = 90, hit = SkillHit(damagePercent = 100, chainTargets = 2, chainRadiusPixels = 120, chainDamagePercent = 50)))
+        )
+        val sim = WorldSimulation(SeededRandomSource(5L), game = MorganaClassic.COMPILED)
+        sim.modules = ModuleFlags.ALL_ENABLED
+        sim.combat = ActionCombatModule()
+        sim.npcs[9] = dummy
+        sim.actionSkills[10] = strike
+        sim.weaponSets[1] = WeaponSetDefinition(id = 1, name = "Set", skillIds = listOf(10), entries = listOf(ComboEntry("RMB", 10)))
+        sim.registerMap(
+            MapDefinition(
+                id = 1, name = "Arena", width = 24, height = 16,
+                npcSpawns = listOf(MapNpcSpawnSlot(0, 9, 6, 5), MapNpcSpawnSlot(1, 9, 6, 8), MapNpcSpawnSlot(2, 9, 18, 12))
+            )
+        )
+        sim.spawnOrUpdatePlayer(CharacterState(id = "ann", accountId = "a", name = "Ann", level = 10, position = WorldPosition.fromTile(1, 4, 5, Direction.RIGHT)))
+        sim.handleAction("ann", "input", mapOf("token" to "RMB"))
+        repeat(10) { sim.stepTick() }
+        val hp = sim.mapNpcs.getValue(1).associate { it.spawnSlotIndex to it.vitals.getValue("hp").cur }
+        assertTrue(hp.getValue(0) < 100_000, "the monster in the arc was hit")
+        assertTrue(hp.getValue(1) < 100_000, "the one beside it was shocked")
+        assertEquals(100_000, hp.getValue(2), "a far monster was not")
+        val struck = 100_000 - hp.getValue(0)
+        val shocked = 100_000 - hp.getValue(1)
+        assertTrue(shocked in 1 until struck, "the chain hits for less than the strike: $shocked vs $struck")
     }
 }

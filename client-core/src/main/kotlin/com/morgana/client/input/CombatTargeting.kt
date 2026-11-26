@@ -54,6 +54,25 @@ object CombatTargeting {
         return inReach[(at + 1) % inReach.size]
     }
 
+    /**
+     * Where an area skill should land when the player gives no aim: the centre of the largest group of enemies that fit within
+     * [radius] of one another, reachable within [reach] (nearer groups and groups with a boss win ties). Null when no enemy is in reach.
+     */
+    fun clusterCenter(px: Float, py: Float, candidates: List<TargetCandidate>, reach: Float, radius: Float): Pair<Float, Float>? {
+        val near = candidates.filter { distance(px, py, it) <= reach + radius * 0.5f }
+        if (near.isEmpty()) return null
+        var bestScore = Float.NEGATIVE_INFINITY
+        var best: Pair<Float, Float>? = null
+        for (seed in near) {
+            val members = near.filter { hypot(it.x - seed.x, it.y - seed.y) <= radius }
+            val cx = members.map { it.x }.average().toFloat()
+            val cy = members.map { it.y }.average().toFloat()
+            val score = members.size * 100f + (if (members.any { it.boss }) 60f else 0f) - hypot(cx - px, cy - py) / reach.coerceAtLeast(1f) * 20f
+            if (score > bestScore) { bestScore = score; best = cx to cy }
+        }
+        return best
+    }
+
     /** The enemy nearest the map point ([x], [y]) within [radius] pixels (a tap on it), or null. */
     fun nearestTo(x: Float, y: Float, candidates: List<TargetCandidate>, radius: Float = 40f): TargetCandidate? =
         candidates.filter { hypot(it.x - x, it.y - y) <= radius }.minByOrNull { hypot(it.x - x, it.y - y) }

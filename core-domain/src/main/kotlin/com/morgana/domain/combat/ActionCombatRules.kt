@@ -44,7 +44,11 @@ data class ActionState(
     /** The point the skill was aimed at (world pixels), when the press carried one; used by ground-targeted hitboxes. */
     val aimX: Double = 0.0,
     val aimY: Double = 0.0,
-    val aimSet: Boolean = false
+    val aimSet: Boolean = false,
+    /** Where a leap (`SkillMove.toAim`) lands, in world pixels (the character's centre), set when the skill starts. */
+    val leapX: Double = 0.0,
+    val leapY: Double = 0.0,
+    val leapSet: Boolean = false
 ) {
     val idle: Boolean get() = skillId == 0
 }

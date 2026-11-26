@@ -227,6 +227,15 @@
                 },
                 "statusDurationTicks": {
                     "type": "integer"
+                },
+                "chainTargets": {
+                    "type": "integer"
+                },
+                "chainRadiusPixels": {
+                    "type": "integer"
+                },
+                "chainDamagePercent": {
+                    "type": "integer"
                 }
             },
             "required": [],
@@ -291,12 +300,17 @@
                 },
                 "sidePixels": {
                     "type": "integer"
+                },
+                "toAim": {
+                    "type": "boolean"
+                },
+                "maxPixels": {
+                    "type": "integer"
                 }
             },
             "required": [
                 "fromTick",
-                "toTick",
-                "forwardPixels"
+                "toTick"
             ],
             "additionalProperties": false
         },

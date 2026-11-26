@@ -688,7 +688,12 @@ class MorganaGame(
         }
         hud.manualAim()?.let { return it }
         if (cursor != null) return cursor
-        if (key == "Q" || centre == null) return null
+        if (centre == null || hud.skillForToken(key)?.guard != null) return null
+        // An area skill with no aim goes over the nearest cluster of enemies (it does not lock one).
+        hud.areaSkillInfo(key)?.let { (range, radius) ->
+            val reach = if (range > 0) range.toFloat() else com.morgana.client.input.CombatTargeting.AUTO_RANGE
+            return com.morgana.client.input.CombatTargeting.clusterCenter(centre.first, centre.second, worldState.targetCandidates(), reach, radius.toFloat())
+        }
         val t = com.morgana.client.input.CombatTargeting.pickAuto(centre.first, centre.second, worldState.targetCandidates(), worldState.lockedNpcId) ?: return null
         // Using a skill with enemies near locks on to the one it picked, so the next skills keep going at it until it falls.
         if (worldState.lockedNpcId == null) worldState.lockedNpcId = t.id

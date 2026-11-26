@@ -610,7 +610,7 @@ class PlayerHudAndWindows(
     fun refreshHotbar() {
         worldState.refreshLock()
         worldState.aimPreview = manualAim()
-        worldState.aimRadius = if (touchAimDrag != null) (groundHitbox(touchAimToken)?.radiusPixels ?: 0).toFloat() else 0f
+        worldState.aimRadius = if (touchAimDrag != null) (areaInfo(touchAimToken)?.second ?: 0).toFloat() else 0f
         placeTargetFrame()
         placeMenuDock()
         applyRingHud()
@@ -2826,17 +2826,27 @@ class PlayerHudAndWindows(
     fun manualAim(): Pair<Float, Float>? {
         val v = touchAimDrag ?: return null
         val c = worldState.playerCentre() ?: return null
-        val ground = groundHitbox(touchAimToken)
-        // A ground-targeted skill lands as far out as the drag is long (a full drag reaches its range); others fly or swing along the drag.
-        val reach = if (ground != null && ground.maxRangePixels > 0) {
-            (kotlin.math.hypot(v.first, v.second) / GROUND_DRAG_FULL).coerceIn(0.12f, 1f) * ground.maxRangePixels
+        val area = areaInfo(touchAimToken)
+        // An area skill (ground-targeted or a leap) lands as far out as the drag is long (a full drag reaches its range); others fly or swing along the drag.
+        val reach = if (area != null && area.first > 0) {
+            (kotlin.math.hypot(v.first, v.second) / GROUND_DRAG_FULL).coerceIn(0.12f, 1f) * area.first
         } else 160f
         return com.morgana.client.input.CombatTargeting.dragAim(c.first, c.second, v.first, v.second, reach)
     }
 
-    /** The ground-targeted hitbox of the skill on action input [token], or null when it has none. */
-    private fun groundHitbox(token: String?): com.morgana.domain.content.SkillHitbox? =
-        token?.let { skillForToken(it) }?.hitboxes?.firstOrNull { it.groundTarget }
+    /**
+     * For an area skill (a ground-targeted hitbox, or a leap to the aim) on action input [token]: how far out it can land and the radius
+     * of what it hits, in pixels; null for any other skill.
+     */
+    private fun areaInfo(token: String?): Pair<Int, Int>? {
+        val skill = token?.let { skillForToken(it) } ?: return null
+        skill.hitboxes.firstOrNull { it.groundTarget }?.let { return it.maxRangePixels to it.radiusPixels }
+        val leap = skill.moves.firstOrNull { it.toAim } ?: return null
+        return leap.maxPixels to (skill.hitboxes.maxOfOrNull { it.radiusPixels } ?: 0)
+    }
+
+    /** [areaInfo] for the game's aim: (range, radius) of the area skill on [token], or null. */
+    fun areaSkillInfo(token: String): Pair<Int, Int>? = areaInfo(token)
 
     /** The weapon set the character fights with (the first main set for their class and level), or null. */
     private fun activeWeaponSet(): com.morgana.domain.content.WeaponSetDefinition? {
@@ -3101,13 +3111,13 @@ class PlayerHudAndWindows(
                 cooldownLabel = { if (kit() != null) skillCooldownLabel(kitTokens[k]) else "" },
                 dimmed = { if (kit() != null) skillCooldownLeftMs(kitTokens[k]) > 0L || skillCantPay(kitTokens[k]) else slotDimmed(k) },
                 empty = { kit() == null && slot(k) == null },
-                // A weapon-set skill can be aimed by dragging (the guard is held instead, never aimed).
-                aimable = { kit() != null && kitTokens[k] != "Q" }
+                // A weapon-set skill can be aimed by dragging (a held guard is never aimed).
+                aimable = { kit() != null && skillForToken(kitTokens[k])?.guard == null }
             ) {
                 if (kit() != null) onCombatInput(com.morgana.client.input.ActionCombatInput.Button.entries.first { it.token == kitTokens[k] })
                 else triggerHotbar(k)
             }
-            b.withRelease { if (kit() != null && kitTokens[k] == "Q") onCombatRelease() }
+            b.withRelease { if (kit() != null && skillForToken(kitTokens[k])?.guard != null) onCombatRelease() }
             b.withAim { touchAimDrag = it; touchAimToken = if (it != null) kitTokens[k] else null }
             return b
         }
@@ -3651,9 +3661,14 @@ class MinimapCanvas(
             if (!insideCircle(nx, ny)) continue
             val npcDef = worldState.catalog.npcs.firstOrNull { it.id == npc.npcId }
             val isHostile = npcDef?.behavior?.name?.contains("ATTACK") == true || npcDef?.behavior?.name?.contains("GUARD") == true
-            val blip = Accessibility.colour(if (isHostile) PaletteRole.HOSTILE else PaletteRole.FRIENDLY)
+            // Ordinary monsters stay off the minimap; only rare, legendary and other special variants show, in their own colour.
+            val isMonster = npcDef != null && (npcDef.behavior == com.morgana.domain.content.NpcBehavior.ATTACK_ON_SIGHT || npcDef.behavior == com.morgana.domain.content.NpcBehavior.PASSIVE) &&
+                npcDef.eventId == 0 && npcDef.shopId == 0
+            val variant = npc.variantId?.let { vid -> worldState.gameDefinition?.combat?.enemyVariants?.firstOrNull { it.id == vid } }
+            if (isMonster && variant == null) continue
+            val blip = if (variant != null) Color.valueOf(variant.colorHex) else Accessibility.colour(if (isHostile) PaletteRole.HOSTILE else PaletteRole.FRIENDLY)
             batch.setColor(blip.r, blip.g, blip.b, 1f * parentAlpha)
-            val blipSize = if (isHostile) 5f else 3.5f
+            val blipSize = if (variant != null) 6.5f else if (isHostile) 5f else 3.5f
             batch.draw(assets.whitePixel, nx - blipSize * 0.5f, ny - blipSize * 0.5f, blipSize, blipSize)
         }
 

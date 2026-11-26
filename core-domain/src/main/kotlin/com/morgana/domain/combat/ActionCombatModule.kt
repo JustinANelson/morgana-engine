@@ -155,7 +155,23 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         }
         if (skill.animationId > 0) out.add(WorldSimulationEvent.AnimationTriggered(updated.position.mapId, updated.position.tileX, updated.position.tileY, skill.animationId))
         val guard = skill.guard
+        // A leap lands on the aimed point, held within the move's range of where the skill began.
+        val leapMove = skill.moves.firstOrNull { it.toAim }
+        var leapX = 0.0
+        var leapY = 0.0
+        if (leapMove != null) {
+            var lx = aim?.let { it.first - cx } ?: (vector.first * leapMove.maxPixels * 0.5)
+            var ly = aim?.let { it.second - cy } ?: (vector.second * leapMove.maxPixels * 0.5)
+            val len = StrictMath.sqrt(lx * lx + ly * ly)
+            if (leapMove.maxPixels > 0 && len > leapMove.maxPixels && len > 1e-6) {
+                lx = lx / len * leapMove.maxPixels
+                ly = ly / len * leapMove.maxPixels
+            }
+            leapX = cx + lx
+            leapY = cy + ly
+        }
         return st.copy(
+            leapX = leapX, leapY = leapY, leapSet = leapMove != null,
             skillId = skillId, start = now, done = -1, hit = false, hits = emptySet(), groupCounts = emptyMap(), freeze = 0,
             fx = vector.first, fy = vector.second, bufferedToken = null, bufferedAt = 0L, movedTo = -1,
             aimX = aim?.first ?: 0.0, aimY = aim?.second ?: 0.0, aimSet = aim != null,
@@ -333,6 +349,7 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
     private fun hitNpc(sim: WorldSimulation, player: CharacterState, npc: MapNpcInstance, hit: SkillHit, st: ActionState, out: MutableList<WorldSimulationEvent>) {
         val (damage, crit) = damageOf(sim, player, npc, hit)
         if (damage > 0) sim.applyDamageToNpc(player, npc, damage, crit, out)
+        if (damage > 0 && hit.chainTargets > 0 && hit.chainRadiusPixels > 0) chainLightning(sim, player, npc, damage * hit.chainDamagePercent / 100, hit, out)
         // Dual-wielding works under action combat as it does under realtime: each landed melee hit may be followed by a second
         // strike from the off-hand weapon. No random number is drawn unless a usable off-hand weapon is worn.
         if (damage > 0 && hit.damageKind == SkillDamageKind.MELEE) {
@@ -361,6 +378,26 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         if (live != list[idx]) {
             list[idx] = live
             out.add(WorldSimulationEvent.NpcUpdated(live))
+        }
+    }
+
+    /** Chain lightning: strikes the nearest other hostile monsters around [from], each for [damage], and flashes a yellow notice on each. */
+    private fun chainLightning(sim: WorldSimulation, player: CharacterState, from: MapNpcInstance, damage: Int, hit: SkillHit, out: MutableList<WorldSimulationEvent>) {
+        val map = sim.maps[from.mapId] ?: return
+        val ts = map.tileSize
+        val fx = from.bodyX(ts) + ts / 2.0
+        val fy = from.bodyY(ts) + ts / 2.0
+        val reach = hit.chainRadiusPixels.toDouble()
+        val others = (sim.mapNpcs[from.mapId] ?: emptyList<MapNpcInstance>())
+            .filter { it.instanceId != from.instanceId && it.isAlive && sim.isHostileNpc(it) }
+            .map { it to StrictMath.hypot(it.bodyX(ts) + ts / 2.0 - fx, it.bodyY(ts) + ts / 2.0 - fy) }
+            .filter { it.second <= reach }
+            .sortedWith(compareBy({ it.second }, { it.first.instanceId }))
+            .take(hit.chainTargets)
+        for ((other, _) in others) {
+            val live = sim.mapNpcs[from.mapId]?.firstOrNull { it.instanceId == other.instanceId && it.isAlive } ?: continue
+            sim.applyDamageToNpc(sim.players[player.id] ?: player, live, damage.coerceAtLeast(1), false, out)
+            out.add(WorldSimulationEvent.FloatingTextEmitted(mapId = from.mapId, tileX = live.tileX, tileY = live.tileY, text = "Shock!", category = "SPELL", colorHex = "#FACC15"))
         }
     }
 
@@ -423,12 +460,21 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         if (skill.moves.isEmpty()) return
         var dx = 0.0
         var dy = 0.0
+        val mover = sim.players[charId]
+        val moverTile = sim.maps[mover?.position?.mapId ?: 0]?.tileSize ?: 32
         for (m in skill.moves) {
             val from = maxOf(m.fromTick, st.movedTo + 1)
             val to = minOf(m.toTick, last)
             if (to < from) continue
             val span = (m.toTick - m.fromTick + 1).toDouble()
             val ticks = (to - from + 1).toDouble()
+            if (m.toAim && st.leapSet && mover != null) {
+                // A leap closes the remaining distance to its landing point in the ticks left, so it arrives exactly on time.
+                val frac = ticks / (m.toTick - from + 1).toDouble()
+                dx += (st.leapX - (mover.position.pixelX + moverTile / 2.0)) * frac
+                dy += (st.leapY - (mover.position.pixelY + moverTile / 2.0)) * frac
+                continue
+            }
             val forward = m.forwardPixels * ticks / span
             val side = m.sidePixels * ticks / span
             dx += st.fx * forward + (-st.fy) * side
@@ -444,7 +490,8 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         val from = player.position.tileCoord
         if (toTile != from) {
             val dir = ActionCombatRules.nearestDirection(dx, dy)
-            val blockedByBody = (sim.mapNpcs[player.position.mapId] ?: emptyList<MapNpcInstance>()).any { it.isAlive && it.tileX == toTile.x && it.tileY == toTile.y }
+            // A leap goes over bodies (it lands among the monsters it spins at); walls still stop it.
+            val blockedByBody = skill.moves.none { it.toAim } && (sim.mapNpcs[player.position.mapId] ?: emptyList<MapNpcInstance>()).any { it.isAlive && it.tileX == toTile.x && it.tileY == toTile.y }
             if (blockedByBody || !map.isInBounds(toTile) || !map.canTraverse(from, toTile, dir, isNpc = false)) return
         }
         val moved = player.copy(position = player.position.withPixels(newX, newY, map.tileSize))

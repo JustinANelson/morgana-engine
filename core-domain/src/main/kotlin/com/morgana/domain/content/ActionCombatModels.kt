@@ -91,7 +91,14 @@ data class SkillHit(
     val hitStopTicks: Int = 0,
     val statusEffectType: StatusEffectType? = null,
     val statusMagnitude: Int = 0,
-    val statusDurationTicks: Int = 0
+    val statusDurationTicks: Int = 0,
+    /**
+     * Chain lightning: when this hit lands, it also strikes up to [chainTargets] other hostile monsters within [chainRadiusPixels] of
+     * the one hit (nearest first), each for [chainDamagePercent] of the damage dealt. 0 targets or 0 radius = no chain.
+     */
+    val chainTargets: Int = 0,
+    val chainRadiusPixels: Int = 0,
+    val chainDamagePercent: Int = 60
 )
 
 /** A hitbox that leaves the character: it spawns on the hitbox's `fromTick` and flies forward. */
@@ -150,8 +157,14 @@ data class SkillArmorWindow(
 data class SkillMove(
     val fromTick: Int,
     val toTick: Int,
-    val forwardPixels: Int,
-    val sidePixels: Int = 0
+    val forwardPixels: Int = 0,
+    val sidePixels: Int = 0,
+    /**
+     * True: instead of a fixed push, the character travels to the point the player aimed at (a leap), arriving by [toTick]. The point is
+     * held within [maxPixels] of where the skill began (0 = no limit); with no aim point the leap goes half its range forward.
+     */
+    val toAim: Boolean = false,
+    val maxPixels: Int = 0
 )
 
 /** Makes the skill a held guard: hits from inside the arc are reduced and cost [blockCosts] each. */
