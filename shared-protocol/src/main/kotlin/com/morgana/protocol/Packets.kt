@@ -945,7 +945,8 @@ sealed interface ServerPacket {
         val toY: Float,
         val radius: Float = 0f,
         val delayTicks: Int = 0,
-        val spanTicks: Int = 1
+        val spanTicks: Int = 1,
+        val sourceId: String = ""
     ) : ServerPacket
 
     @Serializable

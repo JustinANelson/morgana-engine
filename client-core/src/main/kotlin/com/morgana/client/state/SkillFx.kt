@@ -29,6 +29,9 @@ class SkillFx(
             EMPOWER_BURST -> 1.1f
             EMPOWER_PULSE -> 0.5f
             BOLT -> 0.3f
+            SHOCK -> 0.55f
+            BASH -> delaySeconds + 0.5f
+            ELECTRIFY -> 0.8f
             SHOCKWAVE -> 0.45f
             else -> 0.6f
         }
@@ -42,6 +45,9 @@ class SkillFx(
         const val EMPOWER_BURST = "empower_burst"
         const val EMPOWER_PULSE = "empower_pulse"
         const val BOLT = "bolt"
+        const val SHOCK = "shock"
+        const val BASH = "bash"
+        const val ELECTRIFY = "electrify"
         const val SHOCKWAVE = "shockwave"
         const val TICK_SECONDS = 0.05f
     }
@@ -99,6 +105,36 @@ object SkillFxMath {
         List(count) { i ->
             val a = (i.toFloat() / count + turns) * 2f * PI.toFloat()
             (cx + cos(a) * r) to (cy + sin(a) * r)
+        }
+
+    /** Short crackling arcs radiating from ([cx], [cy]): [count] polylines of 4 points, [length] long, jumping each frame. */
+    fun shockArcs(cx: Float, cy: Float, frame: Int, count: Int = 7, length: Float = 36f): List<List<Pair<Float, Float>>> =
+        List(count) { a ->
+            val base = (a.toFloat() / count + 0.07f * (frame % 5)) * 2f * PI.toFloat()
+            List(4) { i ->
+                val r = length * i / 3f
+                val wobble = if (i == 0) 0f else (fract(sin(a * 7.13f + i * 3.7f + frame * 12.9898f) * 43758.547f) - 0.5f) * 0.9f
+                (cx + cos(base + wobble) * r) to (cy + sin(base + wobble) * r)
+            }
+        }
+
+    /** Arcs that leap across an area of [radius] around ([cx], [cy]): [count] jagged lines between points on its rim, new ones each frame. */
+    fun electrifyArcs(cx: Float, cy: Float, radius: Float, frame: Int, count: Int = 5): List<List<Pair<Float, Float>>> =
+        List(count) { a ->
+            fun rim(seed: Float): Pair<Float, Float> {
+                val ang = fract(sin(seed + frame * 78.233f) * 43758.547f) * 2f * PI.toFloat()
+                return (cx + cos(ang) * radius * 0.95f) to (cy + sin(ang) * radius * 0.95f)
+            }
+            val from = rim(a * 5.31f)
+            val to = rim(a * 9.77f + 1.3f)
+            val dx = to.first - from.first
+            val dy = to.second - from.second
+            val len = hypot(dx, dy).coerceAtLeast(1f)
+            List(6) { i ->
+                val t = i / 5f
+                val jump = if (i == 0 || i == 5) 0f else (fract(sin(a * 3.3f + i * 8.1f + frame * 12.9898f) * 43758.547f) - 0.5f) * 26f
+                (from.first + dx * t - dy / len * jump) to (from.second + dy * t + dx / len * jump)
+            }
         }
 
     /** A jagged lightning bolt from the effect's start to its end: [segments] + 1 points whose middle ones jump sideways each frame. */

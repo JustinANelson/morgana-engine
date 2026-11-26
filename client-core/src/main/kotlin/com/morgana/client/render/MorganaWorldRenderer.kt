@@ -687,6 +687,66 @@ class MorganaWorldRenderer(
                     batch.setColor(1f, 1f, 0.7f, 0.8f * fade)
                     for ((px, py) in com.morgana.client.state.SkillFxMath.ring(fx.toX, fx.toY, 10f + 14f * (1f - fade), 8, 0f)) dot(px, py, 4f)
                 }
+                com.morgana.client.state.SkillFx.BASH -> {
+                    // A rush: a dust streak along the charge, then a heavy ring where the shield lands.
+                    val t = fx.elapsed
+                    val streak = (t / 0.12f).coerceIn(0f, 1f)
+                    val streakFade = (1f - (t - 0.1f) / 0.35f).coerceIn(0f, 1f)
+                    batch.setColor(0.9f, 0.85f, 0.75f, 0.65f * streakFade)
+                    for (i in 0..10) {
+                        val f = i / 10f * streak
+                        dot(fx.fromX + (fx.toX - fx.fromX) * f, fx.fromY + (fx.toY - fx.fromY) * f + 6f - 9f * f, 5.5f - 3f * i / 10f)
+                    }
+                    val u = ((t - fx.delaySeconds) / 0.4f).coerceIn(0f, 1f)
+                    if (t >= fx.delaySeconds && u < 1f) {
+                        batch.setColor(1f, 0.95f, 0.8f, 1f - u)
+                        for (k in 0..1) for ((px, py) in com.morgana.client.state.SkillFxMath.ring(fx.toX, fx.toY + 6f, 16f + (fx.radius + 24f) * (u - 0.1f * k).coerceAtLeast(0f), 26, 0f)) dot(px, py, 5.5f * (1f - u) + 2f)
+                    }
+                }
+                com.morgana.client.state.SkillFx.SHOCK -> {
+                    // An electric hit: a white flash and a spreading ring, then crackling arcs round the monster, in white-hot blue.
+                    val t = fx.elapsed
+                    val frame = (t * 30f).toInt()
+                    val fade = (1f - t / 0.55f).coerceIn(0f, 1f)
+                    if (t < 0.12f) {
+                        batch.setColor(1f, 1f, 1f, 1f - t / 0.12f)
+                        for (i in 0 until 3) for ((px, py) in com.morgana.client.state.SkillFxMath.ring(fx.toX, fx.toY, 4f + 7f * i + 40f * t, 12, 0f)) dot(px, py, 6f - i)
+                    }
+                    for (arc in com.morgana.client.state.SkillFxMath.shockArcs(fx.toX, fx.toY, frame)) {
+                        for (pass in 0..1) {
+                            if (pass == 0) batch.setColor(0.35f, 0.65f, 1f, 0.6f * fade) else batch.setColor(0.95f, 1f, 1f, fade)
+                            val size = if (pass == 0) 5f else 2.2f
+                            for (i in 0 until arc.size - 1) {
+                                val (ax, ay) = arc[i]
+                                val (bx, by) = arc[i + 1]
+                                val steps = (kotlin.math.hypot(bx - ax, by - ay) / 3f).toInt().coerceAtLeast(1)
+                                for (s in 0..steps) dot(ax + (bx - ax) * s / steps, ay + (by - ay) * s / steps, size)
+                            }
+                        }
+                    }
+                }
+                com.morgana.client.state.SkillFx.ELECTRIFY -> {
+                    // A skill electrified by a critical hit: a blue-white flash and arcs leaping across the whole area.
+                    val t = fx.elapsed
+                    val frame = (t * 24f).toInt()
+                    val fade = (1f - t / 0.8f).coerceIn(0f, 1f)
+                    if (t < 0.2f) {
+                        batch.setColor(0.6f, 0.85f, 1f, 0.7f * (1f - t / 0.2f))
+                        for (k in 1..3) for ((px, py) in com.morgana.client.state.SkillFxMath.ring(fx.toX, fx.toY, fx.radius * k / 3f * (0.6f + t * 2f), 18 + 6 * k, 0f)) dot(px, py, 5f)
+                    }
+                    for (arc in com.morgana.client.state.SkillFxMath.electrifyArcs(fx.toX, fx.toY, fx.radius, frame)) {
+                        for (pass in 0..1) {
+                            if (pass == 0) batch.setColor(0.35f, 0.65f, 1f, 0.55f * fade) else batch.setColor(0.95f, 1f, 1f, 0.95f * fade)
+                            val size = if (pass == 0) 6f else 2.4f
+                            for (i in 0 until arc.size - 1) {
+                                val (ax, ay) = arc[i]
+                                val (bx, by) = arc[i + 1]
+                                val steps = (kotlin.math.hypot(bx - ax, by - ay) / 3f).toInt().coerceAtLeast(1)
+                                for (s in 0..steps) dot(ax + (bx - ax) * s / steps, ay + (by - ay) * s / steps, size)
+                            }
+                        }
+                    }
+                }
                 com.morgana.client.state.SkillFx.SHOCKWAVE -> {
                     val u = (fx.elapsed / 0.35f).coerceIn(0f, 1f)
                     if (u < 1f) {
@@ -1416,6 +1476,20 @@ class MorganaWorldRenderer(
                 npcDef.eventId == 0 && npcDef.shopId == 0
             // Plain, uninjured monsters stay anonymous; rare variants always show their bar and [Label] name.
             val isRare = isMonster && variant != null
+            if (npc.statusEffects.any { it.type == com.morgana.domain.stats.StatusEffectType.STUN }) {
+                // Stunned: little stars circle above the head.
+                for (i in 0 until 3) {
+                    val ang = elapsedSeconds * 5f + i * (2f * Math.PI.toFloat() / 3f)
+                    val sx = cx + kotlin.math.cos(ang) * 11f
+                    val sy = topY + 22f + kotlin.math.sin(ang) * 3.5f
+                    batch.setColor(1f, 0.92f, 0.3f, 1f)
+                    batch.draw(assets.whitePixel, sx - 2.5f, sy - 2.5f, 5f, 5f)
+                    batch.setColor(1f, 1f, 0.85f, 1f)
+                    batch.draw(assets.whitePixel, sx - 1f, sy - 4f, 2f, 8f)
+                    batch.draw(assets.whitePixel, sx - 4f, sy - 1f, 8f, 2f)
+                }
+                batch.color = Color.WHITE
+            }
             val locked = worldState.lockedNpcId == npc.instanceId
             if (locked) {
                 // A gold arrow above the enemy the player has locked on to.

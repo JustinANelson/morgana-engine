@@ -78,6 +78,29 @@ class SkillFxTest {
     }
 
     @Test
+    fun `shock arcs radiate from the hit point and change each frame`() {
+        val a = SkillFxMath.shockArcs(100f, 100f, 1)
+        val b = SkillFxMath.shockArcs(100f, 100f, 2)
+        assertEquals(7, a.size)
+        for (arc in a) {
+            assertEquals(100f, arc.first().first, 0.001f)
+            assertEquals(4, arc.size)
+            assertTrue(hypot(arc.last().first - 100f, arc.last().second - 100f) in 30f..40f, "arcs reach out about their length")
+        }
+        assertTrue(a != b, "they flicker")
+    }
+
+    @Test
+    fun `electrify arcs stay within the area they crackle over`() {
+        for (frame in 0 until 8) {
+            for (arc in SkillFxMath.electrifyArcs(0f, 0f, 100f, frame)) {
+                assertEquals(6, arc.size)
+                assertTrue(arc.all { hypot(it.first, it.second) <= 100f + 14f }, "kept to the area")
+            }
+        }
+    }
+
+    @Test
     fun `a dodge trail draws out along the dash and fades`() {
         val fx = SkillFx(SkillFx.DODGE, 0f, 0f, 100f, 0f, 0f, 0f, 0.4f)
         fx.elapsed = 0.05f

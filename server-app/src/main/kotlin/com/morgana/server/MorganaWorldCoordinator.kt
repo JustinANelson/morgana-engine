@@ -3129,7 +3129,7 @@ class MorganaWorldCoordinator(
                 is WorldSimulationEvent.SkillEffect -> {
                     broadcastNear(
                         ev.mapId, ev.tileX, ev.tileY,
-                        ServerPacket.SkillEffect(ev.mapId, ev.effect, ev.fromX, ev.fromY, ev.toX, ev.toY, ev.radius, ev.delayTicks, ev.spanTicks)
+                        ServerPacket.SkillEffect(ev.mapId, ev.effect, ev.fromX, ev.fromY, ev.toX, ev.toY, ev.radius, ev.delayTicks, ev.spanTicks, ev.sourceId)
                     )
                 }
                 is WorldSimulationEvent.AnimationTriggered -> {

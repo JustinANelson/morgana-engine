@@ -427,7 +427,9 @@ data class MapProjectile(
     val py: Float = 0f,
     val vx: Float = 0f,
     val vy: Float = 0f,
-    val remainingPixels: Float = 0f
+    val remainingPixels: Float = 0f,
+    /** Whether the shot was rolled as a critical hit when it was fired. */
+    val crit: Boolean = false
 )
 
 /**

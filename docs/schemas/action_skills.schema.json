@@ -239,6 +239,24 @@
                 },
                 "chainDamagePercent": {
                     "type": "integer"
+                },
+                "critBonusBp": {
+                    "type": "integer"
+                },
+                "critScalePercent": {
+                    "type": "integer"
+                },
+                "electric": {
+                    "type": "boolean"
+                },
+                "critElectrifies": {
+                    "type": "boolean"
+                },
+                "stunTicks": {
+                    "type": "integer"
+                },
+                "knockbackRadial": {
+                    "type": "boolean"
                 }
             },
             "required": [],

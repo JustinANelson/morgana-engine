@@ -67,7 +67,9 @@ sealed interface WorldSimulationEvent {
         val toY: Float,
         val radius: Float,
         val delayTicks: Int,
-        val spanTicks: Int
+        val spanTicks: Int,
+        /** Who started it (a character id), "" when not a character's: lets the client make that character hop for a leap. */
+        val sourceId: String = ""
     ) : WorldSimulationEvent
 
     /** The momentum meter of one character changed: its fill (0..99) and the ticks of empowerment left (0 when not empowered). */

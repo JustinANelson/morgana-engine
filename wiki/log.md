@@ -2,6 +2,8 @@
 
 ## 2026-11-26
 
+* **Add** - **Per-skill crits, electric hits that stun, radial knockback, a hopping leap** ([action combat](/systems/action_combat.md)): skills get their own crit chance from agility, electrical hits stun with a crackling effect, a crit electrifies Scatter Shot, Shield Bash rushes and pushes everything round its target away, and Cyclone is a faster leap with a hop.
+
 * **Add** - **Momentum from successful dodges, built-in skill visuals, tappable player frame** ([action combat](/systems/action_combat.md)): dodges that avoid a hit fill a meter that empowers one skill per class (Storm Strike, Arrow Storm); skills can name a built-in effect (arrow rain, dodge dust, spin, shockwave, bolt); the player frame opens the character screen and the joystick no longer starts under it.
 
 * **Add** - **Leaps, chain lightning, area-skill auto-clusters, variant-only minimap blips** ([action combat](/systems/action_combat.md)): `SkillMove.toAim` leaps to the aim, `SkillHit.chain*` chains lightning, tapped area skills land on the biggest enemy cluster in reach, and the minimap hides ordinary monsters.

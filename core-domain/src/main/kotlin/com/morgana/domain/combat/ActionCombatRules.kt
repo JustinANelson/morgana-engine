@@ -54,7 +54,9 @@ data class ActionState(
     val momentumExpires: Long = 0L,
     val momentumFrom: Long = -1L,
     /** The tick until which the character is empowered (an upgraded skill is in effect); 0 when not. */
-    val empoweredUntil: Long = 0L
+    val empoweredUntil: Long = 0L,
+    /** True once a critical hit has electrified the skill in progress (see `SkillHit.critElectrifies`). */
+    val electrified: Boolean = false
 ) {
     val idle: Boolean get() = skillId == 0
 }

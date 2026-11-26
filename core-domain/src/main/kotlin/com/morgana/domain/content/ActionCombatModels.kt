@@ -85,7 +85,7 @@ data class SkillHit(
     val reaction: HitReaction = HitReaction.NONE,
     /** How long the reaction holds the target. */
     val reactionTicks: Int = 0,
-    /** Push along the attacker's facing. */
+    /** Push along the attacker's facing (or away from the attacker when [knockbackRadial]). */
     val knockbackPixels: Int = 0,
     /** Ticks both sides freeze on impact, for weight. */
     val hitStopTicks: Int = 0,
@@ -98,7 +98,23 @@ data class SkillHit(
      */
     val chainTargets: Int = 0,
     val chainRadiusPixels: Int = 0,
-    val chainDamagePercent: Int = 60
+    val chainDamagePercent: Int = 60,
+    /**
+     * This skill's own critical chance: the game's agility-based chance scaled by [critScalePercent] (100 = as is), plus [critBonusBp]
+     * basis points flat. A skill that fires many small hits can scale it down; a precise one can scale it up.
+     */
+    val critBonusBp: Int = 0,
+    val critScalePercent: Int = 100,
+    /** An electrical hit: it stuns the monster for [stunTicks] and flashes an electric hit effect. */
+    val electric: Boolean = false,
+    /**
+     * A critical hit electrifies the skill: that hit and every later hit of the same use become electrical (stun and electric effect),
+     * and an electric flash shows over the area.
+     */
+    val critElectrifies: Boolean = false,
+    val stunTicks: Int = 30,
+    /** True: the knockback pushes each monster directly away from the attacker, so a bash sends everything round it outwards. */
+    val knockbackRadial: Boolean = false
 )
 
 /** A hitbox that leaves the character: it spawns on the hitbox's `fromTick` and flies forward. */

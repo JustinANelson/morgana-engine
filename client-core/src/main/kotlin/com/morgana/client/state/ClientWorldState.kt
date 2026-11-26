@@ -93,11 +93,19 @@ data class EntityVisualSmoothing(
     var leapDuration: Float = 0f,
     var leapStartX: Float = 0f,
     var leapStartY: Float = 0f,
-    var leapPeakPixels: Float = 0f
+    var leapPeakPixels: Float = 0f,
+    /** A hop in place of the position easing (a skill's leap, whose position the server moves): a sine arc of [hopPeak] over [hopDuration]. */
+    var hopTimer: Float = 0f,
+    var hopDuration: Float = 0f,
+    var hopPeak: Float = 0f
 ) {
-    /** Height of the jump hop in pixels: a sine arc over the leap, 0 when not leaping. */
+    /** Height of the jump hop in pixels: a sine arc over the leap or the skill hop, 0 when neither. */
     val hopHeight: Float
-        get() = if (leapDuration <= 0f) 0f else kotlin.math.sin(Math.PI * (leapTimer / leapDuration).coerceIn(0f, 1f)).toFloat() * leapPeakPixels
+        get() {
+            val leap = if (leapDuration <= 0f) 0f else kotlin.math.sin(Math.PI * (leapTimer / leapDuration).coerceIn(0f, 1f)).toFloat() * leapPeakPixels
+            val skillHop = if (hopDuration <= 0f) 0f else kotlin.math.sin(Math.PI * (hopTimer / hopDuration).coerceIn(0f, 1f)).toFloat() * hopPeak
+            return maxOf(leap, skillHop)
+        }
 
     val walkFrame: Int
         get() = if (!isMoving) 0 else if (((walkCycleTimer * 8f).toInt() % 2) == 0) 1 else 2
@@ -1187,6 +1195,14 @@ class ClientWorldState {
                         )
                     )
                     while (skillFx.size > 40) skillFx.removeAt(0)
+                    // A leaping skill (the spin) makes its character hop through the air while the server carries them to the spot.
+                    if (packet.effect == SkillFx.SPIN && packet.sourceId.isNotEmpty()) {
+                        playerVisuals[packet.sourceId]?.let { v ->
+                            v.hopTimer = 0f
+                            v.hopDuration = maxOf(0.12f, (packet.delayTicks - 1) * SkillFx.TICK_SECONDS)
+                            v.hopPeak = 30f
+                        }
+                    }
                 }
             }
             is ServerPacket.TriggerAnimation -> {
@@ -1710,6 +1726,10 @@ class ClientWorldState {
                 vis.actionTimer = 0f
                 vis.actionDuration = 0f
             }
+        }
+        if (vis.hopDuration > 0f) {
+            vis.hopTimer += deltaSeconds
+            if (vis.hopTimer >= vis.hopDuration) { vis.hopDuration = 0f; vis.hopTimer = 0f; vis.hopPeak = 0f }
         }
         if (vis.leapDuration > 0f) {
             vis.leapTimer += deltaSeconds

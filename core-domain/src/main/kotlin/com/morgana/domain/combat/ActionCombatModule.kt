@@ -176,7 +176,7 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
             leapY = cy + ly
         }
         return st.copy(
-            leapX = leapX, leapY = leapY, leapSet = leapMove != null,
+            leapX = leapX, leapY = leapY, leapSet = leapMove != null, electrified = false,
             skillId = skillId, start = now, done = -1, hit = false, hits = emptySet(), groupCounts = emptyMap(), freeze = 0,
             fx = vector.first, fy = vector.second, bufferedToken = null, bufferedAt = 0L, movedTo = -1,
             aimX = aim?.first ?: 0.0, aimY = aim?.second ?: 0.0, aimSet = aim != null,
@@ -222,7 +222,7 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         return WorldSimulationEvent.SkillEffect(
             mapId = player.position.mapId, tileX = player.position.tileX, tileY = player.position.tileY, effect = skill.effect,
             fromX = cx.toFloat(), fromY = cy.toFloat(), toX = toX.toFloat(), toY = toY.toFloat(), radius = radius.toFloat(),
-            delayTicks = first, spanTicks = (last - first).coerceAtLeast(1)
+            delayTicks = first, spanTicks = (last - first).coerceAtLeast(1), sourceId = player.id
         )
     }
 
@@ -352,7 +352,12 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
                 if (key in st.hits || (hb.maxTargets > 0 && count >= hb.maxTargets)) continue
                 if (!ActionCombatRules.inShape(shape, ox, oy, st.fx, st.fy, npc.bodyX(ts) + ts / 2.0, npc.bodyY(ts) + ts / 2.0, targetRadius)) continue
                 st = st.copy(hits = st.hits + key, groupCounts = st.groupCounts + (hb.hitGroup to count + 1), hit = true)
-                hitNpc(sim, sim.players[player.id] ?: player, npc, hb.hit, st, out)
+                val result = hitNpc(sim, sim.players[player.id] ?: player, npc, hb.hit, st, out)
+                if (result.crit && hb.hit.critElectrifies && !st.electrified) {
+                    // A critical hit electrifies the rest of the skill: a flash crackles over the area it is hitting.
+                    st = st.copy(electrified = true)
+                    out.add(WorldSimulationEvent.SkillEffect(player.position.mapId, player.position.tileX, player.position.tileY, "electrify", ox.toFloat(), oy.toFloat(), ox.toFloat(), oy.toFloat(), hb.radiusPixels.toFloat(), 0, 12))
+                }
                 bestStop = maxOf(bestStop, hb.hit.hitStopTicks)
             }
             if (sim.game.definition.worldObjects != null) {
@@ -385,7 +390,9 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         if (hit.damagePercent <= 0) return 0 to false
         val attrs = player.effectiveAttributes(sim.game, sim.items)
         val defender = defenderAttributes(sim, npc)
-        val critBp = (sim.game.critChanceBp(attrs).toInt() + player.equipment.totalCritBonusBp(sim.items, sim.game.definition.gearRules) + com.morgana.domain.game.BuildBonuses.critChanceBpBonus(player, sim.game.definition)).coerceIn(0, 10_000)
+        // Each skill has its own chance: the agility-based one scaled by the skill, plus its flat bonus, plus gear and build.
+        val critBp = (sim.game.critChanceBp(attrs).toInt() * hit.critScalePercent / 100 + player.equipment.totalCritBonusBp(sim.items, sim.game.definition.gearRules) +
+            com.morgana.domain.game.BuildBonuses.critChanceBpBonus(player, sim.game.definition) + hit.critBonusBp).coerceIn(0, 10_000)
         val crit = sim.rng.rollBasisPoints(critBp)
         val weapon = weaponDamage(sim, player)
         val raw = when (hit.damageKind) {
@@ -401,8 +408,13 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         return sim.game.definition.attributes.associate { a -> a.id to (def?.attributes?.get(a.id) ?: a.base) }
     }
 
-    private fun hitNpc(sim: WorldSimulation, player: CharacterState, npc: MapNpcInstance, hit: SkillHit, st: ActionState, out: MutableList<WorldSimulationEvent>) {
+    /** What landing one hit did: whether it was a critical hit and whether it was electrical. */
+    private data class HitResult(val crit: Boolean, val electric: Boolean)
+
+    private fun hitNpc(sim: WorldSimulation, player: CharacterState, npc: MapNpcInstance, hit: SkillHit, st: ActionState, out: MutableList<WorldSimulationEvent>): HitResult {
         val (damage, crit) = damageOf(sim, player, npc, hit)
+        val electric = hit.electric || (hit.critElectrifies && (crit || st.electrified))
+        val result = HitResult(crit, electric)
         if (damage > 0) sim.applyDamageToNpc(player, npc, damage, crit, out)
         if (damage > 0 && hit.chainTargets > 0 && hit.chainRadiusPixels > 0) chainLightning(sim, player, npc, damage * hit.chainDamagePercent / 100, hit, out)
         // Dual-wielding works under action combat as it does under realtime: each landed melee hit may be followed by a second
@@ -415,12 +427,20 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
                 }
             }
         }
-        val list = sim.mapNpcs[npc.mapId] ?: return
+        val list = sim.mapNpcs[npc.mapId] ?: return result
         val idx = list.indexOfFirst { it.instanceId == npc.instanceId }
-        if (idx < 0) return
+        if (idx < 0) return result
         var live = list[idx]
-        if (!live.isAlive) return
+        if (!live.isAlive) return result
         val effects = ArrayList<ActiveStatusEffect>()
+        if (electric) {
+            // An electrical hit stuns, with its own bright hit effect on the monster.
+            effects += ActiveStatusEffect("action-shock", StatusEffectType.STUN, player.id, 0, emptyMap(), hit.stunTicks.coerceAtLeast(1))
+            val ts = sim.maps[npc.mapId]?.tileSize ?: 32
+            val sx = (live.bodyX(ts) + ts / 2.0).toFloat()
+            val sy = (live.bodyY(ts) + ts / 2.0).toFloat()
+            out.add(WorldSimulationEvent.SkillEffect(npc.mapId, live.tileX, live.tileY, "shock", sx, sy, sx, sy, 0f, 0, hit.stunTicks.coerceAtLeast(1)))
+        }
         if (hit.reaction != HitReaction.NONE && hit.reactionTicks > 0) {
             effects += ActiveStatusEffect("action-react", StatusEffectType.STUN, player.id, 0, emptyMap(), hit.reactionTicks)
         }
@@ -429,11 +449,12 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
             effects += ActiveStatusEffect("action-status-${status.name}", status, player.id, hit.statusMagnitude, emptyMap(), hit.statusDurationTicks)
         }
         if (effects.isNotEmpty()) live = live.copy(statusEffects = live.statusEffects.filterNot { e -> effects.any { it.id == e.id } } + effects)
-        if (hit.knockbackPixels > 0) live = knockedBack(sim, live, st, hit.knockbackPixels)
+        if (hit.knockbackPixels > 0) live = knockedBack(sim, live, st, hit.knockbackPixels, if (hit.knockbackRadial) player else null)
         if (live != list[idx]) {
             list[idx] = live
             out.add(WorldSimulationEvent.NpcUpdated(live))
         }
+        return result
     }
 
     /** Chain lightning: strikes the nearest other hostile monsters around [from], each for [damage], and flashes a yellow notice on each. */
@@ -452,6 +473,19 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         for ((other, _) in others) {
             val live = sim.mapNpcs[from.mapId]?.firstOrNull { it.instanceId == other.instanceId && it.isAlive } ?: continue
             sim.applyDamageToNpc(sim.players[player.id] ?: player, live, damage.coerceAtLeast(1), false, out)
+            // The bolt stuns whoever it strikes.
+            val victims = sim.mapNpcs[from.mapId]
+            val vi = victims?.indexOfFirst { it.instanceId == live.instanceId } ?: -1
+            if (victims != null && vi >= 0 && victims[vi].isAlive) {
+                val v = victims[vi]
+                val stunned = v.copy(statusEffects = v.statusEffects.filterNot { it.id == "action-shock" } +
+                    ActiveStatusEffect("action-shock", StatusEffectType.STUN, player.id, 0, emptyMap(), hit.stunTicks.coerceAtLeast(1)))
+                victims[vi] = stunned
+                out.add(WorldSimulationEvent.NpcUpdated(stunned))
+                val vx = (v.bodyX(ts) + ts / 2.0).toFloat()
+                val vy = (v.bodyY(ts) + ts / 2.0).toFloat()
+                out.add(WorldSimulationEvent.SkillEffect(from.mapId, v.tileX, v.tileY, "shock", vx, vy, vx, vy, 0f, 0, hit.stunTicks.coerceAtLeast(1)))
+            }
             out.add(WorldSimulationEvent.FloatingTextEmitted(mapId = from.mapId, tileX = live.tileX, tileY = live.tileY, text = "Shock!", category = "SPELL", colorHex = "#FACC15"))
             out.add(
                 WorldSimulationEvent.SkillEffect(
@@ -463,9 +497,13 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
     }
 
     /** Pushes a monster away along the skill's aim, one tile per 32 px (at least one), stopping at a wall or another body. */
-    private fun knockedBack(sim: WorldSimulation, npc: MapNpcInstance, st: ActionState, pixels: Int): MapNpcInstance {
+    private fun knockedBack(sim: WorldSimulation, npc: MapNpcInstance, st: ActionState, pixels: Int, awayFrom: CharacterState? = null): MapNpcInstance {
         val map = sim.maps[npc.mapId] ?: return npc
-        val dir = ActionCombatRules.nearestDirection(st.fx, st.fy)
+        val ts = map.tileSize
+        // Radial: straight away from the attacker; otherwise along the skill's aim.
+        val dir = if (awayFrom != null) {
+            ActionCombatRules.nearestDirection(npc.bodyX(ts) - awayFrom.position.pixelX.toDouble(), npc.bodyY(ts) - awayFrom.position.pixelY.toDouble())
+        } else ActionCombatRules.nearestDirection(st.fx, st.fy)
         var moved = npc
         repeat(maxOf(1, pixels / map.tileSize)) {
             val to = com.morgana.domain.spatial.TileCoord(moved.tileX + dir.dx, moved.tileY + dir.dy)
@@ -482,7 +520,7 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         if (!sim.modules.isEnabled(OptionalModule.PROJECTILES)) return
         val p = hb.projectile ?: return
         val dir = ActionCombatRules.nearestDirection(st.fx, st.fy)
-        val (damage, _) = damageOf(sim, player, null, hb.hit)
+        val (damage, projectileCrit) = damageOf(sim, player, null, hb.hit)
         val tiles = maxOf(2, p.rangePixels / 32)
         if (p.freeAngle) {
             // Flies along the exact aim: a position in pixels that moves every tick, so it hits what it passes at any angle.
@@ -500,7 +538,7 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
                 spriteId = maxOf(1, p.spriteId), damage = maxOf(1, damage), ticksPerTile = 1,
                 nextStepTick = sim.currentTick + 1L, pierce = p.pierce,
                 free = true, px = startX.toFloat(), py = startY.toFloat(),
-                vx = (dirX * speed).toFloat(), vy = (dirY * speed).toFloat(), remainingPixels = p.rangePixels.toFloat()
+                vx = (dirX * speed).toFloat(), vy = (dirY * speed).toFloat(), remainingPixels = p.rangePixels.toFloat(), crit = projectileCrit
             )
             val freeList = sim.mapProjectiles.getOrPut(player.position.mapId) { mutableListOf() }
             freeList.add(free)
@@ -549,20 +587,26 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         val player = sim.players[charId] ?: return
         val map = sim.maps[player.position.mapId] ?: return
         val half = map.tileSize / 2.0
-        val newX = player.position.pixelX + dx.toFloat()
-        val newY = player.position.pixelY + dy.toFloat()
-        val toTile = com.morgana.domain.spatial.TileCoord(((newX + half) / map.tileSize).toInt().coerceAtLeast(0), ((newY + half) / map.tileSize).toInt().coerceAtLeast(0))
-        val from = player.position.tileCoord
-        if (toTile != from) {
-            val dir = ActionCombatRules.nearestDirection(dx, dy)
-            // A leap goes over bodies (it lands among the monsters it spins at); walls still stop it.
-            val blockedByBody = skill.moves.none { it.toAim } && (sim.mapNpcs[player.position.mapId] ?: emptyList<MapNpcInstance>()).any { it.isAlive && it.tileX == toTile.x && it.tileY == toTile.y }
-            if (blockedByBody || !map.isInBounds(toTile) || !map.canTraverse(from, toTile, dir, isNpc = false)) return
+        // A fast move (a rush or a leap) goes in short sub-steps, each checked, so it can neither skip a thin wall nor pass through a body.
+        val steps = maxOf(1, StrictMath.ceil(StrictMath.sqrt(dx * dx + dy * dy) / 20.0).toInt())
+        val dir = ActionCombatRules.nearestDirection(dx, dy)
+        var cur = player
+        for (k in 1..steps) {
+            val newX = cur.position.pixelX + (dx / steps).toFloat()
+            val newY = cur.position.pixelY + (dy / steps).toFloat()
+            val toTile = com.morgana.domain.spatial.TileCoord(((newX + half) / map.tileSize).toInt().coerceAtLeast(0), ((newY + half) / map.tileSize).toInt().coerceAtLeast(0))
+            val from = cur.position.tileCoord
+            if (toTile != from) {
+                // A leap goes over bodies (it lands among the monsters it spins at); walls still stop it.
+                val blockedByBody = skill.moves.none { it.toAim } && (sim.mapNpcs[player.position.mapId] ?: emptyList<MapNpcInstance>()).any { it.isAlive && it.tileX == toTile.x && it.tileY == toTile.y }
+                if (blockedByBody || !map.isInBounds(toTile) || !map.canTraverse(from, toTile, dir, isNpc = false)) break
+            }
+            cur = cur.copy(position = cur.position.withPixels(newX, newY, map.tileSize))
         }
-        val moved = player.copy(position = player.position.withPixels(newX, newY, map.tileSize))
-        sim.players[charId] = moved
-        out.add(WorldSimulationEvent.PlayerMoved(moved, map.id, map.id))
-        out.add(WorldSimulationEvent.CharacterUpdated(moved))
+        if (cur === player) return
+        sim.players[charId] = cur
+        out.add(WorldSimulationEvent.PlayerMoved(cur, map.id, map.id))
+        out.add(WorldSimulationEvent.CharacterUpdated(cur))
     }
 
     // ---- defence (called by the engine when a monster or a boss zone damages a player) ----
