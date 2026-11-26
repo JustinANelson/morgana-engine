@@ -2833,7 +2833,7 @@ class PlayerHudAndWindows(
 
     /** What the target frame shows: the locked enemy's name, level and life, or null with no lock. */
     private fun targetInfo(): TargetFrame.Info? {
-        val npc = worldState.lockedNpcId?.let { worldState.npcsOnMap[it] } ?: return null
+        val npc = worldState.lockedNpcId?.let { worldState.npcOrSeamNpc(it) } ?: return null
         val def = worldState.catalog.npcs.firstOrNull { it.id == npc.npcId } ?: return null
         val hp = npc.vitals["hp"] ?: npc.vitals.values.firstOrNull()
         return TargetFrame.Info(

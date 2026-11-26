@@ -1,5 +1,7 @@
 package com.morgana.domain.combat
 
+import com.morgana.domain.sim.hostileNpcsInReach
+import com.morgana.domain.sim.shiftPosition
 import com.morgana.domain.content.ActionSkillDefinition
 import com.morgana.domain.content.HitReaction
 import com.morgana.domain.content.InputTokens
@@ -361,16 +363,20 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
             val originTileX = if (ground) (ox / ts).toInt() else player.position.tileX
             val originTileY = if (ground) (oy / ts).toInt() else player.position.tileY
             val reach = ActionCombatRules.reachTiles(shape, ts, targetRadius)
-            val candidates = (sim.mapNpcs[player.position.mapId] ?: emptyList<MapNpcInstance>()).filter {
-                it.isAlive && sim.isHostileNpc(it) && StrictMath.abs(it.tileX - originTileX) <= reach && StrictMath.abs(it.tileY - originTileY) <= reach
-            }
-            for (npc in candidates) {
+            // The monsters in reach, including those across a map border in a seamless world, at where they stand on this map.
+            val candidates = sim.hostileNpcsInReach(player.position.mapId, originTileX, originTileY, reach)
+            for (reachNpc in candidates) {
+                val npc = reachNpc.npc
                 val key = "${hb.hitGroup}:${npc.instanceId}"
                 val count = st.groupCounts[hb.hitGroup] ?: 0
                 if (key in st.hits || (hb.maxTargets > 0 && count >= hb.maxTargets)) continue
-                if (!ActionCombatRules.inShape(shape, ox, oy, st.fx, st.fy, npc.bodyX(ts) + ts / 2.0, npc.bodyY(ts) + ts / 2.0, targetRadius)) continue
+                if (!ActionCombatRules.inShape(shape, ox, oy, st.fx, st.fy, npc.bodyX(ts) + reachNpc.shiftTilesX * ts + ts / 2.0, npc.bodyY(ts) + reachNpc.shiftTilesY * ts + ts / 2.0, targetRadius)) continue
                 st = st.copy(hits = st.hits + key, groupCounts = st.groupCounts + (hb.hitGroup to count + 1), hit = true)
-                val result = hitNpc(sim, sim.players[player.id] ?: player, npc, hb.hit, st, out)
+                val attacker = sim.players[player.id] ?: player
+                // Pulls and pushes work in the monster's own map, so the attacker is shown to them where they would stand on it.
+                val geometry = if (reachNpc.shiftTilesX == 0 && reachNpc.shiftTilesY == 0) attacker
+                    else attacker.copy(position = shiftPosition(attacker.position, -reachNpc.shiftTilesX, -reachNpc.shiftTilesY, ts))
+                val result = hitNpc(sim, attacker, npc, hb.hit, st, out, geometry)
                 if (result.crit) st = armOnCrit(sim, player, st, out)
                 if (result.crit && hb.hit.critElectrifies && !st.electrified) {
                     // A critical hit electrifies the rest of the skill: a flash crackles over the area it is hitting.
@@ -459,7 +465,11 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
     /** What landing one hit did: whether it was a critical hit and whether it was electrical. */
     private data class HitResult(val crit: Boolean, val electric: Boolean)
 
-    private fun hitNpc(sim: WorldSimulation, player: CharacterState, npc: MapNpcInstance, hit: SkillHit, st: ActionState, out: MutableList<WorldSimulationEvent>): HitResult {
+    private fun hitNpc(
+        sim: WorldSimulation, player: CharacterState, npc: MapNpcInstance, hit: SkillHit, st: ActionState, out: MutableList<WorldSimulationEvent>,
+        /** The attacker with their position in the monster's own map coordinates (differs only across a map border); used for pulls and pushes. */
+        geometry: CharacterState = player
+    ): HitResult {
         val (damage, crit) = damageOf(sim, player, npc, hit)
         val electric = hit.electric || (hit.critElectrifies && (crit || st.electrified))
         val result = HitResult(crit, electric)
@@ -497,8 +507,8 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
             effects += ActiveStatusEffect("action-status-${status.name}", status, player.id, hit.statusMagnitude, emptyMap(), hit.statusDurationTicks)
         }
         if (effects.isNotEmpty()) live = live.copy(statusEffects = live.statusEffects.filterNot { e -> effects.any { it.id == e.id } } + effects)
-        if (hit.knockbackPixels > 0) live = knockedBack(sim, live, st, hit.knockbackPixels, if (hit.knockbackRadial) player else null)
-        if (hit.pullPixels > 0) live = pulledToward(sim, live, sim.players[player.id] ?: player, hit.pullPixels)
+        if (hit.knockbackPixels > 0) live = knockedBack(sim, live, st, hit.knockbackPixels, if (hit.knockbackRadial) geometry else null)
+        if (hit.pullPixels > 0) live = pulledToward(sim, live, geometry, hit.pullPixels)
         if (live != list[idx]) {
             list[idx] = live
             out.add(WorldSimulationEvent.NpcUpdated(live))

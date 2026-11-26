@@ -184,10 +184,14 @@ private fun WorldSimulation.stepFreeProjectile(proj: MapProjectile, mapId: Int, 
     val ts = map.tileSize
     val nx = proj.px + proj.vx
     val ny = proj.py + proj.vy
-    if (nx < 0f || ny < 0f) return null
-    val tile = TileCoord((nx / ts).toInt(), (ny / ts).toInt())
-    if (!map.isInBounds(tile)) return null
-    if (map.getCell(tile)?.attribute is TileAttribute.Blocked) return null
+    val seamless = layout.isPlaced(mapId)
+    if (!seamless && (nx < 0f || ny < 0f)) return null
+    val tile = TileCoord(kotlin.math.floor(nx / ts).toInt(), kotlin.math.floor(ny / ts).toInt())
+    if (!map.isInBounds(tile)) {
+        // In a seamless world the shot flies on over the border (its position stays in this map's coordinates) until the world ends or a wall stops it.
+        val across = if (seamless) layout.crossing(map, tile.x, tile.y) else null
+        if (across == null || across.map.getCell(across.tileX, across.tileY)?.attribute is TileAttribute.Blocked) return null
+    } else if (map.getCell(tile)?.attribute is TileAttribute.Blocked) return null
 
     val reach = (game.definition.gameplayTuning.actionTargetRadiusPixels + 6).toFloat()
     val reach2 = reach * reach
@@ -195,16 +199,17 @@ private fun WorldSimulation.stepFreeProjectile(proj: MapProjectile, mapId: Int, 
     var hitSomething = false
     val attacker = players[proj.sourceEntityId]
     if (attacker != null) {
-        for (npc in mapNpcs[mapId].orEmpty().toList()) {
-            if (!npc.isAlive || npc.instanceId in hitIds || !isHostileNpc(npc)) continue
-            if (segmentDistance2(proj.px, proj.py, nx, ny, npc.bodyX(ts) + ts / 2f, npc.bodyY(ts) + ts / 2f) > reach2) continue
+        for (reachNpc in hostileNpcsInReach(mapId, tile.x, tile.y, 3)) {
+            val npc = reachNpc.npc
+            if (npc.instanceId in hitIds) continue
+            if (segmentDistance2(proj.px, proj.py, nx, ny, npc.bodyX(ts) + reachNpc.shiftTilesX * ts + ts / 2f, npc.bodyY(ts) + reachNpc.shiftTilesY * ts + ts / 2f) > reach2) continue
             applyDamageToNpc(attacker, npc, proj.damage, isCrit = proj.crit, out = out)
             if (proj.crit) actionCrit(attacker, out)
             hitSomething = true
             hitIds = hitIds + npc.instanceId
             if (!proj.pierce) break
         }
-        if (!hitSomething) {
+        if (!hitSomething && map.isInBounds(tile)) {
             worldObjectAt(mapId, tile.x, tile.y)?.let { obj ->
                 if (com.morgana.domain.systems.WorldStateSystem.strike(this, attacker, obj, proj.damage, out)) hitSomething = true
             }

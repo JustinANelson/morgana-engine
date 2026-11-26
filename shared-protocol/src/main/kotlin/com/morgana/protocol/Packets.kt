@@ -897,7 +897,9 @@ sealed interface ServerPacket {
         @SerialName("px") val pixelX: Float = 0f,
         @SerialName("py") val pixelY: Float = 0f,
         @SerialName("wx") val wanderX: Int = -1,
-        @SerialName("wy") val wanderY: Int = -1
+        @SerialName("wy") val wanderY: Int = -1,
+        /** 0 for a monster on the viewer's own map; otherwise the map it is on (a monster across a border in a seamless world). */
+        @SerialName("m") val mapId: Int = 0
     ) : ServerPacket
 
     /** A player who only moved since their last [PlayerUpdated]: the client sets [position] on the player it already has. */

@@ -39,6 +39,15 @@ internal fun WorldSimulation.slotIsSupplied(map: com.morgana.domain.map.MapDefin
 }
 
 internal fun WorldSimulation.tickNpcs(out: MutableList<WorldSimulationEvent>) {
+    val firstEvent = out.size
+    tickNpcsInner(out)
+    // Monsters work with ghosts of players across a border (see CrossBorder.kt): leave the world with only real positions in it.
+    restoreBorderGhosts()
+    fixBorderGhostEvents(out, firstEvent)
+    borderGhosts.clear()
+}
+
+private fun WorldSimulation.tickNpcsInner(out: MutableList<WorldSimulationEvent>) {
     val npcRules = game.definition.combat.npcs
     val freeNpcMovement = modules.isEnabled(com.morgana.domain.sim.OptionalModule.SUB_TILE_MOVEMENT)
     // How many live monsters already hunt each player (for combat.npcs.maxAttackersPerTarget).
@@ -53,6 +62,7 @@ internal fun WorldSimulation.tickNpcs(out: MutableList<WorldSimulationEvent>) {
         val map = maps[mapId] ?: continue
         beforeMonstersOf(mapId, npcList, out)
         for (idx in npcList.indices) {
+            restoreBorderGhosts() // the previous monster may have written back a ghost it fought
             var npc = npcList[idx]
             val npcDef = npcs[npc.npcId] ?: continue
             // A pet is moved by PetSystem, not by the monster AI.
@@ -159,15 +169,13 @@ internal fun WorldSimulation.tickNpcs(out: MutableList<WorldSimulationEvent>) {
             val effectiveAttackDamage = ((npcDef.attackDamage * (variant?.attackPercent ?: 100)) / 100).coerceAtLeast(1)
 
             // Acquire target if ATTACK_ON_SIGHT or GUARD
-            var targetPlayer = npc.targetEntityId?.let { players[it] }?.takeIf {
-                it.isAlive(game.lifeVitalId) && it.position.mapId == mapId
-            }
+            var targetPlayer = npc.targetEntityId?.let { playerOnOrNear(mapId, it) }?.takeIf { it.isAlive(game.lifeVitalId) }
             if (targetPlayer == null && (effectiveBehavior == NpcBehavior.ATTACK_ON_SIGHT || effectiveBehavior == NpcBehavior.GUARD)) {
                 val huntCap = npcRules.maxAttackersPerTarget
-                targetPlayer = players.values.firstOrNull { p ->
+                // The players on this map and, in a seamless world, those just across its borders (as ghosts in this map's coordinates).
+                targetPlayer = playersOnOrNear(mapId).firstOrNull { p ->
                     p.isAlive(game.lifeVitalId) &&
                         (huntCap <= 0 || (hunters[p.id] ?: 0) < huntCap) &&
-                        p.position.mapId == mapId &&
                         (
                             effectiveBehavior == NpcBehavior.ATTACK_ON_SIGHT ||
                                 p.isRoguePk ||
@@ -637,8 +645,8 @@ private fun WorldSimulation.resolveTelegraph(npc: MapNpcInstance, def: com.morga
     val ex = cur.bodyX(ts) + ts / 2f
     val ey = cur.bodyY(ts) + ts / 2f
     val reach = def.telegraphRadiusPixels + 12f
-    val victims = players.values.filter { p ->
-        if (p.position.mapId != map.id || !p.isAlive(game.lifeVitalId) || p.isFlying) false else {
+    val victims = playersOnOrNear(map.id).filter { p ->
+        if (!p.isAlive(game.lifeVitalId) || p.isFlying) false else {
             val px = p.position.pixelX + ts / 2f
             val py = p.position.pixelY + ts / 2f
             when (def.telegraphKind) {

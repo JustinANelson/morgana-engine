@@ -337,15 +337,21 @@ class ClientWorldState {
         val ts = activeMap?.tileSize ?: return emptyList()
         val me = localCharacter?.id
         val out = ArrayList<com.morgana.client.input.TargetCandidate>()
-        for (npc in npcsOnMap.values) {
+        // The monsters on this map and, in a seamless world, those just across its borders (placed by their map's offset).
+        val everyone = ArrayList<Triple<com.morgana.domain.entity.MapNpcInstance, EntityVisualSmoothing?, Pair<Float, Float>>>()
+        for (npc in npcsOnMap.values) everyone += Triple(npc, npcVisuals[npc.instanceId], 0f to 0f)
+        for (m in seamMaps) {
+            val offset = seamOffsetOf(m.mapId) ?: continue
+            for (npc in m.npcs) everyone += Triple(npc, seamNpcVisuals["${m.mapId}:${npc.instanceId}"], offset)
+        }
+        for ((npc, vis, shift) in everyone) {
             if (!npc.isAlive || npc.ownerId != null) continue
             val def = catalog.npcs.firstOrNull { it.id == npc.npcId } ?: continue
             val monster = (def.behavior == com.morgana.domain.content.NpcBehavior.ATTACK_ON_SIGHT || def.behavior == com.morgana.domain.content.NpcBehavior.PASSIVE) &&
                 def.eventId == 0 && def.shopId == 0
             if (!monster) continue
-            val vis = npcVisuals[npc.instanceId]
-            val x = (vis?.renderPixelX ?: npc.bodyX(ts)) + ts / 2f
-            val y = (vis?.renderPixelY ?: npc.bodyY(ts)) + ts / 2f
+            val x = if (vis != null) vis.renderPixelX + ts / 2f else npc.bodyX(ts) + shift.first + ts / 2f
+            val y = if (vis != null) vis.renderPixelY + ts / 2f else npc.bodyY(ts) + shift.second + ts / 2f
             val hp = npc.vitals["hp"] ?: npc.vitals.values.firstOrNull()
             val frac = if (hp == null || hp.max <= 0) 1f else hp.cur.toFloat() / hp.max
             out += com.morgana.client.input.TargetCandidate(
@@ -356,10 +362,14 @@ class ClientWorldState {
         return out
     }
 
+    /** The monster with [id] on this map or, in a seamless world, across one of its borders. */
+    fun npcOrSeamNpc(id: String): com.morgana.domain.entity.MapNpcInstance? =
+        npcsOnMap[id] ?: seamMaps.asSequence().flatMap { it.npcs.asSequence() }.firstOrNull { it.instanceId == id }
+
     /** Drops the lock when its enemy is gone or dead. */
     fun refreshLock() {
         val id = lockedNpcId ?: return
-        val npc = npcsOnMap[id]
+        val npc = npcOrSeamNpc(id)
         if (npc == null || !npc.isAlive) lockedNpcId = null
     }
 
@@ -1106,6 +1116,10 @@ class ClientWorldState {
                 playersOnMap[packet.characterId]?.let { applyServerPacket(ServerPacket.PlayerUpdated(it.copy(position = packet.position))) }
             }
             is ServerPacket.NpcMoved -> {
+                if (packet.mapId != 0 && packet.mapId != activeMap?.id) {
+                    applySeamNpcMove(packet)
+                    return
+                }
                 npcsOnMap[packet.instanceId]?.let {
                     applyServerPacket(
                         ServerPacket.NpcUpdated(
@@ -1123,6 +1137,10 @@ class ClientWorldState {
             }
             is ServerPacket.NpcUpdated -> {
                 val n = packet.npc
+                if (activeMap != null && n.mapId != activeMap?.id) {
+                    applySeamNpc(n)
+                    return
+                }
                 val wasAlive = npcsOnMap[n.instanceId]?.isAlive == true
                 npcsOnMap[n.instanceId] = n
                 if (wasAlive && !n.isAlive) {
@@ -1224,6 +1242,13 @@ class ClientWorldState {
                 spellCooldowns.set(packet.spellId, packet.durationTicks / SpellCooldowns.TICKS_PER_SECOND, com.morgana.client.ui.ToastClock.now())
             }
             is ServerPacket.FloatingText -> {
+                val active = activeMap
+                val across = if (active != null && active.id != packet.mapId) neighborOffsets[packet.mapId] else null
+                if (across != null) {
+                    // Damage text from a fight across a map border (seamless world): shown where it happened, in this map's coordinates.
+                    applyServerPacket(packet.copy(mapId = active!!.id, tileX = packet.tileX + across.x, tileY = packet.tileY + across.y))
+                    return
+                }
                 if (activeMap?.id == packet.mapId) {
                     if (packet.category == com.morgana.protocol.FloatingTextCategory.DAMAGE ||
                         packet.category == com.morgana.protocol.FloatingTextCategory.CRIT_DAMAGE
@@ -1265,6 +1290,14 @@ class ClientWorldState {
                 empoweredUntilMs = if (packet.empoweredTicks > 0) System.currentTimeMillis() + packet.empoweredTicks * 50L else 0L
             }
             is ServerPacket.SkillEffect -> {
+                val active = activeMap
+                val across = if (active != null && active.id != packet.mapId) neighborOffsets[packet.mapId] else null
+                if (across != null) {
+                    val sx = across.x * active!!.tileSize.toFloat()
+                    val sy = across.y * active.tileSize.toFloat()
+                    applyServerPacket(packet.copy(mapId = active.id, fromX = packet.fromX + sx, fromY = packet.fromY + sy, toX = packet.toX + sx, toY = packet.toY + sy))
+                    return
+                }
                 if (activeMap?.id == packet.mapId && packet.effect == SkillFx.TELEGRAPH_CANCEL) {
                     skillFx.removeAll { it.isTelegraph && it.sourceId == packet.sourceId }
                 } else if (activeMap?.id == packet.mapId) {
@@ -1443,6 +1476,31 @@ class ClientWorldState {
         }
         seamNpcVisuals.keys.retainAll(liveNpcs)
         seamPlayerVisuals.keys.retainAll(livePlayers)
+    }
+
+    /** A monster on a map across a border changed (a seamless world): replaces it in what is shown across that border, or removes it when it died. */
+    private fun applySeamNpc(n: com.morgana.domain.entity.MapNpcInstance) {
+        val active = activeMap ?: return
+        if (!isModuleEnabled("softSeams")) return
+        val offset = seamOffset(active, n.mapId) ?: return
+        val key = "${n.mapId}:${n.instanceId}"
+        val existing = seamMaps.firstOrNull { it.mapId == n.mapId }
+        val others = seamMaps.filter { it.mapId != n.mapId }
+        val npcs = (existing?.npcs.orEmpty().filter { it.instanceId != n.instanceId }) + (if (n.isAlive) listOf(n) else emptyList())
+        seamMaps = if (npcs.isEmpty() && existing?.players.isNullOrEmpty() && existing?.groundItems.isNullOrEmpty()) others
+            else others + com.morgana.protocol.NeighborMapEntities(n.mapId, npcs, existing?.players.orEmpty(), existing?.groundItems.orEmpty())
+        if (n.isAlive) syncSeamVisual(seamNpcVisuals, key, n.bodyX(active.tileSize) + offset.first, n.bodyY(active.tileSize) + offset.second, n.direction)
+        else seamNpcVisuals.remove(key)
+    }
+
+    /** A monster across a border only moved: updates what is shown of it and where it is drawn. */
+    private fun applySeamNpcMove(m: ServerPacket.NpcMoved) {
+        val current = seamMaps.firstOrNull { it.mapId == m.mapId }?.npcs?.firstOrNull { it.instanceId == m.instanceId } ?: return
+        applySeamNpc(
+            current.copy(
+                tileX = m.tileX, tileY = m.tileY, direction = m.direction, subPixel = m.subPixel, pixelX = m.pixelX, pixelY = m.pixelY, wanderX = m.wanderX, wanderY = m.wanderY
+            )
+        )
     }
 
     private fun syncSeamVisual(visuals: MutableMap<String, EntityVisualSmoothing>, key: String, px: Float, py: Float, dir: Direction) {

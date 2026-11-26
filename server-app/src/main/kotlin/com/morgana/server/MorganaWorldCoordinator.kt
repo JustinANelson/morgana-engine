@@ -3176,16 +3176,16 @@ class MorganaWorldCoordinator(
                         sessionByCharacterId[targetId]?.send(pkt)
                     } else {
                         broadcastNear(ev.mapId, ev.tileX, ev.tileY, pkt)
+                        crossBorderSend(ev.mapId, ev.tileX, ev.tileY, pkt)
                     }
                 }
                 is WorldSimulationEvent.MomentumChanged -> {
                     sessionByCharacterId[ev.characterId]?.send(ServerPacket.Momentum(ev.momentum, ev.empoweredTicks))
                 }
                 is WorldSimulationEvent.SkillEffect -> {
-                    broadcastNear(
-                        ev.mapId, ev.tileX, ev.tileY,
-                        ServerPacket.SkillEffect(ev.mapId, ev.effect, ev.fromX, ev.fromY, ev.toX, ev.toY, ev.radius, ev.delayTicks, ev.spanTicks, ev.sourceId)
-                    )
+                    val fx = ServerPacket.SkillEffect(ev.mapId, ev.effect, ev.fromX, ev.fromY, ev.toX, ev.toY, ev.radius, ev.delayTicks, ev.spanTicks, ev.sourceId)
+                    broadcastNear(ev.mapId, ev.tileX, ev.tileY, fx)
+                    crossBorderSend(ev.mapId, ev.tileX, ev.tileY, fx)
                 }
                 is WorldSimulationEvent.AnimationTriggered -> {
                     broadcastNear(
@@ -3586,10 +3586,42 @@ class MorganaWorldCoordinator(
             lastNpcSent[npc.instanceId] = npc
             val moved = ServerPacket.NpcMoved(npc.instanceId, npc.tileX, npc.tileY, npc.direction, 0L, npc.subPixel, npc.pixelX, npc.pixelY, npc.wanderX, npc.wanderY)
             broadcastNearDelta(npc.mapId, npc.tileX, npc.tileY, before.first, before.second, full, moved)
+            val across = crossBorderViewers(npc.mapId, npc.tileX, npc.tileY)
+            if (across.isNotEmpty()) {
+                val movedAcross = moved.copy(mapId = npc.mapId)
+                for (viewer in across) queueMove(viewer, movedAcross)
+            }
         } else {
             lastNpcSent[npc.instanceId] = npc
             broadcastNear(npc.mapId, npc.tileX, npc.tileY, full, before.first, before.second)
+            crossBorderSend(npc.mapId, npc.tileX, npc.tileY, full)
         }
+    }
+
+    /**
+     * In a seamless world, the players on the maps around [mapId] who are within the seam view distance of its tile ([tileX], [tileY]):
+     * they see a fight across the border, so what happens there (a monster's changes, damage text, skill effects) is sent to them too
+     * (the packet keeps its own map id and the client places it by that map's offset). Only for clients that support soft seams.
+     */
+    private fun crossBorderViewers(mapId: Int, tileX: Int, tileY: Int): List<String> {
+        val layout = simulation.layout
+        if (!layout.isPlaced(mapId) || !simulation.modules.isEnabled(OptionalModule.SOFT_SEAMS)) return emptyList()
+        val view = simulation.game.definition.worldLayout?.seamViewTiles ?: com.morgana.domain.map.WorldLayoutDefinition.DEFAULT_SEAM_VIEW
+        var out: ArrayList<String>? = null
+        for (p in simulation.players.values) {
+            if (p.position.mapId == mapId) continue
+            val offset = layout.offsetBetween(mapId, p.position.mapId) ?: continue
+            if (kotlin.math.abs(p.position.tileX + offset.x - tileX) > view || kotlin.math.abs(p.position.tileY + offset.y - tileY) > view) continue
+            val session = sessionByCharacterId[p.id] ?: continue
+            val caps = clientCapabilitiesBySession[session.sessionId]
+            if (caps != null && ProtocolCapabilities.SOFT_SEAMS !in caps) continue
+            (out ?: ArrayList<String>().also { out = it }).add(p.id)
+        }
+        return out ?: emptyList()
+    }
+
+    private fun crossBorderSend(mapId: Int, tileX: Int, tileY: Int, packet: ServerPacket) {
+        for (viewer in crossBorderViewers(mapId, tileX, tileY)) sessionByCharacterId[viewer]?.send(packet)
     }
 
     /** A monster without where it stands and without the server-only clocks (attack and spell cooldowns, threat, wind-up) that no client reads. */

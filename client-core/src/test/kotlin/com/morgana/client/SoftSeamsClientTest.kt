@@ -208,4 +208,62 @@ class SoftSeamsClientTest {
         repeat(6) { stuck.predictAndCreateMovePacket(Direction.RIGHT) }
         assertEquals(9, stuck.localCharacter!!.position.tileX)
     }
+
+    // ---- fighting across a border (seamless world) ----
+
+    private val wolfDef = com.morgana.domain.content.NpcDefinition(id = 1, name = "Wolf", behavior = com.morgana.domain.content.NpcBehavior.ATTACK_ON_SIGHT, level = 1)
+
+    private fun fightState(): ClientWorldState {
+        val state = ClientWorldState()
+        state.applyServerPacket(ServerPacket.AuthResult(true, "ok", character = hero(1, 8, 5), catalog = WorldContentCatalogDto(npcs = listOf(wolfDef))))
+        state.applyServerPacket(
+            ServerPacket.MapStateSnapshot(activeMap = west, neighborMaps = mapOf(5 to shelf), neighborOffsets = offsets, players = listOf(snapshot(hero(1, 8, 5))))
+        )
+        return state
+    }
+
+    @Test
+    fun `a monster across the border that changes is updated in place, and removed when it dies`() {
+        val state = fightState()
+        state.applyServerPacket(ServerPacket.NpcUpdated(npc(5, "wolf", x = 2, y = 1)))
+        assertEquals(listOf("wolf"), state.seamMaps.single { it.mapId == 5 }.npcs.map { it.instanceId })
+        assertEquals((10 + 2) * 32f, state.seamNpcVisuals["5:wolf"]!!.targetPixelX, 0.01f)
+        assertTrue(state.npcsOnMap.isEmpty(), "it is not on the active map")
+        // It moves (a compact move for a monster on another map).
+        state.applyServerPacket(ServerPacket.NpcMoved("wolf", 3, 1, Direction.LEFT, mapId = 5))
+        assertEquals((10 + 3) * 32f, state.seamNpcVisuals["5:wolf"]!!.targetPixelX, 0.01f)
+        // It dies.
+        state.applyServerPacket(ServerPacket.NpcUpdated(npc(5, "wolf", x = 3, y = 1).copy(vitals = mapOf("hp" to VitalState(0, 10)))))
+        assertTrue(state.seamNpcVisuals.isEmpty())
+        assertTrue(state.seamMaps.none { it.npcs.isNotEmpty() })
+    }
+
+    @Test
+    fun `damage text and skill effects from the other map are drawn where they happened in this map's space`() {
+        val state = fightState()
+        state.applyServerPacket(ServerPacket.SkillEffect(mapId = 5, effect = "bolt", fromX = 32f, fromY = 64f, toX = 64f, toY = 96f))
+        val fx = state.skillFx.single()
+        assertEquals(32f + 10 * 32f, fx.fromX, 0.01f)
+        assertEquals(64f + 3 * 32f, fx.fromY, 0.01f)
+        assertEquals(64f + 10 * 32f, fx.toX, 0.01f)
+        state.applyServerPacket(ServerPacket.FloatingText(mapId = 5, tileX = 2, tileY = 1, text = "-9"))
+        val text = state.floatingTexts.single()
+        assertEquals((10 + 2) * 32f + 16f, text.worldX, 0.01f)
+        // A map that is not a neighbour is ignored.
+        state.applyServerPacket(ServerPacket.FloatingText(mapId = 99, tileX = 2, tileY = 1, text = "-1"))
+        assertEquals(1, state.floatingTexts.size)
+    }
+
+    @Test
+    fun `monsters across the border can be targeted and locked`() {
+        val state = fightState()
+        state.applyServerPacket(ServerPacket.SeamView(listOf(NeighborMapEntities(5, npcs = listOf(npc(5, "wolf", x = 2, y = 1))))))
+        val candidates = state.targetCandidates()
+        assertEquals(listOf("wolf"), candidates.map { it.id })
+        assertEquals((10 + 2) * 32f + 16f, candidates.single().x, 0.5f)
+        state.lockedNpcId = "wolf"
+        state.refreshLock()
+        assertEquals("wolf", state.lockedNpcId, "the lock survives while the monster lives across the border")
+        assertNotNull(state.npcOrSeamNpc("wolf"))
+    }
 }

@@ -440,6 +440,9 @@ class WorldSimulation(
     var layout: com.morgana.domain.map.WorldLayout = com.morgana.domain.map.WorldLayout(emptyList())
         private set
 
+    /** Players seen across a map border while monsters act (ghost position, real position), to be put right afterwards; see [ghostOf]. Empty between ticks. */
+    internal val borderGhosts: MutableMap<String, MutableSet<Pair<com.morgana.domain.spatial.WorldPosition, com.morgana.domain.spatial.WorldPosition>>> = HashMap()
+
     /** Rebuilds [layout] from the registered maps and makes each placed map's N/S/E/W links say what the geometry says. */
     private fun relinkWorld() {
         layout = com.morgana.domain.map.WorldLayout(maps.values)
