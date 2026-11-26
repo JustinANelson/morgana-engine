@@ -257,6 +257,9 @@
                 },
                 "knockbackRadial": {
                     "type": "boolean"
+                },
+                "pullPixels": {
+                    "type": "integer"
                 }
             },
             "required": [],

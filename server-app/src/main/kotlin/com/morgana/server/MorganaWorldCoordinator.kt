@@ -3107,6 +3107,9 @@ class MorganaWorldCoordinator(
                 is WorldSimulationEvent.GroundItemsChanged -> {
                     broadcastToMap(ev.mapId, ServerPacket.GroundItemsUpdated(ev.mapId, ev.items))
                 }
+                is WorldSimulationEvent.OrbsChanged -> {
+                    broadcastToMap(ev.mapId, ServerPacket.HealthOrbsUpdated(ev.mapId, ev.orbs))
+                }
                 is WorldSimulationEvent.ProjectilesChanged -> {
                     broadcastToMap(ev.mapId, ServerPacket.ProjectilesUpdated(ev.mapId, ev.projectiles))
                 }

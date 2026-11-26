@@ -2,6 +2,8 @@
 
 ## 2026-11-26
 
+* **Add** - **Telegraphed monster attacks, health orbs, a potion button, pulls and snares, hit feel** ([action combat](/systems/action_combat.md)): monsters can wind up visible danger zones before they strike, slain monsters drop health orbs, the ring gets a Potion button, skills can pull monsters in (`pullPixels`), and the screen shakes and monsters flash when struck.
+
 * **Change** - **Crit-armed transformations are rarer** ([action combat](/systems/action_combat.md)): `empowerChancePercent` (one roll per skill use) and `empowerCooldownTicks` (a lockout after it is spent or expires) were added; Trevena uses 20% and 20 s.
 
 * **Change** - **Leaps always jump, the spin turns the sprite, rushes keep the sprite up** ([action combat](/systems/action_combat.md)): `SkillMove.minPixels` makes a leap travel at least that far even at point-blank range; a `spin` effect turns the character's sprite two full circles (`EntityVisualSmoothing.spinDegrees`, drawn under a rotated transform); `bash` and `dodge` effects let the sprite follow the server's fast move instead of crawling at walking speed.

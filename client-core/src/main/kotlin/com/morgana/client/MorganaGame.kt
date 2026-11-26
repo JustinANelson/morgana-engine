@@ -408,6 +408,7 @@ class MorganaGame(
                         com.morgana.client.access.GameAction.STANCE -> hud.cycleStance()
                         com.morgana.client.access.GameAction.MORE_ACTIONS -> hud.toggleActionList()
                         com.morgana.client.access.GameAction.TARGET_NEXT -> hud.cycleTarget()
+                        com.morgana.client.access.GameAction.HEALTH_POTION -> hud.useHealthPotion()
                         com.morgana.client.access.GameAction.CONTROLS -> hud.toggleControlsWindow()
                         else -> {
                             // Quickbar slots; the movement keys are read every frame (see render), not as key events.

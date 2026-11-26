@@ -138,7 +138,13 @@ internal fun WorldSimulation.tickNpcs(out: MutableList<WorldSimulationEvent>) {
             }
 
             if (npc.statusEffects.any { it.preventsActions }) {
-                // Stunned or frozen: a spell being wound up is interrupted.
+                // Stunned or frozen: a telegraphed strike is cancelled, and so is a spell being wound up.
+                if (npc.windUpUntil > 0L) {
+                    npc = npc.copy(windUpUntil = 0L)
+                    out.add(WorldSimulationEvent.SkillEffect(mapId, npc.tileX, npc.tileY, "telegraph_cancel", 0f, 0f, 0f, 0f, 0f, 0, 1, npc.instanceId))
+                    out.add(WorldSimulationEvent.NpcUpdated(npc))
+                }
+                // (a spell being wound up is interrupted below)
                 if (npc.castingSpellId != null) npc = npc.copy(castingSpellId = null, castFinishTick = 0L)
                 npcList[idx] = npc
                 continue
@@ -411,8 +417,20 @@ internal fun WorldSimulation.tickNpcs(out: MutableList<WorldSimulationEvent>) {
                 }
 
                 if (!castSpellThisTick) {
-                    if (dist == 1) {
-                        if (currentTick - npc.lastAttackTick >= effectiveAttackSpeedTicks && currentTick >= npc.strikeReadyTick && !targetPlayer.isFlying) {
+                    val strikeReady = currentTick - npc.lastAttackTick >= effectiveAttackSpeedTicks && currentTick >= npc.strikeReadyTick && !targetPlayer.isFlying
+                    if (npc.windUpUntil > 0L) {
+                        // Winding up a telegraphed strike: stand and wait, then hit whoever is in the zone.
+                        if (currentTick >= npc.windUpUntil) {
+                            npc = resolveTelegraph(npc, npcDef, map, (effectiveAttackDamage * npcDef.telegraphDamagePercent / 100).coerceAtLeast(1), out)
+                            npcList[idx] = npc
+                            out.add(WorldSimulationEvent.NpcUpdated(npc))
+                        }
+                    } else if (npcDef.telegraphTicks > 0 && dist <= maxOf(1, npcDef.telegraphRangeTiles) && strikeReady) {
+                        npc = beginTelegraph(npc, npcDef, targetPlayer, map.tileSize, out)
+                        npcList[idx] = npc
+                        out.add(WorldSimulationEvent.NpcUpdated(npc))
+                    } else if (dist == 1) {
+                        if (strikeReady) {
                             val dir = Direction.fromDelta(
                                 targetPlayer.position.tileX - npc.tileX,
                                 targetPlayer.position.tileY - npc.tileY
@@ -420,45 +438,8 @@ internal fun WorldSimulation.tickNpcs(out: MutableList<WorldSimulationEvent>) {
                             npc = npc.copy(direction = dir, lastAttackTick = currentTick)
                             npcList[idx] = npc
 
-                            val playerAttrs = targetPlayer.effectiveAttributes(game, items)
-                            val playerArmor = armorOf(targetPlayer)
-                            val npcAttrs = game.definition.attributes.associate { a ->
-                                a.id to (npcDef.attributes[a.id] ?: a.base)
-                            }
-                            val dmg = actionDefence(targetPlayer, npc.tileX, npc.tileY, game.meleeDamage(
-                                attacker = npcAttrs,
-                                defender = playerAttrs,
-                                weapon = effectiveAttackDamage.toLong(),
-                                armor = playerArmor.toLong(),
-                                crit = false
-                            ).toInt().coerceAtLeast(1), out)
-                            val lifeId = game.lifeVitalId
-                            val curLife = targetPlayer.vitals[lifeId]?.cur ?: 0
-                            val newLife = (curLife - dmg).coerceAtLeast(0)
-                            var updatedTarget = targetPlayer.copy(
-                                vitals = targetPlayer.vitals + (lifeId to (targetPlayer.vitals[lifeId]?.copy(cur = newLife) ?: VitalState(newLife, newLife)))
-                            )
-                            out.add(
-                                WorldSimulationEvent.FloatingTextEmitted(
-                                    mapId = mapId,
-                                    tileX = updatedTarget.position.tileX,
-                                    tileY = updatedTarget.position.tileY,
-                                    text = "-$dmg",
-                                    category = "DAMAGE",
-                                    colorHex = "#EF4444"
-                                )
-                            )
-                            updatedTarget = afterStruck(updatedTarget, out)
-                            if (!updatedTarget.isAlive(lifeId)) {
-                                updatedTarget = handlePlayerDeath(updatedTarget, map, out)
-                                npc = npc.copy(targetEntityId = null)
-                                npcList[idx] = npc
-                            } else if (updatedTarget.reflectPercent > 0) {
-                                npc = reflectOntoNpc(npc, npcDef, updatedTarget, dmg, out)
-                                npcList[idx] = npc
-                            }
-                            players[updatedTarget.id] = updatedTarget
-                            out.add(WorldSimulationEvent.CharacterUpdated(updatedTarget))
+                            npc = npcStrike(npc, npcDef, targetPlayer, effectiveAttackDamage, map, out)
+                            npcList[idx] = npc
                         }
                     } else if (npcRules.casterKeepsDistance && npcAttackSpell != null && dist <= npcAttackSpell.rangeTiles) {
                         // A caster in spell range holds its ground while the spell recharges instead of closing to melee.
@@ -589,6 +570,86 @@ internal fun WorldSimulation.stepNpcPixels(npc: MapNpcInstance, map: MapDefiniti
         return npc.copy(subPixel = true, pixelX = nx, pixelY = ny, tileX = tile.x, tileY = tile.y, direction = dir)
     }
     return attempt(vx, vy) ?: attempt(vx, 0f) ?: attempt(0f, vy) ?: npc
+}
+
+/** One melee strike of [npc] on [target] for [attackDamage] (before the target's defence): damage, armour, defence, death and reflection. Returns the monster afterwards. */
+private fun WorldSimulation.npcStrike(npc: MapNpcInstance, npcDef: com.morgana.domain.content.NpcDefinition, target: com.morgana.domain.entity.CharacterState, attackDamage: Int, map: MapDefinition, out: MutableList<WorldSimulationEvent>): MapNpcInstance {
+    var cur = npc
+    val playerAttrs = target.effectiveAttributes(game, items)
+    val playerArmor = armorOf(target)
+    val npcAttrs = game.definition.attributes.associate { a -> a.id to (npcDef.attributes[a.id] ?: a.base) }
+    val dmg = actionDefence(target, cur.tileX, cur.tileY, game.meleeDamage(
+        attacker = npcAttrs, defender = playerAttrs, weapon = attackDamage.toLong(), armor = playerArmor.toLong(), crit = false
+    ).toInt().coerceAtLeast(1), out)
+    val lifeId = game.lifeVitalId
+    val curLife = target.vitals[lifeId]?.cur ?: 0
+    val newLife = (curLife - dmg).coerceAtLeast(0)
+    var updatedTarget = target.copy(vitals = target.vitals + (lifeId to (target.vitals[lifeId]?.copy(cur = newLife) ?: VitalState(newLife, newLife))))
+    out.add(WorldSimulationEvent.FloatingTextEmitted(mapId = map.id, tileX = updatedTarget.position.tileX, tileY = updatedTarget.position.tileY, text = "-$dmg", category = "DAMAGE", colorHex = "#EF4444"))
+    updatedTarget = afterStruck(updatedTarget, out)
+    if (!updatedTarget.isAlive(lifeId)) {
+        updatedTarget = handlePlayerDeath(updatedTarget, map, out)
+        cur = cur.copy(targetEntityId = null)
+    } else if (updatedTarget.reflectPercent > 0) {
+        cur = reflectOntoNpc(cur, npcDef, updatedTarget, dmg, out)
+    }
+    players[updatedTarget.id] = updatedTarget
+    out.add(WorldSimulationEvent.CharacterUpdated(updatedTarget))
+    return cur
+}
+
+/** Starts a telegraphed strike: the monster stops, its zone is fixed now, and the client is told to draw the warning for the wind-up. */
+private fun WorldSimulation.beginTelegraph(npc: MapNpcInstance, def: com.morgana.domain.content.NpcDefinition, target: com.morgana.domain.entity.CharacterState, ts: Int, out: MutableList<WorldSimulationEvent>): MapNpcInstance {
+    val cx = npc.bodyX(ts) + ts / 2f
+    val cy = npc.bodyY(ts) + ts / 2f
+    val tx = target.position.pixelX + ts / 2f
+    val ty = target.position.pixelY + ts / 2f
+    var ex = tx
+    var ey = ty
+    when (def.telegraphKind) {
+        "lunge" -> {
+            val d = kotlin.math.hypot((tx - cx).toDouble(), (ty - cy).toDouble()).toFloat().coerceAtLeast(1f)
+            val len = def.telegraphLengthPixels.coerceAtLeast(ts).toFloat()
+            ex = cx + (tx - cx) / d * len
+            ey = cy + (ty - cy) / d * len
+        }
+        "slam" -> { ex = cx; ey = cy }
+    }
+    val effect = if (def.telegraphKind == "lunge") "telegraph_line" else "telegraph_circle"
+    out.add(WorldSimulationEvent.SkillEffect(npc.mapId, npc.tileX, npc.tileY, effect, cx, cy, ex, ey, def.telegraphRadiusPixels.toFloat(), 0, def.telegraphTicks, npc.instanceId))
+    val dir = if (kotlin.math.abs(tx - cx) >= kotlin.math.abs(ty - cy)) (if (tx >= cx) Direction.RIGHT else Direction.LEFT) else (if (ty >= cy) Direction.DOWN else Direction.UP)
+    return npc.copy(direction = dir, windUpUntil = currentTick + def.telegraphTicks, windUpX = ex, windUpY = ey)
+}
+
+/** The wind-up is over: a lunge dashes along its line, then every player inside the zone is struck. */
+private fun WorldSimulation.resolveTelegraph(npc: MapNpcInstance, def: com.morgana.domain.content.NpcDefinition, map: MapDefinition, attackDamage: Int, out: MutableList<WorldSimulationEvent>): MapNpcInstance {
+    val ts = map.tileSize
+    val sx = npc.bodyX(ts) + ts / 2f
+    val sy = npc.bodyY(ts) + ts / 2f
+    var cur = npc
+    if (def.telegraphKind == "lunge") {
+        for (i in 0 until 10) {
+            val moved = stepNpcPixels(cur, map, npc.windUpX, npc.windUpY, 18f)
+            if (moved === cur) break
+            cur = moved
+        }
+    }
+    val ex = cur.bodyX(ts) + ts / 2f
+    val ey = cur.bodyY(ts) + ts / 2f
+    val reach = def.telegraphRadiusPixels + 12f
+    val victims = players.values.filter { p ->
+        if (p.position.mapId != map.id || !p.isAlive(game.lifeVitalId) || p.isFlying) false else {
+            val px = p.position.pixelX + ts / 2f
+            val py = p.position.pixelY + ts / 2f
+            when (def.telegraphKind) {
+                "lunge" -> segmentDistance2(sx, sy, ex, ey, px, py) <= reach * reach
+                "slam" -> kotlin.math.hypot((px - ex).toDouble(), (py - ey).toDouble()) <= reach
+                else -> kotlin.math.hypot((px - npc.windUpX).toDouble(), (py - npc.windUpY).toDouble()) <= reach
+            }
+        }
+    }
+    for (v in victims) cur = npcStrike(cur, def, v, attackDamage, map, out)
+    return cur.copy(windUpUntil = 0L, lastAttackTick = currentTick)
 }
 
 internal fun WorldSimulation.canNpcStepTo(map: MapDefinition, from: TileCoord, to: TileCoord, dir: Direction): Boolean {

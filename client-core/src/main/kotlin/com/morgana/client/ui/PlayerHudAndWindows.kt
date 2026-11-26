@@ -2799,6 +2799,38 @@ class PlayerHudAndWindows(
         }
     }
 
+    private var lastPotionMs = 0L
+    private val POTION_GAP_MS = 1500L
+
+    /** The bag slot of the first healing item (one that restores life), or -1. */
+    private fun potionSlot(): Int {
+        val ch = worldState.localCharacter ?: return -1
+        val lifeId = worldState.lifeVitalId()
+        return ch.inventory.slots.indexOfFirst { st ->
+            st != null && (worldState.catalog.items.firstOrNull { it.id == st.itemId }?.restore?.get(lifeId) ?: 0) > 0
+        }
+    }
+
+    /** How many healing items the character carries (all stacks that restore life). */
+    private fun potionCount(): Int {
+        val ch = worldState.localCharacter ?: return 0
+        val lifeId = worldState.lifeVitalId()
+        return ch.inventory.slots.filterNotNull().filter { st -> (worldState.catalog.items.firstOrNull { it.id == st.itemId }?.restore?.get(lifeId) ?: 0) > 0 }.sumOf { it.amount }
+    }
+
+    /** Drinks a health potion (the ring's Potion button and its key); a short gap stops a mashed button wasting several. */
+    fun useHealthPotion() {
+        val idx = potionSlot()
+        if (idx < 0) return
+        val now = System.currentTimeMillis()
+        if (now - lastPotionMs < POTION_GAP_MS) return
+        lastPotionMs = now
+        netClient.send(ClientPacket.UseInventorySlot(idx))
+        audio.play(RetroSoundEngine.Sfx.CLICK)
+    }
+
+    private fun potionCooldownMs(): Long = (POTION_GAP_MS - (System.currentTimeMillis() - lastPotionMs)).coerceAtLeast(0L)
+
     /** What the target frame shows: the locked enemy's name, level and life, or null with no lock. */
     private fun targetInfo(): TargetFrame.Info? {
         val npc = worldState.lockedNpcId?.let { worldState.npcsOnMap[it] } ?: return null
@@ -3187,6 +3219,17 @@ class PlayerHudAndWindows(
                 count = { moreActionCount().let { if (it > 0) it.toString() else "" } },
                 highlighted = { openOrNull(actionListWindow) != null }
             ) { toggleActionList() })
+            add(RingButton(
+                key = RingKey(RingRole.POTION),
+                glyph = { "Potion" },
+                tint = Color(0.85f, 0.2f, 0.3f, 1f),
+                visible = { ringShown() && worldState.showCombatUi() },
+                keyHint = { if (keyHints) KeyBindings.shortKeyName(Accessibility.keys.keysFor(GameAction.HEALTH_POTION).firstOrNull() ?: 0) else "" },
+                count = { potionCount().let { if (it > 0) it.toString() else "" } },
+                cooldown = { (potionCooldownMs().toFloat() / POTION_GAP_MS).coerceIn(0f, 1f) },
+                dimmed = { potionCount() == 0 || potionCooldownMs() > 0L },
+                empty = { potionCount() == 0 }
+            ) { useHealthPotion() })
             add(RingButton(
                 key = RingKey(RingRole.TARGET),
                 glyph = { "Tgt" },

@@ -870,7 +870,10 @@
                 },
                 "layout": {
                     "type": "string",
-                    "enum": ["classic", "ring"]
+                    "enum": [
+                        "classic",
+                        "ring"
+                    ]
                 }
             },
             "required": [],
@@ -2154,6 +2157,15 @@
                     "type": "integer"
                 },
                 "actionTargetRadiusPixels": {
+                    "type": "integer"
+                },
+                "healthOrbChancePercent": {
+                    "type": "integer"
+                },
+                "healthOrbHealPercent": {
+                    "type": "integer"
+                },
+                "healthOrbLifeTicks": {
                     "type": "integer"
                 }
             },

@@ -29,6 +29,7 @@ enum class GameAction(val label: String, val defaults: List<Int>, val group: Act
     STANCE("Combat stance", listOf(Keys.T), ActionGroup.ACTIONS),
     MORE_ACTIONS("Other actions list", listOf(Keys.R), ActionGroup.ACTIONS),
     TARGET_NEXT("Next target (then none)", listOf(Keys.U), ActionGroup.ACTIONS),
+    HEALTH_POTION("Drink a health potion", listOf(Keys.O), ActionGroup.ACTIONS),
     CHARACTER("Character", listOf(Keys.V), ActionGroup.WINDOWS),
     INVENTORY("Inventory", listOf(Keys.I), ActionGroup.WINDOWS),
     SPELLBOOK("Spells / Skills", listOf(Keys.K), ActionGroup.WINDOWS),

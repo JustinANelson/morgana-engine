@@ -75,6 +75,9 @@ sealed interface WorldSimulationEvent {
     /** The momentum meter of one character changed: its fill (0..99) and the ticks of empowerment left (0 when not empowered). */
     data class MomentumChanged(val characterId: String, val momentum: Int, val empoweredTicks: Int) : WorldSimulationEvent
 
+    /** The health orbs on [mapId] changed (dropped, drifting to a player, picked up or faded); [orbs] is the whole list now. */
+    data class OrbsChanged(val mapId: Int, val orbs: List<com.morgana.domain.entity.HealthOrb>) : WorldSimulationEvent
+
     data class AnimationTriggered(
         val mapId: Int,
         val tileX: Int,

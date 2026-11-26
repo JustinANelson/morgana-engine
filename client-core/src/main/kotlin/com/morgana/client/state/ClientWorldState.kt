@@ -455,6 +455,29 @@ class ClientWorldState {
 
     fun isEmpowered(nowMs: Long = System.currentTimeMillis()): Boolean = com.morgana.client.render.ClientDebug.empower == "on" || empoweredUntilMs > nowMs
 
+    /** Health orbs lying on the active map (see `tuning.healthOrbChancePercent`). */
+    var healthOrbs: List<com.morgana.domain.entity.HealthOrb> = emptyList()
+
+    /** Screen shake: the current amplitude in pixels (decays by itself) and a counter to vary the offset each frame. */
+    var shake: Float = 0f
+    private var shakeTick = 0
+
+    fun addShake(amount: Float) {
+        if (com.morgana.client.access.Accessibility.reduceMotion) return
+        shake = (shake + amount).coerceAtMost(9f)
+    }
+
+    /** The camera's offset this frame for the shake, in world pixels (0, 0 when still). */
+    fun shakeOffset(): Pair<Float, Float> {
+        if (shake < 0.3f) return 0f to 0f
+        shakeTick++
+        val a = shakeTick * 2.399f
+        return kotlin.math.cos(a) * shake to kotlin.math.sin(a * 1.7f) * shake
+    }
+
+    /** Seconds left of the brief red flash on a monster that was just struck, by instance id. */
+    val npcHitFlash: MutableMap<String, Float> = HashMap()
+
     /** Built-in skill visuals (arrow rain, dodge dust, spin whirl) in progress; see [SkillFx]. */
     val skillFx: MutableList<SkillFx> = mutableListOf()
     val playerCastProgress: MutableMap<String, Float> = linkedMapOf()
@@ -847,6 +870,8 @@ class ClientWorldState {
         activeAnimations.clear()
         spellShots.clear()
         skillFx.clear()
+        healthOrbs = emptyList()
+        npcHitFlash.clear()
         momentum = 0
         empoweredUntilMs = 0L
         playerCastProgress.clear()
@@ -1161,6 +1186,7 @@ class ClientWorldState {
                     if (packet.category == com.morgana.protocol.FloatingTextCategory.DAMAGE ||
                         packet.category == com.morgana.protocol.FloatingTextCategory.CRIT_DAMAGE
                     ) flinchAt(packet.tileX, packet.tileY)
+                    if (packet.category == com.morgana.protocol.FloatingTextCategory.CRIT_DAMAGE) addShake(2.2f)
                     val tileSize = activeMap?.tileSize ?: 32
                     val profile = gameDefinition?.sprites
                     // Text rises above whoever stands on the tile: their visible height, with any draw scale.
@@ -1189,16 +1215,31 @@ class ClientWorldState {
                     }
                 }
             }
+            is ServerPacket.HealthOrbsUpdated -> {
+                if (activeMap?.id == packet.mapId) healthOrbs = packet.orbs
+            }
             is ServerPacket.Momentum -> {
                 momentum = packet.momentum
                 empoweredUntilMs = if (packet.empoweredTicks > 0) System.currentTimeMillis() + packet.empoweredTicks * 50L else 0L
             }
             is ServerPacket.SkillEffect -> {
-                if (activeMap?.id == packet.mapId) {
+                if (activeMap?.id == packet.mapId && packet.effect == SkillFx.TELEGRAPH_CANCEL) {
+                    skillFx.removeAll { it.isTelegraph && it.sourceId == packet.sourceId }
+                } else if (activeMap?.id == packet.mapId) {
+                    if (packet.sourceId.isNotEmpty() && packet.sourceId == localCharacter?.id) {
+                        // A big skill of the local player shakes the screen a little.
+                        when (packet.effect) {
+                            SkillFx.BASH, SkillFx.SHOCKWAVE -> addShake(5f)
+                            SkillFx.SPIN -> addShake(3.5f)
+                            SkillFx.PULL -> addShake(3f)
+                        }
+                    }
+                    if (packet.effect == SkillFx.ELECTRIFY) addShake(2f)
                     skillFx.add(
                         SkillFx(
                             effect = packet.effect, fromX = packet.fromX, fromY = packet.fromY, toX = packet.toX, toY = packet.toY, radius = packet.radius,
-                            delaySeconds = packet.delayTicks * SkillFx.TICK_SECONDS, spanSeconds = packet.spanTicks * SkillFx.TICK_SECONDS
+                            delaySeconds = packet.delayTicks * SkillFx.TICK_SECONDS, spanSeconds = packet.spanTicks * SkillFx.TICK_SECONDS,
+                            sourceId = packet.sourceId
                         )
                     )
                     while (skillFx.size > 40) skillFx.removeAt(0)
@@ -1577,8 +1618,12 @@ class ClientWorldState {
         for (n in npcsOnMap.values) {
             if (n.tileX == tileX && n.tileY == tileY) {
                 npcVisuals[n.instanceId]?.takeIf { it.actionState == null }?.triggerAction(SpriteState.HURT, HURT_DURATION)
+                npcHitFlash[n.instanceId] = 0.11f
             }
         }
+        // The local player being struck jolts the screen.
+        val me = localCharacter
+        if (me != null && me.position.tileX == tileX && me.position.tileY == tileY) addShake(4.5f)
     }
 
     /** Plays a short client-side visual action pose ([SpriteState.ATTACK], [SpriteState.HARVEST], [SpriteState.CAST]) on the local hero. */
@@ -1704,8 +1749,18 @@ class ClientWorldState {
         while (fxIter.hasNext()) {
             val fx = fxIter.next()
             fx.elapsed += deltaSeconds
-            if (fx.finished) fxIter.remove()
+            // A warning ends with the monster that made it (it died, left or was stunned and the cancel was missed).
+            if (fx.finished || (fx.isTelegraph && fx.sourceId.isNotEmpty() && npcsOnMap[fx.sourceId]?.isAlive != true)) fxIter.remove()
         }
+        if (npcHitFlash.isNotEmpty()) {
+            val flashIter = npcHitFlash.entries.iterator()
+            while (flashIter.hasNext()) {
+                val e = flashIter.next()
+                e.setValue(e.value - deltaSeconds)
+                if (e.value <= 0f) flashIter.remove()
+            }
+        }
+        if (shake > 0f) shake = (shake - deltaSeconds * 26f).coerceAtLeast(0f)
 
         val shotIter = spellShots.iterator()
         while (shotIter.hasNext()) {

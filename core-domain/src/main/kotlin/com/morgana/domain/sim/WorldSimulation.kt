@@ -133,6 +133,9 @@ class WorldSimulation(
     val commonEvents: MutableMap<Int, CommonEventDefinition> = linkedMapOf()
     val animations: MutableMap<Int, AnimationDefinition> = linkedMapOf()
     /** Action-combat skills and the weapon sets (combo graphs) over them; read by an action combat module (ADR 0017). */
+    /** Health orbs lying on each map (not saved: they fade in seconds). */
+    val healthOrbs: MutableMap<Int, MutableList<com.morgana.domain.entity.HealthOrb>> = linkedMapOf()
+
     val actionSkills: MutableMap<Int, com.morgana.domain.content.ActionSkillDefinition> = linkedMapOf()
     val weaponSets: MutableMap<Int, com.morgana.domain.content.WeaponSetDefinition> = linkedMapOf()
 
@@ -694,6 +697,7 @@ class WorldSimulation(
 
         // 6. Tick NPC AI, status effects, combat, and respawns
         tickNpcs(out)
+        tickHealthOrbs(out)
 
         // 6b. Systems that run after the monsters (the Guild War starts and ends on schedule)
         tickSystems(TickStage.AFTER_NPCS, out)

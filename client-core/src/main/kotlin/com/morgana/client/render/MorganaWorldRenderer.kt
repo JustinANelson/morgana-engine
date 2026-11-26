@@ -116,6 +116,8 @@ class MorganaWorldRenderer(
                 camera.position.y += shiftY
             }
         }
+        // A jolt (being hit, a heavy skill) shakes the view for a moment.
+        worldState.shakeOffset().let { (sx, sy) -> camera.position.x += sx; camera.position.y += sy }
         // Snap to a whole screen pixel so scaled tiles and sprites do not shimmer (the editor may use in-between scales).
         val zoomScale = 1f / camera.zoom
         camera.position.x = WorldZoom.snap(camera.position.x, zoomScale)
@@ -496,7 +498,8 @@ class MorganaWorldRenderer(
                     paperdollSpriteIds = emptyList(),
                     paperdollLayers = emptyList(),
                     // Rare variants are recoloured toward their variant colour and stand in a pulsing glow.
-                    tint = if (variantColor != null) Color(0.55f + 0.45f * variantColor.r, 0.55f + 0.45f * variantColor.g, 0.55f + 0.45f * variantColor.b, 1f) else Color.WHITE,
+                    tint = if ((worldState.npcHitFlash[npc.instanceId] ?: 0f) > 0f) Color(1f, 0.45f, 0.45f, 1f)
+                    else if (variantColor != null) Color(0.55f + 0.45f * variantColor.r, 0.55f + 0.45f * variantColor.g, 0.55f + 0.45f * variantColor.b, 1f) else Color.WHITE,
                     aura = variantColor
                 )
             )
@@ -624,6 +627,25 @@ class MorganaWorldRenderer(
         renderAnimations(batch, map, worldState, aboveEntities = true)
     }
 
+    private var orbTex: com.badlogic.gdx.graphics.Texture? = null
+
+    /** A soft red globe for the health orbs: a radial gradient from a white-hot centre to a red edge, made once. */
+    private fun orbTexture(): com.badlogic.gdx.graphics.Texture {
+        orbTex?.let { return it }
+        val size = 32
+        val pm = com.badlogic.gdx.graphics.Pixmap(size, size, com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888)
+        for (y in 0 until size) for (x in 0 until size) {
+            val d = kotlin.math.hypot(x - 15.5, y - 15.5) / 15.5
+            if (d <= 1.0) {
+                val a = (1.0 - d).coerceIn(0.0, 1.0)
+                val core = (1.0 - d * 1.6).coerceIn(0.0, 1.0)
+                pm.setColor(1f, (0.18 + 0.8 * core).toFloat(), (0.18 + 0.8 * core).toFloat(), kotlin.math.min(1.0, a * 2.4).toFloat())
+            } else pm.setColor(0f, 0f, 0f, 0f)
+            pm.drawPixel(x, y)
+        }
+        return com.badlogic.gdx.graphics.Texture(pm).also { it.setFilter(com.badlogic.gdx.graphics.Texture.TextureFilter.Linear, com.badlogic.gdx.graphics.Texture.TextureFilter.Linear); pm.dispose(); orbTex = it }
+    }
+
     /** Draws the built-in skill effects (see [com.morgana.client.state.SkillFx]) from plain shapes and the arrow sprite. */
     private fun renderSkillFx(batch: SpriteBatch, map: MapDefinition, worldState: ClientWorldState) {
         val ts = map.tileSize
@@ -646,8 +668,94 @@ class MorganaWorldRenderer(
             }
             batch.color = Color.WHITE
         }
+        // Health orbs: glowing red globes that bob a little and draw in a hurt player.
+        if (worldState.healthOrbs.isNotEmpty()) {
+            val tex = orbTexture()
+            val t = elapsedSeconds
+            for ((i, orb) in worldState.healthOrbs.withIndex()) {
+                val bob = kotlin.math.sin(t * 5f + i * 1.9f) * 2.5f
+                val pulse = 1f + 0.12f * kotlin.math.sin(t * 7f + i)
+                val cx = orb.x
+                val cy = ry(orb.y - bob) + half
+                batch.setColor(1f, 0.25f, 0.25f, 0.28f)
+                batch.draw(tex, cx - 20f * pulse, cy - 20f * pulse, 40f * pulse, 40f * pulse)
+                batch.setColor(1f, 1f, 1f, 1f)
+                batch.draw(tex, cx - 10f * pulse, cy - 10f * pulse, 20f * pulse, 20f * pulse)
+            }
+            batch.color = Color.WHITE
+        }
         for (fx in worldState.skillFx) {
             when (fx.effect) {
+                com.morgana.client.state.SkillFx.TELEGRAPH_CIRCLE -> {
+                    // A danger zone on the ground: a pulsing red edge, and a fill that grows from the middle until the strike lands.
+                    val pulse = 0.65f + 0.3f * kotlin.math.sin(fx.elapsed * 14f)
+                    val fadeOut = (1f - (fx.elapsed - fx.spanSeconds) / 0.12f).coerceIn(0f, 1f)
+                    batch.setColor(1f, 0.15f, 0.12f, 0.85f * pulse * fadeOut)
+                    for ((px, py) in com.morgana.client.state.SkillFxMath.ring(fx.toX, fx.toY, fx.radius, (fx.radius / 3f).toInt().coerceAtLeast(14), 0f)) dot(px, py, 4f)
+                    val r = fx.radius * fx.progress
+                    for (k in 1..4) {
+                        batch.setColor(1f, 0.2f, 0.15f, (0.28f + 0.2f * fx.progress) * fadeOut)
+                        for ((px, py) in com.morgana.client.state.SkillFxMath.ring(fx.toX, fx.toY, r * k / 4f, (r * k / 4f / 3f).toInt().coerceAtLeast(6), 0f)) dot(px, py, 5f)
+                    }
+                }
+                com.morgana.client.state.SkillFx.TELEGRAPH_LINE -> {
+                    // A danger lane: its edges pulse red and the fill sweeps along it towards where the monster will end up.
+                    val dx = fx.toX - fx.fromX
+                    val dy = fx.toY - fx.fromY
+                    val len = kotlin.math.hypot(dx, dy).coerceAtLeast(1f)
+                    val ux = dx / len
+                    val uy = dy / len
+                    val nx = -uy
+                    val ny = ux
+                    val pulse = 0.65f + 0.3f * kotlin.math.sin(fx.elapsed * 14f)
+                    val fadeOut = (1f - (fx.elapsed - fx.spanSeconds) / 0.12f).coerceIn(0f, 1f)
+                    var d = 0f
+                    while (d <= len) {
+                        batch.setColor(1f, 0.15f, 0.12f, 0.85f * pulse * fadeOut)
+                        dot(fx.fromX + ux * d + nx * fx.radius, fx.fromY + uy * d + ny * fx.radius, 4f)
+                        dot(fx.fromX + ux * d - nx * fx.radius, fx.fromY + uy * d - ny * fx.radius, 4f)
+                        if (d <= len * fx.progress) {
+                            batch.setColor(1f, 0.2f, 0.15f, (0.28f + 0.2f * fx.progress) * fadeOut)
+                            var w = -fx.radius
+                            while (w <= fx.radius) { dot(fx.fromX + ux * d + nx * w, fx.fromY + uy * d + ny * w, 5f); w += 8f }
+                        }
+                        d += 8f
+                    }
+                }
+                com.morgana.client.state.SkillFx.PULL -> {
+                    // A pulling cry: rings that contract towards the character, with inward streaks.
+                    val t = fx.elapsed
+                    val fade = (1f - t / 0.6f).coerceIn(0f, 1f)
+                    for (k in 0..2) {
+                        val u = ((t - 0.08f * k) / 0.45f).coerceIn(0f, 1f)
+                        if (t >= 0.08f * k && u < 1f) {
+                            batch.setColor(0.9f, 0.85f, 0.7f, 0.9f * (1f - u))
+                            for ((px, py) in com.morgana.client.state.SkillFxMath.ring(fx.fromX, fx.fromY + 6f, fx.radius * (1f - u) + 18f, 28, 0f)) dot(px, py, 4.5f)
+                        }
+                    }
+                    batch.setColor(1f, 0.95f, 0.8f, 0.7f * fade)
+                    for (i in 0 until 12) {
+                        val ang = i * (2f * Math.PI.toFloat() / 12f)
+                        val u = (t / 0.4f).coerceIn(0f, 1f)
+                        val r = fx.radius * (1f - u) + 20f
+                        dot(fx.fromX + kotlin.math.cos(ang) * r, fx.fromY + 6f + kotlin.math.sin(ang) * r, 3.5f)
+                    }
+                }
+                com.morgana.client.state.SkillFx.SNARE -> {
+                    // A net thrown over an area: spokes and rings that settle and fade.
+                    val t = fx.elapsed
+                    val fade = (1f - (t - 0.5f) / 0.6f).coerceIn(0f, 1f)
+                    val grow = (t / 0.2f).coerceIn(0f, 1f)
+                    val r = fx.radius * (0.4f + 0.6f * grow)
+                    batch.setColor(0.7f, 0.9f, 1f, 0.9f * fade)
+                    for ((px, py) in com.morgana.client.state.SkillFxMath.ring(fx.toX, fx.toY, r, (r / 3f).toInt().coerceAtLeast(14), 0f)) dot(px, py, 3.5f)
+                    for ((px, py) in com.morgana.client.state.SkillFxMath.ring(fx.toX, fx.toY, r * 0.55f, (r * 0.55f / 3f).toInt().coerceAtLeast(10), 0f)) dot(px, py, 3f)
+                    for (i in 0 until 8) {
+                        val ang = i * (Math.PI.toFloat() / 4f)
+                        var d = 0f
+                        while (d <= r) { dot(fx.toX + kotlin.math.cos(ang) * d, fx.toY + kotlin.math.sin(ang) * d, 2.6f); d += 9f }
+                    }
+                }
                 com.morgana.client.state.SkillFx.EMPOWER_BURST -> {
                     // The empowerment starts: two rings burst out and a column of sparks rises.
                     val t = fx.elapsed

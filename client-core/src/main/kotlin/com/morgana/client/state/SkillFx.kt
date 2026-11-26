@@ -20,8 +20,15 @@ class SkillFx(
     val radius: Float,
     val delaySeconds: Float,
     val spanSeconds: Float,
-    var elapsed: Float = 0f
+    var elapsed: Float = 0f,
+    /** Who started it: a character id, or a monster's instance id for a telegraph (so a stun can cancel the warning). */
+    val sourceId: String = ""
 ) {
+    val isTelegraph: Boolean get() = effect == TELEGRAPH_CIRCLE || effect == TELEGRAPH_LINE
+
+    /** How far through its wind-up a telegraph is, 0..1. */
+    val progress: Float get() = if (spanSeconds <= 0f) 1f else (elapsed / spanSeconds).coerceIn(0f, 1f)
+
     val durationSeconds: Float
         get() = when (effect) {
             ARROW_RAIN -> delaySeconds + spanSeconds + 0.4f
@@ -30,6 +37,9 @@ class SkillFx(
             EMPOWER_PULSE -> 0.5f
             BOLT -> 0.3f
             SHOCK -> 0.55f
+            TELEGRAPH_CIRCLE, TELEGRAPH_LINE -> spanSeconds + 0.12f
+            PULL -> 0.6f
+            SNARE -> 1.1f
             BASH -> delaySeconds + 0.5f
             ELECTRIFY -> 0.8f
             SHOCKWAVE -> 0.45f
@@ -46,6 +56,11 @@ class SkillFx(
         const val EMPOWER_PULSE = "empower_pulse"
         const val BOLT = "bolt"
         const val SHOCK = "shock"
+        const val TELEGRAPH_CIRCLE = "telegraph_circle"
+        const val TELEGRAPH_LINE = "telegraph_line"
+        const val TELEGRAPH_CANCEL = "telegraph_cancel"
+        const val PULL = "pull"
+        const val SNARE = "snare"
         const val BASH = "bash"
         const val ELECTRIFY = "electrify"
         const val SHOCKWAVE = "shockwave"

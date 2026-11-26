@@ -165,7 +165,7 @@ internal fun WorldSimulation.tickProjectiles(out: MutableList<WorldSimulationEve
 }
 
 /** The squared distance from the point ([qx], [qy]) to the segment ([ax], [ay])-([bx], [by]). */
-private fun segmentDistance2(ax: Float, ay: Float, bx: Float, by: Float, qx: Float, qy: Float): Float {
+internal fun segmentDistance2(ax: Float, ay: Float, bx: Float, by: Float, qx: Float, qy: Float): Float {
     val dx = bx - ax
     val dy = by - ay
     val len2 = dx * dx + dy * dy
@@ -1322,6 +1322,61 @@ internal fun WorldSimulation.applyDamageToNpc(
     out.add(WorldSimulationEvent.NpcUpdated(updatedNpc))
 }
 
+/** A slain monster may drop health orbs (a rare or special variant always drops three) where it fell. */
+internal fun WorldSimulation.dropHealthOrbs(npc: MapNpcInstance, special: Boolean, out: MutableList<WorldSimulationEvent>) {
+    val t = game.definition.gameplayTuning
+    if (t.healthOrbChancePercent <= 0 || t.healthOrbHealPercent <= 0) return
+    val count = if (special) 3 else if (rng.nextInt(100) < t.healthOrbChancePercent) 1 else 0
+    if (count == 0) return
+    val ts = maps[npc.mapId]?.tileSize ?: 32
+    val list = healthOrbs.getOrPut(npc.mapId) { mutableListOf() }
+    repeat(count) {
+        list.add(
+            com.morgana.domain.entity.HealthOrb(
+                id = nextId("orb"), x = npc.bodyX(ts) + ts / 2f + (rng.nextInt(41) - 20), y = npc.bodyY(ts) + ts / 2f + (rng.nextInt(41) - 20),
+                expiresAt = currentTick + t.healthOrbLifeTicks, healPercent = t.healthOrbHealPercent
+            )
+        )
+    }
+    out.add(WorldSimulationEvent.OrbsChanged(npc.mapId, list.toList()))
+}
+
+/** Orbs fade, drift towards a hurt player nearby and heal them when reached. */
+internal fun WorldSimulation.tickHealthOrbs(out: MutableList<WorldSimulationEvent>) {
+    for ((mapId, list) in healthOrbs) {
+        if (list.isEmpty()) continue
+        val lifeId = game.lifeVitalId
+        var changed = false
+        val iter = list.listIterator()
+        while (iter.hasNext()) {
+            val orb = iter.next()
+            if (currentTick >= orb.expiresAt) { iter.remove(); changed = true; continue }
+            val ts = maps[mapId]?.tileSize ?: 32
+            // Only a player who is hurt picks an orb up (or draws it in); a healthy one walks over it and leaves it.
+            val hurt = players.values.filter { p ->
+                p.position.mapId == mapId && p.isAlive(lifeId) && (p.vitals[lifeId]?.let { it.cur < it.max } ?: false)
+            }.minByOrNull { p -> kotlin.math.hypot((p.position.pixelX + ts / 2f - orb.x).toDouble(), (p.position.pixelY + ts / 2f - orb.y).toDouble()) } ?: continue
+            val dx = hurt.position.pixelX + ts / 2f - orb.x
+            val dy = hurt.position.pixelY + ts / 2f - orb.y
+            val dist = kotlin.math.hypot(dx.toDouble(), dy.toDouble()).toFloat()
+            if (dist <= 24f) {
+                val life = hurt.vitals[lifeId] ?: continue
+                val amount = (life.max * orb.healPercent / 100).coerceAtLeast(1)
+                val healed = hurt.copy(vitals = hurt.vitals + (lifeId to life.heal(amount)))
+                players[healed.id] = healed
+                out.add(WorldSimulationEvent.FloatingTextEmitted(mapId, hurt.position.tileX, hurt.position.tileY, "+$amount", "HEAL", "#22C55E"))
+                out.add(WorldSimulationEvent.CharacterUpdated(healed))
+                iter.remove()
+                changed = true
+            } else if (dist <= 110f) {
+                iter.set(orb.copy(x = orb.x + dx / dist * 6f, y = orb.y + dy / dist * 6f))
+                changed = true
+            }
+        }
+        if (changed) out.add(WorldSimulationEvent.OrbsChanged(mapId, list.toList()))
+    }
+}
+
 internal fun WorldSimulation.handleNpcKilled(
     npc: MapNpcInstance,
     npcDef: NpcDefinition,
@@ -1350,6 +1405,7 @@ internal fun WorldSimulation.handleNpcKilled(
     val variant = npcVariant(npc)
     val rolled = rolledVariant(npc)
     val effectiveNpcLevel = (rolled?.effectiveLevel(npcDef.level) ?: npcDef.level) + npcLevelShift(npc)
+    dropHealthOrbs(npc, rolled != null, out)
 
     // Roll loot drops
     val groundList = mapGroundItems.getOrPut(npc.mapId) { mutableListOf() }

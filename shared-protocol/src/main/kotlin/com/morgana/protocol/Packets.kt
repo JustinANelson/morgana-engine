@@ -879,6 +879,11 @@ sealed interface ServerPacket {
     @SerialName("s_ground_items")
     data class GroundItemsUpdated(val mapId: Int, val items: List<MapGroundItem>) : ServerPacket
 
+    /** The health orbs on [mapId] (the whole list; an empty list clears them). */
+    @Serializable
+    @SerialName("s_orbs")
+    data class HealthOrbsUpdated(val mapId: Int, val orbs: List<com.morgana.domain.entity.HealthOrb>) : ServerPacket
+
     @Serializable
     @SerialName("s_projectiles")
     data class ProjectilesUpdated(val mapId: Int, val projectiles: List<MapProjectile>) : ServerPacket

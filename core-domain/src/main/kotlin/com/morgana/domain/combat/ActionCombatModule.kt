@@ -498,6 +498,7 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         }
         if (effects.isNotEmpty()) live = live.copy(statusEffects = live.statusEffects.filterNot { e -> effects.any { it.id == e.id } } + effects)
         if (hit.knockbackPixels > 0) live = knockedBack(sim, live, st, hit.knockbackPixels, if (hit.knockbackRadial) player else null)
+        if (hit.pullPixels > 0) live = pulledToward(sim, live, sim.players[player.id] ?: player, hit.pullPixels)
         if (live != list[idx]) {
             list[idx] = live
             out.add(WorldSimulationEvent.NpcUpdated(live))
@@ -542,6 +543,26 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
                 )
             )
         }
+    }
+
+    /** Drags a monster up to [pixels] towards [attacker], a tile at a time, stopping beside them (never onto their tile or another body). */
+    private fun pulledToward(sim: WorldSimulation, npc: MapNpcInstance, attacker: CharacterState, pixels: Int): MapNpcInstance {
+        val map = sim.maps[npc.mapId] ?: return npc
+        val ts = map.tileSize
+        var moved = npc
+        repeat(maxOf(1, pixels / ts)) {
+            val dx = attacker.position.tileX - moved.tileX
+            val dy = attacker.position.tileY - moved.tileY
+            if (StrictMath.abs(dx) <= 1 && StrictMath.abs(dy) <= 1) return moved
+            val dir = ActionCombatRules.nearestDirection(dx.toDouble(), dy.toDouble())
+            val to = com.morgana.domain.spatial.TileCoord(moved.tileX + dir.dx, moved.tileY + dir.dy)
+            val occupied = (sim.mapNpcs[npc.mapId] ?: emptyList<MapNpcInstance>()).any { it.isAlive && it.instanceId != moved.instanceId && it.tileX == to.x && it.tileY == to.y } ||
+                sim.players.values.any { it.position.mapId == npc.mapId && it.position.tileX == to.x && it.position.tileY == to.y }
+            if (!occupied && map.isInBounds(to) && map.canTraverse(com.morgana.domain.spatial.TileCoord(moved.tileX, moved.tileY), to, dir, isNpc = true)) {
+                moved = moved.copy(tileX = to.x, tileY = to.y)
+            } else return moved
+        }
+        return moved
     }
 
     /** Pushes a monster away along the skill's aim, one tile per 32 px (at least one), stopping at a wall or another body. */

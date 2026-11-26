@@ -358,7 +358,11 @@ data class MapNpcInstance(
     val pixelY: Float = 0f,
     /** The tile a free-moving idle monster is wandering to, or -1 when it is not wandering. */
     val wanderX: Int = -1,
-    val wanderY: Int = -1
+    val wanderY: Int = -1,
+    /** The tick a telegraphed strike lands (0 when the monster is not winding one up) and the point it is aimed at / ends at, in map pixels. */
+    val windUpUntil: Long = 0L,
+    val windUpX: Float = 0f,
+    val windUpY: Float = 0f
 ) {
     val isAlive: Boolean
         get() = (vitals["hp"]?.cur ?: (vitals.values.firstOrNull()?.cur ?: 0)) > 0 && respawnAtTick == 0L
@@ -393,6 +397,10 @@ data class MapGroundItem(
     val ownerProtectedUntilTick: Long = 0L,
     val despawnAtTick: Long = 0L
 )
+
+/** A health orb on the ground (see `tuning.healthOrbChancePercent`): at ([x], [y]) in map pixels, heals [healPercent] of life when a hurt player reaches it, gone at tick [expiresAt]. */
+@Serializable
+data class HealthOrb(val id: String, val x: Float, val y: Float, val expiresAt: Long, val healPercent: Int)
 
 /**
  * Live ranged projectile or directional spell missile in flight on a map.

@@ -114,7 +114,9 @@ data class SkillHit(
     val critElectrifies: Boolean = false,
     val stunTicks: Int = 30,
     /** True: the knockback pushes each monster directly away from the attacker, so a bash sends everything round it outwards. */
-    val knockbackRadial: Boolean = false
+    val knockbackRadial: Boolean = false,
+    /** Drags the monster this many pixels straight towards the attacker (stopping beside them): gathers a crowd for an area skill. */
+    val pullPixels: Int = 0
 )
 
 /** A hitbox that leaves the character: it spawns on the hitbox's `fromTick` and flies forward. */

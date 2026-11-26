@@ -28,6 +28,8 @@ enum class RingRole {
     TARGET,
     /** The dodge, below and left of the attack. */
     DODGE,
+    /** The health potion, beside the dodge: drinks the first healing item in the bag. */
+    POTION,
     /** Use / Get: shown only when there is something to use or pick up. */
     CONTEXT,
     /** Jump, when the game has it. */
@@ -70,6 +72,7 @@ fun ringLayout(rightEdge: Float, bottom: Float, d: Float, gap: Float = 6f): Map<
     slots[RingKey(RingRole.DODGE)] = polar(cx, cy, r1, 238f, small)
     slots[RingKey(RingRole.MORE)] = polar(cx, cy, r2, 80f, potion)
     slots[RingKey(RingRole.TARGET)] = polar(cx, cy, r2, 116f, potion)
+    slots[RingKey(RingRole.POTION)] = polar(cx, cy, r2, 214f, potion)
     slots[RingKey(RingRole.CONTEXT)] = polar(cx, cy, r2, 188f, small)
     slots[RingKey(RingRole.JUMP)] = polar(cx, cy, r2, 152f, small)
     val core = slots.values.toList()

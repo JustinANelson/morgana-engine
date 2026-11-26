@@ -78,7 +78,8 @@ fun touchRoute(action: com.morgana.client.access.GameAction): TouchRoute = when 
     com.morgana.client.access.GameAction.INTERACT,
     com.morgana.client.access.GameAction.PICK_UP,
     com.morgana.client.access.GameAction.MORE_ACTIONS,
-    com.morgana.client.access.GameAction.TARGET_NEXT -> TouchRoute.ACTION_BUTTON
+    com.morgana.client.access.GameAction.TARGET_NEXT,
+    com.morgana.client.access.GameAction.HEALTH_POTION -> TouchRoute.ACTION_BUTTON
     com.morgana.client.access.GameAction.STANCE -> TouchRoute.ACTION_LIST
     com.morgana.client.access.GameAction.SPRINT -> TouchRoute.TOGGLE_BUTTON
     com.morgana.client.access.GameAction.HOTBAR_1,
