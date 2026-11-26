@@ -43,6 +43,12 @@ internal fun WorldSimulation.tickProjectiles(out: MutableList<WorldSimulationEve
         var changed = false
 
         for (proj in projList) {
+            if (proj.free) {
+                // A free-flight projectile moves every tick; the others step a tile at a time.
+                changed = true
+                stepFreeProjectile(proj, mapId, map, out)?.let { updatedList.add(it) }
+                continue
+            }
             if (currentTick < proj.nextStepTick) {
                 updatedList.add(proj)
                 continue
@@ -155,6 +161,70 @@ internal fun WorldSimulation.tickProjectiles(out: MutableList<WorldSimulationEve
             out.add(WorldSimulationEvent.ProjectilesChanged(mapId, projList.toList()))
         }
     }
+}
+
+/** The squared distance from the point ([qx], [qy]) to the segment ([ax], [ay])-([bx], [by]). */
+private fun segmentDistance2(ax: Float, ay: Float, bx: Float, by: Float, qx: Float, qy: Float): Float {
+    val dx = bx - ax
+    val dy = by - ay
+    val len2 = dx * dx + dy * dy
+    val t = if (len2 < 1e-6f) 0f else (((qx - ax) * dx + (qy - ay) * dy) / len2).coerceIn(0f, 1f)
+    val cx = ax + t * dx - qx
+    val cy = ay + t * dy - qy
+    return cx * cx + cy * cy
+}
+
+/**
+ * Moves one free-flight projectile a tick: it stops at a wall or the map's edge, hits the hostile monsters (and, where PvP is on,
+ * players) its body passes within reach of on the way (the whole step is swept, so a fast shot cannot skip a target), and ends when its
+ * range runs out. Returns the projectile still in flight, or null when it has ended.
+ */
+private fun WorldSimulation.stepFreeProjectile(proj: MapProjectile, mapId: Int, map: MapDefinition, out: MutableList<WorldSimulationEvent>): MapProjectile? {
+    val ts = map.tileSize
+    val nx = proj.px + proj.vx
+    val ny = proj.py + proj.vy
+    if (nx < 0f || ny < 0f) return null
+    val tile = TileCoord((nx / ts).toInt(), (ny / ts).toInt())
+    if (!map.isInBounds(tile)) return null
+    if (map.getCell(tile)?.attribute is TileAttribute.Blocked) return null
+
+    val reach = (game.definition.gameplayTuning.actionTargetRadiusPixels + 6).toFloat()
+    val reach2 = reach * reach
+    var hitIds = proj.hitEntityIds
+    var hitSomething = false
+    val attacker = players[proj.sourceEntityId]
+    if (attacker != null) {
+        for (npc in mapNpcs[mapId].orEmpty().toList()) {
+            if (!npc.isAlive || npc.instanceId in hitIds || !isHostileNpc(npc)) continue
+            if (segmentDistance2(proj.px, proj.py, nx, ny, npc.tileX * ts + ts / 2f, npc.tileY * ts + ts / 2f) > reach2) continue
+            applyDamageToNpc(attacker, npc, proj.damage, isCrit = false, out = out)
+            hitSomething = true
+            hitIds = hitIds + npc.instanceId
+            if (!proj.pierce) break
+        }
+        if (!hitSomething) {
+            worldObjectAt(mapId, tile.x, tile.y)?.let { obj ->
+                if (com.morgana.domain.systems.WorldStateSystem.strike(this, attacker, obj, proj.damage, out)) hitSomething = true
+            }
+        }
+        if ((!hitSomething || proj.pierce) && map.moral.pvpEnabled) {
+            for (target in players.values.toList()) {
+                if (target.id == proj.sourceEntityId || target.id in hitIds || !target.isAlive(game.lifeVitalId) || target.position.mapId != mapId || !canAttackPlayer(attacker, target)) continue
+                if (segmentDistance2(proj.px, proj.py, nx, ny, target.position.pixelX + ts / 2f, target.position.pixelY + ts / 2f) > reach2) continue
+                applyPvpDamage(attacker, target, proj.damage, isCrit = false, out = out)
+                hitSomething = true
+                hitIds = hitIds + target.id
+                if (!proj.pierce) break
+            }
+        }
+    }
+    if (hitSomething && !proj.pierce) return null
+    val left = proj.remainingPixels - kotlin.math.sqrt(proj.vx * proj.vx + proj.vy * proj.vy)
+    if (left <= 0f) return null
+    return proj.copy(
+        px = nx, py = ny, currentTileX = tile.x, currentTileY = tile.y, remainingPixels = left,
+        nextStepTick = currentTick + 1L, hitEntityIds = hitIds
+    )
 }
 
 private const val LAST_SEEN_STAMP_TICKS = 200L

@@ -675,6 +675,8 @@ class MorganaGame(
         if (cursor != null) return cursor
         if (key == "Q" || centre == null) return null
         val t = com.morgana.client.input.CombatTargeting.pickAuto(centre.first, centre.second, worldState.targetCandidates(), worldState.lockedNpcId) ?: return null
+        // Using a skill with enemies near locks on to the one it picked, so the next skills keep going at it until it falls.
+        if (worldState.lockedNpcId == null) worldState.lockedNpcId = t.id
         return t.x to t.y
     }
 

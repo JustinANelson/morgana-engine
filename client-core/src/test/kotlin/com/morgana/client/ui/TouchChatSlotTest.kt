@@ -26,4 +26,16 @@ class TouchChatSlotTest {
             assertTrue(s.buttonX == s.feedX && s.buttonY == s.feedY, "$w x $h: button replaces the box where it was")
         }
     }
+
+    @Test
+    fun `the chat is centred on the screen when both thumbs leave room, with safe-area insets counted`() {
+        for ((w, h) in listOf(844f to 390f, 932f to 430f, 1024f to 600f)) {
+            for (inset in listOf(0f to 0f, 60f to 0f, 60f to 40f)) {
+                val s = touchChatSlot(w, h, inset.first, inset.second)
+                val chatCentre = s.feedX + s.feedW / 2f
+                val screenCentre = (inset.first + (w - inset.second)) / 2f
+                assertTrue(kotlin.math.abs(chatCentre - screenCentre) < 1f, "$w x $h inset $inset: centre $chatCentre vs $screenCentre")
+            }
+        }
+    }
 }

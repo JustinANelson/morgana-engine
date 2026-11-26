@@ -39,7 +39,11 @@ data class ActionState(
     /** A guard skill holds its timeline until this tick unless released. */
     val holdUntil: Long = 0L,
     /** The last skill tick whose movement has been applied. */
-    val movedTo: Int = -1
+    val movedTo: Int = -1,
+    /** The point the skill was aimed at (world pixels), when the press carried one; used by ground-targeted hitboxes. */
+    val aimX: Double = 0.0,
+    val aimY: Double = 0.0,
+    val aimSet: Boolean = false
 ) {
     val idle: Boolean get() = skillId == 0
 }

@@ -298,6 +298,9 @@ class ClientWorldState {
     /** Where a skill the player is aiming by dragging would go, in map pixels (y down), for the aim line; null when not aiming. */
     var aimPreview: Pair<Float, Float>? = null
 
+    /** Radius (map pixels) of the area the aimed skill will hit around [aimPreview], or 0 for a skill with no area (just the line). */
+    var aimRadius: Float = 0f
+
     /** The local player's centre in map pixels (y down), or null before they are on a map. */
     fun playerCentre(): Pair<Float, Float>? {
         val ch = localCharacter ?: return null

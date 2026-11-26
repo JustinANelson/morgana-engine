@@ -401,7 +401,17 @@ data class MapProjectile(
     /** When true, this projectile passes through entities instead of stopping on its first hit. */
     val pierce: Boolean = false,
     /** Entities already struck by a piercing projectile so it hits each target at most once. */
-    val hitEntityIds: Set<String> = emptySet()
+    val hitEntityIds: Set<String> = emptySet(),
+    /**
+     * True for a free-flight projectile (action combat, `SkillProjectile.freeAngle`): it moves every tick by ([vx], [vy]) pixels from
+     * ([px], [py]) at any angle, and ends when [remainingPixels] runs out. [currentTileX] and [currentTileY] follow it for the map's sake.
+     */
+    val free: Boolean = false,
+    val px: Float = 0f,
+    val py: Float = 0f,
+    val vx: Float = 0f,
+    val vy: Float = 0f,
+    val remainingPixels: Float = 0f
 )
 
 /**

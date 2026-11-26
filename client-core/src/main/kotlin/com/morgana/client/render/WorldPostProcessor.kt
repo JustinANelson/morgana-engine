@@ -124,7 +124,7 @@ class WorldPostProcessor {
         sh.setUniformf("u_aspect", width.toFloat() / height)
         sh.setUniformf("u_lighting", if (VisualFx.lighting) 1f else 0f)
         sh.setUniformf("u_tone", if (VisualFx.lighting) 1f else 0f)
-        sh.setUniformf("u_tilt", if (VisualFx.hd2d) 1f else 0f)
+        sh.setUniformf("u_tilt", if (VisualFx.hd2d && VisualFx.tiltShift) 1f else 0f)
         sh.setUniformf("u_hd", if (VisualFx.hd2d) 1f else 0f)
         // Bloom is stronger at night, when lit windows and fires are the brightest things on screen.
         sh.setUniformf("u_bloom", if (VisualFx.hd2d) 0.9f + 0.9f * (1f - (sky?.daylight ?: 1f)) else 0f)

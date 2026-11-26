@@ -11,8 +11,11 @@ object VisualFx {
     /** Sun/moon projected cast shadows for characters instead of a fixed oval (Ctrl+F7). */
     @JvmField var shadows: Boolean = true
 
-    /** "HD-2D" look: tilt-shift depth of field, bloom, saturation lift and vignette on the flat 2D world (Ctrl+F8). */
+    /** "HD-2D" look: bloom, saturation lift and vignette on the flat 2D world (Ctrl+F8). */
     @JvmField var hd2d: Boolean = true
+
+    /** The tilt-shift blur at the top and bottom edges of the view. Off by default (it read as a smear on a phone); `?fx=tilt` or `all` brings it back. */
+    @JvmField var tiltShift: Boolean = false
 
     /** Set false when the platform could not create framebuffers or compile the shader; everything falls back to the plain renderer. */
     @JvmField var available: Boolean = true
@@ -34,6 +37,7 @@ fun VisualFx.applyList(list: String?) {
     lighting = all || "lighting" in on
     shadows = all || "shadows" in on
     hd2d = all || "hd2d" in on
+    tiltShift = all || "tilt" in on
 }
 
 /** The `fx` value in a page address's query string, or null when there is none. */

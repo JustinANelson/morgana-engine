@@ -29,6 +29,11 @@ Every key press is an **input token** (`LMB`, `RMB`, `SPACE`, `Q`, `E`, `F`, `TA
 - **Super armour**: while a `SUPER_ARMOR` (or invulnerable) window is open, a stun or root on the character is removed instead of ending the skill; otherwise a stun ends the skill.
 - **State**: `WorldSimulation.actionStates` (`ActionState` per character, a sorted map), part of the state hash; cleaned up when idle. Not saved.
 
+## Free-angle projectiles and ground-targeted hitboxes (2026-11-26)
+- **`SkillProjectile.freeAngle`** (default false, so existing games are unchanged): the shot flies along the exact aim instead of one of eight tile directions. The simulation keeps it as a pixel position and velocity on `MapProjectile` (`free`, `px`, `py`, `vx`, `vy`, `remainingPixels`), moves it every tick (`stepFreeProjectile` in `CombatSystem.kt`), sweeps the whole step so a fast shot cannot skip a target, and hits hostile monsters (and players where PvP is on) whose body (`tuning.actionTargetRadiusPixels` plus 6 px) the path passes within. It stops at a wall, the map edge, its first hit (unless `pierce`) and its range. The client draws it at its pixel position, turned along its heading.
+- **`SkillHitbox.groundTarget` and `maxRangePixels`**: the hitbox is centred on the point the player aimed at (the press's `aimX`/`aimY`, kept on `ActionState.aimX/aimY/aimSet`), held within `maxRangePixels` of the character, instead of in front of them. With no aim point it sits in front as before. Tests: `FreeAimCombatTest`.
+- The F1 **Action skills** form does not show these three fields yet (edit the JSON; the schema knows them).
+
 ## Lanternfall
 `games/roguelike` ships on it: **Delver** (Slash, Backslash and Lantern Slam on left click; Shield Bash on right click with super armour; Roll on Space; hold Q to Guard and left click for a Riposte), **Ranger** (Quick Shot into Twin Shot; Piercing Arrow; Backstep; Knife Flick) and **Pyromancer** (Flame Lash into Ember Burst; Fire Wave; Blink). Hotbar spells (Fireball, Mending Light, Frost Nova, Rekindle) still work. See [Lanternfall](/content/roguelike_game.md).
 

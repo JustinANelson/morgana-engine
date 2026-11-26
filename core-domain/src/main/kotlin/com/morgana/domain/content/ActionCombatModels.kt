@@ -101,7 +101,9 @@ data class SkillProjectile(
     val speedPixelsPerTick: Int = 12,
     val rangePixels: Int = 224,
     /** Keeps flying after its first hit. */
-    val pierce: Boolean = false
+    val pierce: Boolean = false,
+    /** True: flies along the exact aim, at any angle, and hits whatever its body touches. False (the default): one of the eight directions, tile by tile. */
+    val freeAngle: Boolean = false
 )
 
 /** One hit area, live from [fromTick] to [toTick] inclusive; both must lie inside the skill's active window. */
@@ -125,7 +127,14 @@ data class SkillHitbox(
     /** Most targets this hitbox may hit; 0 = no limit. */
     val maxTargets: Int = 0,
     val hit: SkillHit = SkillHit(),
-    val projectile: SkillProjectile? = null
+    val projectile: SkillProjectile? = null,
+    /**
+     * True: the shape is centred on the point the player aimed at (a tap's auto-target or a drag), not in front of the character,
+     * so an area skill lands where it is aimed. [maxRangePixels] limits how far from the character the point may be (0 = no limit).
+     * With no aim point (a keyboard press with no cursor) the shape sits in front as usual.
+     */
+    val groundTarget: Boolean = false,
+    val maxRangePixels: Int = 0
 )
 
 /** Ticks [fromTick]..[toTick] (inclusive) during which the character has [type] armor. */

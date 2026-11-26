@@ -197,6 +197,7 @@ class PlayerHudAndWindows(
     private var chatPanel: VisTable? = null
     private var targetFrame: TargetFrame? = null
     private var touchAimDrag: Pair<Float, Float>? = null
+    private var touchAimToken: String? = null
     private var chatPanelOpen = false
     private var chatPanelTitle: VisLabel? = null
     private var chatCounter: VisLabel? = null
@@ -609,6 +610,7 @@ class PlayerHudAndWindows(
     fun refreshHotbar() {
         worldState.refreshLock()
         worldState.aimPreview = manualAim()
+        worldState.aimRadius = if (touchAimDrag != null) (groundHitbox(touchAimToken)?.radiusPixels ?: 0).toFloat() else 0f
         placeTargetFrame()
         placeMenuDock()
         applyRingHud()
@@ -940,7 +942,8 @@ class PlayerHudAndWindows(
         val chatKey = "${activeChatTab.name}|" + visibleMessages.joinToString("\n") { "${it.channel}:${it.senderName}:${it.message}" }
         if (chatKey != lastChatRenderKey) {
             lastChatRenderKey = chatKey
-            chatFeedLines = visibleMessages.takeLast(8).map { ChatFormatting.line(it) to chatChannelColor(it.channel) }
+            chatFeedLines = visibleMessages.takeLast(20).map { ChatFormatting.line(it) to chatChannelColor(it.channel) }
+            chatFeed?.followNewest()
             chatScroll?.let { sp -> if (chatPanelOpen) { sp.layout(); sp.scrollPercentY = 1f } }
             chatHistoryTable.clearChildren()
             chatHistoryTable.defaults().left().growX().padBottom(1f)
@@ -2722,7 +2725,7 @@ class PlayerHudAndWindows(
         chatLastUseMs = System.currentTimeMillis()
         chatMissed = 0
         lastChatRenderKey = ""
-        stage.keyboardFocus = chatInputField
+        // The keyboard opens only when the player taps the typing line, so opening the panel to read does not cover the screen.
     }
 
     private fun closeChatPanel() {
@@ -2823,8 +2826,17 @@ class PlayerHudAndWindows(
     fun manualAim(): Pair<Float, Float>? {
         val v = touchAimDrag ?: return null
         val c = worldState.playerCentre() ?: return null
-        return com.morgana.client.input.CombatTargeting.dragAim(c.first, c.second, v.first, v.second)
+        val ground = groundHitbox(touchAimToken)
+        // A ground-targeted skill lands as far out as the drag is long (a full drag reaches its range); others fly or swing along the drag.
+        val reach = if (ground != null && ground.maxRangePixels > 0) {
+            (kotlin.math.hypot(v.first, v.second) / GROUND_DRAG_FULL).coerceIn(0.12f, 1f) * ground.maxRangePixels
+        } else 160f
+        return com.morgana.client.input.CombatTargeting.dragAim(c.first, c.second, v.first, v.second, reach)
     }
+
+    /** The ground-targeted hitbox of the skill on action input [token], or null when it has none. */
+    private fun groundHitbox(token: String?): com.morgana.domain.content.SkillHitbox? =
+        token?.let { skillForToken(it) }?.hitboxes?.firstOrNull { it.groundTarget }
 
     /** The weapon set the character fights with (the first main set for their class and level), or null. */
     private fun activeWeaponSet(): com.morgana.domain.content.WeaponSetDefinition? {
@@ -2864,6 +2876,8 @@ class PlayerHudAndWindows(
         val ch = worldState.localCharacter ?: return false
         return skill.costs.any { (vital, cost) -> (ch.vitals[vital]?.cur ?: 0) < cost }
     }
+
+    private val GROUND_DRAG_FULL = 90f
 
     /** The ring's skill slots hold the weapon set's right-click, guard, special and free-key skills, in that order. */
     private val kitTokens = listOf("RMB", "Q", "TAB", "F")
@@ -3094,7 +3108,7 @@ class PlayerHudAndWindows(
                 else triggerHotbar(k)
             }
             b.withRelease { if (kit() != null && kitTokens[k] == "Q") onCombatRelease() }
-            b.withAim { touchAimDrag = it }
+            b.withAim { touchAimDrag = it; touchAimToken = if (it != null) kitTokens[k] else null }
             return b
         }
         fun combat(button: com.morgana.client.input.ActionCombatInput.Button, key: RingKey, tint: Color, visible: () -> Boolean): RingButton {

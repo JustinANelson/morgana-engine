@@ -158,6 +158,7 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         return st.copy(
             skillId = skillId, start = now, done = -1, hit = false, hits = emptySet(), groupCounts = emptyMap(), freeze = 0,
             fx = vector.first, fy = vector.second, bufferedToken = null, bufferedAt = 0L, movedTo = -1,
+            aimX = aim?.first ?: 0.0, aimY = aim?.second ?: 0.0, aimSet = aim != null,
             holdUntil = if (guard != null && guard.maxHoldTicks > 0) now + skill.startupTicks + guard.maxHoldTicks else 0L,
             cooldowns = if (skill.cooldownTicks > 0) st.cooldowns + (skillId to now + skill.cooldownTicks) else st.cooldowns
         )
@@ -251,29 +252,48 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
                 return@forEachIndexed
             }
             val targetRadius = sim.game.definition.gameplayTuning.actionTargetRadiusPixels
-            val reach = ActionCombatRules.reachTiles(hb, ts, targetRadius)
+            // A ground-targeted hitbox is centred on the aimed point (held within its range of the character); others sit on the character.
+            val ground = hb.groundTarget && st.aimSet
+            var ox = cx
+            var oy = cy
+            var shape = hb
+            if (ground) {
+                var gx = st.aimX - cx
+                var gy = st.aimY - cy
+                val dist = StrictMath.sqrt(gx * gx + gy * gy)
+                if (hb.maxRangePixels > 0 && dist > hb.maxRangePixels && dist > 1e-6) {
+                    gx = gx / dist * hb.maxRangePixels
+                    gy = gy / dist * hb.maxRangePixels
+                }
+                ox = cx + gx
+                oy = cy + gy
+                shape = hb.copy(forwardPixels = 0, sidePixels = 0)
+            }
+            val originTileX = if (ground) (ox / ts).toInt() else player.position.tileX
+            val originTileY = if (ground) (oy / ts).toInt() else player.position.tileY
+            val reach = ActionCombatRules.reachTiles(shape, ts, targetRadius)
             val candidates = (sim.mapNpcs[player.position.mapId] ?: emptyList<MapNpcInstance>()).filter {
-                it.isAlive && sim.isHostileNpc(it) && StrictMath.abs(it.tileX - player.position.tileX) <= reach && StrictMath.abs(it.tileY - player.position.tileY) <= reach
+                it.isAlive && sim.isHostileNpc(it) && StrictMath.abs(it.tileX - originTileX) <= reach && StrictMath.abs(it.tileY - originTileY) <= reach
             }
             for (npc in candidates) {
                 val key = "${hb.hitGroup}:${npc.instanceId}"
                 val count = st.groupCounts[hb.hitGroup] ?: 0
                 if (key in st.hits || (hb.maxTargets > 0 && count >= hb.maxTargets)) continue
-                if (!ActionCombatRules.inShape(hb, cx, cy, st.fx, st.fy, npc.tileX * ts + ts / 2.0, npc.tileY * ts + ts / 2.0, targetRadius)) continue
+                if (!ActionCombatRules.inShape(shape, ox, oy, st.fx, st.fy, npc.tileX * ts + ts / 2.0, npc.tileY * ts + ts / 2.0, targetRadius)) continue
                 st = st.copy(hits = st.hits + key, groupCounts = st.groupCounts + (hb.hitGroup to count + 1), hit = true)
                 hitNpc(sim, sim.players[player.id] ?: player, npc, hb.hit, st, out)
                 bestStop = maxOf(bestStop, hb.hit.hitStopTicks)
             }
             if (sim.game.definition.worldObjects != null) {
                 val structures = sim.worldObjectsOn(player.position.mapId).filter {
-                    StrictMath.abs(it.tileX - player.position.tileX) <= reach && StrictMath.abs(it.tileY - player.position.tileY) <= reach &&
+                    StrictMath.abs(it.tileX - originTileX) <= reach && StrictMath.abs(it.tileY - originTileY) <= reach &&
                         sim.game.definition.worldObjects?.kind(it.kind)?.attackable == true
                 }.sortedBy { it.id }
                 for (obj in structures) {
                     val key = "${hb.hitGroup}:${obj.id}"
                     val count = st.groupCounts[hb.hitGroup] ?: 0
                     if (key in st.hits || (hb.maxTargets > 0 && count >= hb.maxTargets)) continue
-                    if (!ActionCombatRules.inShape(hb, cx, cy, st.fx, st.fy, obj.tileX * ts + ts / 2.0, obj.tileY * ts + ts / 2.0, targetRadius)) continue
+                    if (!ActionCombatRules.inShape(shape, ox, oy, st.fx, st.fy, obj.tileX * ts + ts / 2.0, obj.tileY * ts + ts / 2.0, targetRadius)) continue
                     st = st.copy(hits = st.hits + key, groupCounts = st.groupCounts + (hb.hitGroup to count + 1), hit = true)
                     val (damage, _) = damageOf(sim, sim.players[player.id] ?: player, null, hb.hit)
                     com.morgana.domain.systems.WorldStateSystem.strike(sim, sim.players[player.id] ?: player, obj, damage, out)
@@ -366,6 +386,25 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         val dir = ActionCombatRules.nearestDirection(st.fx, st.fy)
         val (damage, _) = damageOf(sim, player, null, hb.hit)
         val tiles = maxOf(2, p.rangePixels / 32)
+        if (p.freeAngle) {
+            // Flies along the exact aim: a position in pixels that moves every tick, so it hits what it passes at any angle.
+            val ts = sim.maps[player.position.mapId]?.tileSize ?: 32
+            val speed = maxOf(1, p.speedPixelsPerTick).toDouble()
+            val startX = player.position.pixelX + ts / 2.0 + st.fx * 14.0
+            val startY = player.position.pixelY + ts / 2.0 + st.fy * 14.0
+            val free = MapProjectile(
+                projectileId = sim.nextId("aproj"), sourceEntityId = player.id, isFromPlayer = true, mapId = player.position.mapId,
+                currentTileX = (startX / ts).toInt(), currentTileY = (startY / ts).toInt(), direction = dir, remainingTiles = tiles,
+                spriteId = maxOf(1, p.spriteId), damage = maxOf(1, damage), ticksPerTile = 1,
+                nextStepTick = sim.currentTick + 1L, pierce = p.pierce,
+                free = true, px = startX.toFloat(), py = startY.toFloat(),
+                vx = (st.fx * speed).toFloat(), vy = (st.fy * speed).toFloat(), remainingPixels = p.rangePixels.toFloat()
+            )
+            val freeList = sim.mapProjectiles.getOrPut(player.position.mapId) { mutableListOf() }
+            freeList.add(free)
+            out.add(WorldSimulationEvent.ProjectilesChanged(player.position.mapId, freeList.toList()))
+            return
+        }
         val proj = MapProjectile(
             projectileId = sim.nextId("aproj"), sourceEntityId = player.id, isFromPlayer = true, mapId = player.position.mapId,
             currentTileX = player.position.tileX, currentTileY = player.position.tileY, direction = dir, remainingTiles = tiles,

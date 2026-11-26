@@ -209,11 +209,15 @@ class TouchChatSlot(val feedX: Float, val feedY: Float, val feedW: Float, val fe
  */
 fun touchChatSlot(w: Float, h: Float, insetLeft: Float = 0f, insetRight: Float = 0f): TouchChatSlot {
     val d = ringBaseSize(w, h)
-    val left = (14f + d * 0.95f * 2.25f + 10f + insetLeft).coerceAtMost(w * 0.4f)
-    val right = w - ringReach(w, h) - 10f - insetRight
-    val feedW = (right - left).coerceIn(120f, 380f)
+    val leftLimit = (14f + d * 0.95f * 2.25f + 10f + insetLeft).coerceAtMost(w * 0.4f)
+    val rightLimit = w - ringReach(w, h) - 10f - insetRight
+    val centre = (insetLeft + (w - insetRight)) / 2f
     val feedH = (h * 0.34f).coerceIn(84f, 130f)
-    return TouchChatSlot(left, 10f, feedW, feedH, left, 10f)
+    // Centred on the screen when both thumbs leave room for it; squeezed into the gap between them when they do not.
+    val half = minOf(190f, centre - leftLimit, rightLimit - centre)
+    if (half >= 60f) return TouchChatSlot(centre - half, 10f, half * 2f, feedH, centre - half, 10f)
+    val feedW = (rightLimit - leftLimit).coerceIn(120f, 380f)
+    return TouchChatSlot(leftLimit, 10f, feedW, feedH, leftLimit, 10f)
 }
 
 /**
@@ -233,13 +237,45 @@ class ChatFeed(
 ) : Actor() {
     private val layout = GlyphLayout()
 
+    /** How many of the newest lines are scrolled out of view (0 = following the newest). */
+    private var scrolled = 0
+    private var dragStartY = 0f
+    private var dragStartScroll = 0
+    private var onButton = false
+
+    /** Back to the newest lines (a new message arrived). */
+    fun followNewest() { scrolled = 0 }
+
+    private fun overButton(x: Float, y: Float) = x >= width - BUTTON && y <= BUTTON
+
     init {
+        // Tabs switch the view, dragging scrolls the history, and only the small chat button opens the full panel, so brushing
+        // or scrolling the box never brings up the panel and the keyboard by accident.
         addListener(object : InputListener() {
             override fun touchDown(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int): Boolean {
                 stage?.keyboardFocus = null
                 val n = tabs().size
-                if (y >= height - TAB_H && n > 0) onTab((x / width * n).toInt().coerceIn(0, n - 1)) else onOpen()
+                onButton = false
+                if (y >= height - TAB_H && n > 0) {
+                    onTab((x / width * n).toInt().coerceIn(0, n - 1))
+                } else if (overButton(x, y)) {
+                    onButton = true
+                } else {
+                    dragStartY = y
+                    dragStartScroll = scrolled
+                }
                 return true
+            }
+
+            override fun touchDragged(event: InputEvent, x: Float, y: Float, pointer: Int) {
+                if (onButton) return
+                // Dragging down reveals older lines.
+                scrolled = (dragStartScroll + ((y - dragStartY) / LINE_STEP).toInt()).coerceIn(0, (lines().size - 1).coerceAtLeast(0))
+            }
+
+            override fun touchUp(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int) {
+                if (onButton && overButton(x, y)) onOpen()
+                onButton = false
             }
         })
     }
@@ -275,10 +311,19 @@ class ChatFeed(
             return true
         }
         val all = lines()
-        for (i in all.indices.reversed()) {
-            val age = all.size - 1 - i
+        val newest = all.size - 1 - scrolled.coerceIn(0, (all.size - 1).coerceAtLeast(0))
+        for (i in newest downTo 0) {
+            val age = newest - i
             if (!put(all[i].first, all[i].second, (1f - 0.13f * age).coerceAtLeast(0.35f))) break
         }
+        // The chat button that opens the full panel, in the bottom-right corner.
+        shapes.rect(batch, x + width - BUTTON, y, BUTTON, BUTTON - 2f, Color(0.02f, 0.02f, 0.02f, 1f), 0.6f * a)
+        val ink = Color(0.95f, 0.82f, 0.55f, 1f)
+        val bx = x + width - BUTTON / 2f
+        val by = y + BUTTON / 2f - 1f
+        shapes.rect(batch, bx - 9f, by - 4f, 18f, 12f, ink, a)
+        shapes.rect(batch, bx - 6f, by - 8f, 4f, 4f, ink, a)
+        for (k in -1..1) shapes.rect(batch, bx + k * 5f - 1f, by + 1f, 2f, 2f, Color(0.07f, 0.06f, 0.06f, 1f), a)
         f.data.setScale(1f)
         f.color = Color.WHITE
         batch.setColor(Color.WHITE)
@@ -287,6 +332,8 @@ class ChatFeed(
     companion object {
         const val SCALE = 0.85f
         const val TAB_H = 26f
+        const val BUTTON = 34f
+        const val LINE_STEP = 16f
     }
 }
 

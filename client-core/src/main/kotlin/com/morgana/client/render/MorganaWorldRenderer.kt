@@ -573,6 +573,17 @@ class MorganaWorldRenderer(
 
         // Projectiles in flight
         for (proj in worldState.projectilesOnMap) {
+            if (proj.free) {
+                // A free-flight shot is drawn at its pixel position, turned along its exact heading.
+                val half = ts * 0.5f
+                val angle = Math.toDegrees(kotlin.math.atan2(-proj.vy.toDouble(), proj.vx.toDouble())).toFloat()
+                batch.draw(
+                    assets.getProjectileRegion(proj.spriteId),
+                    proj.px - half, pixelToRenderY(map.height, proj.py, ts) + half,
+                    half, half, ts.toFloat(), ts.toFloat(), 1f, 1f, angle
+                )
+                continue
+            }
             val rx = proj.currentTileX * ts.toFloat()
             // A tall shooter's hands are above the tile's middle, so the shot starts at the height of its body, not the tile.
             val sourceSprite = if (proj.isFromPlayer) worldState.playersOnMap[proj.sourceEntityId]?.spriteId
@@ -1234,6 +1245,17 @@ class MorganaWorldRenderer(
                     while (d <= len) {
                         batch.draw(assets.whitePixel, c.first + dx / len * d - 2f, (mapPx - (c.second + dy / len * d)) - 2f, 4f, 4f)
                         d += 14f
+                    }
+                    // An area skill also shows the ring it will hit.
+                    if (worldState.aimRadius > 0f) {
+                        for (k in 0 until 20) {
+                            val a = k * (2.0 * Math.PI / 20.0)
+                            batch.draw(
+                                assets.whitePixel,
+                                (aim.first + kotlin.math.cos(a) * worldState.aimRadius).toFloat() - 2f,
+                                (mapPx - (aim.second + kotlin.math.sin(a) * worldState.aimRadius)).toFloat() - 2f, 4f, 4f
+                            )
+                        }
                     }
                     batch.color = Color.WHITE
                 }

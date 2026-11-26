@@ -2,6 +2,10 @@
 
 ## 2026-11-26
 
+* **Add** - **Free-angle projectiles, ground-targeted area hitboxes and auto-lock in action combat** ([action combat](/systems/action_combat.md)): `SkillProjectile.freeAngle` makes shots fly at any angle (swept pixel collision), `SkillHitbox.groundTarget`/`maxRangePixels` land an area skill where it was aimed, and the client locks on to the enemy a skill auto-picked. New fields are in `action_skills.schema.json`. Free-angle and ground fields are not in the F1 form yet.
+
+* **Change** - **Phone chat is centred and no longer opens by accident; tilt-shift blur is off by default** ([input and HUD](/client/input_and_hud.md)): the compact chat box is centred on the screen when both thumbs leave room (`touchChatSlot`), dragging it scrolls the history, only its small chat button opens the full panel, and the panel no longer raises the keyboard until the typing line is tapped. `VisualFx.tiltShift` (the top/bottom blur) is off unless `?fx=tilt` or `all`.
+
 * **Add** - **Target lock, auto-targeting and drag-to-aim for combat** ([input and HUD](/client/input_and_hud.md)): new `CombatTargeting` (locked target, then the most valuable enemy in range), a Target ring button and key (`U`), a target frame and world marker, drag-to-aim on weapon-set skills, and weapon-set skills in the ring's skill slots. Ground-placed area skills still need engine support.
 
 * **Change** - **Phone chat follows the Diablo Immortal pattern; quest tracker as cards** ([input and HUD](/client/input_and_hud.md)): a compact tabbed chat box (All, Local, Party, Guild) between the pad and the ring opens a full-height chat panel on the right half with the channel list and Send. The quest tracker draws each quest as a card with a colour stripe (orange ready to hand in, green in progress). The chat panel shows a typed-length counter (limit 300, the server's) and the tracker title shows how many quests it lists.
