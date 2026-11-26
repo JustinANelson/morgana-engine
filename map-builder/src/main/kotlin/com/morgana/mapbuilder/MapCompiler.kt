@@ -186,6 +186,19 @@ object MapCompiler {
                 }
             }
             is TerraceOp -> terrace(recipe, op, index, w, h, fields, ::terrain, ::at)
+            is WorldGenOp -> {
+                val region = op.region ?: listOf(0, 0, w, h)
+                val rules = op.rules.map { r -> terrain(r.terrain) to r.ranges }
+                val ox = recipe.worldX ?: 0
+                val oy = recipe.worldY ?: 0
+                for (y in maxOf(0, region[1]) until minOf(region[1] + region[3], h)) for (x in maxOf(0, region[0]) until minOf(region[0] + region[2], w)) {
+                    val values = WorldNoise.sample(op, ox + x, oy + y)
+                    val hit = rules.firstOrNull { (_, ranges) ->
+                        ranges.all { (field, r) -> (values[field] ?: return@all false).let { v -> v >= r[0] && (v < r[1] || r[1] >= 1f) } }
+                    }
+                    if (hit != null) at(x, y).terrain = hit.first
+                }
+            }
             is BlobOp -> {
                 val t = terrain(op.terrain)
                 val reach = (op.radius * (1f + op.roughness)).toInt() + 1

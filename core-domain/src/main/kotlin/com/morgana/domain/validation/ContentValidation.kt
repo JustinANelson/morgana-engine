@@ -220,7 +220,7 @@ object ContentValidator {
                 // placement is: no two maps may overlap, and where two maps meet the border should be open on both sides or neither.
                 val layout = worldLayout
                 for ((a, b) in layout.overlaps()) if (a == m.id) error(col, m.id, "/worldX", "world_overlap", "Map $a overlaps map $b in the world grid")
-                for ((other, offset) in layout.around(m.id, 0)) {
+                if (game.worldLayout?.borderWarnings != false) for ((other, offset) in layout.around(m.id, 0)) {
                     if (other.id < m.id) continue
                     val bad = layout.mismatchedBorderTiles(m, other)
                     if (bad.isNotEmpty()) {

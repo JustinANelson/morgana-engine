@@ -2,6 +2,8 @@
 
 ## 2026-11-26
 
+* **Add** - **`worldgen`: a whole continent from noise, with maps built on top** ([playbook](/playbooks/ai_assisted_mapping.md)): a recipe op that paints terrain from world-wide noise fields (scale, warp, ridged rivers, tilt, edge falloff, mixing, `bumps`) and first-match biome rules, sampled at world coordinates so maps that touch agree tile for tile (tested: one map equals its two halves). `worldLayout.borderWarnings` turns off the open/blocked border warning for generated worlds.
+
 * **Add** - **More of the seamless world** ([seamless world](/systems/seamless_world.md)): using what is in front of you across a border (resource nodes, doors, shop tiles, people), trading and stalls across a border, a minimap and exploration that carry on past a border, and a *World position* section in the F1 map properties panel. Trevena gained two areas (the Fen south of the Weald and the Marches, the Frostmarch Approach north of them) built from noise with `scripts/gen_ring2_recipes.py`. Tests in `CrossBorderWorldTest` and `MapPropertiesFormTest`.
 
 * **Add** - **Everyday rules cross the border** ([seamless world](/systems/seamless_world.md)): loot just across a border can be picked up (and is listed, labelled and offered by the client), health orbs heal a hurt player across it, an NPC across it can be spoken to, map chat is heard across it, and a fight across a border counts for the threat table, boss loot lockout and party XP. Tests in `CrossBorderWorldTest`.

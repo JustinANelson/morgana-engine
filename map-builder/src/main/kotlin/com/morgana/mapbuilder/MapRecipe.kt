@@ -120,6 +120,55 @@ data class NoiseOp(
     val salt: Int = 0
 ) : MapOp
 
+/**
+ * Paints the map's terrain from a *world-wide* function: every field is sampled at world coordinates ([MapRecipe.worldX] + x), with a fixed
+ * mapping to 0..1 (no per-map stretching), so two maps that touch agree tile for tile along their border and a world can grow by adding
+ * maps. [fields] are evaluated in order (a field may mix in earlier ones, so temperature can fall with height); [rules] then give each tile
+ * the terrain of the first rule whose ranges all contain the tile's field values. Give every map of a world the same op (same [seed]).
+ */
+@Serializable @SerialName("worldgen")
+data class WorldGenOp(
+    val seed: Long,
+    /** The size of the whole world in tiles, for the edge falloff. */
+    val worldWidth: Int,
+    val worldHeight: Int,
+    val fields: Map<String, WorldField>,
+    val rules: List<WorldRule>,
+    val region: List<Int>? = null
+) : MapOp
+
+/**
+ * One field of a [WorldGenOp]. The raw fractal noise (about -0.5..0.5) becomes `0.5 + raw * gain`; [ridged] turns it into thin lines (near 1
+ * where the noise crosses zero: rivers). [tiltX]/[tiltY] add a slope across the whole world (0 to 1 from west to east, north to south),
+ * [edge] tiles of falloff at the world's border push the value by [edgeBias], and [mix] adds other (earlier) fields times a weight.
+ */
+@Serializable
+data class WorldField(
+    val scale: Float = 120f,
+    val octaves: Int = 4,
+    val persistence: Float = 0.5f,
+    val warp: Float = 0f,
+    val salt: Int = 0,
+    val gain: Float = 1.3f,
+    val ridged: Boolean = false,
+    val ridgeWidth: Float = 2.4f,
+    val tiltX: Float = 0f,
+    val tiltY: Float = 0f,
+    val edge: Float = 0f,
+    val edgeBias: Float = 0f,
+    val mix: Map<String, Float> = emptyMap(),
+    /** Hand-placed swells in the field: the value rises (or falls, when negative) by [WorldBump.amount] at a point, fading out over its radius. This is how a plan makes room for a district. */
+    val bumps: List<WorldBump> = emptyList()
+)
+
+/** A soft swell of [amount] centred on world tile ([x], [y]), reaching [radius] tiles (the effect fades with the square of the distance). */
+@Serializable
+data class WorldBump(val x: Int, val y: Int, val radius: Int, val amount: Float)
+
+/** The first [WorldRule] whose every range holds gives a tile its [terrain]. A range is `[from, to)` (a `to` of 1 or more includes 1). */
+@Serializable
+data class WorldRule(val terrain: String, val ranges: Map<String, List<Float>> = emptyMap())
+
 /** One step of a [NoiseOp]: field values below [below] become [terrain]. */
 @Serializable
 data class NoiseBand(val below: Float, val terrain: String)

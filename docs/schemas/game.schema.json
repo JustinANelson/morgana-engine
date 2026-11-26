@@ -2430,6 +2430,9 @@
                 },
                 "seamViewTiles": {
                     "type": "integer"
+                },
+                "borderWarnings": {
+                    "type": "boolean"
                 }
             },
             "required": [],

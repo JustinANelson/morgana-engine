@@ -238,4 +238,34 @@ class MapCompilerTest {
         assertTrue(b.sumOf { r -> r.substring(0, 20).count { it == '#' } } > b.sumOf { r -> r.substring(60).count { it == '#' } } * 5, "rock lies mostly on the west")
         assertTrue(shore.toSet().size > 4, "the shoreline wanders instead of running straight: ${shore.toSet()}")
     }
+
+    private val worldOp = """{"op": "worldgen", "seed": 77, "worldWidth": 64, "worldHeight": 32,
+        "fields": {"height": {"scale": 20, "octaves": 4, "warp": 6, "edge": 10, "edgeBias": -0.5},
+                   "wet": {"scale": 14, "salt": 3},
+                   "cold": {"scale": 40, "tiltY": 0.8, "mix": {"height": -0.3}, "salt": 5}},
+        "rules": [{"terrain": "sea", "ranges": {"height": [0, 0.32]}},
+                  {"terrain": "rock", "ranges": {"height": [0.32, 0.55], "wet": [0, 0.5]}},
+                  {"terrain": "grass", "ranges": {}}]}"""
+
+    @Test
+    fun `a worldgen map is the same function of world coordinates, so maps that touch agree and halves equal the whole`() {
+        val whole = MapCompiler.build(recipe(worldOp, 64, 32), index).analysis.terrain
+        val left = MapCompiler.build(recipe(worldOp, 32, 32, "\"worldX\": 0, \"worldY\": 0,"), index).analysis.terrain
+        val right = MapCompiler.build(recipe(worldOp, 32, 32, "\"worldX\": 32, \"worldY\": 0,"), index).analysis.terrain
+        for (y in 0 until 32) {
+            assertEquals(whole[y].substring(0, 32), left[y], "left half, row $y")
+            assertEquals(whole[y].substring(32), right[y], "right half, row $y")
+        }
+        val kinds = whole.joinToString("").toSet()
+        assertTrue(kinds.size >= 2, "the world has more than one terrain: $kinds")
+        // The falloff at the world's edge sinks it: the corner is sea.
+        assertEquals("sea", MapCompiler.build(recipe(worldOp, 64, 32), index).analysis.legend.getValue(whole[0][0].toString()))
+    }
+
+    @Test
+    fun `worldgen is deterministic and a different seed changes the world`() {
+        val a = MapCompiler.build(recipe(worldOp, 64, 32), index).analysis.terrain
+        assertEquals(a, MapCompiler.build(recipe(worldOp, 64, 32), index).analysis.terrain)
+        assertNotEquals(a, MapCompiler.build(recipe(worldOp.replace("\"seed\": 77", "\"seed\": 78"), 64, 32), index).analysis.terrain)
+    }
 }

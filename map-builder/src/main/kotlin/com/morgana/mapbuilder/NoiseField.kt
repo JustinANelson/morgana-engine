@@ -108,3 +108,37 @@ internal object NoiseField {
         }
     }
 }
+
+/** The fields of a [WorldGenOp] at one world tile: a pure function of the op and the tile, so every map agrees along its borders. */
+internal object WorldNoise {
+    fun sample(op: WorldGenOp, wx: Int, wy: Int): Map<String, Float> {
+        val out = LinkedHashMap<String, Float>()
+        for ((name, f) in op.fields) {
+            var sx = wx.toFloat() / f.scale
+            var sy = wy.toFloat() / f.scale
+            val seed = op.seed + f.salt * 7919L
+            if (f.warp > 0f) {
+                val k = f.scale * 1.7f
+                sx += NoiseField.gradient(wx / k + 31.7f, wy / k + 11.3f, seed + 101L) * f.warp / f.scale
+                sy += NoiseField.gradient(wx / k - 17.9f, wy / k + 47.1f, seed + 202L) * f.warp / f.scale
+            }
+            val raw = NoiseField.fbm(sx, sy, seed, f.octaves, f.persistence)
+            var v = if (f.ridged) 1f - kotlin.math.abs(raw * f.ridgeWidth) else 0.5f + raw * f.gain
+            v += f.tiltX * (wx.toFloat() / op.worldWidth.coerceAtLeast(1) - 0.5f) + f.tiltY * (wy.toFloat() / op.worldHeight.coerceAtLeast(1) - 0.5f)
+            for ((other, weight) in f.mix) v += weight * (out[other] ?: 0f)
+            for (b in f.bumps) {
+                val dx = (wx - b.x).toFloat()
+                val dy = (wy - b.y).toFloat()
+                val d2 = dx * dx + dy * dy
+                val r2 = b.radius.toFloat() * b.radius
+                if (d2 < r2) { val k = 1f - d2 / r2; v += b.amount * k * k }
+            }
+            if (f.edge > 0f && f.edgeBias != 0f) {
+                val d = minOf(minOf(wx, op.worldWidth - 1 - wx), minOf(wy, op.worldHeight - 1 - wy)).toFloat()
+                if (d < f.edge) { val k = 1f - d / f.edge; v += f.edgeBias * k * k }
+            }
+            out[name] = v.coerceIn(0f, 1f)
+        }
+        return out
+    }
+}

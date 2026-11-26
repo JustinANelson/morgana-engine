@@ -15,7 +15,12 @@ data class WorldLayoutDefinition(
     /** How far from the active map's edge, in tiles, a neighbouring map is still sent to the client and drawn. */
     val neighborMarginTiles: Int = 40,
     /** How far from the player, in tiles, entities of the maps around them are shown across a border. */
-    val seamViewTiles: Int = 28
+    val seamViewTiles: Int = 28,
+    /**
+     * Warn (validation `world_border_mismatch`) about a border tile open on one side and blocked on the other. Right for hand-built seams;
+     * switch it off for a generated world, where a lake or river crossing a border legitimately blocks one side of a pair of tiles.
+     */
+    val borderWarnings: Boolean = true
 ) {
     companion object {
         const val DEFAULT_MARGIN = 40
