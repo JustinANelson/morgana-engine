@@ -273,6 +273,16 @@ class ActionCombatModuleTest {
     }
 
     @Test
+    fun `an arc forgives a close body that is only partly inside the cone`() {
+        val arc = SkillHitbox(0, 1, HitboxShape.ARC, radiusPixels = 68, arcDegrees = 140)
+        // Facing right; a body 24 px away and 90 degrees to the side (beyond the 70 degree half-angle) is still touched by its radius.
+        assertTrue(ActionCombatRules.inShape(arc, 0.0, 0.0, 1.0, 0.0, 0.0, 24.0), "close and beside is hit")
+        // The same direction far away is a small sidestep in distance but a wide angle only for a point: out of the cone.
+        assertTrue(!ActionCombatRules.inShape(arc, 0.0, 0.0, 1.0, 0.0, 0.0, 70.0), "far to the side is a miss")
+        assertTrue(!ActionCombatRules.inShape(arc, 0.0, 0.0, 1.0, 0.0, -40.0, 0.0), "directly behind is a miss")
+    }
+
+    @Test
     fun `geometry helpers agree with the rules`() {
         assertEquals(Direction.RIGHT, ActionCombatRules.nearestDirection(1.0, 0.1))
         assertEquals(Direction.UP_LEFT, ActionCombatRules.nearestDirection(-1.0, -1.0))

@@ -158,7 +158,11 @@ object ActionCombatRules {
         if (d2 > reach * reach) return false
         if (hb.shape == HitboxShape.CIRCLE || hb.arcDegrees >= 360 || d2 == 0.0) return true
         val dist = StrictMath.sqrt(d2)
-        return dx * fx + dy * fy >= dist * StrictMath.cos(StrictMath.toRadians(hb.arcDegrees / 2.0))
+        // The body is not a point: widen the slice by the angle the body's radius covers from here, so a target that is close
+        // (where a small sidestep is a big angle) is still hit when any part of it is inside the cone.
+        val half = StrictMath.toRadians(hb.arcDegrees / 2.0) + StrictMath.atan2(targetRadius.toDouble(), dist)
+        if (half >= StrictMath.PI) return true
+        return dx * fx + dy * fy >= dist * StrictMath.cos(half)
     }
 
     /** How many tiles around the character a hitbox can reach, for picking candidates. */
