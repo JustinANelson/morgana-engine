@@ -1,6 +1,8 @@
 package com.morgana.domain.combat
 
+import com.morgana.domain.sim.bodyAtTileThrough
 import com.morgana.domain.sim.hostileNpcsInReach
+import com.morgana.domain.sim.walkableThrough
 import com.morgana.domain.sim.shiftPosition
 import com.morgana.domain.content.ActionSkillDefinition
 import com.morgana.domain.content.HitReaction
@@ -673,12 +675,15 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         for (k in 1..steps) {
             val newX = cur.position.pixelX + (dx / steps).toFloat()
             val newY = cur.position.pixelY + (dy / steps).toFloat()
-            val toTile = com.morgana.domain.spatial.TileCoord(((newX + half) / map.tileSize).toInt().coerceAtLeast(0), ((newY + half) / map.tileSize).toInt().coerceAtLeast(0))
+            // In a seamless world a tile beyond the edge is a real tile of the map next door (the player is handed over at the end of the tick).
+            val seamless = sim.layout.isPlaced(map.id)
+            val toTile = if (seamless) com.morgana.domain.spatial.TileCoord(StrictMath.floor((newX + half) / map.tileSize).toInt(), StrictMath.floor((newY + half) / map.tileSize).toInt())
+                else com.morgana.domain.spatial.TileCoord(((newX + half) / map.tileSize).toInt().coerceAtLeast(0), ((newY + half) / map.tileSize).toInt().coerceAtLeast(0))
             val from = cur.position.tileCoord
             if (toTile != from) {
                 // A leap goes over bodies (it lands among the monsters it spins at); walls still stop it.
-                val blockedByBody = skill.moves.none { it.toAim } && (sim.mapNpcs[player.position.mapId] ?: emptyList<MapNpcInstance>()).any { it.isAlive && it.tileX == toTile.x && it.tileY == toTile.y }
-                if (blockedByBody || !map.isInBounds(toTile) || !map.canTraverse(from, toTile, dir, isNpc = false)) break
+                val blockedByBody = skill.moves.none { it.toAim } && sim.bodyAtTileThrough(map, toTile.x, toTile.y, includePlayers = false)
+                if (blockedByBody || !sim.walkableThrough(map, from, toTile, dir, isNpc = false)) break
             }
             cur = cur.copy(position = cur.position.withPixels(newX, newY, map.tileSize))
         }

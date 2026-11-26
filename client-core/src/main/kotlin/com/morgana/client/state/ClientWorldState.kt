@@ -1095,6 +1095,10 @@ class ClientWorldState {
                 }
             }
             is ServerPacket.PlayerUpdated -> {
+                if (activeMap != null && packet.player.position.mapId != activeMap?.id) {
+                    applySeamPlayer(packet.player)
+                    return
+                }
                 // Our own position comes from CharacterSync, which says which of our steps it includes. This public copy
                 // is a round trip old and would pull the predicted player back, so the predicted position is kept.
                 val own = localCharacter?.takeIf { it.id == packet.player.characterId && it.position.mapId == packet.player.position.mapId }
@@ -1113,6 +1117,10 @@ class ClientWorldState {
                 packet.players.forEach { applyServerPacket(it) }
             }
             is ServerPacket.PlayerMoved -> {
+                if (packet.mapId != 0 && packet.mapId != activeMap?.id) {
+                    applySeamPlayerMove(packet)
+                    return
+                }
                 playersOnMap[packet.characterId]?.let { applyServerPacket(ServerPacket.PlayerUpdated(it.copy(position = packet.position))) }
             }
             is ServerPacket.NpcMoved -> {
@@ -1491,6 +1499,24 @@ class ClientWorldState {
             else others + com.morgana.protocol.NeighborMapEntities(n.mapId, npcs, existing?.players.orEmpty(), existing?.groundItems.orEmpty())
         if (n.isAlive) syncSeamVisual(seamNpcVisuals, key, n.bodyX(active.tileSize) + offset.first, n.bodyY(active.tileSize) + offset.second, n.direction)
         else seamNpcVisuals.remove(key)
+    }
+
+    /** A player on a map across a border changed (a seamless world): replaces them in what is shown across that border. */
+    private fun applySeamPlayer(p: com.morgana.protocol.PublicPlayerSnapshot) {
+        val active = activeMap ?: return
+        if (!isModuleEnabled("softSeams") || p.characterId == localCharacter?.id) return
+        val offset = seamOffset(active, p.position.mapId) ?: return
+        val mapId = p.position.mapId
+        val existing = seamMaps.firstOrNull { it.mapId == mapId }
+        val others = seamMaps.filter { it.mapId != mapId }
+        val players = existing?.players.orEmpty().filter { it.characterId != p.characterId } + p
+        seamMaps = others + com.morgana.protocol.NeighborMapEntities(mapId, existing?.npcs.orEmpty(), players, existing?.groundItems.orEmpty())
+        syncSeamVisual(seamPlayerVisuals, p.characterId, p.position.pixelX + offset.first, p.position.pixelY + offset.second, p.position.direction)
+    }
+
+    private fun applySeamPlayerMove(m: ServerPacket.PlayerMoved) {
+        val current = seamMaps.firstOrNull { it.mapId == m.mapId }?.players?.firstOrNull { it.characterId == m.characterId } ?: return
+        applySeamPlayer(current.copy(position = m.position))
     }
 
     /** A monster across a border only moved: updates what is shown of it and where it is drawn. */

@@ -905,7 +905,12 @@ sealed interface ServerPacket {
     /** A player who only moved since their last [PlayerUpdated]: the client sets [position] on the player it already has. */
     @Serializable
     @SerialName("s_player_pos")
-    data class PlayerMoved(@SerialName("c") val characterId: String, @SerialName("p") val position: com.morgana.domain.spatial.WorldPosition) : ServerPacket
+    data class PlayerMoved(
+        @SerialName("c") val characterId: String,
+        @SerialName("p") val position: com.morgana.domain.spatial.WorldPosition,
+        /** 0 for a player on the viewer's own map; otherwise the map they are on (a player across a border in a seamless world). */
+        @SerialName("m") val mapId: Int = 0
+    ) : ServerPacket
 
     /** Every [NpcMoved] and [PlayerMoved] one tick produced for what this player can see, in a single packet. */
     @Serializable

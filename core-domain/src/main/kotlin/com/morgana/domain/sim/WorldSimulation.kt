@@ -715,6 +715,8 @@ class WorldSimulation(
 
         // 5. Tick status effects & natural regeneration on players + HealTrap tiles
         combat.tickPlayers(this, out)
+        // A dash or leap may have carried a player over a map border: hand them to the map that lies there.
+        settleBorderCrossings(out)
 
         // 6. Tick NPC AI, status effects, combat, and respawns
         tickNpcs(out)

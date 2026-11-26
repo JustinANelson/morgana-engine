@@ -90,3 +90,66 @@ internal fun WorldSimulation.fixBorderGhostEvents(out: MutableList<WorldSimulati
 
 /** A monster's position (tile and pixels) is shifted by ([dx], [dy]) tiles: for geometry in another map's coordinates. */
 internal fun shiftPosition(p: WorldPosition, dx: Int, dy: Int, ts: Int): WorldPosition = p.copy(tileX = p.tileX + dx, tileY = p.tileY + dy, pixelX = p.pixelX + dx * ts, pixelY = p.pixelY + dy * ts)
+
+/**
+ * The cell at tile ([tx], [ty]) of [map], looking through to the neighbouring map when the tile lies beyond the edge in a seamless
+ * world; null where there is no map (the edge of the world). A border is not a wall: anything can stand, walk or fly across it.
+ */
+internal fun WorldSimulation.cellThrough(map: com.morgana.domain.map.MapDefinition, tx: Int, ty: Int): com.morgana.domain.map.MapCell? {
+    if (map.isInBounds(tx, ty)) return map.getCell(tx, ty)
+    if (!layout.isPlaced(map.id)) return null
+    val across = layout.crossing(map, tx, ty) ?: return null
+    return across.map.getCell(across.tileX, across.tileY)
+}
+
+/**
+ * Whether a body can step from [from] to [to] on [map]: the map's own rules when both tiles are on it, otherwise (a step over a border in
+ * a seamless world) only that the tile reached is not blocked and is on a map at all.
+ */
+internal fun WorldSimulation.walkableThrough(
+    map: com.morgana.domain.map.MapDefinition, from: com.morgana.domain.spatial.TileCoord, to: com.morgana.domain.spatial.TileCoord,
+    dir: com.morgana.domain.spatial.Direction, isNpc: Boolean
+): Boolean {
+    if (map.isInBounds(from) && map.isInBounds(to)) return map.canTraverse(from, to, dir, isNpc = isNpc)
+    val cell = cellThrough(map, to.x, to.y) ?: return false
+    return cell.attribute !is com.morgana.domain.map.TileAttribute.Blocked
+}
+
+/** Whether a living body (a monster, or a player) stands on tile ([tx], [ty]) of [map], counting the other side of a border. */
+internal fun WorldSimulation.bodyAtTileThrough(map: com.morgana.domain.map.MapDefinition, tx: Int, ty: Int, includePlayers: Boolean = true): Boolean {
+    var mapId = map.id
+    var x = tx
+    var y = ty
+    if (!map.isInBounds(tx, ty)) {
+        val across = (if (layout.isPlaced(map.id)) layout.crossing(map, tx, ty) else null) ?: return false
+        mapId = across.map.id; x = across.tileX; y = across.tileY
+    }
+    return mapNpcs[mapId]?.any { it.isAlive && it.tileX == x && it.tileY == y } == true ||
+        (includePlayers && players.values.any { it.position.mapId == mapId && it.isAlive(game.lifeVitalId) && it.position.tileX == x && it.position.tileY == y })
+}
+
+/**
+ * Hands over the players whose position has gone beyond their map's edge (a dash, a leap or a dodge that carried them over a border) to
+ * the map that lies there, the same way walking does, and moves what their skill is aimed at along with them.
+ */
+internal fun WorldSimulation.settleBorderCrossings(out: MutableList<WorldSimulationEvent>) {
+    if (layout.isEmpty) return
+    for (id in players.keys.toList()) {
+        val p = players[id] ?: continue
+        val map = maps[p.position.mapId] ?: continue
+        if (map.isInBounds(p.position.tileX, p.position.tileY)) continue
+        val across = layout.crossing(map, p.position.tileX, p.position.tileY) ?: continue
+        val ts = across.map.tileSize
+        val sx = across.shiftTilesX * ts
+        val sy = across.shiftTilesY * ts
+        val moved = p.copy(
+            position = p.position.copy(mapId = across.map.id, tileX = across.tileX, tileY = across.tileY, pixelX = p.position.pixelX + sx, pixelY = p.position.pixelY + sy)
+        )
+        players[id] = moved
+        actionStates[id]?.let { st -> actionStates[id] = st.copy(aimX = st.aimX + sx, aimY = st.aimY + sy, leapX = st.leapX + sx, leapY = st.leapY + sy) }
+        out.add(WorldSimulationEvent.PlayerMoved(moved, map.id, across.map.id))
+        out.add(WorldSimulationEvent.CharacterUpdated(moved))
+        checkQuestVisitMap(moved, across.map.id, out)
+        fireMapEntryEvents(id, out)
+    }
+}

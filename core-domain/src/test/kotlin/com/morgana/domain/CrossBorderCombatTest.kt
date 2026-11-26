@@ -8,6 +8,7 @@ import com.morgana.domain.content.NpcBehavior
 import com.morgana.domain.content.NpcDefinition
 import com.morgana.domain.content.SkillHit
 import com.morgana.domain.content.SkillHitbox
+import com.morgana.domain.content.SkillMove
 import com.morgana.domain.content.SkillProjectile
 import com.morgana.domain.content.WeaponSetDefinition
 import com.morgana.domain.entity.CharacterState
@@ -127,5 +128,41 @@ class CrossBorderCombatTest {
         val startHp = sim.players.getValue("ann").vitals.getValue("hp").cur
         repeat(60) { sim.stepTick() }
         assertEquals(startHp, sim.players.getValue("ann").vitals.getValue("hp").cur)
+    }
+
+    private fun dash(pixels: Int) = ActionSkillDefinition(
+        id = 6, name = "Dash", startupTicks = 1, activeTicks = 4, recoveryTicks = 2,
+        moves = listOf(SkillMove(fromTick = 1, toTick = 4, forwardPixels = pixels))
+    )
+
+    @Test
+    fun `a dash carries the player over the border and hands them to the map there`() {
+        val sim = world(dash(220), playerX = 36, wolfX = 30)
+        sim.handleAction("ann", "input", mapOf("token" to "RMB", "aimX" to (60 * 32).toString(), "aimY" to (10 * 32 + 16).toString()))
+        repeat(12) { sim.stepTick() }
+        val pos = sim.players.getValue("ann").position
+        assertEquals(2, pos.mapId, "the player now stands on the east map")
+        assertTrue(pos.tileX in 1..8, "and at the place the dash took them, not at its edge: ${pos.tileX}")
+        assertEquals(10, pos.tileY)
+    }
+
+    @Test
+    fun `a dash stops at the edge of the world`() {
+        val sim = world(dash(220), playerX = 2, wolfX = 30)
+        sim.handleAction("ann", "input", mapOf("token" to "RMB", "aimX" to "0", "aimY" to (10 * 32 + 16).toString()))
+        repeat(12) { sim.stepTick() }
+        val pos = sim.players.getValue("ann").position
+        assertEquals(1, pos.mapId)
+        assertTrue(pos.tileX >= 0 && pos.pixelX >= -16f, "no further than the world's edge: ${pos.pixelX}")
+    }
+
+    @Test
+    fun `a monster chases a player over the border and walks onto the other map`() {
+        val sim = world(swing(50), playerX = 36, wolfX = 2)
+        repeat(160) { sim.stepTick() }
+        val chaser = sim.mapNpcs.getValue(2).single()
+        assertTrue(chaser.tileX < 0, "the wolf walked past its map's west edge, tile ${chaser.tileX}")
+        assertEquals(2, chaser.mapId, "it is still owned by its own map")
+        assertEquals(36, sim.players.getValue("ann").position.tileX, "and the player was not moved")
     }
 }

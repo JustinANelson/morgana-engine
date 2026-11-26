@@ -557,10 +557,11 @@ internal fun WorldSimulation.stepNpcPixels(npc: MapNpcInstance, map: MapDefiniti
         if (mx == 0f && my == 0f) return null
         val nx = px + mx
         val ny = py + my
-        if (nx + ts / 2f < 0f || ny + ts / 2f < 0f) return null
-        val tile = TileCoord(((nx + ts / 2f) / ts).toInt(), ((ny + ts / 2f) / ts).toInt())
+        val seamless = layout.isPlaced(map.id)
+        if (!seamless && (nx + ts / 2f < 0f || ny + ts / 2f < 0f)) return null
+        val tile = TileCoord(kotlin.math.floor((nx + ts / 2f) / ts).toInt(), kotlin.math.floor((ny + ts / 2f) / ts).toInt())
         if (tile != npc.tileCoord) {
-            if (!map.isInBounds(tile)) return null
+            if (!seamless && !map.isInBounds(tile)) return null
             val dir = Direction.fromDelta((tile.x - npc.tileX).coerceIn(-1, 1), (tile.y - npc.tileY).coerceIn(-1, 1)) ?: return null
             if (!canNpcStepTo(map, npc.tileCoord, tile, dir)) return null
         }
@@ -573,7 +574,7 @@ internal fun WorldSimulation.stepNpcPixels(npc: MapNpcInstance, map: MapDefiniti
             return after < gap && after < before
         }
         if (npcs.any { it.instanceId != npc.instanceId && it.isAlive && crowds(it.bodyX(ts) + ts / 2f, it.bodyY(ts) + ts / 2f) }) return null
-        if (players.values.any { it.position.mapId == map.id && it.isAlive(game.lifeVitalId) && crowds(it.position.pixelX + ts / 2f, it.position.pixelY + ts / 2f) }) return null
+        if (playersOnOrNear(map.id).any { it.isAlive(game.lifeVitalId) && crowds(it.position.pixelX + ts / 2f, it.position.pixelY + ts / 2f) }) return null
         val dir = if (kotlin.math.abs(mx) >= kotlin.math.abs(my)) (if (mx >= 0f) Direction.RIGHT else Direction.LEFT) else (if (my >= 0f) Direction.DOWN else Direction.UP)
         return npc.copy(subPixel = true, pixelX = nx, pixelY = ny, tileX = tile.x, tileY = tile.y, direction = dir)
     }
@@ -661,6 +662,10 @@ private fun WorldSimulation.resolveTelegraph(npc: MapNpcInstance, def: com.morga
 }
 
 internal fun WorldSimulation.canNpcStepTo(map: MapDefinition, from: TileCoord, to: TileCoord, dir: Direction): Boolean {
+    if (!map.isInBounds(to) || !map.isInBounds(from)) {
+        // A step over a border in a seamless world: walkable if the tile on the other side is, and nothing stands on it.
+        return walkableThrough(map, from, to, dir, isNpc = true) && !bodyAtTileThrough(map, to.x, to.y)
+    }
     val unlocked = unlockedDoors[map.id]?.keys ?: emptySet()
     val depleted = mapResources[map.id]?.filterValues { it.depleted }?.keys ?: emptySet()
     if (!map.canTraverse(from, to, dir, isNpc = true, unlockedDoors = unlocked, depletedResources = depleted)) {

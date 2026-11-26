@@ -266,4 +266,16 @@ class SoftSeamsClientTest {
         assertEquals("wolf", state.lockedNpcId, "the lock survives while the monster lives across the border")
         assertNotNull(state.npcOrSeamNpc("wolf"))
     }
+
+    @Test
+    fun `a player on the map across the border is shown moving in real time, not only when the seam view refreshes`() {
+        val state = fightState()
+        val other = CharacterState(id = "ally", accountId = "b", name = "Ally", position = WorldPosition.fromTile(5, 2, 1, Direction.LEFT))
+        state.applyServerPacket(ServerPacket.PlayerUpdated(snapshot(other)))
+        assertTrue(state.playersOnMap.keys.none { it == "ally" }, "not on this map")
+        assertEquals((10 + 2) * 32f, state.seamPlayerVisuals["ally"]!!.targetPixelX, 0.01f)
+        state.applyServerPacket(ServerPacket.PlayerMoved("ally", WorldPosition.fromTile(5, 3, 1, Direction.RIGHT), mapId = 5))
+        assertEquals((10 + 3) * 32f, state.seamPlayerVisuals["ally"]!!.targetPixelX, 0.01f)
+        assertEquals(1, state.seamMaps.single { it.mapId == 5 }.players.size)
+    }
 }

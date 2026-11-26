@@ -3564,9 +3564,15 @@ class MorganaWorldCoordinator(
             if (prev.position == snapshot.position) return
             lastPlayerSent[character.id] = snapshot
             broadcastNearDelta(character.position.mapId, x, y, before.first, before.second, pkt, ServerPacket.PlayerMoved(character.id, snapshot.position), alwaysTo = character.id)
+            val across = crossBorderViewers(character.position.mapId, x, y)
+            if (across.isNotEmpty()) {
+                val movedAcross = ServerPacket.PlayerMoved(character.id, snapshot.position, character.position.mapId)
+                for (viewer in across) if (viewer != character.id) queueMove(viewer, movedAcross)
+            }
         } else {
             lastPlayerSent[character.id] = snapshot
             broadcastNear(character.position.mapId, x, y, pkt, before.first, before.second, alwaysTo = character.id)
+            for (viewer in crossBorderViewers(character.position.mapId, x, y)) if (viewer != character.id) sessionByCharacterId[viewer]?.send(pkt)
         }
     }
 
