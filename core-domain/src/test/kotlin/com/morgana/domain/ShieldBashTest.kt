@@ -77,4 +77,20 @@ class ShieldBashTest {
         sim.run()
         assertTrue(sim.players.getValue("ann").position.tileX <= 5, "stopped at the wall: ${sim.players.getValue("ann").position.tileX}")
     }
+
+    @Test
+    fun `a leap with a minimum range is still a jump when the aim is on top of the character`() {
+        val leap = ActionSkillDefinition(
+            id = 1, name = "Leap", startupTicks = 1, activeTicks = 8, recoveryTicks = 2,
+            moves = listOf(SkillMove(1, 4, toAim = true, maxPixels = 150, minPixels = 80))
+        )
+        val sim = world(emptyList())
+        sim.actionSkills[1] = leap
+        val startX = sim.players.getValue("ann").position.pixelX
+        val me = sim.players.getValue("ann").position
+        sim.handleAction("ann", "input", mapOf("token" to "TAB", "aimX" to (me.pixelX + 16f).toString(), "aimY" to (me.pixelY + 16f).toString()))
+        repeat(12) { sim.stepTick() }
+        val moved = sim.players.getValue("ann").position.pixelX - startX
+        assertTrue(moved in 70f..90f, "it still jumped about its minimum, facing right: $moved")
+    }
 }

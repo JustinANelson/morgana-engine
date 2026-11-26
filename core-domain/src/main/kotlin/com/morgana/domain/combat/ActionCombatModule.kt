@@ -177,6 +177,12 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
             if (leapMove.maxPixels > 0 && len > leapMove.maxPixels && len > 1e-6) {
                 lx = lx / len * leapMove.maxPixels
                 ly = ly / len * leapMove.maxPixels
+            } else if (len < leapMove.minPixels) {
+                // Too close to be a jump: go the minimum distance the same way (the facing when the aim is right on top of us).
+                val ux = if (len > 1e-6) lx / len else vector.first
+                val uy = if (len > 1e-6) ly / len else vector.second
+                lx = ux * leapMove.minPixels
+                ly = uy * leapMove.minPixels
             }
             leapX = cx + lx
             leapY = cy + ly
@@ -215,6 +221,12 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
             var ly = aim?.let { it.second - cy } ?: (vector.second * leap.maxPixels * 0.5)
             val len = StrictMath.sqrt(lx * lx + ly * ly)
             if (leap.maxPixels > 0 && len > leap.maxPixels && len > 1e-6) { lx = lx / len * leap.maxPixels; ly = ly / len * leap.maxPixels }
+            else if (len < leap.minPixels) {
+                val ux = if (len > 1e-6) lx / len else vector.first
+                val uy = if (len > 1e-6) ly / len else vector.second
+                lx = ux * leap.minPixels
+                ly = uy * leap.minPixels
+            }
             toX = cx + lx
             toY = cy + ly
         } else {

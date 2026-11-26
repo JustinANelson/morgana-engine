@@ -97,8 +97,15 @@ data class EntityVisualSmoothing(
     /** A hop in place of the position easing (a skill's leap, whose position the server moves): a sine arc of [hopPeak] over [hopDuration]. */
     var hopTimer: Float = 0f,
     var hopDuration: Float = 0f,
-    var hopPeak: Float = 0f
+    var hopPeak: Float = 0f,
+    /** A spin of the sprite (a skill's whirl): [spinTimer] counts up from a negative wait to [spinDuration], turning two full circles. */
+    var spinTimer: Float = 0f,
+    var spinDuration: Float = 0f
 ) {
+    /** How far the sprite is turned, in degrees: two full turns over the spin, 0 before it starts and after it ends. */
+    val spinDegrees: Float
+        get() = if (spinDuration <= 0f || spinTimer < 0f) 0f else 720f * (spinTimer / spinDuration).coerceIn(0f, 1f)
+
     /** Height of the jump hop in pixels: a sine arc over the leap or the skill hop, 0 when neither. */
     val hopHeight: Float
         get() {
@@ -1201,6 +1208,17 @@ class ClientWorldState {
                             v.hopTimer = 0f
                             v.hopDuration = maxOf(0.12f, (packet.delayTicks - 1) * SkillFx.TICK_SECONDS)
                             v.hopPeak = 38f
+                            // Then the sprite spins through the whirl.
+                            v.spinTimer = -(packet.delayTicks - 1) * SkillFx.TICK_SECONDS
+                            v.spinDuration = packet.spanTicks * SkillFx.TICK_SECONDS + 0.15f
+                        }
+                    }
+                    // A rush or a dash moves the character in a few ticks: let the sprite keep up with the server instead of crawling.
+                    if ((packet.effect == SkillFx.BASH || packet.effect == SkillFx.DODGE) && packet.sourceId.isNotEmpty()) {
+                        playerVisuals[packet.sourceId]?.let { v ->
+                            v.hopTimer = 0f
+                            v.hopDuration = if (packet.effect == SkillFx.BASH) 0.2f else 0.45f
+                            v.hopPeak = 0f
                         }
                     }
                 }
@@ -1726,6 +1744,10 @@ class ClientWorldState {
                 vis.actionTimer = 0f
                 vis.actionDuration = 0f
             }
+        }
+        if (vis.spinDuration > 0f) {
+            vis.spinTimer += deltaSeconds
+            if (vis.spinTimer >= vis.spinDuration) { vis.spinDuration = 0f; vis.spinTimer = 0f }
         }
         if (vis.hopDuration > 0f) {
             vis.hopTimer += deltaSeconds

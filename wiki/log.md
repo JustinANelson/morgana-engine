@@ -2,6 +2,8 @@
 
 ## 2026-11-26
 
+* **Change** - **Leaps always jump, the spin turns the sprite, rushes keep the sprite up** ([action combat](/systems/action_combat.md)): `SkillMove.minPixels` makes a leap travel at least that far even at point-blank range; a `spin` effect turns the character's sprite two full circles (`EntityVisualSmoothing.spinDegrees`, drawn under a rotated transform); `bash` and `dodge` effects let the sprite follow the server's fast move instead of crawling at walking speed.
+
 * **Change** - **A crit arms a skill transformation instead of electrifying the cast** ([action combat](/systems/action_combat.md)): with `empowerOnCrit` a critical hit arms a transformed version of a chosen skill (Scatter Shot -> Thunder Volley, Lightning Strike -> Storm Strike) that the player casts when they like; it is spent on use. The Cyclone leap now keeps the sprite with the server during its hop.
 
 * **Add** - **Per-skill crits, electric hits that stun, radial knockback, a hopping leap** ([action combat](/systems/action_combat.md)): skills get their own crit chance from agility, electrical hits stun with a crackling effect, a crit electrifies Scatter Shot, Shield Bash rushes and pushes everything round its target away, and Cyclone is a faster leap with a hop.

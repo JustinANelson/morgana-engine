@@ -330,6 +330,9 @@
                 },
                 "maxPixels": {
                     "type": "integer"
+                },
+                "minPixels": {
+                    "type": "integer"
                 }
             },
             "required": [

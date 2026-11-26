@@ -206,7 +206,9 @@ class MorganaWorldRenderer(
         val paperdollLayers: List<PaperdollLayer>,
         val tint: Color,
         /** Rare-variant ground glow colour (Feral/Exalted/Swift/Golden monsters); null for everything else. */
-        val aura: Color? = null
+        val aura: Color? = null,
+        /** Degrees the sprite is turned about its middle (a spinning skill); 0 for none. */
+        val spinDegrees: Float = 0f
     )
 
     private fun resolveCharacterState(
@@ -516,7 +518,8 @@ class MorganaWorldRenderer(
                     actionProgress = progress,
                     paperdollSpriteIds = player.paperdollSpriteIds,
                     paperdollLayers = player.paperdollLayers,
-                    tint = if (player.isGhost) GHOST_TINT else Color.WHITE
+                    tint = if (player.isGhost) GHOST_TINT else Color.WHITE,
+                    spinDegrees = vis?.spinDegrees ?: 0f
                 )
             )
         }
@@ -909,6 +912,22 @@ class MorganaWorldRenderer(
     private fun castShadowSky(): SkyState? = if (VisualFx.shadows) VisualFx.sky else null
 
     private fun drawEntityCharacter(batch: SpriteBatch, entity: DrawableCharacter, tileSizePx: Float) {
+        if (entity.spinDegrees == 0f) {
+            drawEntityCharacterBody(batch, entity, tileSizePx)
+            return
+        }
+        // A spinning skill turns the whole sprite about its middle: draw it under a rotated transform, then put the transform back.
+        batch.flush()
+        val saved = com.badlogic.gdx.math.Matrix4(batch.transformMatrix)
+        val cx = entity.box.centerX
+        val cy = entity.box.drawY + entity.box.drawHeight * 0.5f
+        batch.transformMatrix = com.badlogic.gdx.math.Matrix4(saved).translate(cx, cy, 0f).rotate(0f, 0f, 1f, entity.spinDegrees).translate(-cx, -cy, 0f)
+        drawEntityCharacterBody(batch, entity, tileSizePx)
+        batch.flush()
+        batch.transformMatrix = saved
+    }
+
+    private fun drawEntityCharacterBody(batch: SpriteBatch, entity: DrawableCharacter, tileSizePx: Float) {
         val castSky = castShadowSky()
         // Under a cast shadow the oval shrinks to a small contact shadow so feet still sit on the ground.
         drawGroundShadow(batch, entity.box, tileSizePx, entity.tint.a * if (castSky != null) 0.55f else 1f)

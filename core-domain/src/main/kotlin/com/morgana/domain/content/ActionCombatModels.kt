@@ -182,7 +182,9 @@ data class SkillMove(
      * held within [maxPixels] of where the skill began (0 = no limit); with no aim point the leap goes half its range forward.
      */
     val toAim: Boolean = false,
-    val maxPixels: Int = 0
+    val maxPixels: Int = 0,
+    /** A leap always travels at least this far (towards the aim, or the facing when the aim is on top of the character), so it is a real jump even at point-blank range. */
+    val minPixels: Int = 0
 )
 
 /** Makes the skill a held guard: hits from inside the arc are reduced and cost [blockCosts] each. */
