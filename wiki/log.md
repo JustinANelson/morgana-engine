@@ -2,6 +2,8 @@
 
 ## 2026-11-26
 
+* **Add** - **Noise terrain, cliff terraces, meandering paths and map readers for AI-assisted mapping** ([playbook](/playbooks/ai_assisted_mapping.md), [map builder](/architecture/map_builder.md)): recipes get `noise` (seeded fractal fields painted in bands, with smoothing, `minArea`, `onlyOn`, `store`), `terrace` (plateaus from a stored field with two-row cliff faces from a wall set, ramps, sliver levelling) and `path.meander`. The CLI can write an analysis file per map (`--analysis`), and `render_map.py`/`map_info.py` in a game's scripts draw a compiled map and describe it in text (overview grid, terrain bodies, clear sites).
+
 * **Fix** - **Monsters no longer blink across the field on dashes, pulls and knockbacks** ([client state](/client/client_state_and_prediction.md)): a gap of more than 40 px between where the server put an entity and where it is drawn is now closed in about 0.2 s instead of at walking speed, and only a gap over 320 px (was 96) snaps. Wolf lunges, Gathering Cry pulls and Shield Bash pushes glide instead of teleporting.
 
 * **Fix** - **Melee arcs forgive a close target** ([action combat](/systems/action_combat.md)): an ARC hitbox now widens its cone by the angle the target's body radius covers from where the attacker stands, so a monster that circles during the windup is still hit when any part of it is inside the cone (before, it was tested as a point, and at close range a small sidestep was a miss).

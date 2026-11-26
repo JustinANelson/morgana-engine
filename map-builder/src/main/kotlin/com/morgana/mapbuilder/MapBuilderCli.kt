@@ -20,7 +20,7 @@ object MapBuilderCli {
 
     fun run(args: Array<String>, out: PrintStream = System.out, err: PrintStream = System.err): Int {
         if (args.firstOrNull() != "build") {
-            err.println("Usage: build --game <game folder> --recipes <folder|a.json,b.json> [--index <file>] [--only <id,id>] [--force true]")
+            err.println("Usage: build --game <game folder> --recipes <folder|a.json,b.json> [--index <file>] [--only <id,id>] [--force true] [--analysis <folder>]")
             return 1
         }
         val flags = args.drop(1).chunked(2).associate { it[0].removePrefix("--") to (it.getOrNull(1) ?: "") }
@@ -42,18 +42,23 @@ object MapBuilderCli {
                 return 1
             }
             if (only != null && recipe.id !in only) continue
-            val map = try {
-                MapCompiler.compile(recipe, index)
+            val built = try {
+                MapCompiler.build(recipe, index)
             } catch (e: RecipeException) {
                 err.println("${file.fileName}: ${e.message}")
                 return 1
             }
+            val map = built.map
             val existing = repo.maps.findById(map.id)
             if (existing != null && existing.revision > 1 && flags["force"] != "true") {
                 err.println("${file.fileName}: map ${map.id} was edited by hand (revision ${existing.revision}); not overwritten. Use --force true to replace it.")
                 return 1
             }
             repo.maps.save(map.id, map)
+            flags["analysis"]?.takeIf { it.isNotBlank() }?.let { dir ->
+                Files.createDirectories(Paths.get(dir))
+                Files.writeString(Paths.get(dir).resolve("map_%03d.json".format(map.id)), json.encodeToString(MapAnalysis.serializer(), built.analysis))
+            }
             written++
             out.println("map ${map.id} ${map.name}: ${map.width}x${map.height}, ${map.npcSpawns.size} spawns")
         }

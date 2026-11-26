@@ -68,9 +68,76 @@ data class RectOp(val terrain: String, val x: Int, val y: Int, val w: Int, val h
 @Serializable @SerialName("ellipse")
 data class EllipseOp(val terrain: String, val cx: Int, val cy: Int, val rx: Int, val ry: Int) : MapOp
 
-/** Paints a thick line through [points] (each `[x, y]`), [width] tiles wide. */
+/**
+ * Paints a thick line through [points] (each `[x, y]`), [width] tiles wide. With [meander] above 0 the line wanders sideways by up
+ * to that many tiles (smooth seeded noise, one wiggle per [wavelength] tiles, none at the end points), so roads and rivers bend
+ * instead of running ruler-straight.
+ */
 @Serializable @SerialName("path")
-data class PathOp(val terrain: String, val points: List<List<Int>>, val width: Int = 3) : MapOp
+data class PathOp(
+    val terrain: String,
+    val points: List<List<Int>>,
+    val width: Int = 3,
+    val meander: Float = 0f,
+    val wavelength: Float = 14f,
+    val salt: Int = 0
+) : MapOp
+
+/**
+ * Lays a seeded noise field over the map and paints [bands] by its value (0..1; the field is stretched to span exactly that), which
+ * is how you get hills, lakes, swamps and glades with natural outlines. The first band whose [NoiseBand.below] is above the value
+ * paints; a value above every band leaves the cell as it is. [scale] is the size of a feature in tiles, [octaves] and [persistence]
+ * add finer detail, [warp] bends the shapes, [edge] and [edgeBias] sink or raise the map border. [onlyOn] limits painting to cells that
+ * currently hold one of those terrains, and [region] (`[x, y, w, h]`) to an area. [store] keeps the field under a name for a later
+ * [TerraceOp].
+ */
+@Serializable @SerialName("noise")
+data class NoiseOp(
+    val bands: List<NoiseBand> = emptyList(),
+    val scale: Float = 18f,
+    val octaves: Int = 4,
+    val persistence: Float = 0.5f,
+    val warp: Float = 0f,
+    val edge: Float = 0f,
+    val edgeBias: Float = -0.4f,
+    val onlyOn: List<String> = emptyList(),
+    val region: List<Int>? = null,
+    val store: String? = null,
+    /** Passes of 3 x 3 blurring of the field before it is banded: rounder outlines, fewer ragged one-tile edges. */
+    val smooth: Int = 1,
+    /** Painted areas (per terrain, 4-connected) smaller than this many tiles are undone, so no speckle of one-tile ponds is left. */
+    val minArea: Int = 0,
+    val salt: Int = 0
+) : MapOp
+
+/** One step of a [NoiseOp]: field values below [below] become [terrain]. */
+@Serializable
+data class NoiseBand(val below: Float, val terrain: String)
+
+/**
+ * Raises plateaus where a stored noise [field] passes each of [thresholds] (a cell above the first is level 1, above the second level 2):
+ * plateau cells become that level's terrain from [terrains], the south edge of every plateau becomes a two-row cliff face from the wall
+ * [set] (`<set>_top_*` over `<set>_bot_*`, blocked), and [ramps] open a [rampWidth] wide walkable gap in each long enough face about every
+ * [rampEvery] tiles, painted with [rampTerrain] (default: the ground below). Plateaus narrower than [minWidth] or shallower than
+ * [minDepth] are levelled so no face is ever a single row.
+ */
+@Serializable @SerialName("terrace")
+data class TerraceOp(
+    val field: String,
+    val set: String,
+    val thresholds: List<Float>,
+    val terrains: List<String>,
+    val ramps: Boolean = true,
+    val rampTerrain: String? = null,
+    val rampEvery: Int = 16,
+    val rampWidth: Int = 3,
+    val minWidth: Int = 4,
+    val minDepth: Int = 4,
+    /** Plateau edges snap to bands of this many rows, so cliff faces run in long horizontal stretches. */
+    val rowStep: Int = 3,
+    val region: List<Int>? = null,
+    val salt: Int = 0
+) : MapOp
 
 /** Paints an organic blob: a circle of [radius] whose edge is pushed in and out by seeded noise ([roughness] 0 to 1). */
 @Serializable @SerialName("blob")

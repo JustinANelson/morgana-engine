@@ -153,4 +153,79 @@ class MapCompilerTest {
         assertThrows<RecipeException> { MapCompiler.compile(recipe("""{"op": "rect", "terrain": "lava", "x": 0, "y": 0, "w": 2, "h": 2}"""), index) }
         assertThrows<RecipeException> { MapCompiler.compile(recipe("""{"op": "prop", "prop": "dragon", "x": 2, "y": 2}"""), index) }
     }
+
+    private fun seaCells(m: com.morgana.domain.map.MapDefinition) = m.cells.count { it.attribute == TileAttribute.Blocked }
+
+    @Test
+    fun `a noise op paints organic bands, the same every time, and a different seed changes them`() {
+        val ops = """{"op": "noise", "scale": 10, "bands": [{"below": 0.3, "terrain": "rock"}]}"""
+        val a = MapCompiler.compile(recipe(ops, 60, 60), index)
+        assertEquals(a, MapCompiler.compile(recipe(ops, 60, 60), index))
+        val rock = seaCells(a)
+        assertTrue(rock in 300..1800, "about a third of 3600 tiles is rock, was $rock")
+        val other = MapCompiler.compile(recipe(ops.replace("\"scale\"", "\"salt\": 3, \"scale\""), 60, 60), index)
+        assertNotEquals(a, other)
+    }
+
+    @Test
+    fun `minArea undoes small patches and onlyOn limits where a band paints`() {
+        val speckled = """{"op": "noise", "scale": 4, "octaves": 5, "smooth": 0, "bands": [{"below": 0.3, "terrain": "rock"}]}"""
+        assertTrue(seaCells(MapCompiler.compile(recipe(speckled, 60, 60), index)) > 0)
+        val cleaned = speckled.replace("\"smooth\": 0,", "\"smooth\": 0, \"minArea\": 100000,")
+        assertEquals(0, seaCells(MapCompiler.compile(recipe(cleaned, 60, 60), index)), "every patch is smaller than the minimum, so none stays")
+        val restricted = MapCompiler.compile(recipe("""{"op": "noise", "scale": 10, "onlyOn": ["sea"], "bands": [{"below": 0.9, "terrain": "rock"}]}"""), index)
+        assertEquals(0, seaCells(restricted), "no cell was sea, so nothing painted")
+    }
+
+    @Test
+    fun `a meandering path bends but still starts and ends where it was told`() {
+        val straight = MapCompiler.compile(recipe("""{"op": "path", "terrain": "rock", "points": [[2, 15], [57, 15]], "width": 1}""", 60, 30), index)
+        val bent = MapCompiler.compile(recipe("""{"op": "path", "terrain": "rock", "points": [[2, 15], [57, 15]], "width": 1, "meander": 6, "wavelength": 10}""", 60, 30), index)
+        fun rows(m: com.morgana.domain.map.MapDefinition) = m.cells.withIndex().filter { it.value.attribute == TileAttribute.Blocked }.map { it.index / 60 }.toSet()
+        assertEquals(setOf(15), rows(straight))
+        assertTrue(rows(bent).size > 3, "the bent path crosses several rows: ${rows(bent)}")
+        assertEquals(TileAttribute.Blocked, bent.cells[15 * 60 + 2].attribute)
+        assertEquals(TileAttribute.Blocked, bent.cells[15 * 60 + 57].attribute)
+    }
+
+    @Test
+    fun `a terrace raises plateaus with two-row cliff faces and walkable ramps`() {
+        val ops = """{"op": "noise", "store": "elev", "scale": 18, "salt": 4, "bands": []},
+            {"op": "terrace", "field": "elev", "set": "w", "thresholds": [0.5], "terrains": ["grass"], "rampTerrain": "grass", "rampEvery": 8}"""
+        val built = MapCompiler.build(recipe(ops, 80, 80), index)
+        val blocked = built.analysis.blocked
+        val faces = (0 until 80).sumOf { y -> blocked[y].count { it == '#' } }
+        assertTrue(faces > 20, "cliff faces were drawn, found $faces")
+        // Every face tile has another face tile directly above or below it: the cornice and the plinth, never a single row.
+        for (y in 0 until 80) for (x in 0 until 80) if (blocked[y][x] == '#') {
+            val above = y > 0 && blocked[y - 1][x] == '#'
+            val below = y < 79 && blocked[y + 1][x] == '#'
+            assertTrue(above || below, "a lone face tile at ($x,$y)")
+        }
+        assertEquals(built.map, MapCompiler.build(recipe(ops, 80, 80), index).map, "deterministic")
+        val noRamps = MapCompiler.build(recipe(ops.replace("\"rampTerrain\": \"grass\", \"rampEvery\": 8", "\"ramps\": false"), 80, 80), index)
+        val rampCells = built.analysis.occupied.sumOf { r -> r.count { it == 'o' } } - noRamps.analysis.occupied.sumOf { r -> r.count { it == 'o' } }
+        assertTrue(noRamps.analysis.blocked.sumOf { r -> r.count { it == '#' } } > faces, "ramps open gaps in the faces")
+        assertTrue(rampCells >= 0)
+    }
+
+    @Test
+    fun `a terrace needs its field and one terrain per level`() {
+        assertThrows<RecipeException> { MapCompiler.compile(recipe("""{"op": "terrace", "field": "nope", "set": "w", "thresholds": [0.5], "terrains": ["grass"]}"""), index) }
+        assertThrows<RecipeException> {
+            MapCompiler.compile(recipe("""{"op": "noise", "store": "e", "bands": []}, {"op": "terrace", "field": "e", "set": "w", "thresholds": [0.5, 0.7], "terrains": ["grass"]}"""), index)
+        }
+    }
+
+    @Test
+    fun `the analysis lists terrain, blocked tiles and spawns in the same grid as the map`() {
+        val built = MapCompiler.build(recipe("""{"op": "rect", "terrain": "rock", "x": 3, "y": 4, "w": 5, "h": 2}, {"op": "spawn", "npcId": 4, "x": 1, "y": 1}"""), index)
+        val a = built.analysis
+        assertEquals(30, a.terrain.size)
+        assertEquals(30, a.terrain[0].length)
+        assertEquals("rock", a.legend.getValue(a.terrain[4][3].toString()))
+        assertEquals('#', a.blocked[4][3])
+        assertEquals('.', a.blocked[0][0])
+        assertEquals(listOf(listOf(4, 1, 1)), a.spawns)
+    }
 }

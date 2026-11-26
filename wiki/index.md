@@ -150,6 +150,7 @@ Maintenance knowledge base for Morgana ORPG, written for human and AI contributo
 
 ## Playbooks
 
+* [AI-Assisted Mapping](/playbooks/ai_assisted_mapping.md) - Noise for the land, a picture and text summary to read it, then an LLM places roads, camps and landmarks on what exists.
 * [Add a New Content Type](/playbooks/add_content_type.md) - Every file to touch when adding a content collection (model to editor), in order.
 * [Add an Event Command](/playbooks/add_event_command.md) - Steps to add a new page-event command.
 * [Add a Network Packet](/playbooks/add_packet.md) - Checklist for a new client or server packet.
