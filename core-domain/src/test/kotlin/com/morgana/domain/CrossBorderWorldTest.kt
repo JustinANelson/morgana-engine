@@ -71,4 +71,24 @@ class CrossBorderWorldTest {
         val events = s.playerInteractFacing("ann")
         assertTrue(events.any { it is com.morgana.domain.sim.WorldSimulationEvent.ChatEmitted && it.message == "Well met!" }, "the greeter answered: $events")
     }
+
+    @Test
+    fun `a locked door just across the border is tried and reports what it needs`() {
+        val s = sim(playerX = 39)
+        val cells = List(40 * 40) { i -> if (i % 40 == 0 && i / 40 == 10) com.morgana.domain.map.MapCell(attribute = com.morgana.domain.map.TileAttribute.KeyDoor(keyItemId = 1)) else com.morgana.domain.map.MapCell() }
+        s.registerMap(MapDefinition(id = 2, name = "East", width = 40, height = 40, worldX = 40, worldY = 0, cells = cells))
+        val events = s.playerInteractFacing("ann")
+        assertTrue(events.any { it is com.morgana.domain.sim.WorldSimulationEvent.ChatEmitted && it.message.startsWith("Locked!") }, "the door on the other map answered: $events")
+    }
+
+    @Test
+    fun `players on either side of a border can trade and are measured across it`() {
+        val s = sim(playerX = 39)
+        s.spawnOrUpdatePlayer(CharacterState(id = "bob", accountId = "b", name = "Bob", level = 5, position = WorldPosition.fromTile(2, 2, 10, Direction.LEFT)))
+        assertTrue(s.initiateTrade("ann", "bob").isNotEmpty(), "they are three tiles apart across the border")
+        s.spawnOrUpdatePlayer(s.players.getValue("bob").copy(position = WorldPosition.fromTile(2, 39, 10, Direction.LEFT)))
+        val s2 = sim(playerX = 3)
+        s2.spawnOrUpdatePlayer(CharacterState(id = "bob", accountId = "b", name = "Bob", level = 5, position = WorldPosition.fromTile(2, 39, 10, Direction.LEFT)))
+        assertTrue(s2.initiateTrade("ann", "bob").isEmpty(), "70 tiles apart is too far")
+    }
 }

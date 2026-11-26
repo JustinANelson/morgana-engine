@@ -1710,7 +1710,7 @@ class MorganaWorldRenderer(
         val labelFlash = if (com.morgana.client.access.Accessibility.reduceMotion) 0f else 0.5f + 0.5f * sin(elapsedSeconds * 5.5f)
         val itemsById = worldState.catalog.items.associateBy { it.id }
         val groundLabels = com.morgana.client.ui.GroundLootLabels.layout(
-            groundItems = worldState.groundItemsOnMap,
+            groundItems = worldState.groundItemsInView(),
             itemsById = itemsById,
             lootRules = worldState.gameDefinition?.loot,
             mapHeightTiles = map.height,

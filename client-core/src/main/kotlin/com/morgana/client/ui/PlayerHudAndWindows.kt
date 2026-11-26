@@ -3667,32 +3667,40 @@ class MinimapCanvas(
             ry += step
         }
 
-        val minTx = (centerTx - radiusTiles - 1).toInt().coerceAtLeast(0)
-        val maxTx = (centerTx + radiusTiles + 1).toInt().coerceAtMost(map.width - 1)
-        val minTy = (centerTy - radiusTiles - 1).toInt().coerceAtLeast(0)
-        val maxTy = (centerTy + radiusTiles + 1).toInt().coerceAtMost(map.height - 1)
-        val fog = if (worldState.isModuleEnabled("exploration")) worldState.explored[map.id] else null
+        val exploring = worldState.isModuleEnabled("exploration")
+        // The active map, and in a seamless world the maps around it at their offsets, so the minimap carries on past a border.
+        val drawn = ArrayList<Triple<com.morgana.domain.map.MapDefinition, Int, Int>>()
+        drawn += Triple(map, 0, 0)
+        for ((id, offset) in worldState.neighborOffsets) worldState.neighborMaps[id]?.let { drawn += Triple(it, offset.x, offset.y) }
 
         // Draw terrain within circular viewport
-        for (ty in minTy..maxTy) {
-            val cellY = cy + (centerTy - ty) * pxPerTile
-            for (tx in minTx..maxTx) {
-                val cellX = cx + (tx - centerTx) * pxPerTile
-                if (!insideCircle(cellX, cellY)) continue
-                if (fog != null && !Exploration.isTileExplored(fog.explored, map.width, tx, ty)) continue
-                val cell = map.getCell(tx, ty)
-                val isWater = cell?.layers?.get(MapLayer.GROUND)?.srcTileX == 3
-                val isBlocked = cell?.attribute is TileAttribute.Blocked
-                val isWarp = cell?.attribute is TileAttribute.Warp
-                when {
-                    isBlocked -> batch.setColor(0.35f, 0.38f, 0.45f, 0.9f * parentAlpha)
-                    isWater -> batch.setColor(0.15f, 0.35f, 0.75f, 0.9f * parentAlpha)
-                    isWarp -> batch.setColor(0.2f, 0.85f, 0.9f, 0.95f * parentAlpha)
-                    else -> batch.setColor(0.20f, 0.42f, 0.24f, 0.88f * parentAlpha)
+        for ((m, ox, oy) in drawn) {
+            val minTx = (centerTx - ox - radiusTiles - 1).toInt().coerceAtLeast(0)
+            val maxTx = (centerTx - ox + radiusTiles + 1).toInt().coerceAtMost(m.width - 1)
+            val minTy = (centerTy - oy - radiusTiles - 1).toInt().coerceAtLeast(0)
+            val maxTy = (centerTy - oy + radiusTiles + 1).toInt().coerceAtMost(m.height - 1)
+            val fog = if (exploring) worldState.explored[m.id] else null
+            for (ty in minTy..maxTy) {
+                val cellY = cy + (centerTy - (ty + oy)) * pxPerTile
+                for (tx in minTx..maxTx) {
+                    val cellX = cx + ((tx + ox) - centerTx) * pxPerTile
+                    if (!insideCircle(cellX, cellY)) continue
+                    if (fog != null && !Exploration.isTileExplored(fog.explored, m.width, tx, ty)) continue
+                    val cell = m.getCell(tx, ty)
+                    val isWater = cell?.layers?.get(MapLayer.GROUND)?.srcTileX == 3
+                    val isBlocked = cell?.attribute is TileAttribute.Blocked
+                    val isWarp = cell?.attribute is TileAttribute.Warp
+                    when {
+                        isBlocked -> batch.setColor(0.35f, 0.38f, 0.45f, 0.9f * parentAlpha)
+                        isWater -> batch.setColor(0.15f, 0.35f, 0.75f, 0.9f * parentAlpha)
+                        isWarp -> batch.setColor(0.2f, 0.85f, 0.9f, 0.95f * parentAlpha)
+                        else -> batch.setColor(0.20f, 0.42f, 0.24f, 0.88f * parentAlpha)
+                    }
+                    batch.draw(assets.whitePixel, cellX - pxPerTile * 0.5f, cellY - pxPerTile * 0.5f, pxPerTile + 0.5f, pxPerTile + 0.5f)
                 }
-                batch.draw(assets.whitePixel, cellX - pxPerTile * 0.5f, cellY - pxPerTile * 0.5f, pxPerTile + 0.5f, pxPerTile + 0.5f)
             }
         }
+        val fog = if (exploring) worldState.explored[map.id] else null
 
         // Points of interest within circular viewport
         val npcDefsById = worldState.catalog.npcs.associateBy { it.id }

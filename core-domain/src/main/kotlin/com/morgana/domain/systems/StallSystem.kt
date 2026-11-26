@@ -1,5 +1,6 @@
 package com.morgana.domain.systems
 
+import com.morgana.domain.sim.tileDistanceAcross
 import com.morgana.domain.sim.GameSystem
 import com.morgana.domain.sim.OptionalModule
 import com.morgana.domain.sim.WorldSimulation
@@ -153,8 +154,9 @@ private fun WorldSimulation.describeListings(stall: Stall): List<String> =
 private fun WorldSimulation.stallOwnerFor(buyer: CharacterState, name: String?, rules: StallDefinition): CharacterState? {
     if (name == null) return null
     val owner = players.values.firstOrNull { it.name.equals(name, ignoreCase = true) } ?: return null
-    if (owner.id == buyer.id || !isStalled(owner.id) || owner.position.mapId != buyer.position.mapId) return null
-    return owner.takeIf { it.position.tileCoord.chebyshevDistanceTo(buyer.position.tileCoord) <= rules.rangeTiles }
+    if (owner.id == buyer.id || !isStalled(owner.id)) return null
+    val distance = tileDistanceAcross(buyer, owner) ?: return null // same map, or just across a border in a seamless world
+    return owner.takeIf { distance <= rules.rangeTiles }
 }
 
 private fun WorldSimulation.buyFromStall(buyer: CharacterState, parts: List<String>, rules: StallDefinition, out: MutableList<WorldSimulationEvent>) {

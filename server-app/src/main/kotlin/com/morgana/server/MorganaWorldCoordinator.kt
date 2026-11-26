@@ -2892,12 +2892,20 @@ class MorganaWorldCoordinator(
             val mapId = player.position.mapId
             if (MapInstances.isInstanceId(mapId)) continue
             val map = simulation.maps[mapId] ?: continue
-            val doc = exploration[player.id] ?: continue
-            val revealed = Exploration.reveal(doc.maps[mapId], map.width, map.height, player.position.tileX, player.position.tileY) ?: continue
-            val next = doc.copy(maps = doc.maps + (mapId to revealed))
-            exploration[player.id] = next
-            persistenceWriter.enqueueExploration(next)
-            session.send(ServerPacket.ExplorationUpdate(exploredInfo(map, revealed)))
+            var doc = exploration[player.id] ?: continue
+            // What the player sees: their own map and, in a seamless world, the maps around it (their position in each one's coordinates).
+            val seen = ArrayList<Triple<com.morgana.domain.map.MapDefinition, Int, Int>>()
+            seen += Triple(map, player.position.tileX, player.position.tileY)
+            if (simulation.layout.isPlaced(mapId)) {
+                for ((other, offset) in simulation.layout.around(mapId, Exploration.VISION_RADIUS)) seen += Triple(other, player.position.tileX - offset.x, player.position.tileY - offset.y)
+            }
+            for ((m, tx, ty) in seen) {
+                val revealed = Exploration.reveal(doc.maps[m.id], m.width, m.height, tx, ty) ?: continue
+                doc = doc.copy(maps = doc.maps + (m.id to revealed))
+                exploration[player.id] = doc
+                persistenceWriter.enqueueExploration(doc)
+                session.send(ServerPacket.ExplorationUpdate(exploredInfo(m, revealed)))
+            }
         }
     }
 

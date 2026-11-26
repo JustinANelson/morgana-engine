@@ -37,14 +37,19 @@ internal fun WorldSimulation.playerInteractFacingImpl(characterId: String): List
     val map = maps[mapId] ?: return emptyList()
     val facingTile = player.position.tileCoord.step(player.position.direction)
     val out = mutableListOf<WorldSimulationEvent>()
+    // In a seamless world the tile in front may lie on the map across the border: what stands there (a node, a door, a person) is looked up on that map.
+    val ahead = if (map.isInBounds(facingTile) || !layout.isPlaced(mapId)) null else layout.crossing(map, facingTile.x, facingTile.y)
+    val fMapId = ahead?.map?.id ?: mapId
+    val fMap = ahead?.map ?: map
+    val fTile = if (ahead != null) TileCoord(ahead.tileX, ahead.tileY) else facingTile
 
     // 0. A placed world object in front of the character (a chest, a station, a door of a base) has its own interaction.
-    worldObjectAt(mapId, facingTile.x, facingTile.y)?.let { obj ->
+    worldObjectAt(fMapId, fTile.x, fTile.y)?.let { obj ->
         if (com.morgana.domain.systems.WorldStateSystem.interact(this, player, obj, out)) return out
     }
 
     // 1. Check facing tile attributes (KeyDoor, ResourceNode, ShopTile, BankTile)
-    val cell = map.getCell(facingTile)
+    val cell = fMap.getCell(fTile)
     if (cell != null) {
         when (val attr = cell.attribute) {
             is TileAttribute.KeyDoor -> {
@@ -55,13 +60,13 @@ internal fun WorldSimulation.playerInteractFacingImpl(characterId: String): List
                         players[characterId] = player
                         out.add(WorldSimulationEvent.CharacterUpdated(player))
                     }
-                    val mapDoors = unlockedDoors.getOrPut(mapId) { linkedMapOf() }
-                    mapDoors[facingTile] = currentTick + max(20, attr.unlockDurationTicks)
+                    val mapDoors = unlockedDoors.getOrPut(fMapId) { linkedMapOf() }
+                    mapDoors[fTile] = currentTick + max(20, attr.unlockDurationTicks)
                     out.add(
                         WorldSimulationEvent.FloatingTextEmitted(
-                            mapId = mapId,
-                            tileX = facingTile.x,
-                            tileY = facingTile.y,
+                            mapId = fMapId,
+                            tileX = fTile.x,
+                            tileY = fTile.y,
                             text = "Unlocked!",
                             category = "RESOURCE",
                             colorHex = "#4ADE80"
@@ -85,7 +90,7 @@ internal fun WorldSimulation.playerInteractFacingImpl(characterId: String): List
                 return out
             }
             is TileAttribute.ResourceNode -> {
-                harvestResourceAt(player, facingTile, attr.resourceId, out)
+                harvestResourceAt(player, fTile, attr.resourceId, out, fMapId)
                 return out
             }
             is TileAttribute.ShopTile -> {
@@ -101,14 +106,9 @@ internal fun WorldSimulation.playerInteractFacingImpl(characterId: String): List
     }
 
     // 2. Check facing NPC
-    // (in a seamless world the tile in front may lie on the map across the border: someone standing there can be spoken to all the same)
-    val facingNpc = mapNpcs[mapId]?.firstOrNull {
-        it.isAlive && it.tileX == facingTile.x && it.tileY == facingTile.y
-    } ?: if (!map.isInBounds(facingTile) && layout.isPlaced(mapId)) {
-        layout.crossing(map, facingTile.x, facingTile.y)?.let { across ->
-            mapNpcs[across.map.id]?.firstOrNull { it.isAlive && it.tileX == across.tileX && it.tileY == across.tileY }
-        }
-    } else null
+    val facingNpc = mapNpcs[fMapId]?.firstOrNull {
+        it.isAlive && it.tileX == fTile.x && it.tileY == fTile.y
+    }
     if (facingNpc != null) {
         val npcDef = npcs[facingNpc.npcId]
         if (npcDef != null) {
@@ -162,9 +162,8 @@ internal fun WorldSimulation.playerInteractFacingImpl(characterId: String): List
 
     // 3. Check facing or current tile EventDefinition (ACTION_INTERACT)
     val mapEvent = events.values.firstOrNull {
-        it.mapId == contentMapId(mapId) &&
-            ((it.tileX == facingTile.x && it.tileY == facingTile.y) ||
-                (it.tileX == player.position.tileX && it.tileY == player.position.tileY))
+        (it.mapId == contentMapId(fMapId) && it.tileX == fTile.x && it.tileY == fTile.y) ||
+            (it.mapId == contentMapId(mapId) && it.tileX == player.position.tileX && it.tileY == player.position.tileY)
     }
     if (mapEvent != null) {
         val page = resolveActiveEventPage(player, mapEvent)
@@ -183,9 +182,11 @@ internal fun WorldSimulation.harvestResourceAt(
     player: CharacterState,
     coord: TileCoord,
     resourceId: Int,
-    out: MutableList<WorldSimulationEvent>
+    out: MutableList<WorldSimulationEvent>,
+    /** The map the node lies on: the player's own, or the one across a border in a seamless world. */
+    nodeMapId: Int = player.position.mapId
 ) {
-    val mapId = player.position.mapId
+    val mapId = nodeMapId
     val resDef = resources[resourceId] ?: return
     val mapNodeStates = mapResources.getOrPut(mapId) { linkedMapOf() }
     val state = mapNodeStates[coord] ?: MapResourceState(

@@ -188,3 +188,17 @@ internal fun WorldSimulation.groundItemsInReach(mapId: Int, tx: Int, ty: Int, ra
     }
     return out
 }
+
+/**
+ * How many tiles apart [a] and [b] stand (the larger of the two axes), measuring across a map border in a seamless world; null when they
+ * are on different maps that are not next to each other (or no layout is on). On one map it is the plain tile distance.
+ */
+internal fun WorldSimulation.tileDistanceAcross(a: CharacterState, b: CharacterState): Int? {
+    if (a.position.mapId == b.position.mapId) return a.position.tileCoord.chebyshevDistanceTo(b.position.tileCoord)
+    if (!layout.isPlaced(a.position.mapId) || !layout.isPlaced(b.position.mapId)) return null
+    val offset = layout.offsetBetween(a.position.mapId, b.position.mapId) ?: return null
+    val dx = kotlin.math.abs(b.position.tileX + offset.x - a.position.tileX)
+    val dy = kotlin.math.abs(b.position.tileY + offset.y - a.position.tileY)
+    return maxOf(dx, dy).takeIf { it <= BORDER_COMBAT_TILES * 3 }
+}
+

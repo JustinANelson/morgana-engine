@@ -2,6 +2,8 @@
 
 ## 2026-11-26
 
+* **Add** - **More of the seamless world** ([seamless world](/systems/seamless_world.md)): using what is in front of you across a border (resource nodes, doors, shop tiles, people), trading and stalls across a border, a minimap and exploration that carry on past a border, and a *World position* section in the F1 map properties panel. Trevena gained two areas (the Fen south of the Weald and the Marches, the Frostmarch Approach north of them) built from noise with `scripts/gen_ring2_recipes.py`. Tests in `CrossBorderWorldTest` and `MapPropertiesFormTest`.
+
 * **Add** - **Everyday rules cross the border** ([seamless world](/systems/seamless_world.md)): loot just across a border can be picked up (and is listed, labelled and offered by the client), health orbs heal a hurt player across it, an NPC across it can be spoken to, map chat is heard across it, and a fight across a border counts for the threat table, boss loot lockout and party XP. Tests in `CrossBorderWorldTest`.
 
 * **Change** - **The border stops being a wall in the seamless world** ([seamless world](/systems/seamless_world.md)): dodges, bashes, leaps and dashes carry a player over a border and the player is handed to the next map at the end of the tick; monsters walk over borders (still owned by their own map, bounded by their leash) with all walkability and occupancy checks looking through; other players are streamed across a border in real time (`s_player_pos` gained a map id). Trevena's Citadel, Weald and Marches now meet along their whole shared edges instead of a gap.

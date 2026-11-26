@@ -22,7 +22,10 @@ data class MapPropertiesValues(
     val north: String,
     val south: String,
     val east: String,
-    val west: String
+    val west: String,
+    /** Where the map's top left tile sits in a seamless world (`worldLayout`); both blank when it takes no part. */
+    val worldX: String = "",
+    val worldY: String = ""
 )
 
 object MapPropertiesForm {
@@ -39,7 +42,9 @@ object MapPropertiesForm {
         north = map.neighbors.northMapId.toString(),
         south = map.neighbors.southMapId.toString(),
         east = map.neighbors.eastMapId.toString(),
-        west = map.neighbors.westMapId.toString()
+        west = map.neighbors.westMapId.toString(),
+        worldX = map.worldX?.toString() ?: "",
+        worldY = map.worldY?.toString() ?: ""
     )
 
     /**
@@ -68,6 +73,11 @@ object MapPropertiesForm {
         if (v.instanced && listOf(v.north, v.south, v.east, v.west).any { (it.trim().toIntOrNull() ?: 0) != 0 }) {
             out += "An instanced map cannot have neighbouring maps"
         }
+        val wx = v.worldX.trim()
+        val wy = v.worldY.trim()
+        if ((wx.isEmpty()) != (wy.isEmpty())) out += "World position needs both x and y (or neither)"
+        else if (wx.isNotEmpty() && (wx.toIntOrNull() == null || wy.toIntOrNull() == null)) out += "World position must be whole numbers"
+        else if (wx.isNotEmpty() && v.instanced) out += "An instanced map cannot have a world position"
         return out
     }
 
@@ -82,6 +92,8 @@ object MapPropertiesForm {
             isIndoors = v.interior,
             zoneId = v.zone.trim().toIntOrNull()?.takeIf { it >= 0 } ?: map.zoneId,
             instanced = v.instanced,
+            worldX = if (v.worldX.isBlank() && v.worldY.isBlank()) null else v.worldX.trim().toIntOrNull() ?: map.worldX,
+            worldY = if (v.worldX.isBlank() && v.worldY.isBlank()) null else v.worldY.trim().toIntOrNull() ?: map.worldY,
             neighbors = MapNeighborLinks(
                 northMapId = id(v.north, map.neighbors.northMapId),
                 southMapId = id(v.south, map.neighbors.southMapId),
