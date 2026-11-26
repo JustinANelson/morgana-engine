@@ -875,6 +875,35 @@ sealed interface ServerPacket {
     @SerialName("s_npc_sync")
     data class NpcUpdated(val npc: MapNpcInstance) : ServerPacket
 
+    /**
+     * A monster that only moved since its last [NpcUpdated]: the client copies these fields onto the monster it already has (and ignores the
+     * packet for one it does not know; the server sends the whole monster to anyone who has not seen it). About a third of the size.
+     */
+    @Serializable
+    @SerialName("s_npc_pos")
+    data class NpcMoved(
+        @SerialName("i") val instanceId: String,
+        @SerialName("x") val tileX: Int,
+        @SerialName("y") val tileY: Int,
+        @SerialName("d") val direction: Direction,
+        @SerialName("t") val lastMoveTick: Long = 0L,
+        @SerialName("s") val subPixel: Boolean = false,
+        @SerialName("px") val pixelX: Float = 0f,
+        @SerialName("py") val pixelY: Float = 0f,
+        @SerialName("wx") val wanderX: Int = -1,
+        @SerialName("wy") val wanderY: Int = -1
+    ) : ServerPacket
+
+    /** A player who only moved since their last [PlayerUpdated]: the client sets [position] on the player it already has. */
+    @Serializable
+    @SerialName("s_player_pos")
+    data class PlayerMoved(@SerialName("c") val characterId: String, @SerialName("p") val position: com.morgana.domain.spatial.WorldPosition) : ServerPacket
+
+    /** Every [NpcMoved] and [PlayerMoved] one tick produced for what this player can see, in a single packet. */
+    @Serializable
+    @SerialName("s_moves")
+    data class EntityMoves(@SerialName("n") val npcs: List<NpcMoved> = emptyList(), @SerialName("p") val players: List<PlayerMoved> = emptyList()) : ServerPacket
+
     @Serializable
     @SerialName("s_ground_items")
     data class GroundItemsUpdated(val mapId: Int, val items: List<MapGroundItem>) : ServerPacket
@@ -883,6 +912,14 @@ sealed interface ServerPacket {
     @Serializable
     @SerialName("s_orbs")
     data class HealthOrbsUpdated(val mapId: Int, val orbs: List<com.morgana.domain.entity.HealthOrb>) : ServerPacket
+
+    /**
+     * What changed in the projectiles on [mapId] since the last [ProjectilesUpdated] or this packet: [upserted] shots are new or changed (replace by
+     * `projectileId`), [removedIds] are gone. A free-flight shot that merely flew on is not listed; the client flies it on from its last position.
+     */
+    @Serializable
+    @SerialName("s_proj_delta")
+    data class ProjectilesDelta(val mapId: Int, val upserted: List<com.morgana.domain.entity.MapProjectile> = emptyList(), val removedIds: List<String> = emptyList()) : ServerPacket
 
     @Serializable
     @SerialName("s_projectiles")

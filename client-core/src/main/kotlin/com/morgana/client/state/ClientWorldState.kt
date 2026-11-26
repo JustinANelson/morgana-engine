@@ -243,6 +243,9 @@ class ClientWorldState {
     val npcsOnMap: MutableMap<String, MapNpcInstance> = linkedMapOf()
     val groundItemsOnMap: MutableList<MapGroundItem> = mutableListOf()
     val projectilesOnMap: MutableList<MapProjectile> = mutableListOf()
+
+    /** When each shot in [projectilesOnMap] last arrived (by id): the server does not resend a free-flight shot that only moved, so it is flown on from here. */
+    val projectileStampMs: MutableMap<String, Long> = HashMap()
     val resourcesOnMap: MutableMap<TileCoord, MapResourceState> = linkedMapOf()
 
     /** The walls, chests and totems placed on the active map, by object id (see the `world_objects` capability). */
@@ -892,6 +895,14 @@ class ClientWorldState {
         hotbarSlots.fill(null)
     }
 
+    private fun replaceProjectiles(list: List<MapProjectile>) {
+        projectilesOnMap.clear()
+        projectilesOnMap.addAll(list)
+        projectileStampMs.clear()
+        val now = System.currentTimeMillis()
+        for (p in list) projectileStampMs[p.projectileId] = now
+    }
+
     fun applyServerPacket(packet: ServerPacket, onUiWindowRequested: (ServerPacket.OpenUiWindow) -> Unit = {}) {
         when (packet) {
             is ServerPacket.AuthResult -> {
@@ -1031,8 +1042,7 @@ class ClientWorldState {
                 }
                 groundItemsOnMap.clear()
                 groundItemsOnMap.addAll(packet.groundItems)
-                projectilesOnMap.clear()
-                projectilesOnMap.addAll(packet.projectiles)
+                replaceProjectiles(packet.projectiles)
                 resourcesOnMap.clear()
                 packet.resources.forEach { resourcesOnMap[TileCoord(it.tileX, it.tileY)] = it }
                 worldObjectsOnMap.clear()
@@ -1080,6 +1090,25 @@ class ClientWorldState {
                     dir = p.position.direction,
                     snapImmediately = p.characterId !in playerVisuals
                 )
+            }
+            is ServerPacket.EntityMoves -> {
+                packet.npcs.forEach { applyServerPacket(it) }
+                packet.players.forEach { applyServerPacket(it) }
+            }
+            is ServerPacket.PlayerMoved -> {
+                playersOnMap[packet.characterId]?.let { applyServerPacket(ServerPacket.PlayerUpdated(it.copy(position = packet.position))) }
+            }
+            is ServerPacket.NpcMoved -> {
+                npcsOnMap[packet.instanceId]?.let {
+                    applyServerPacket(
+                        ServerPacket.NpcUpdated(
+                            it.copy(
+                                tileX = packet.tileX, tileY = packet.tileY, direction = packet.direction,
+                                subPixel = packet.subPixel, pixelX = packet.pixelX, pixelY = packet.pixelY, wanderX = packet.wanderX, wanderY = packet.wanderY
+                            )
+                        )
+                    )
+                }
             }
             is ServerPacket.PlayerLeftMap -> {
                 playersOnMap.remove(packet.characterId)
@@ -1131,9 +1160,15 @@ class ClientWorldState {
                 }
             }
             is ServerPacket.ProjectilesUpdated -> {
+                if (activeMap?.id == packet.mapId) replaceProjectiles(packet.projectiles)
+            }
+            is ServerPacket.ProjectilesDelta -> {
                 if (activeMap?.id == packet.mapId) {
-                    projectilesOnMap.clear()
-                    projectilesOnMap.addAll(packet.projectiles)
+                    val gone = packet.removedIds.toHashSet() + packet.upserted.map { it.projectileId }
+                    projectilesOnMap.removeAll { it.projectileId in gone }
+                    gone.forEach { projectileStampMs.remove(it) }
+                    val now = System.currentTimeMillis()
+                    for (p in packet.upserted) { projectilesOnMap.add(p); projectileStampMs[p.projectileId] = now }
                 }
             }
             is ServerPacket.WorldObjectsUpdated -> {

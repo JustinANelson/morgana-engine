@@ -34,3 +34,7 @@ node cli.mjs put_content --collection items --id 3 --json @item_003.json
 `status`, `list_players`, `list_accounts`, `list_characters`, `create_account`, `set_access` (below Owner), `create_character`, `login_ticket`, `provision_tester`, `warp_player`, `give_item`, `kick_player`, `broadcast`, `reload_content`, `list_content`, `get_content`, `put_content` (validated; a refused edit is rolled back), `audit_log`. Every action is recorded in the audit log under `web-admin`.
 
 Tests: `npm test` (or `node --test test/ctl.test.mjs`).
+
+## Load test
+
+`node loadtest.mjs --spawn <game folder> --levels 10,30,60 --seconds 25` runs bots against a throwaway server and prints tick time and bandwidth per client ([wiki/server/load_testing.md](../../wiki/server/load_testing.md)). Against a running `--agent` server use `--ws host:port --admin url --data dir`.

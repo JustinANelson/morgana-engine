@@ -125,6 +125,9 @@ private val MODERATION_COMMANDS = setOf("kick", "mute", "unmute", "mutes", "ban"
 /** Population and tick-time samples kept for the admin panel: one a minute, so three hours. */
 private const val MAX_METRIC_SAMPLES = 180
 
+/** Entity moves are sent to each viewer in one packet every this many ticks. */
+private const val MOVE_BATCH_TICKS = 2L
+
 private val MODERATION_USAGE = mapOf(
     "kick" to "/kick <player> [reason]",
     "mute" to "/mute <player> <30m|12h|7d|perm> [reason]",
@@ -391,6 +394,7 @@ class MorganaWorldCoordinator(
         questGuideKeys.remove(charId)
         viewerAreas.remove(charId)
         lastEntityTile.remove("p:$charId")
+        lastPlayerSent.remove(charId)
         tips.forget(charId)
         pluginWindows.remove(charId)
         val player = simulation.players[charId]
@@ -460,6 +464,7 @@ class MorganaWorldCoordinator(
         saveChangedWorldObjects(everyTicks = 200L)
         if (simulation.currentTick % 1200L == 0L) expireMarketListings()
         if (simulation.currentTick % 10L == 0L) updateExploration()
+        flushMoves()
         recordTick(startedNanos)
     }
 
@@ -3050,6 +3055,39 @@ class MorganaWorldCoordinator(
     /** Where each broadcast entity (`p:<character id>`, `n:<npc instance id>`) was when it was last announced, so a move out of view still reaches the viewers who saw it leave. */
     private val lastEntityTile = HashMap<String, Pair<Int, Int>>()
 
+    /** What was last broadcast in full for each monster and player, so a move that changes nothing else goes out as a compact packet. */
+    private val lastNpcSent = HashMap<String, com.morgana.domain.entity.MapNpcInstance>()
+    private val lastPlayerSent = HashMap<String, PublicPlayerSnapshot>()
+
+    /** Compact moves waiting for the end of the tick, per viewing character, so each viewer gets one packet for everything that moved. */
+    private val pendingMoves = HashMap<String, LinkedHashMap<String, ServerPacket>>()
+
+    /** Remembers [compact] for [viewerId]; a later move of the same entity before the flush replaces it (only where it ended up matters). */
+    private fun queueMove(viewerId: String, compact: ServerPacket) {
+        val key = when (compact) {
+            is ServerPacket.NpcMoved -> "n:" + compact.instanceId
+            is ServerPacket.PlayerMoved -> "p:" + compact.characterId
+            else -> { sessionByCharacterId[viewerId]?.send(compact); return }
+        }
+        pendingMoves.getOrPut(viewerId) { LinkedHashMap() }[key] = compact
+    }
+
+    /**
+     * Sends every viewer the latest place of what moved near them, one packet each, every [MOVE_BATCH_TICKS] ticks (10 times a second):
+     * the clients smooth between positions, and it halves what a crowded fight costs in bandwidth.
+     */
+    private fun flushMoves() {
+        if (pendingMoves.isEmpty() || simulation.currentTick % MOVE_BATCH_TICKS != 0L) return
+        for ((viewerId, moves) in pendingMoves) {
+            val session = sessionByCharacterId[viewerId] ?: continue
+            session.send(ServerPacket.EntityMoves(moves.values.filterIsInstance<ServerPacket.NpcMoved>(), moves.values.filterIsInstance<ServerPacket.PlayerMoved>()))
+        }
+        pendingMoves.clear()
+    }
+
+    /** The projectile list last broadcast per map: a tick that only moved free-flight shots is not sent again, the clients fly them on. */
+    private val lastProjectilesSent = HashMap<Int, List<com.morgana.domain.entity.MapProjectile>>()
+
     /** Each online player's map and tile when their area of interest was last brought up to date. */
     private val viewerAreas = HashMap<String, Triple<Int, Int, Int>>()
 
@@ -3085,6 +3123,7 @@ class MorganaWorldCoordinator(
                     if (ev.previousMapId != ev.currentMapId) {
                         broadcastToMap(ev.previousMapId, ServerPacket.PlayerLeftMap(ev.character.id, ev.previousMapId))
                         lastEntityTile.remove("p:${ev.character.id}")
+                        lastPlayerSent.remove(ev.character.id)
                         sessionByCharacterId[ev.character.id]?.let { sendFullMapSnapshotTo(it, ev.currentMapId) }
                         viewerAreas[ev.character.id] = Triple(ev.currentMapId, ev.character.position.tileX, ev.character.position.tileY)
                     }
@@ -3111,7 +3150,20 @@ class MorganaWorldCoordinator(
                     broadcastToMap(ev.mapId, ServerPacket.HealthOrbsUpdated(ev.mapId, ev.orbs))
                 }
                 is WorldSimulationEvent.ProjectilesChanged -> {
-                    broadcastToMap(ev.mapId, ServerPacket.ProjectilesUpdated(ev.mapId, ev.projectiles))
+                    val prev = lastProjectilesSent[ev.mapId]
+                    if (prev == null) {
+                        lastProjectilesSent[ev.mapId] = ev.projectiles
+                        broadcastToMap(ev.mapId, ServerPacket.ProjectilesUpdated(ev.mapId, ev.projectiles))
+                    } else {
+                        val prevById = prev.associateBy { it.projectileId }
+                        val nowIds = ev.projectiles.mapTo(HashSet()) { it.projectileId }
+                        val removed = prev.filter { it.projectileId !in nowIds }.map { it.projectileId }
+                        val upserted = ev.projectiles.filter { b -> prevById[b.projectileId].let { a -> a == null || (a != b && !freeFlightAdvanced(a, b)) } }
+                        if (removed.isNotEmpty() || upserted.isNotEmpty()) {
+                            lastProjectilesSent[ev.mapId] = ev.projectiles
+                            broadcastToMap(ev.mapId, ServerPacket.ProjectilesDelta(ev.mapId, upserted, removed))
+                        }
+                    }
                 }
                 is WorldSimulationEvent.ResourceNodeChanged -> {
                     broadcastNear(ev.resource.mapId, ev.resource.tileX, ev.resource.tileY, ServerPacket.ResourceNodeUpdated(ev.resource))
@@ -3490,17 +3542,80 @@ class MorganaWorldCoordinator(
     }
 
     private fun broadcastPlayerUpdate(character: CharacterState) {
-        val pkt = ServerPacket.PlayerUpdated(toPublicSnapshot(character))
+        val snapshot = toPublicSnapshot(character)
+        val pkt = ServerPacket.PlayerUpdated(snapshot)
         val x = character.position.tileX
         val y = character.position.tileY
         val before = lastEntityTile.put("p:${character.id}", x to y) ?: (x to y)
-        broadcastNear(character.position.mapId, x, y, pkt, before.first, before.second, alwaysTo = character.id)
+        val prev = lastPlayerSent[character.id]
+        if (prev != null && prev.position.mapId == snapshot.position.mapId && lookOf(prev) == lookOf(snapshot)) {
+            // Nothing others can see changed except perhaps where the player stands.
+            if (prev.position == snapshot.position) return
+            lastPlayerSent[character.id] = snapshot
+            broadcastNearDelta(character.position.mapId, x, y, before.first, before.second, pkt, ServerPacket.PlayerMoved(character.id, snapshot.position), alwaysTo = character.id)
+        } else {
+            lastPlayerSent[character.id] = snapshot
+            broadcastNear(character.position.mapId, x, y, pkt, before.first, before.second, alwaysTo = character.id)
+        }
     }
+
+    /** A player's public snapshot without where they stand and without the bars other players never see (only life is shown over their head). */
+    private fun lookOf(s: PublicPlayerSnapshot): PublicPlayerSnapshot =
+        s.copy(position = com.morgana.domain.spatial.WorldPosition(0, 0, 0), vitals = s.vitals.filterKeys { it == "hp" })
 
     private fun broadcastNpcUpdate(npc: com.morgana.domain.entity.MapNpcInstance) {
         val before = lastEntityTile.put("n:${npc.instanceId}", npc.tileX to npc.tileY) ?: (npc.tileX to npc.tileY)
-        broadcastNear(npc.mapId, npc.tileX, npc.tileY, ServerPacket.NpcUpdated(npc), before.first, before.second)
+        val prev = lastNpcSent[npc.instanceId]
+        val full = ServerPacket.NpcUpdated(npc)
+        val onlyMoved = prev != null && prev.mapId == npc.mapId && npcLook(prev) == npcLook(npc)
+        if (onlyMoved) {
+            if (prev!!.tileX == npc.tileX && prev.tileY == npc.tileY && prev.direction == npc.direction && prev.subPixel == npc.subPixel &&
+                prev.pixelX == npc.pixelX && prev.pixelY == npc.pixelY && prev.wanderX == npc.wanderX && prev.wanderY == npc.wanderY
+            ) return // only cooldown clocks and threat changed: no client reads them
+            lastNpcSent[npc.instanceId] = npc
+            val moved = ServerPacket.NpcMoved(npc.instanceId, npc.tileX, npc.tileY, npc.direction, 0L, npc.subPixel, npc.pixelX, npc.pixelY, npc.wanderX, npc.wanderY)
+            broadcastNearDelta(npc.mapId, npc.tileX, npc.tileY, before.first, before.second, full, moved)
+        } else {
+            lastNpcSent[npc.instanceId] = npc
+            broadcastNear(npc.mapId, npc.tileX, npc.tileY, full, before.first, before.second)
+        }
     }
+
+    /** A monster without where it stands and without the server-only clocks (attack and spell cooldowns, threat, wind-up) that no client reads. */
+    private fun npcLook(n: com.morgana.domain.entity.MapNpcInstance): com.morgana.domain.entity.MapNpcInstance = n.copy(
+        tileX = 0, tileY = 0, direction = Direction.DOWN, lastMoveTick = 0L, subPixel = false, pixelX = 0f, pixelY = 0f, wanderX = -1, wanderY = -1,
+        lastAttackTick = 0L, lastSpellCastTick = 0L, strikeReadyTick = 0L, threat = emptyMap(), abilityReadyTicks = emptyMap(),
+        windUpUntil = 0L, windUpX = 0f, windUpY = 0f
+    )
+
+    /**
+     * Like [broadcastNear] for an entity that only moved: a viewer who could already see both its old and new place has the entity and
+     * gets the small [compact] packet; anyone else who can see it now gets the [full] one.
+     */
+    private fun broadcastNearDelta(
+        mapId: Int, tileX: Int, tileY: Int, alsoX: Int, alsoY: Int, full: ServerPacket, compact: ServerPacket, alwaysTo: String? = null
+    ) {
+        val aoi = areaOfInterest
+        val fullText = lazy(LazyThreadSafetyMode.NONE) { PacketCodec.encodeServerJson(full) }
+        for (p in simulation.players.values) {
+            if (p.position.mapId != mapId) continue
+            val session = sessionByCharacterId[p.id] ?: continue
+            if (aoi == null) { queueMove(p.id, compact); continue }
+            val seesNew = aoi.sees(p.position.tileX, p.position.tileY, tileX, tileY)
+            val seesOld = aoi.sees(p.position.tileX, p.position.tileY, alsoX, alsoY)
+            when {
+                seesNew && seesOld -> queueMove(p.id, compact)
+                seesNew || seesOld || p.id == alwaysTo -> session.sendEncoded(full) { fullText.value }
+            }
+        }
+    }
+
+    /** True when free-flight shot [b] is [a] a little further along its path (nothing else about it changed), so clients can fly it on themselves. */
+    private fun freeFlightAdvanced(a: com.morgana.domain.entity.MapProjectile, b: com.morgana.domain.entity.MapProjectile): Boolean =
+        b.free && a.copy(
+            px = b.px, py = b.py, remainingPixels = b.remainingPixels, currentTileX = b.currentTileX, currentTileY = b.currentTileY,
+            remainingTiles = b.remainingTiles, nextStepTick = b.nextStepTick, hitEntityIds = b.hitEntityIds
+        ) == b
 
     /**
      * When a player's area of interest moves to new cells, tells them the current state of everything in the cells it now

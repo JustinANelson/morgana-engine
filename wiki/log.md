@@ -2,6 +2,8 @@
 
 ## 2026-11-26
 
+* **Add / Fix** - **Bot load test; a crowd costs a fifth of the bandwidth; NaN aim no longer breaks the tick** ([load testing](/server/load_testing.md)): `tools/morgana-ctl/loadtest.mjs` runs N bots against a throwaway or running server and reports tick time and per-client bandwidth by packet type. Its first run showed monsters and players re-sent whole on every step and the projectile list re-sent per shot, so 60 bots in one spot cost 437 KB/s each. Moves now go out as compact `s_npc_pos`/`s_player_pos` batched in `s_moves` at 10 Hz, projectiles as `s_proj_delta` (clients fly free shots on), and changes no client reads are not sent: 90 KB/s each. A non-finite `aimX`/`aimY` made a NaN projectile that failed every tick's encoding; such aims are now ignored.
+
 * **Add** - **Telegraphed monster attacks, health orbs, a potion button, pulls and snares, hit feel** ([action combat](/systems/action_combat.md)): monsters can wind up visible danger zones before they strike, slain monsters drop health orbs, the ring gets a Potion button, skills can pull monsters in (`pullPixels`), and the screen shakes and monsters flash when struck.
 
 * **Change** - **Crit-armed transformations are rarer** ([action combat](/systems/action_combat.md)): `empowerChancePercent` (one roll per skill use) and `empowerCooldownTicks` (a lockout after it is spent or expires) were added; Trevena uses 20% and 20 s.

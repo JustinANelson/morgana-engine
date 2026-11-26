@@ -77,6 +77,7 @@ Maintenance knowledge base for Morgana ORPG, written for human and AI contributo
 
 * [Admin Web Panel and REST API](/server/admin_panel.md) - The operator's web panel and JSON API: how to turn it on, the token, every endpoint, what it can do, the security rules and how it is built.
 * [Agent Control (admin API for LLMs and scripts)](/server/agent_control.md) - How an LLM or script makes accounts and characters, logs in without a password, and changes the live world through the admin API, the morgana-ctl CLI and its MCP server.
+* [Load testing with bots](/server/load_testing.md) - A bot load test (morgana-ctl loadtest.mjs) that reports tick time and per-client bandwidth by packet type, and the numbers before and after the movement and projectile packets were slimmed.
 * [Characters per Account](/server/characters.md) - How one account holds several characters: the list after login, creating, choosing and deleting, the rules, and what older clients see.
 * [Connection Limits and IP Bans](/server/connection_limits.md) - Per-address connection caps, connection-rate limits, strikes and temporary bans, the pre-login timeout, and operator commands.
 * [World Coordinator](/server/coordinator.md) - The single synchronized authority: sessions, authentication, packet handling, persistence triggers, and event dispatch.

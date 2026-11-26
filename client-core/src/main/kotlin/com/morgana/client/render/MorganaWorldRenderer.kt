@@ -578,14 +578,19 @@ class MorganaWorldRenderer(
         batch.color = Color.WHITE
 
         // Projectiles in flight
+        val nowMs = System.currentTimeMillis()
         for (proj in worldState.projectilesOnMap) {
             if (proj.free) {
-                // A free-flight shot is drawn at its pixel position, turned along its exact heading.
+                // A free-flight shot is drawn at its pixel position, turned along its exact heading. The server sends the list when a
+                // shot is fired or ends, not every tick, so it is flown on from when the list arrived (one tick is 50 ms) until its range runs out.
                 val half = ts * 0.5f
                 val angle = Math.toDegrees(kotlin.math.atan2(-proj.vy.toDouble(), proj.vx.toDouble())).toFloat()
+                val speed = kotlin.math.hypot(proj.vx.toDouble(), proj.vy.toDouble()).toFloat()
+                val flownTicks = ((nowMs - (worldState.projectileStampMs[proj.projectileId] ?: nowMs)) / 50f).coerceIn(0f, 40f)
+                val advance = if (speed > 0f) minOf(flownTicks, proj.remainingPixels / speed) else 0f
                 batch.draw(
                     assets.getProjectileRegion(proj.spriteId),
-                    proj.px - half, pixelToRenderY(map.height, proj.py, ts) + half,
+                    proj.px + proj.vx * advance - half, pixelToRenderY(map.height, proj.py + proj.vy * advance, ts) + half,
                     half, half, ts.toFloat(), ts.toFloat(), 1f, 1f, angle
                 )
                 continue

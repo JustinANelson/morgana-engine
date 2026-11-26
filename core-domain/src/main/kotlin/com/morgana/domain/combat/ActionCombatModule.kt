@@ -65,8 +65,8 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         when (actionId.lowercase()) {
             "input" -> {
                 val token = params["token"]?.let { InputTokens.canonical(it) }
-                val aimX = params["aimX"]?.toDoubleOrNull()
-                val aimY = params["aimY"]?.toDoubleOrNull()
+                val aimX = params["aimX"]?.toDoubleOrNull()?.takeIf { it.isFinite() && StrictMath.abs(it) < 1.0e7 }
+                val aimY = params["aimY"]?.toDoubleOrNull()?.takeIf { it.isFinite() && StrictMath.abs(it) < 1.0e7 }
                 CombatActionResult(true, if (token == null) emptyList() else input(sim, characterId, token, if (aimX != null && aimY != null) aimX to aimY else null))
             }
             "release" -> {

@@ -65,6 +65,18 @@ class FreeAimCombatTest {
     }
 
     @Test
+    fun `a non-finite or absurd aim is ignored so it cannot put NaN on a projectile`() {
+        for (bad in listOf("NaN", "Infinity", "-Infinity", "1e30")) {
+            val sim = world(shot(free = true), 11 to 8)
+            sim.handleAction("ann", "input", mapOf("token" to "RMB", "aimX" to bad, "aimY" to bad))
+            repeat(10) {
+                sim.stepTick()
+                sim.mapProjectiles.values.flatten().forEach { assertTrue(it.px.isFinite() && it.py.isFinite(), "projectile at ${it.px},${it.py} for aim $bad") }
+            }
+        }
+    }
+
+    @Test
     fun `a free-angle shot hits a target that is nowhere near one of the eight directions`() {
         // 7 tiles across and 3 down from the player: about 23 degrees, between the right and down-right lines.
         val sim = world(shot(free = true), 11 to 8)
