@@ -28,6 +28,7 @@ enum class GameAction(val label: String, val defaults: List<Int>, val group: Act
     PICK_UP("Pick up", listOf(Keys.G), ActionGroup.ACTIONS),
     STANCE("Combat stance", listOf(Keys.T), ActionGroup.ACTIONS),
     MORE_ACTIONS("Other actions list", listOf(Keys.R), ActionGroup.ACTIONS),
+    TARGET_NEXT("Next target (then none)", listOf(Keys.U), ActionGroup.ACTIONS),
     CHARACTER("Character", listOf(Keys.V), ActionGroup.WINDOWS),
     INVENTORY("Inventory", listOf(Keys.I), ActionGroup.WINDOWS),
     SPELLBOOK("Spells / Skills", listOf(Keys.K), ActionGroup.WINDOWS),

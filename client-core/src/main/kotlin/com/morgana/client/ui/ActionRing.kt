@@ -24,6 +24,8 @@ enum class RingRole {
     SKILL,
     /** The More button, above the arc: opens the list of other actions (potions, scrolls, food, stance). */
     MORE,
+    /** Cycles the locked target (nearest enemy, next, next, then none); lit while a target is locked. */
+    TARGET,
     /** The dodge, below and left of the attack. */
     DODGE,
     /** Use / Get: shown only when there is something to use or pick up. */
@@ -67,6 +69,7 @@ fun ringLayout(rightEdge: Float, bottom: Float, d: Float, gap: Float = 6f): Map<
     for (k in 0 until RING_SKILLS) slots[RingKey(RingRole.SKILL, k)] = polar(cx, cy, r1, 195f - 43f * k, small)
     slots[RingKey(RingRole.DODGE)] = polar(cx, cy, r1, 238f, small)
     slots[RingKey(RingRole.MORE)] = polar(cx, cy, r2, 80f, potion)
+    slots[RingKey(RingRole.TARGET)] = polar(cx, cy, r2, 116f, potion)
     slots[RingKey(RingRole.CONTEXT)] = polar(cx, cy, r2, 188f, small)
     slots[RingKey(RingRole.JUMP)] = polar(cx, cy, r2, 152f, small)
     val core = slots.values.toList()
@@ -107,10 +110,19 @@ class RingButton(
     val highlighted: () -> Boolean = { false },
     /** An unassigned slot: drawn as a faint empty socket. */
     val empty: () -> Boolean = { false },
+    /**
+     * True for a skill that can be aimed by dragging: pressing does nothing yet, dragging sets a direction (shown through [onAim]), and
+     * letting go fires [onPress] (with that aim); a plain tap fires it at once, aimed automatically. False: fires on press.
+     */
+    val aimable: () -> Boolean = { false },
     val onPress: () -> Unit
 ) {
     var onRelease: (() -> Unit)? = null
     fun withRelease(action: () -> Unit): RingButton = apply { onRelease = action }
+
+    /** Told the drag in screen pixels (y up) while the player aims, and null when the aim ends. */
+    var onAim: ((Pair<Float, Float>?) -> Unit)? = null
+    fun withAim(action: (Pair<Float, Float>?) -> Unit): RingButton = apply { onAim = action }
 }
 
 /**
@@ -168,6 +180,9 @@ class ActionRing(
     private inner class RingActor(private val def: RingButton) : Actor() {
         private var pointer = -2
         private val layout = GlyphLayout()
+        private var downX = 0f
+        private var downY = 0f
+        private var aiming = false
 
         init {
             addListener(object : InputListener() {
@@ -175,8 +190,19 @@ class ActionRing(
                     if (pointer != -2) return false
                     stage?.keyboardFocus = null
                     pointer = p
-                    def.onPress()
+                    downX = x
+                    downY = y
+                    aiming = false
+                    if (!def.aimable()) def.onPress()
                     return true
+                }
+
+                override fun touchDragged(event: InputEvent, x: Float, y: Float, p: Int) {
+                    if (p != pointer || !def.aimable()) return
+                    val dx = x - downX
+                    val dy = y - downY
+                    if (!aiming && hypot(dx, dy) >= AIM_DRAG_START) aiming = true
+                    if (aiming) def.onAim?.invoke(dx to dy)
                 }
 
                 override fun touchUp(event: InputEvent, x: Float, y: Float, p: Int, button: Int) {
@@ -188,6 +214,12 @@ class ActionRing(
         fun release() {
             if (pointer == -2) return
             pointer = -2
+            if (def.aimable()) {
+                // Let go: fire now (the HUD reads the drag as the aim), then clear the aim.
+                def.onPress()
+                if (aiming) def.onAim?.invoke(null)
+                aiming = false
+            }
             def.onRelease?.invoke()
         }
 
@@ -253,6 +285,9 @@ class ActionRing(
     }
 
     companion object {
+        /** How far (stage units) a finger must move on a skill before it counts as aiming instead of a tap. */
+        const val AIM_DRAG_START = 18f
+
         private fun makeDisc(): Texture {
             val size = 128
             val pm = Pixmap(size, size, Pixmap.Format.RGBA8888)

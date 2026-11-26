@@ -1,5 +1,15 @@
 # Directory Update Log
 
+## 2026-11-26
+
+* **Add** - **Target lock, auto-targeting and drag-to-aim for combat** ([input and HUD](/client/input_and_hud.md)): new `CombatTargeting` (locked target, then the most valuable enemy in range), a Target ring button and key (`U`), a target frame and world marker, drag-to-aim on weapon-set skills, and weapon-set skills in the ring's skill slots. Ground-placed area skills still need engine support.
+
+* **Change** - **Phone chat follows the Diablo Immortal pattern; quest tracker as cards** ([input and HUD](/client/input_and_hud.md)): a compact tabbed chat box (All, Local, Party, Guild) between the pad and the ring opens a full-height chat panel on the right half with the channel list and Send. The quest tracker draws each quest as a card with a colour stripe (orange ready to hand in, green in progress). The chat panel shows a typed-length counter (limit 300, the server's) and the tracker title shows how many quests it lists.
+
+* **Add** - **Chat views and per-view activity** ([input and HUD](/client/input_and_hud.md)): `ChatView` (All default, Local, Global, Party, Guild, Whisper, System) replaces the old tab list on desktop and drives the phone's chip. A new message in the viewed channel wakes the faded chat; routine system lines do not on All; other lines count as unread on the chat button.
+
+* **Change** - **Phone chat is a see-through feed between the movement pad and the action ring** ([input and HUD](/client/input_and_hud.md)): the chat window is gone on touch devices. A transparent log of the latest lines sits in the middle of the bottom edge with a chat button and a channel chip; typing opens the browser text bar and moves the feed up under it so the game stays visible above the keyboard; Enter sends (it did not before). New `ChatFeed`, `HudChip`, `touchChatSlot`, `TextEntryBridge.occupiedTopFraction`.
+
 ## 2026-11-25
 
 * **Add** - **The chat box fades out when unused, with a small button to bring it back** ([input and HUD](/client/input_and_hud.md)): after 6 seconds without a hover, touch, typing or new message the chat fades over about a third of a second and stops taking touches; a speech-bubble button at the bottom-left shows it again (and focuses its input on a keyboard, or hides it at once if it is showing), with a red count of messages that arrived while hidden. On every layout. Rule: `ChatFade` (pure). Tests: `ChatFadeTest`.

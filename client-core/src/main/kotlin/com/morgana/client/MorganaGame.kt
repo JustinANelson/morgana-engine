@@ -407,6 +407,7 @@ class MorganaGame(
                         }
                         com.morgana.client.access.GameAction.STANCE -> hud.cycleStance()
                         com.morgana.client.access.GameAction.MORE_ACTIONS -> hud.toggleActionList()
+                        com.morgana.client.access.GameAction.TARGET_NEXT -> hud.cycleTarget()
                         com.morgana.client.access.GameAction.CONTROLS -> hud.toggleControlsWindow()
                         else -> {
                             // Quickbar slots; the movement keys are read every frame (see render), not as key events.
@@ -508,6 +509,10 @@ class MorganaGame(
                     if (button == Input.Buttons.LEFT) {
                         lmbHeldOnWorld = true
                         holdAttackRepeat.markFired()
+                    }
+                    // Clicking or tapping an enemy locks on to it.
+                    cursorAim(screenX, screenY)?.let { a ->
+                        com.morgana.client.input.CombatTargeting.nearestTo(a.first, a.second, worldState.targetCandidates())?.let { worldState.lockedNpcId = it.id }
                     }
                     sendActionInput(if (button == Input.Buttons.LEFT) "LMB" else "RMB", cursorAim(screenX, screenY))
                     return true
@@ -635,8 +640,25 @@ class MorganaGame(
         val shift = Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT) || Gdx.input.isKeyPressed(Input.Keys.SHIFT_RIGHT) || hud.touchShift
         val facing = worldState.localCharacter?.position?.direction ?: com.morgana.domain.spatial.Direction.DOWN
         val token = com.morgana.client.input.ActionCombatInput.token(key, shift, moveX, moveY, facing)
-        netClient.send(com.morgana.client.input.ActionCombatInput.packet(token, aim))
+        netClient.send(com.morgana.client.input.ActionCombatInput.packet(token, resolveAim(key, aim, moveX, moveY)))
         audio.play(RetroSoundEngine.Sfx.SWING)
+    }
+
+    /**
+     * Where an attack or skill aims, the same on a phone and a keyboard: a dodge goes the way the player is moving; a skill the player
+     * is dragging goes along the drag; a cursor aim (a mouse click or key) is kept; otherwise the locked target, else the most
+     * valuable enemy in reach ([com.morgana.client.input.CombatTargeting]); with none the character's facing is used.
+     */
+    private fun resolveAim(key: String, cursor: Pair<Float, Float>?, moveX: Int, moveY: Int): Pair<Float, Float>? {
+        val centre = worldState.playerCentre()
+        if (key == "SPACE") {
+            return if (centre != null && (moveX != 0 || moveY != 0)) (centre.first + moveX * 100f) to (centre.second + moveY * 100f) else null
+        }
+        hud.manualAim()?.let { return it }
+        if (cursor != null) return cursor
+        if (key == "Q" || centre == null) return null
+        val t = com.morgana.client.input.CombatTargeting.pickAuto(centre.first, centre.second, worldState.targetCandidates(), worldState.lockedNpcId) ?: return null
+        return t.x to t.y
     }
 
     /** The action-combat keys (see [com.morgana.client.input.ActionCombatInput.buttonForKey]). Returns true when [keycode] was one. */

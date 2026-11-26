@@ -192,9 +192,23 @@ class PlayerHudAndWindows(
     private var menuDockRow2: VisTable? = null
     private var menuDockRow1Buttons: List<VisTextButton> = emptyList()
     private var menuDockRow2Buttons: List<VisTextButton> = emptyList()
-    private var chatWindow: com.badlogic.gdx.scenes.scene2d.ui.Table? = null
-    private var activeChatTab: ChatTab = ChatTab.ALL
-    private enum class ChatTab(val label: String) { ALL("All"), GLOBAL("Global"), PARTY("Party"), GUILD("Guild"), SYSTEM("System") }
+    private var chatWindow: Actor? = null
+    private var chatFeed: ChatFeed? = null
+    private var chatPanel: VisTable? = null
+    private var targetFrame: TargetFrame? = null
+    private var touchAimDrag: Pair<Float, Float>? = null
+    private var chatPanelOpen = false
+    private var chatPanelTitle: VisLabel? = null
+    private var chatCounter: VisLabel? = null
+    private var chatScroll: VisScrollPane? = null
+    private val chatViewButtons = LinkedHashMap<ChatView, VisTextButton>()
+    private var chatFeedLines: List<Pair<String, Color>> = emptyList()
+    private var activeChatTab: ChatView = ChatView.ALL
+    /** The longest chat message the server accepts (PacketLimits.MAX_CHAT). */
+    private val CHAT_MAX_LENGTH = 300
+    private val COMPACT_TABS = listOf(ChatView.ALL, ChatView.LOCAL, ChatView.PARTY, ChatView.GUILD)
+    private var lastChatSeen: ServerPacket.ChatBroadcast? = null
+    private var chatSeenOnce = false
     private var charInvTopButton: VisTextButton? = null
     private var questsTopButton: VisTextButton? = null
     private var craftingTopButton: VisTextButton? = null
@@ -374,6 +388,9 @@ class PlayerHudAndWindows(
         cornerButtons?.remove()
         playerFrame = PlayerFrame(worldState, shapes, { VisUI.getSkin().getFont("default-font") }) { portraitRegion() }.also { stage.addActor(it) }
         cornerButtons = CornerButtons(shapes, { toggleMenuWindow() }, { toggleCharacterAndInventoryWindow() }).also { stage.addActor(it) }
+        targetFrame?.remove()
+        targetFrame = TargetFrame(shapes, { VisUI.getSkin().getFont("default-font") }, { targetInfo() }) { worldState.lockedNpcId = null }
+            .also { stage.addActor(it) }
         chatToggle?.remove()
         chatToggle = ChatToggleButton(shapes, { VisUI.getSkin().getFont("default-font") }, { if (chatAlpha < 0.5f) chatMissed else 0 }) { toggleChatShown() }
             .also { it.setPosition(12f, 10f); stage.addActor(it) }
@@ -409,17 +426,31 @@ class PlayerHudAndWindows(
         stage.addActor(gmBar)
         gmQuickBar = gmBar
 
+        // Enter sends the message (the phone's keyboard "go" key arrives as Enter too).
+        chatInputField.addListener(object : com.badlogic.gdx.scenes.scene2d.InputListener() {
+            override fun keyDown(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, keycode: Int): Boolean {
+                if (keycode == com.badlogic.gdx.Input.Keys.ENTER || keycode == com.badlogic.gdx.Input.Keys.NUMPAD_ENTER) {
+                    submitChatMessage()
+                    if (touchDevice) stage.keyboardFocus = null
+                    return true
+                }
+                return false
+            }
+        })
         if (touchDevice) {
-            val chatWin = HudWindow("Chat & Command Console", rememberAs = "Chat & Command Console")
-            chatWin.isMovable = true
-            chatWin.add(scroll).width(440f).height(130f).colspan(3).pad(4f).row()
-            chatWin.add(chatChannelBox).width(95f).pad(3f)
-            chatWin.add(chatInputField).width(265f).pad(3f)
-            chatWin.add(actionButton("Send") { submitChatMessage() }).width(70f).pad(3f).row()
-            chatWin.pack()
-            chatWin.setPosition(12f, 12f)
-            stage.addActor(chatWin)
-            chatWindow = chatWin
+            // A phone has no chat window: a see-through feed between the movement pad and the action ring, and the typed line
+            // goes through the browser's text bar (the feed moves up under it so the game stays in view above the keyboard).
+            chatChannelBox.selected = ChatChannel.MAP
+            chatInputField.messageText = "Tap here..."
+            val feed = ChatFeed(shapes, { VisUI.getSkin().getFont("default-font") }, { chatFeedLines },
+                { COMPACT_TABS.map { it.label } }, { COMPACT_TABS.indexOf(activeChatTab) },
+                { i -> setChatView(COMPACT_TABS[i]); chatLastUseMs = System.currentTimeMillis() },
+                { openChatPanel() })
+            stage.addActor(feed)
+            chatWindow = feed
+            chatFeed = feed
+            chatPanel?.remove()
+            chatPanel = buildChatPanel(scroll).also { stage.addActor(it) }
         } else {
             val chatBox = VisTable()
             chatBox.background = theme.dynamic { t, p ->
@@ -436,13 +467,13 @@ class PlayerHudAndWindows(
             val tabGroup = com.badlogic.gdx.scenes.scene2d.ui.ButtonGroup<VisTextButton>()
             tabGroup.setMinCheckCount(1)
             tabGroup.setMaxCheckCount(1)
-            for (tab in ChatTab.entries) {
+            for (tab in ChatView.entries) {
                 val btn = VisTextButton(tab.label, theme.tabStyle).apply {
                     setProgrammaticChangeEvents(false)
                     isChecked = (tab == activeChatTab)
                     addListener(object : ChangeListener() {
                         override fun changed(event: ChangeEvent?, actor: Actor?) {
-                            if (isChecked) activeChatTab = tab
+                            if (isChecked) { activeChatTab = tab; chatLastUseMs = System.currentTimeMillis() }
                         }
                     })
                 }
@@ -471,7 +502,7 @@ class PlayerHudAndWindows(
                     return false
                 }
             })
-            chat.setPosition(12f + ChatToggleButton.SIZE + 10f, chat.y)
+            if (!touchDevice) chat.setPosition(12f + ChatToggleButton.SIZE + 10f, chat.y)
         }
 
         updateHudVisibility()
@@ -536,7 +567,7 @@ class PlayerHudAndWindows(
         dungeonHudOverlay?.isVisible = playing
         partyFramesOverlay?.isVisible = playing
         menuButton?.isVisible = playing
-        chatWindow?.isVisible = playing && worldState.showChatUi()
+        chatWindow?.isVisible = playing && worldState.showChatUi() && !chatPanelOpen
         hotbarWindow?.isVisible = playing && !touchDevice && worldState.showAnyHotbarSlot()
         if (playing && worldState.showMinimap && worldState.showMinimapUi() && minimapWindow == null) {
             openMinimapWindow()
@@ -576,6 +607,9 @@ class PlayerHudAndWindows(
     }
 
     fun refreshHotbar() {
+        worldState.refreshLock()
+        worldState.aimPreview = manualAim()
+        placeTargetFrame()
         placeMenuDock()
         applyRingHud()
         updateChatFade()
@@ -887,23 +921,27 @@ class PlayerHudAndWindows(
             vitalsLabel.setText(worldState.statusMessage)
         }
 
+        // New messages: the ones in the view being read (not routine system lines on All) bring the chat up; every shown line
+        // counts as unread on the chat button while the chat is hidden.
+        val fresh = ChatActivity.newSince(worldState.chatHistory, lastChatSeen)
+        lastChatSeen = worldState.chatHistory.lastOrNull()
+        if (chatSeenOnce) {
+            for (m in fresh) {
+                if (!ChatFormatting.isShown(m, worldState.hideOocChat)) continue
+                if (ChatActivity.wakes(activeChatTab, m.channel)) chatLastUseMs = System.currentTimeMillis()
+                if (chatAlpha < 0.5f) chatMissed++
+            }
+        }
+        chatSeenOnce = true
         val visibleMessages = worldState.chatHistory
             .filter { ChatFormatting.isShown(it, worldState.hideOocChat) }
-            .filter { msg ->
-                when (activeChatTab) {
-                    ChatTab.ALL -> true
-                    ChatTab.GLOBAL -> msg.channel == ChatChannel.GLOBAL || msg.channel == ChatChannel.MAP
-                    ChatTab.PARTY -> msg.channel == ChatChannel.PARTY
-                    ChatTab.GUILD -> msg.channel == ChatChannel.GUILD
-                    ChatTab.SYSTEM -> msg.channel == ChatChannel.SYSTEM
-                }
-            }
-            .takeLast(12)
+            .filter { msg -> activeChatTab.shows(msg.channel) }
+            .takeLast(if (touchDevice) 40 else 12)
         val chatKey = "${activeChatTab.name}|" + visibleMessages.joinToString("\n") { "${it.channel}:${it.senderName}:${it.message}" }
         if (chatKey != lastChatRenderKey) {
             lastChatRenderKey = chatKey
-            chatLastUseMs = System.currentTimeMillis()
-            if (chatAlpha < 0.5f) chatMissed++
+            chatFeedLines = visibleMessages.takeLast(8).map { ChatFormatting.line(it) to chatChannelColor(it.channel) }
+            chatScroll?.let { sp -> if (chatPanelOpen) { sp.layout(); sp.scrollPercentY = 1f } }
             chatHistoryTable.clearChildren()
             chatHistoryTable.defaults().left().growX().padBottom(1f)
             for (msg in visibleMessages) {
@@ -1675,6 +1713,7 @@ class PlayerHudAndWindows(
         }
         val content = trackerContent ?: return
         win.isVisible = true
+        win.badge = entries.size.toString()
         val key = entries.flatMap { e -> listOf("#${e.questId}|${e.name}|${e.ready}") + e.lines.map { QuestTracker.lineText(it) + "|${it.done}" } }
         if (key == trackerShown || win.collapsed) return
         trackerShown = key
@@ -1685,13 +1724,25 @@ class PlayerHudAndWindows(
             top = minOf(top, unitBottom)
         }
         content.clearChildren()
+        // One card per quest: a coloured stripe (orange when ready to hand in, green while in progress) beside the name and objectives.
+        val skin = VisUI.getSkin()
         for (e in entries) {
-            content.add(VisLabel(if (e.ready) "${e.name} (ready to hand in)" else e.name)).left().padTop(4f).row()
+            val stripeColor = if (e.ready) Color(0.95f, 0.6f, 0.15f, 1f) else Color(0.35f, 0.7f, 0.4f, 1f)
+            val card = VisTable()
+            card.background = skin.newDrawable("white", Color(stripeColor.r * 0.25f, stripeColor.g * 0.25f, stripeColor.b * 0.25f, 0.72f))
+            val stripe = VisTable()
+            stripe.background = skin.newDrawable("white", stripeColor)
+            card.add(stripe).width(4f).growY()
+            val inner = VisTable()
+            val title = VisLabel(if (e.ready) "${e.name} (ready to hand in)" else e.name).apply { color = stripeColor; setWrap(true) }
+            inner.add(title).width(226f).left().row()
             for (l in e.lines) {
-                val text = "  " + QuestTracker.lineText(l)
+                val text = QuestTracker.lineText(l)
                 val label = (if (l.done) VisLabel(text, theme.mutedLabelStyle) else VisLabel(text)).apply { setWrap(true) }
-                content.add(label).width(240f).left().row()
+                inner.add(label).width(226f).left().row()
             }
+            card.add(inner).left().pad(4f)
+            content.add(card).width(250f).padBottom(3f).left().row()
         }
         win.pack()
         win.setPosition(win.x, (top - win.height).coerceIn(0f, (stage.height - win.height).coerceAtLeast(0f)))
@@ -2635,20 +2686,163 @@ class PlayerHudAndWindows(
         chatAlpha = ChatFade.step(chatAlpha, wanted, delta)
         if (chatAlpha >= 0.5f) chatMissed = 0
         chat.color.a = chatAlpha
-        chat.touchable = if (chatAlpha > 0.05f) com.badlogic.gdx.scenes.scene2d.Touchable.enabled else com.badlogic.gdx.scenes.scene2d.Touchable.disabled
-        chatToggle?.isVisible = worldState.authenticated && !holdBack && !editorOpen && worldState.showChatUi()
+        chat.touchable = if (chatAlpha > 0.5f) com.badlogic.gdx.scenes.scene2d.Touchable.enabled else com.badlogic.gdx.scenes.scene2d.Touchable.disabled
+        val chatUi = worldState.authenticated && !holdBack && !editorOpen && worldState.showChatUi()
+        chatToggle?.isVisible = chatUi
+        if (touchDevice) placeTouchChat(chat, chatUi)
+    }
+
+    /** Puts the phone's compact chat where [touchChatSlot] says, and the chat button in its corner while the box is faded out. */
+    private fun placeTouchChat(feed: Actor, chatUi: Boolean) {
+        val slot = touchChatSlot(stage.width, stage.height, insetLeft, insetRight)
+        feed.setBounds(slot.feedX, slot.feedY, slot.feedW, slot.feedH)
+        chatToggle?.setPosition(slot.buttonX, slot.buttonY)
+        chatToggle?.isVisible = chatUi && !chatPanelOpen && chatAlpha < 0.5f
+        chatCounter?.setText("${chatInputField.text.length}/$CHAT_MAX_LENGTH")
+        chatPanel?.let { p ->
+            p.isVisible = chatUi && chatPanelOpen
+            val w = (stage.width * 0.52f).coerceIn(300f, 520f)
+            p.setBounds(stage.width - w - 6f - insetRight, 6f, w, stage.height - 12f - insetTop)
+        }
+    }
+
+    /** Switches what the chat shows (and where typed messages go) from the compact tabs or the panel's channel list. */
+    private fun setChatView(view: ChatView) {
+        activeChatTab = view
+        chatChannelBox.selected = view.sendTo
+        chatViewButtons[view]?.isChecked = true
+        chatPanelTitle?.setText("Channel: ${view.label}")
+        lastChatRenderKey = ""
+    }
+
+    /** Opens the phone's full chat panel on the right half of the screen and starts typing (the browser's text bar opens). */
+    private fun openChatPanel() {
+        chatPanelOpen = true
+        chatPanel?.toFront()
+        chatLastUseMs = System.currentTimeMillis()
+        chatMissed = 0
+        lastChatRenderKey = ""
+        stage.keyboardFocus = chatInputField
+    }
+
+    private fun closeChatPanel() {
+        chatPanelOpen = false
+        if (stage.keyboardFocus === chatInputField) stage.keyboardFocus = null
+        chatLastUseMs = System.currentTimeMillis()
+    }
+
+    /**
+     * The full chat panel for a phone: the log on the left, the channel list on the right, and the typing line with Send underneath,
+     * in the right half of the screen so the game stays visible on the left. Hidden until the compact box is tapped.
+     */
+    private fun buildChatPanel(scroll: VisScrollPane): VisTable {
+        chatScroll = scroll
+        val panel = VisTable()
+        panel.background = theme.dynamic { t, p ->
+            t.beveledPanel(Color(p.background.r, p.background.g, p.background.b, 0.97f), highlight = p.border, padX = 6f, padY = 6f)
+        }
+        val title = VisLabel("Channel: ${activeChatTab.label}", theme.accentLabelStyle)
+        chatPanelTitle = title
+        panel.add(title).left().expandX().padBottom(4f)
+        panel.add(actionButton("X") { closeChatPanel() }).width(44f).height(36f).padBottom(4f).row()
+        val body = VisTable()
+        body.add(scroll).grow().padRight(4f)
+        val list = VisTable()
+        val group = com.badlogic.gdx.scenes.scene2d.ui.ButtonGroup<VisTextButton>()
+        group.setMinCheckCount(1)
+        group.setMaxCheckCount(1)
+        chatViewButtons.clear()
+        for ((i, v) in ChatView.entries.withIndex()) {
+            val btn = VisTextButton("[${i + 1}] ${v.label}", theme.tabStyle).apply {
+                setProgrammaticChangeEvents(false)
+                isChecked = (v == activeChatTab)
+                addListener(object : ChangeListener() {
+                    override fun changed(event: ChangeEvent?, actor: Actor?) {
+                        if (isChecked) setChatView(v)
+                    }
+                })
+            }
+            group.add(btn)
+            chatViewButtons[v] = btn
+            list.add(btn).width(118f).height(40f).padBottom(2f).row()
+        }
+        body.add(list).top()
+        panel.add(body).grow().colspan(2).row()
+        // The server refuses longer messages, so the field stops at the limit and a counter shows how much is left.
+        chatInputField.maxLength = CHAT_MAX_LENGTH
+        val counter = VisLabel("0/$CHAT_MAX_LENGTH", theme.mutedLabelStyle)
+        chatCounter = counter
+        val inputRow = VisTable()
+        inputRow.add(chatInputField).growX().height(38f)
+        inputRow.add(counter).padLeft(6f).padRight(4f)
+        inputRow.add(actionButton("Send") { submitChatMessage() }).width(72f).height(38f)
+        panel.add(inputRow).growX().colspan(2).padTop(4f).row()
+        panel.isVisible = false
+        return panel
     }
 
     /** The small chat button: shows the chat (and, on a keyboard, focuses its input), or hides it at once if it is showing. */
     private fun toggleChatShown() {
-        if (chatAlpha > 0.5f && stage.keyboardFocus !== chatInputField) {
+        if (!touchDevice && chatAlpha > 0.5f && stage.keyboardFocus !== chatInputField) {
             chatLastUseMs = 0L
             chatAlpha = 0.49f
         } else {
             chatLastUseMs = System.currentTimeMillis()
             chatMissed = 0
+            // On a phone the button only brings the compact box back (tap the box to open the panel and type).
             if (!touchDevice) stage.keyboardFocus = chatInputField
         }
+    }
+
+    /** What the target frame shows: the locked enemy's name, level and life, or null with no lock. */
+    private fun targetInfo(): TargetFrame.Info? {
+        val npc = worldState.lockedNpcId?.let { worldState.npcsOnMap[it] } ?: return null
+        val def = worldState.catalog.npcs.firstOrNull { it.id == npc.npcId } ?: return null
+        val hp = npc.vitals["hp"] ?: npc.vitals.values.firstOrNull()
+        return TargetFrame.Info(
+            name = npc.displayName.ifBlank { def.name },
+            level = def.level + (npc.scale?.levelBonus ?: 0),
+            hp = hp?.cur ?: 0, maxHp = hp?.max ?: 1, boss = def.encounter != null
+        )
+    }
+
+    private fun placeTargetFrame() {
+        val f = targetFrame ?: return
+        f.isVisible = worldState.authenticated && !holdBack && !editorOpen && worldState.lockedNpcId != null
+        f.setPosition((stage.width - f.width) / 2f, stage.height - f.height - 34f - insetTop)
+    }
+
+    /** Locks on to the nearest enemy, then the next nearer-to-farther one on each press, then none (the target button and the U key). */
+    fun cycleTarget() {
+        val c = worldState.playerCentre() ?: return
+        val next = com.morgana.client.input.CombatTargeting.cycle(c.first, c.second, worldState.targetCandidates(), worldState.lockedNpcId, wrapToNone = true)
+        worldState.lockedNpcId = next?.id
+    }
+
+    /** Where a skill being aimed by drag would go, in map pixels, or null when no drag is in progress. */
+    fun manualAim(): Pair<Float, Float>? {
+        val v = touchAimDrag ?: return null
+        val c = worldState.playerCentre() ?: return null
+        return com.morgana.client.input.CombatTargeting.dragAim(c.first, c.second, v.first, v.second)
+    }
+
+    /** The weapon set the character fights with (the first main set for their class and level), or null. */
+    private fun activeWeaponSet(): com.morgana.domain.content.WeaponSetDefinition? {
+        val ch = worldState.localCharacter ?: return null
+        return worldState.catalog.weaponSets
+            .filter { it.slot == com.morgana.domain.content.WeaponSetSlot.MAIN && (it.classIds.isEmpty() || ch.classId in it.classIds) && it.levelReq <= ch.level }
+            .minByOrNull { it.id }
+    }
+
+    /** The ring's skill slots hold the weapon set's right-click, guard, special and free-key skills, in that order. */
+    private val kitTokens = listOf("RMB", "Q", "TAB", "F")
+    private val kitKeyNames = listOf("RClk", "Q", "Tab", "F")
+
+    /** The name of the weapon-set skill on ring slot [k], or null when the set has none there (the slot then falls back to the quickbar). */
+    private fun kitSkillName(k: Int): String? {
+        if (!actionCombatOn()) return null
+        val id = activeWeaponSet()?.entries?.firstOrNull { it.input == kitTokens[k] }?.skillId ?: return null
+        return worldState.catalog.actionSkills.firstOrNull { it.id == id }?.name
     }
 
     /** Asks for the next combat stance (SAFE, PvE, PvP); the server arms PvP after a short channel. */
@@ -2820,7 +3014,7 @@ class PlayerHudAndWindows(
         val modifier = TouchFaceButton(
             glyph = { "Mod" },
             color = Color(0.55f, 0.55f, 0.6f, 1f),
-            visible = { if (ringOn()) actionCombatOn() && weaponSetsOn() else actionCombatOn() || worldState.gameDefinition?.sprint?.enabled == true },
+            visible = { if (ringOn()) false else actionCombatOn() || worldState.gameDefinition?.sprint?.enabled == true },
             highlighted = { touchModHeld }
         ) { touchModHeld = true }.withRelease { touchModHeld = false }
         val keys = (1..10).map { n ->
@@ -2848,18 +3042,29 @@ class PlayerHudAndWindows(
     private fun buildActionRing(): ActionRing {
         val keyHints = !touchDevice
         fun hint(i: Int) = if (keyHints) hotbarKey(i) else ""
-        fun skill(k: Int, role: RingRole, tint: Color, label: String) = RingButton(
-            key = RingKey(role, if (role == RingRole.SKILL) k else 0),
-            glyph = { label },
-            tint = tint,
-            visible = { ringShown() && worldState.showCombatUi() },
-            icon = { slot(k)?.let { assets.getItemIconRegion(it.iconId) } },
-            keyHint = { hint(k) },
-            count = { slotBadge(k) },
-            cooldown = { slotCooldown(k) },
-            dimmed = { slotDimmed(k) },
-            empty = { slot(k) == null }
-        ) { triggerHotbar(k) }
+        fun skill(k: Int, role: RingRole, tint: Color, label: String): RingButton {
+            fun kit() = kitSkillName(k)
+            val b = RingButton(
+                key = RingKey(role, if (role == RingRole.SKILL) k else 0),
+                glyph = { kit() ?: label },
+                tint = tint,
+                visible = { ringShown() && worldState.showCombatUi() },
+                icon = { if (kit() != null) null else slot(k)?.let { assets.getItemIconRegion(it.iconId) } },
+                keyHint = { if (!keyHints) "" else if (kit() != null) kitKeyNames[k] else hint(k) },
+                count = { if (kit() != null) "" else slotBadge(k) },
+                cooldown = { if (kit() != null) 0f else slotCooldown(k) },
+                dimmed = { if (kit() != null) false else slotDimmed(k) },
+                empty = { kit() == null && slot(k) == null },
+                // A weapon-set skill can be aimed by dragging (the guard is held instead, never aimed).
+                aimable = { kit() != null && kitTokens[k] != "Q" }
+            ) {
+                if (kit() != null) onCombatInput(com.morgana.client.input.ActionCombatInput.Button.entries.first { it.token == kitTokens[k] })
+                else triggerHotbar(k)
+            }
+            b.withRelease { if (kit() != null && kitTokens[k] == "Q") onCombatRelease() }
+            b.withAim { touchAimDrag = it }
+            return b
+        }
         fun combat(button: com.morgana.client.input.ActionCombatInput.Button, key: RingKey, tint: Color, visible: () -> Boolean): RingButton {
             // The keyboard's own key for this input: Space dodges, Q guards, Tab is the special, F the free key.
             val keyName = when (button) {
@@ -2872,7 +3077,8 @@ class PlayerHudAndWindows(
             val b = RingButton(key = key, glyph = { button.label }, tint = tint, visible = visible, keyHint = { if (keyHints) keyName else "" }) { onCombatInput(button) }
             return if (button.holdToRelease) b.withRelease { onCombatRelease() } else b
         }
-        val extrasOn = { ringShown() && actionCombatOn() && weaponSetsOn() }
+        // In the ring layout the weapon set's skills sit in the four skill slots, so the extra arc stays empty.
+        val extrasOn = { ringShown() && actionCombatOn() && weaponSetsOn() && !ringOn() }
         val buttons = buildList {
             add(RingButton(
                 key = RingKey(RingRole.ATTACK),
@@ -2892,6 +3098,14 @@ class PlayerHudAndWindows(
                 count = { moreActionCount().let { if (it > 0) it.toString() else "" } },
                 highlighted = { openOrNull(actionListWindow) != null }
             ) { toggleActionList() })
+            add(RingButton(
+                key = RingKey(RingRole.TARGET),
+                glyph = { "Tgt" },
+                tint = Color(0.9f, 0.7f, 0.2f, 1f),
+                visible = { ringShown() && actionCombatOn() },
+                keyHint = { if (keyHints) KeyBindings.shortKeyName(Accessibility.keys.keysFor(GameAction.TARGET_NEXT).firstOrNull() ?: 0) else "" },
+                highlighted = { worldState.lockedNpcId != null }
+            ) { cycleTarget() })
             add(combat(com.morgana.client.input.ActionCombatInput.Button.DODGE, RingKey(RingRole.DODGE), Color(0.2f, 0.65f, 0.65f, 1f)) { ringShown() && actionCombatOn() })
             add(RingButton(
                 key = RingKey(RingRole.CONTEXT),
@@ -2982,9 +3196,14 @@ class PlayerHudAndWindows(
             if (worldState.showMinimapUi()) add(withKey("Map", GameAction.MINIMAP) to { toggleMinimap() })
             if (worldState.isModuleEnabled("exploration")) add(withKey("World map", GameAction.WORLD_MAP) to { toggleWorldMapWindow() })
             if (worldState.showChatUi()) add("Chat" to {
-                (chatWindow as? HudWindow)?.let { c ->
+                val c = chatWindow as? HudWindow
+                if (c != null) {
                     c.setCollapsed(!c.collapsed)
                     if (!c.collapsed) c.toFront()
+                } else if (touchDevice) {
+                    openChatPanel()
+                } else {
+                    toggleChatShown()
                 }
             })
             add(withKey("Controls", GameAction.CONTROLS) to { toggleControlsWindow() })

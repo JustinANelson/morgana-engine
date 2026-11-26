@@ -289,6 +289,50 @@ class ClientWorldState {
         return ghost
     }
 
+    /** The enemy the player has locked on to (tap, click or the target button), or null. Attacks and skills aim at it while it is in reach. */
+    var lockedNpcId: String? = null
+
+    /** Where a skill the player is aiming by dragging would go, in map pixels (y down), for the aim line; null when not aiming. */
+    var aimPreview: Pair<Float, Float>? = null
+
+    /** The local player's centre in map pixels (y down), or null before they are on a map. */
+    fun playerCentre(): Pair<Float, Float>? {
+        val ch = localCharacter ?: return null
+        val ts = activeMap?.tileSize ?: return null
+        return (ch.position.pixelX + ts / 2f) to (ch.position.pixelY + ts / 2f)
+    }
+
+    /** The enemies that can be targeted: living monsters on this map (not pets or townsfolk), as map-pixel positions with what makes them worth hitting. */
+    fun targetCandidates(): List<com.morgana.client.input.TargetCandidate> {
+        val ts = activeMap?.tileSize ?: return emptyList()
+        val me = localCharacter?.id
+        val out = ArrayList<com.morgana.client.input.TargetCandidate>()
+        for (npc in npcsOnMap.values) {
+            if (!npc.isAlive || npc.ownerId != null) continue
+            val def = catalog.npcs.firstOrNull { it.id == npc.npcId } ?: continue
+            val monster = (def.behavior == com.morgana.domain.content.NpcBehavior.ATTACK_ON_SIGHT || def.behavior == com.morgana.domain.content.NpcBehavior.PASSIVE) &&
+                def.eventId == 0 && def.shopId == 0
+            if (!monster) continue
+            val vis = npcVisuals[npc.instanceId]
+            val x = (vis?.renderPixelX ?: (npc.tileX * ts.toFloat())) + ts / 2f
+            val y = (vis?.renderPixelY ?: (npc.tileY * ts.toFloat())) + ts / 2f
+            val hp = npc.vitals["hp"] ?: npc.vitals.values.firstOrNull()
+            val frac = if (hp == null || hp.max <= 0) 1f else hp.cur.toFloat() / hp.max
+            out += com.morgana.client.input.TargetCandidate(
+                id = npc.instanceId, x = x, y = y, boss = def.encounter != null, hpFraction = frac,
+                targetsMe = me != null && npc.targetEntityId == me
+            )
+        }
+        return out
+    }
+
+    /** Drops the lock when its enemy is gone or dead. */
+    fun refreshLock() {
+        val id = lockedNpcId ?: return
+        val npc = npcsOnMap[id]
+        if (npc == null || !npc.isAlive) lockedNpcId = null
+    }
+
     /**
      * Who to name as the target when casting [spellId]: the clicked ghost for a revive spell while they are still a ghost on
      * this map, otherwise nobody (the server then picks for itself, as it always did).

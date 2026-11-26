@@ -1221,6 +1221,25 @@ class MorganaWorldRenderer(
 
         val floorBossNpcId = map.generator?.bossNpcId ?: 0
 
+        // The aim line of a skill being dragged: dots from the player towards where it will go.
+        worldState.aimPreview?.let { aim ->
+            worldState.playerCentre()?.let { c ->
+                val mapPx = map.height * ts.toFloat()
+                val dx = aim.first - c.first
+                val dy = aim.second - c.second
+                val len = kotlin.math.hypot(dx, dy)
+                if (len > 1f) {
+                    batch.setColor(1f, 0.9f, 0.4f, 0.85f)
+                    var d = 22f
+                    while (d <= len) {
+                        batch.draw(assets.whitePixel, c.first + dx / len * d - 2f, (mapPx - (c.second + dy / len * d)) - 2f, 4f, 4f)
+                        d += 14f
+                    }
+                    batch.color = Color.WHITE
+                }
+            }
+        }
+
         // NPC Nameplates & HP Bars
         for (npc in worldState.npcsOnMap.values) {
             if (!npc.isAlive) continue
@@ -1253,7 +1272,17 @@ class MorganaWorldRenderer(
                 npcDef.eventId == 0 && npcDef.shopId == 0
             // Plain, uninjured monsters stay anonymous; rare variants always show their bar and [Label] name.
             val isRare = isMonster && variant != null
-            if (isDamaged || style.isBoss || isRare) {
+            val locked = worldState.lockedNpcId == npc.instanceId
+            if (locked) {
+                // A gold arrow above the enemy the player has locked on to.
+                batch.setColor(1f, 0.85f, 0.2f, 0.95f)
+                batch.draw(assets.whitePixel, cx - 7f, topY + 46f, 14f, 3f)
+                batch.draw(assets.whitePixel, cx - 5f, topY + 43f, 10f, 3f)
+                batch.draw(assets.whitePixel, cx - 3f, topY + 40f, 6f, 3f)
+                batch.draw(assets.whitePixel, cx - 1f, topY + 37f, 2f, 3f)
+                batch.color = Color.WHITE
+            }
+            if (isDamaged || style.isBoss || isRare || locked) {
                 drawHpBar(batch, cx - barWidth * 0.5f, topY, barWidth, 4f, curHp, maxHp, hostile = isMonster)
             }
             if (!isMonster || isDamaged || style.isBoss || isRare) {

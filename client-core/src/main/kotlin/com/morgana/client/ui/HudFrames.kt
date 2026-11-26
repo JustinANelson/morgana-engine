@@ -200,6 +200,96 @@ object ChatFade {
     }
 }
 
+/** Where the phone's compact chat goes: the box, and the corner where the chat button waits while the box is faded out. */
+class TouchChatSlot(val feedX: Float, val feedY: Float, val feedW: Float, val feedH: Float, val buttonX: Float, val buttonY: Float)
+
+/**
+ * The phone's compact chat sits in the gap between the movement pad (resting at the bottom-left) and the action ring (bottom-right),
+ * so it never covers either thumb. Pure, so it is unit-tested on phone-sized screens.
+ */
+fun touchChatSlot(w: Float, h: Float, insetLeft: Float = 0f, insetRight: Float = 0f): TouchChatSlot {
+    val d = ringBaseSize(w, h)
+    val left = (14f + d * 0.95f * 2.25f + 10f + insetLeft).coerceAtMost(w * 0.4f)
+    val right = w - ringReach(w, h) - 10f - insetRight
+    val feedW = (right - left).coerceIn(120f, 380f)
+    val feedH = (h * 0.34f).coerceIn(84f, 130f)
+    return TouchChatSlot(left, 10f, feedW, feedH, left, 10f)
+}
+
+/**
+ * The phone's compact chat: a strip of channel tabs over the latest lines (newest at the bottom, older ones fainter) on a dark
+ * see-through panel. Tapping a tab switches the view; tapping the lines opens the full chat panel. [alpha] is the fade level set by
+ * the HUD (the box takes touches only while it is visible).
+ */
+class ChatFeed(
+    private val shapes: HudShapes,
+    private val font: () -> BitmapFont,
+    private val lines: () -> List<Pair<String, Color>>,
+    private val tabs: () -> List<String>,
+    /** Index of the lit tab, or -1 when the view is not one of the tabs. */
+    private val activeTab: () -> Int,
+    private val onTab: (Int) -> Unit,
+    private val onOpen: () -> Unit
+) : Actor() {
+    private val layout = GlyphLayout()
+
+    init {
+        addListener(object : InputListener() {
+            override fun touchDown(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int): Boolean {
+                stage?.keyboardFocus = null
+                val n = tabs().size
+                if (y >= height - TAB_H && n > 0) onTab((x / width * n).toInt().coerceIn(0, n - 1)) else onOpen()
+                return true
+            }
+        })
+    }
+
+    override fun draw(batch: Batch, parentAlpha: Float) {
+        val a = parentAlpha * color.a
+        if (a <= 0.01f) return
+        shapes.rect(batch, x, y, width, height, Color(0.05f, 0.04f, 0.04f, 1f), 0.42f * a)
+        shapes.rect(batch, x, y + height - TAB_H, width, TAB_H, Color(0.02f, 0.02f, 0.02f, 1f), 0.5f * a)
+        val f = font()
+        f.data.setScale(SCALE)
+        val names = tabs()
+        val lit = activeTab()
+        for ((i, name) in names.withIndex()) {
+            val tx = x + width * i / names.size
+            val tw = width / names.size
+            if (i == lit) shapes.rect(batch, tx + 4f, y + height - 3f, tw - 8f, 2f, HudStyle.rim, a)
+            layout.setText(f, name, if (i == lit) Color(1f, 0.93f, 0.7f, a) else Color(0.75f, 0.72f, 0.66f, 0.8f * a), tw, com.badlogic.gdx.utils.Align.center, false)
+            f.draw(batch, layout, tx, y + height - (TAB_H - layout.height) / 2f)
+        }
+        val textW = (width - 10f).coerceAtLeast(40f)
+        val limit = y + height - TAB_H - 2f
+        var top = y + 4f
+        fun put(text: String, c: Color, alpha: Float): Boolean {
+            layout.setText(f, text, c, textW, com.badlogic.gdx.utils.Align.left, true)
+            val lineTop = top + layout.height
+            if (lineTop > limit) return false
+            layout.setText(f, text, Color(0f, 0f, 0f, 0.9f * alpha * a), textW, com.badlogic.gdx.utils.Align.left, true)
+            f.draw(batch, layout, x + 6f, lineTop - 1f)
+            layout.setText(f, text, Color(c.r, c.g, c.b, alpha * a), textW, com.badlogic.gdx.utils.Align.left, true)
+            f.draw(batch, layout, x + 5f, lineTop)
+            top = lineTop + 3f
+            return true
+        }
+        val all = lines()
+        for (i in all.indices.reversed()) {
+            val age = all.size - 1 - i
+            if (!put(all[i].first, all[i].second, (1f - 0.13f * age).coerceAtLeast(0.35f))) break
+        }
+        f.data.setScale(1f)
+        f.color = Color.WHITE
+        batch.setColor(Color.WHITE)
+    }
+
+    companion object {
+        const val SCALE = 0.85f
+        const val TAB_H = 26f
+    }
+}
+
 /** A small square button that shows or hides the chat box, with a count of messages that arrived while it was hidden. */
 class ChatToggleButton(
     private val shapes: HudShapes,
@@ -253,6 +343,65 @@ class ChatToggleButton(
 
     companion object {
         const val SIZE = 40f
+    }
+}
+
+/**
+ * The locked enemy's frame at the top centre: its name and level and a life bar with the numbers. Tapping it lets go of the lock.
+ */
+class TargetFrame(
+    private val shapes: HudShapes,
+    private val font: () -> BitmapFont,
+    /** Name, level, life now and life max of the locked enemy, or null when nothing is locked. */
+    private val info: () -> Info?,
+    private val onClear: () -> Unit
+) : Actor() {
+    data class Info(val name: String, val level: Int, val hp: Int, val maxHp: Int, val boss: Boolean)
+
+    private val layout = GlyphLayout()
+
+    init {
+        setSize(WIDTH, HEIGHT)
+        addListener(object : InputListener() {
+            override fun touchDown(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int): Boolean {
+                stage?.keyboardFocus = null
+                return true
+            }
+
+            override fun touchUp(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int) {
+                if (x in 0f..width && y in 0f..height) onClear()
+            }
+        })
+    }
+
+    override fun draw(batch: Batch, parentAlpha: Float) {
+        val i = info() ?: return
+        val a = parentAlpha
+        shapes.rect(batch, x - 2f, y - 2f, width + 4f, height + 4f, if (i.boss) Color(0.95f, 0.75f, 0.2f, 1f) else HudStyle.rim, 0.95f * a)
+        shapes.rect(batch, x, y, width, height, HudStyle.well, 0.9f * a)
+        val ratio = (i.hp.toFloat() / i.maxHp.coerceAtLeast(1)).coerceIn(0f, 1f)
+        shapes.rect(batch, x + 6f, y + 6f, width - 12f, 15f, Color(0.18f, 0.06f, 0.06f, 1f), a)
+        shapes.rect(batch, x + 6f, y + 6f, (width - 12f) * ratio, 15f, Color(0.85f, 0.2f, 0.2f, 1f), a)
+        val f = font()
+        f.data.setScale(0.85f)
+        f.color = Color(1f, 0.93f, 0.7f, a)
+        layout.setText(f, "Lv ${i.level}  ${i.name}", f.color, width - 12f, com.badlogic.gdx.utils.Align.center, false)
+        f.draw(batch, layout, x + 6f, y + height - 5f)
+        f.data.setScale(0.7f)
+        f.color = Color(1f, 1f, 1f, a)
+        layout.setText(f, "${i.hp} / ${i.maxHp}", f.color, width - 12f, com.badlogic.gdx.utils.Align.center, false)
+        f.draw(batch, layout, x + 6f, y + 6f + (15f + layout.height) / 2f)
+        f.data.setScale(1f)
+        f.color = Color.WHITE
+        batch.setColor(Color.WHITE)
+    }
+
+    override fun hit(x: Float, y: Float, touchable: Boolean): Actor? =
+        if (isVisible && info() != null && x in 0f..width && y in 0f..height) this else null
+
+    companion object {
+        const val WIDTH = 220f
+        const val HEIGHT = 48f
     }
 }
 
