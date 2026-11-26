@@ -292,6 +292,9 @@ class ClientWorldState {
     /** The enemy the player has locked on to (tap, click or the target button), or null. Attacks and skills aim at it while it is in reach. */
     var lockedNpcId: String? = null
 
+    /** When each action input ("RMB", "SPACE", ...) last started its skill, in wall-clock ms, for the cooldown shown on its button. */
+    val skillUsedAtMs: MutableMap<String, Long> = HashMap()
+
     /** Where a skill the player is aiming by dragging would go, in map pixels (y down), for the aim line; null when not aiming. */
     var aimPreview: Pair<Float, Float>? = null
 

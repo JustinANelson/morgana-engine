@@ -2834,6 +2834,37 @@ class PlayerHudAndWindows(
             .minByOrNull { it.id }
     }
 
+    /** The weapon-set skill that the action input [token] ("LMB", "RMB", "SPACE", "Q", "TAB", "F") starts, or null. */
+    fun skillForToken(token: String): com.morgana.domain.content.ActionSkillDefinition? {
+        val id = activeWeaponSet()?.entries?.firstOrNull { it.input == token }?.skillId ?: return null
+        return worldState.catalog.actionSkills.firstOrNull { it.id == id }
+    }
+
+    /** Milliseconds left before the skill on action input [token] can be used again (0 when ready or it has no cooldown). */
+    private fun skillCooldownLeftMs(token: String): Long {
+        val skill = skillForToken(token) ?: return 0L
+        val last = worldState.skillUsedAtMs[token] ?: return 0L
+        return (skill.cooldownTicks * 50L - (System.currentTimeMillis() - last)).coerceAtLeast(0L)
+    }
+
+    /** The cooldown as a fraction left (1 just used, 0 ready), for the shrinking disc on the button. */
+    private fun skillCooldownFraction(token: String): Float {
+        val total = (skillForToken(token)?.cooldownTicks ?: 0) * 50L
+        return if (total <= 0L) 0f else (skillCooldownLeftMs(token).toFloat() / total).coerceIn(0f, 1f)
+    }
+
+    private fun skillCooldownLabel(token: String): String {
+        val ms = skillCooldownLeftMs(token)
+        return if (ms <= 0L) "" else if (ms < 10_000L) "%.1f".format(ms / 1000f) else ((ms + 999L) / 1000L).toString()
+    }
+
+    /** True when the character lacks the vital to pay for the skill on [token] (greyed out like a cooldown). */
+    private fun skillCantPay(token: String): Boolean {
+        val skill = skillForToken(token) ?: return false
+        val ch = worldState.localCharacter ?: return false
+        return skill.costs.any { (vital, cost) -> (ch.vitals[vital]?.cur ?: 0) < cost }
+    }
+
     /** The ring's skill slots hold the weapon set's right-click, guard, special and free-key skills, in that order. */
     private val kitTokens = listOf("RMB", "Q", "TAB", "F")
     private val kitKeyNames = listOf("RClk", "Q", "Tab", "F")
@@ -3052,8 +3083,9 @@ class PlayerHudAndWindows(
                 icon = { if (kit() != null) null else slot(k)?.let { assets.getItemIconRegion(it.iconId) } },
                 keyHint = { if (!keyHints) "" else if (kit() != null) kitKeyNames[k] else hint(k) },
                 count = { if (kit() != null) "" else slotBadge(k) },
-                cooldown = { if (kit() != null) 0f else slotCooldown(k) },
-                dimmed = { if (kit() != null) false else slotDimmed(k) },
+                cooldown = { if (kit() != null) skillCooldownFraction(kitTokens[k]) else slotCooldown(k) },
+                cooldownLabel = { if (kit() != null) skillCooldownLabel(kitTokens[k]) else "" },
+                dimmed = { if (kit() != null) skillCooldownLeftMs(kitTokens[k]) > 0L || skillCantPay(kitTokens[k]) else slotDimmed(k) },
                 empty = { kit() == null && slot(k) == null },
                 // A weapon-set skill can be aimed by dragging (the guard is held instead, never aimed).
                 aimable = { kit() != null && kitTokens[k] != "Q" }
@@ -3074,7 +3106,12 @@ class PlayerHudAndWindows(
                 com.morgana.client.input.ActionCombatInput.Button.FREE -> "F"
                 else -> ""
             }
-            val b = RingButton(key = key, glyph = { button.label }, tint = tint, visible = visible, keyHint = { if (keyHints) keyName else "" }) { onCombatInput(button) }
+            val b = RingButton(
+                key = key, glyph = { button.label }, tint = tint, visible = visible, keyHint = { if (keyHints) keyName else "" },
+                cooldown = { skillCooldownFraction(button.token) },
+                cooldownLabel = { skillCooldownLabel(button.token) },
+                dimmed = { skillCooldownLeftMs(button.token) > 0L || skillCantPay(button.token) }
+            ) { onCombatInput(button) }
             return if (button.holdToRelease) b.withRelease { onCombatRelease() } else b
         }
         // In the ring layout the weapon set's skills sit in the four skill slots, so the extra arc stays empty.

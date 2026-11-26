@@ -641,7 +641,24 @@ class MorganaGame(
         val facing = worldState.localCharacter?.position?.direction ?: com.morgana.domain.spatial.Direction.DOWN
         val token = com.morgana.client.input.ActionCombatInput.token(key, shift, moveX, moveY, facing)
         netClient.send(com.morgana.client.input.ActionCombatInput.packet(token, resolveAim(key, aim, moveX, moveY)))
-        audio.play(RetroSoundEngine.Sfx.SWING)
+        if (swingAudible(key)) audio.play(RetroSoundEngine.Sfx.SWING)
+    }
+
+    /**
+     * Whether pressing the action input [key] should make its swing sound: not while the skill is still cooling down or in its
+     * swing, and not when the character cannot pay its cost, so a mashed or refused button stays silent. The press is still sent
+     * (the server decides, and buffers early presses); only the sound is held back. Inputs with no skill keep the old behaviour.
+     */
+    private fun swingAudible(key: String): Boolean {
+        val skill = hud.skillForToken(key) ?: return true
+        val ch = worldState.localCharacter
+        if (ch != null) for ((vital, cost) in skill.costs) if ((ch.vitals[vital]?.cur ?: 0) < cost) return false
+        val now = System.currentTimeMillis()
+        val gapMs = maxOf(skill.cooldownTicks, skill.startupTicks + skill.activeTicks) * 50L
+        val last = worldState.skillUsedAtMs[key]
+        if (last != null && now - last < gapMs) return false
+        worldState.skillUsedAtMs[key] = now
+        return true
     }
 
     /**

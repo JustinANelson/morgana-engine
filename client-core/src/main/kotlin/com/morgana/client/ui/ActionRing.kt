@@ -104,6 +104,8 @@ class RingButton(
     val count: () -> String = { "" },
     /** Cooldown left, 0..1. */
     val cooldown: () -> Float = { 0f },
+    /** The seconds left on the cooldown ("3", "0.8"), drawn over the button; empty for none. */
+    val cooldownLabel: () -> String = { "" },
     /** Cannot be used right now (cooldown, cost, level). */
     val dimmed: () -> Boolean = { false },
     /** Lit: a latched Run, loot in reach. */
@@ -256,10 +258,20 @@ class ActionRing(
             val cd = def.cooldown().coerceIn(0f, 1f)
             if (cd > 0f) drawDisc(batch, cx, cy, r * 0.88f * cd, Color.BLACK, 0.68f * a)
             batch.setColor(Color.WHITE)
+            val cdText = def.cooldownLabel()
+            if (cdText.isNotEmpty()) {
+                val cf = font()
+                val scale = cf.data.scaleX
+                cf.data.setScale(if (r < 26f) 0.95f else 1.2f)
+                layout.setText(cf, cdText, Color(1f, 1f, 1f, a), r * 2f, com.badlogic.gdx.utils.Align.center, false)
+                cf.draw(batch, layout, cx - r, cy + layout.height / 2f)
+                cf.data.setScale(scale)
+                cf.color = Color.WHITE
+            }
 
             val f = font()
             val oldScale = f.data.scaleX
-            if (icon == null && !empty) {
+            if (icon == null && !empty && cdText.isEmpty()) {
                 f.data.setScale(if (def.key.role == RingRole.ATTACK) 1.25f else if (r < 26f) 0.8f else 1f)
                 f.color = Color(1f, 1f, 1f, (if (dimmed) 0.55f else 1f) * a)
                 layout.setText(f, def.glyph(), f.color, r * 2.2f, com.badlogic.gdx.utils.Align.center, true)
