@@ -3223,6 +3223,10 @@ class MorganaWorldCoordinator(
                         broadcastToAll(pkt)
                     } else {
                         broadcastToMap(ev.mapId, pkt)
+                        // Map chat is heard just across a border too (in a seamless world), by those near the speaker.
+                        if (ch == ChatChannel.MAP) simulation.players[ev.senderId]?.takeIf { it.position.mapId == ev.mapId }?.let { speaker ->
+                            crossBorderSend(ev.mapId, speaker.position.tileX, speaker.position.tileY, pkt)
+                        }
                     }
                 }
                 is WorldSimulationEvent.GuildBankChanged -> simulation.guilds[ev.guildId]?.let { guild ->

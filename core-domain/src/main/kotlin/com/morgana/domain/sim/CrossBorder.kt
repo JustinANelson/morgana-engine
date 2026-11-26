@@ -153,3 +153,38 @@ internal fun WorldSimulation.settleBorderCrossings(out: MutableList<WorldSimulat
         fireMapEntryEvents(id, out)
     }
 }
+
+/**
+ * Where player [p] stands in map [mapId]'s pixel space as a shift to add to their own pixel position, when they are on a map around it within
+ * [BORDER_COMBAT_TILES] of its edge in a seamless world; null when they are on a map too far away (or none is placed). A pure test: unlike
+ * [ghostOf] it remembers nothing.
+ */
+internal fun WorldSimulation.pixelShiftToMap(p: CharacterState, mapId: Int): Pair<Float, Float>? {
+    if (p.position.mapId == mapId) return 0f to 0f
+    if (!layout.isPlaced(mapId) || !layout.isPlaced(p.position.mapId)) return null
+    val toMap = maps[mapId] ?: return null
+    val offset = layout.offsetBetween(mapId, p.position.mapId) ?: return null
+    val tx = p.position.tileX + offset.x
+    val ty = p.position.tileY + offset.y
+    if (tx < -BORDER_COMBAT_TILES || ty < -BORDER_COMBAT_TILES || tx >= toMap.width + BORDER_COMBAT_TILES || ty >= toMap.height + BORDER_COMBAT_TILES) return null
+    return (offset.x * toMap.tileSize).toFloat() to (offset.y * toMap.tileSize).toFloat()
+}
+
+/** Whether [p] is on map [mapId] or just across one of its borders (see [pixelShiftToMap]). */
+internal fun WorldSimulation.isOnOrNearMap(p: CharacterState, mapId: Int): Boolean = pixelShiftToMap(p, mapId) != null
+
+/** A ground item within reach of a player and where its map's top left tile sits from the player's map's, in tiles. */
+internal class ReachItem(val sourceMapId: Int, val item: com.morgana.domain.entity.MapGroundItem, val shiftTilesX: Int, val shiftTilesY: Int)
+
+/** Loot lying within [range] tiles of tile ([tx], [ty]) on map [mapId], including that on the maps around it in a seamless world. */
+internal fun WorldSimulation.groundItemsInReach(mapId: Int, tx: Int, ty: Int, range: Int): List<ReachItem> {
+    val out = ArrayList<ReachItem>()
+    for (it in mapGroundItems[mapId].orEmpty()) if (kotlin.math.abs(it.tileX - tx) <= range && kotlin.math.abs(it.tileY - ty) <= range) out += ReachItem(mapId, it, 0, 0)
+    if (!layout.isPlaced(mapId)) return out
+    for ((other, offset) in layout.around(mapId, range)) {
+        for (it in mapGroundItems[other.id].orEmpty()) {
+            if (kotlin.math.abs(it.tileX + offset.x - tx) <= range && kotlin.math.abs(it.tileY + offset.y - ty) <= range) out += ReachItem(other.id, it, offset.x, offset.y)
+        }
+    }
+    return out
+}

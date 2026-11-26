@@ -1,5 +1,6 @@
 package com.morgana.domain.systems
 
+import com.morgana.domain.sim.isOnOrNearMap
 import com.morgana.domain.sim.GameSystem
 import com.morgana.domain.sim.OptionalModule
 import com.morgana.domain.sim.MonsterBehavior
@@ -66,7 +67,7 @@ internal fun WorldSimulation.withThreat(npc: MapNpcInstance, characterId: String
  */
 internal fun WorldSimulation.threatTarget(npc: MapNpcInstance, currentId: String?): String? {
     val life = game.lifeVitalId
-    val valid = npc.threat.filter { (id, t) -> t > 0 && players[id]?.let { it.isAlive(life) && it.position.mapId == npc.mapId } == true }
+    val valid = npc.threat.filter { (id, t) -> t > 0 && players[id]?.let { it.isAlive(life) && isOnOrNearMap(it, npc.mapId) } == true }
     if (valid.isEmpty()) return null
     val top = valid.entries.sortedWith(compareBy({ -it.value }, { it.key })).first()
     val current = currentId?.takeIf { it in valid }

@@ -2,6 +2,8 @@
 
 ## 2026-11-26
 
+* **Add** - **Everyday rules cross the border** ([seamless world](/systems/seamless_world.md)): loot just across a border can be picked up (and is listed, labelled and offered by the client), health orbs heal a hurt player across it, an NPC across it can be spoken to, map chat is heard across it, and a fight across a border counts for the threat table, boss loot lockout and party XP. Tests in `CrossBorderWorldTest`.
+
 * **Change** - **The border stops being a wall in the seamless world** ([seamless world](/systems/seamless_world.md)): dodges, bashes, leaps and dashes carry a player over a border and the player is handed to the next map at the end of the tick; monsters walk over borders (still owned by their own map, bounded by their leash) with all walkability and occupancy checks looking through; other players are streamed across a border in real time (`s_player_pos` gained a map id). Trevena's Citadel, Weald and Marches now meet along their whole shared edges instead of a gap.
 
 * **Add** - **Cross-border combat in the seamless world** ([seamless world](/systems/seamless_world.md)): action-combat skills and free-flight arrows reach monsters on the other side of a map border (translated into the attacker's coordinates, damage on the monster's own map); monsters notice, chase to their map's edge and strike players across it using ghosts of the player that are corrected before anything is saved or sent; monster updates, moves (`s_npc_pos` gained a map id), damage text and skill effects from the other map reach the viewers across the border; the client auto-targets, cycles and locks monsters across a border. Tests in `CrossBorderCombatTest` and `SoftSeamsClientTest`.

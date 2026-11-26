@@ -481,7 +481,7 @@ class MorganaGame(
                             tileX = at.x,
                             tileY = at.y,
                             labels = worldState.lastGroundLootLabels,
-                            groundItems = worldState.groundItemsOnMap
+                            groundItems = worldState.groundItemsInView()
                         )
                         if (clickedLoot != null) {
                             val ch = worldState.localCharacter
@@ -856,7 +856,7 @@ class MorganaGame(
             mapId = ch?.position?.mapId ?: 0,
             tileX = ch?.position?.tileX ?: 0,
             tileY = ch?.position?.tileY ?: 0,
-            ground = worldState.groundItemsOnMap,
+            ground = worldState.groundItemsInView(),
             inventory = ch?.inventory,
             items = worldState.catalog.items.associateBy { it.id },
             nowMs = nowMs,

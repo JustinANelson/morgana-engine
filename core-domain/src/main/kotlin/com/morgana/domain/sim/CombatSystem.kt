@@ -1358,11 +1358,16 @@ internal fun WorldSimulation.tickHealthOrbs(out: MutableList<WorldSimulationEven
             if (currentTick >= orb.expiresAt) { iter.remove(); changed = true; continue }
             val ts = maps[mapId]?.tileSize ?: 32
             // Only a player who is hurt picks an orb up (or draws it in); a healthy one walks over it and leaves it.
+            // A hurt player on this map, or just across a border (their position shifted into this map's pixels for the distance only).
+            fun shifted(p: com.morgana.domain.entity.CharacterState): Pair<Float, Float> {
+                val s = pixelShiftToMap(p, mapId) ?: (0f to 0f)
+                return p.position.pixelX + s.first + ts / 2f to p.position.pixelY + s.second + ts / 2f
+            }
             val hurt = players.values.filter { p ->
-                p.position.mapId == mapId && p.isAlive(lifeId) && (p.vitals[lifeId]?.let { it.cur < it.max } ?: false)
-            }.minByOrNull { p -> kotlin.math.hypot((p.position.pixelX + ts / 2f - orb.x).toDouble(), (p.position.pixelY + ts / 2f - orb.y).toDouble()) } ?: continue
-            val dx = hurt.position.pixelX + ts / 2f - orb.x
-            val dy = hurt.position.pixelY + ts / 2f - orb.y
+                isOnOrNearMap(p, mapId) && p.isAlive(lifeId) && (p.vitals[lifeId]?.let { it.cur < it.max } ?: false)
+            }.minByOrNull { p -> shifted(p).let { kotlin.math.hypot((it.first - orb.x).toDouble(), (it.second - orb.y).toDouble()) } } ?: continue
+            val dx = shifted(hurt).first - orb.x
+            val dy = shifted(hurt).second - orb.y
             val dist = kotlin.math.hypot(dx.toDouble(), dy.toDouble()).toFloat()
             if (dist <= 24f) {
                 val life = hurt.vitals[lifeId] ?: continue
@@ -1392,7 +1397,7 @@ internal fun WorldSimulation.handleNpcKilled(
     // A boss with a lockout rewards only the players on the map who are not already saved to it.
     val lockout = monsterKillLockout(npcDef)
     val worldNow = effectiveWorldTick()
-    val fighters = if (lockout > 0) players.values.filter { it.position.mapId == npc.mapId } else emptyList()
+    val fighters = if (lockout > 0) players.values.filter { isOnOrNearMap(it, npc.mapId) } else emptyList()
     val unsaved = fighters.filter { (it.encounterLockouts[npcDef.id] ?: 0L) <= worldNow }
     val killer = if (lockout > 0) (killedBy?.takeIf { k -> unsaved.any { it.id == k.id } } ?: unsaved.firstOrNull()) else killedBy
     val slotRespawn = map?.npcSpawns?.firstOrNull { it.slotIndex == npc.spawnSlotIndex }?.respawnTicks ?: game.definition.combat.defaultNpcRespawnTicks
@@ -1523,7 +1528,7 @@ internal fun WorldSimulation.awardPartyOrSoloExperience(
     val party = if (modules.isEnabled(OptionalModule.PARTIES)) earner.partyId?.let { parties[it] } else null
     val sameMapMembers = party?.memberCharacterIds
         ?.mapNotNull { players[it] }
-        ?.filter { it.isAlive(game.lifeVitalId) && it.position.mapId == earner.position.mapId }
+        ?.filter { it.isAlive(game.lifeVitalId) && isOnOrNearMap(it, earner.position.mapId) }
         .orEmpty()
 
     if (party != null && party.shareXp && sameMapMembers.size > 1) {

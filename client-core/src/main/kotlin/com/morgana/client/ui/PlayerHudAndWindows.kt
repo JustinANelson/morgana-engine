@@ -2972,7 +2972,7 @@ class PlayerHudAndWindows(
         val ch = worldState.localCharacter ?: return false
         val pos = ch.position
         val range = worldState.gameDefinition?.gameplayTuning?.pickupRangeTiles ?: com.morgana.domain.sim.GROUND_PICKUP_RANGE_TILES
-        return worldState.groundItemsOnMap.any {
+        return worldState.groundItemsInView().any {
             it.mapId == pos.mapId && kotlin.math.abs(it.tileX - pos.tileX) <= range && kotlin.math.abs(it.tileY - pos.tileY) <= range
         }
     }
@@ -3700,7 +3700,7 @@ class MinimapCanvas(
             map = map,
             npcsOnMap = worldState.npcsOnMap.values,
             npcDefsById = npcDefsById,
-            groundItems = worldState.groundItemsOnMap,
+            groundItems = worldState.groundItemsInView(),
             isTileExplored = { tx, ty -> fog == null || Exploration.isTileExplored(fog.explored, map.width, tx, ty) }
         )
         val pulse = if (Accessibility.reduceMotion || ((blinkTimer * 3f).toInt() % 2) == 0) 0.95f else 0.5f

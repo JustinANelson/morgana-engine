@@ -101,9 +101,14 @@ internal fun WorldSimulation.playerInteractFacingImpl(characterId: String): List
     }
 
     // 2. Check facing NPC
+    // (in a seamless world the tile in front may lie on the map across the border: someone standing there can be spoken to all the same)
     val facingNpc = mapNpcs[mapId]?.firstOrNull {
         it.isAlive && it.tileX == facingTile.x && it.tileY == facingTile.y
-    }
+    } ?: if (!map.isInBounds(facingTile) && layout.isPlaced(mapId)) {
+        layout.crossing(map, facingTile.x, facingTile.y)?.let { across ->
+            mapNpcs[across.map.id]?.firstOrNull { it.isAlive && it.tileX == across.tileX && it.tileY == across.tileY }
+        }
+    } else null
     if (facingNpc != null) {
         val npcDef = npcs[facingNpc.npcId]
         if (npcDef != null) {
@@ -309,22 +314,18 @@ internal fun WorldSimulation.pickupGroundItemImpl(characterId: String): List<Wor
     val player = players[characterId] ?: return emptyList()
     if (!player.isAlive(game.lifeVitalId)) return emptyList()
 
-    val mapId = player.position.mapId
-    val groundList = mapGroundItems[mapId] ?: return emptyList()
-    val itemIdx = groundList.indices
-        .filter { idx ->
-            val it = groundList[idx]
-            val dx = kotlin.math.abs(it.tileX - player.position.tileX)
-            val dy = kotlin.math.abs(it.tileY - player.position.tileY)
-            maxOf(dx, dy) <= game.definition.gameplayTuning.pickupRangeTiles &&
-                (it.ownerCharacterId == null || it.ownerCharacterId == characterId || currentTick >= it.ownerProtectedUntilTick)
-        }
-        .minByOrNull { idx ->
-            val it = groundList[idx]
-            val dx = kotlin.math.abs(it.tileX - player.position.tileX)
-            val dy = kotlin.math.abs(it.tileY - player.position.tileY)
+    // The loot in reach: on this map and, in a seamless world, just across its borders (at where it lies in this map's coordinates).
+    val reachItem = groundItemsInReach(player.position.mapId, player.position.tileX, player.position.tileY, game.definition.gameplayTuning.pickupRangeTiles)
+        .filter { r -> r.item.ownerCharacterId == null || r.item.ownerCharacterId == characterId || currentTick >= r.item.ownerProtectedUntilTick }
+        .minByOrNull { r ->
+            val dx = kotlin.math.abs(r.item.tileX + r.shiftTilesX - player.position.tileX)
+            val dy = kotlin.math.abs(r.item.tileY + r.shiftTilesY - player.position.tileY)
             maxOf(dx, dy) * 10 + dx + dy
         } ?: return emptyList()
+    val mapId = reachItem.sourceMapId // the loot lives on its own map, whichever side the player stands
+    val groundList = mapGroundItems[mapId] ?: return emptyList()
+    val itemIdx = groundList.indexOfFirst { it.instanceId == reachItem.item.instanceId }
+    if (itemIdx < 0) return emptyList()
 
     val groundItem = groundList[itemIdx]
     val itemDef = items[groundItem.stack.itemId] ?: return emptyList()

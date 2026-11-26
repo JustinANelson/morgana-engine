@@ -366,6 +366,21 @@ class ClientWorldState {
     fun npcOrSeamNpc(id: String): com.morgana.domain.entity.MapNpcInstance? =
         npcsOnMap[id] ?: seamMaps.asSequence().flatMap { it.npcs.asSequence() }.firstOrNull { it.instanceId == id }
 
+    /**
+     * The loot on this map plus, in a seamless world, the loot just across its borders as if it lay on this map (tiles shifted by the
+     * neighbour's offset): what can be picked up, labelled and offered, wherever it lies.
+     */
+    fun groundItemsInView(): List<MapGroundItem> {
+        val active = activeMap ?: return groundItemsOnMap
+        if (seamMaps.isEmpty()) return groundItemsOnMap
+        val out = ArrayList<MapGroundItem>(groundItemsOnMap)
+        for (m in seamMaps) {
+            val offset = neighborOffsets[m.mapId] ?: continue
+            for (it in m.groundItems) out += it.copy(mapId = active.id, tileX = it.tileX + offset.x, tileY = it.tileY + offset.y)
+        }
+        return out
+    }
+
     /** Drops the lock when its enemy is gone or dead. */
     fun refreshLock() {
         val id = lockedNpcId ?: return
@@ -1809,7 +1824,7 @@ class ClientWorldState {
         if (vis.actionState != null) return false
         // Only games whose sprite sheets have a harvest column: without one the pose would fall back to a walk cycle.
         if ((gameDefinition?.sprites?.stateFrames?.get(SpriteState.HARVEST) ?: 0) <= 0) return false
-        if (!AutoLootModel.lootInReach(groundItemsOnMap, ch.id, ch.position.mapId, ch.position.tileX, ch.position.tileY, gameDefinition?.gameplayTuning?.pickupRangeTiles ?: com.morgana.domain.sim.GROUND_PICKUP_RANGE_TILES)) return false
+        if (!AutoLootModel.lootInReach(groundItemsInView(), ch.id, ch.position.mapId, ch.position.tileX, ch.position.tileY, gameDefinition?.gameplayTuning?.pickupRangeTiles ?: com.morgana.domain.sim.GROUND_PICKUP_RANGE_TILES)) return false
         vis.triggerAction(SpriteState.HARVEST, PICKUP_POSE_SECONDS)
         return true
     }
