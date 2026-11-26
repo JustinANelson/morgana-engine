@@ -325,7 +325,7 @@ object MapCompiler {
         val map = MapDefinition(
             id = recipe.id, name = recipe.name, width = w, height = h, moral = recipe.moral, bgmTrackId = recipe.bgm,
             isIndoors = recipe.indoors, zoneId = recipe.zoneId, instanced = recipe.instanced, instanceOwner = recipe.instanceOwner,
-            neighbors = recipe.neighbors, cells = cells, npcSpawns = finalSpawns
+            neighbors = recipe.neighbors, cells = cells, npcSpawns = finalSpawns, worldX = recipe.worldX, worldY = recipe.worldY
         )
         val symbols = "abcdefghijklmnopqrstuvwxyz"
         val legend = names.withIndex().associate { (i, n) -> symbols[i % symbols.length].toString() to n }

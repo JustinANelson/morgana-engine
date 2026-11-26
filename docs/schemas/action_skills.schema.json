@@ -86,11 +86,11 @@
                 "soundId": {
                     "type": "string"
                 },
-                "schemaVersion": {
-                    "type": "integer"
-                },
                 "effect": {
                     "type": "string"
+                },
+                "schemaVersion": {
+                    "type": "integer"
                 }
             },
             "required": [

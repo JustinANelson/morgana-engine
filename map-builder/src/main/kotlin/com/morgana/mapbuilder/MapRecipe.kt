@@ -27,6 +27,9 @@ data class MapRecipe(
     val instanced: Boolean = false,
     val instanceOwner: InstanceOwner = InstanceOwner.PARTY,
     val neighbors: MapNeighborLinks = MapNeighborLinks(),
+    /** Where the map's top left tile sits in the shared world grid of a game with `worldLayout` (both or neither). Maps that meet are walked between without a warp. */
+    val worldX: Int? = null,
+    val worldY: Int? = null,
     /**
      * A tile (`[x, y]`) the player can stand on. When given, enemy camp spawns that cannot be walked to from it (an island, a pocket
      * behind a lake) are dropped, so no enemy is wasted where nobody can reach it. Service NPCs from `spawn` are never dropped:

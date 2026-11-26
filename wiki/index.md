@@ -150,6 +150,7 @@ Maintenance knowledge base for Morgana ORPG, written for human and AI contributo
 
 ## Playbooks
 
+* [Seamless World](/systems/seamless_world.md) - The `worldLayout` option: maps placed in one shared tile grid are walked between without warps or reloads, at any edge or corner.
 * [AI-Assisted Mapping](/playbooks/ai_assisted_mapping.md) - Noise for the land, a picture and text summary to read it, then an LLM places roads, camps and landmarks on what exists.
 * [Add a New Content Type](/playbooks/add_content_type.md) - Every file to touch when adding a content collection (model to editor), in order.
 * [Add an Event Command](/playbooks/add_event_command.md) - Steps to add a new page-event command.

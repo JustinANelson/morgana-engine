@@ -53,9 +53,6 @@
                         "$ref": "#/$defs/com.morgana.domain.content.ComboEdge"
                     }
                 },
-                "schemaVersion": {
-                    "type": "integer"
-                },
                 "empowerSkillId": {
                     "type": "integer"
                 },
@@ -75,6 +72,9 @@
                     "type": "integer"
                 },
                 "empowerCooldownTicks": {
+                    "type": "integer"
+                },
+                "schemaVersion": {
                     "type": "integer"
                 }
             },

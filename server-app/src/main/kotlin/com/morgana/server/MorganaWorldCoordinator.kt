@@ -3394,13 +3394,23 @@ class MorganaWorldCoordinator(
     internal fun sendFullMapSnapshotTo(session: ClientSession, mapId: Int) {
         val map = simulation.maps[mapId] ?: return
         val neighborMaps = mutableMapOf<Int, MapDefinition>()
-        listOf(
-            map.neighbors.northMapId,
-            map.neighbors.southMapId,
-            map.neighbors.eastMapId,
-            map.neighbors.westMapId
-        ).filter { it > 0 }.forEach { nId ->
-            simulation.maps[nId]?.let { neighborMaps[nId] = it }
+        val neighborOffsets = mutableMapOf<Int, com.morgana.domain.map.TileOffset>()
+        if (simulation.layout.isPlaced(mapId)) {
+            // A seamless world: every placed map near this one, wherever it touches (edges, corners, different sizes).
+            val margin = simulation.game.definition.worldLayout?.neighborMarginTiles ?: com.morgana.domain.map.WorldLayoutDefinition.DEFAULT_MARGIN
+            for ((other, offset) in simulation.layout.around(mapId, margin)) {
+                neighborMaps[other.id] = other
+                neighborOffsets[other.id] = offset
+            }
+        } else {
+            listOf(
+                map.neighbors.northMapId,
+                map.neighbors.southMapId,
+                map.neighbors.eastMapId,
+                map.neighbors.westMapId
+            ).filter { it > 0 }.forEach { nId ->
+                simulation.maps[nId]?.let { neighborMaps[nId] = it }
+            }
         }
 
         val playersOnMap = simulation.players.values
@@ -3430,6 +3440,7 @@ class MorganaWorldCoordinator(
                 activeMap = activeToSend,
                 neighborMaps = neighborsToSend,
                 mapRefs = mapRefs,
+                neighborOffsets = neighborOffsets,
                 players = playersOnMap,
                 npcs = npcsOnMap,
                 groundItems = groundOnMap,

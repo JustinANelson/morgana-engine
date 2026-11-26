@@ -206,6 +206,12 @@ class ClientWorldState {
     var neighborMaps: Map<Int, MapDefinition> = emptyMap()
 
     /**
+     * In a seamless world: where each neighbouring map's top left tile sits from the active map's, in tiles (see
+     * `MapStateSnapshot.neighborOffsets`). Empty for the older fixed N/S/E/W neighbours.
+     */
+    var neighborOffsets: Map<Int, com.morgana.domain.map.TileOffset> = emptyMap()
+
+    /**
      * Every map this connection has received, by id (the client half of the send-once map cache). A snapshot may name a map
      * only by id and revision; it is rebuilt from here. Cleared on every login, because the server's record of what it
      * sent is per connection too.
@@ -981,6 +987,7 @@ class ClientWorldState {
                     workingMapDraft = snapshotMap
                 }
                 neighborMaps = snapshotNeighbors
+                neighborOffsets = packet.neighborOffsets
                 playersOnMap.clear()
                 packet.players.forEach { snap ->
                     // On the same map our own entry is a round trip old; keep the predicted position (see PlayerUpdated).
@@ -1371,6 +1378,8 @@ class ClientWorldState {
      */
     private fun crossingShift(old: MapDefinition, new: MapDefinition): Pair<Float, Float>? {
         val ts = old.tileSize.toFloat()
+        // A seamless world says exactly where the new map lies from the old one.
+        neighborOffsets[new.id]?.let { return -it.x * ts to -it.y * ts }
         val n = old.neighbors
         return when (new.id) {
             n.eastMapId -> -old.width * ts to 0f
@@ -1394,6 +1403,7 @@ class ClientWorldState {
     private fun seamOffset(active: MapDefinition, mapId: Int): Pair<Float, Float>? {
         if (mapId <= 0) return null
         val ts = active.tileSize.toFloat()
+        neighborOffsets[mapId]?.let { return it.x * ts to it.y * ts }
         val n = active.neighbors
         return when (mapId) {
             n.eastMapId -> active.width * ts to 0f
@@ -1584,6 +1594,21 @@ class ClientWorldState {
     }
 
     /** Where one [step] from [from] lands on [map] under the server's rules (a blocked step only turns the player). */
+    /**
+     * In a seamless world a step past the edge of the active map is predicted too, onto the neighbouring map that lies there, so the
+     * hero keeps walking across the border instead of stopping until the server answers. True when tile [tile] (in the active map's
+     * coordinates, possibly outside it) is a walkable tile of the active map or of a neighbour.
+     */
+    private fun openAcrossBorder(active: MapDefinition, tile: TileCoord): Boolean {
+        if (active.isInBounds(tile)) return active.getCell(tile)?.attribute !is TileAttribute.Blocked
+        for ((id, offset) in neighborOffsets) {
+            val other = neighborMaps[id] ?: continue
+            val cell = other.getCell(tile.x - offset.x, tile.y - offset.y) ?: continue
+            return cell.attribute !is TileAttribute.Blocked
+        }
+        return false
+    }
+
     private fun predictStep(from: WorldPosition, step: ClientPacket.MoveInput, map: MapDefinition): WorldPosition {
         val ts = map.tileSize
         val direction = step.direction
@@ -1599,9 +1624,12 @@ class ClientWorldState {
                 val candTy = kotlin.math.floor((candPy + ts * 0.5f) / ts).toInt()
                 val candCoord = TileCoord(candTx, candTy)
                 val npcBlocked = npcsOnMap.values.any { it.isAlive && it.tileX == candTx && it.tileY == candTy }
-                val ok = map.isInBounds(candCoord) &&
-                    (candCoord == from.tileCoord ||
-                        (map.canTraverse(from.tileCoord, candCoord, dir, isNpc = false, depletedResources = depleted) && !npcBlocked))
+                val ok = if (map.isInBounds(candCoord) && map.isInBounds(from.tileCoord)) {
+                    candCoord == from.tileCoord ||
+                        (map.canTraverse(from.tileCoord, candCoord, dir, isNpc = false, depletedResources = depleted) && !npcBlocked)
+                } else {
+                    candCoord == from.tileCoord || openAcrossBorder(map, candCoord)
+                }
                 return if (ok) from.copy(tileX = candTx, tileY = candTy, pixelX = candPx, pixelY = candPy, direction = direction) else null
             }
             // Same rule as the server: a blocked diagonal slides along whichever single axis is open.
@@ -1614,9 +1642,9 @@ class ClientWorldState {
         } else {
             val targetCoord = from.tileCoord.step(direction)
             val npcBlocked = npcsOnMap.values.any { it.isAlive && it.tileX == targetCoord.x && it.tileY == targetCoord.y }
-            if (map.isInBounds(targetCoord) &&
-                map.canTraverse(from.tileCoord, targetCoord, direction, isNpc = false, depletedResources = depleted) &&
-                !npcBlocked
+            if ((if (map.isInBounds(targetCoord) && map.isInBounds(from.tileCoord)) {
+                    map.canTraverse(from.tileCoord, targetCoord, direction, isNpc = false, depletedResources = depleted) && !npcBlocked
+                } else openAcrossBorder(map, targetCoord))
             ) {
                 from.withTile(targetCoord.x, targetCoord.y, ts, direction)
             } else {

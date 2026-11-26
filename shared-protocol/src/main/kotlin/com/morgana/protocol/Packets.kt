@@ -835,6 +835,12 @@ sealed interface ServerPacket {
          * and then its neighbours, so the client can rebuild them from maps it already holds. Empty for other clients.
          */
         val mapRefs: List<MapRef> = emptyList(),
+        /**
+         * In a seamless world (`worldLayout`): where each neighbouring map's top left tile sits from the active map's top left tile, in
+         * tiles. The client draws the neighbours there and places what the server shows across a border; empty for the older N/S/E/W
+         * neighbour links, which keep their fixed arrangement.
+         */
+        val neighborOffsets: Map<Int, com.morgana.domain.map.TileOffset> = emptyMap(),
         val players: List<PublicPlayerSnapshot> = emptyList(),
         val npcs: List<MapNpcInstance> = emptyList(),
         val groundItems: List<MapGroundItem> = emptyList(),

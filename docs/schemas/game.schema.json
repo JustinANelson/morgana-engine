@@ -421,6 +421,16 @@
                             "type": "null"
                         }
                     ]
+                },
+                "worldLayout": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.map.WorldLayoutDefinition"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
                 }
             },
             "required": [
@@ -869,11 +879,7 @@
                     "type": "boolean"
                 },
                 "layout": {
-                    "type": "string",
-                    "enum": [
-                        "classic",
-                        "ring"
-                    ]
+                    "type": "string"
                 }
             },
             "required": [],
@@ -2408,6 +2414,22 @@
                     "items": {
                         "type": "integer"
                     }
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.map.WorldLayoutDefinition": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "neighborMarginTiles": {
+                    "type": "integer"
+                },
+                "seamViewTiles": {
+                    "type": "integer"
                 }
             },
             "required": [],

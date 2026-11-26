@@ -111,9 +111,6 @@
                         }
                     ]
                 },
-                "schemaVersion": {
-                    "type": "integer"
-                },
                 "telegraphTicks": {
                     "type": "integer"
                 },
@@ -130,6 +127,9 @@
                     "type": "integer"
                 },
                 "telegraphDamagePercent": {
+                    "type": "integer"
+                },
+                "schemaVersion": {
                     "type": "integer"
                 }
             },

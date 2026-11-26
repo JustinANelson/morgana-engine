@@ -1,7 +1,7 @@
 {
     "formatVersion": 1,
     "seed": 4208861222,
-    "contentFingerprint": "9c43c06f3188ec83",
+    "contentFingerprint": "0d7d577d931f6cb3",
     "inputs": [
         {
             "_type": "com.morgana.domain.replay.SimInput.SpawnPlayer",
@@ -215,6 +215,9 @@
                 "pkPoints": 0,
                 "isRoguePk": false,
                 "pkMode": "PEACE",
+                "stance": "PVE",
+                "stanceArmsAtTick": -1,
+                "lastCombatTick": -1,
                 "lastMoveTick": 0,
                 "lastAttackTick": 0,
                 "isGhost": false,
@@ -1226,39 +1229,39 @@
     "checkpoints": [
         {
             "tick": 25,
-            "hash": "4acf73a3ee7b0fc1"
+            "hash": "e1e3f903883f9e72"
         },
         {
             "tick": 50,
-            "hash": "d95e96aff50447b5"
+            "hash": "84ac3d75048a6d5b"
         },
         {
             "tick": 75,
-            "hash": "f2d4f9ea558c1cb4"
+            "hash": "e3610ddc2ba917c8"
         },
         {
             "tick": 100,
-            "hash": "41ac7878a2d6a819"
+            "hash": "88d348346f3b6487"
         },
         {
             "tick": 125,
-            "hash": "ca6c7551400eca4e"
+            "hash": "9b7e726571e27f36"
         },
         {
             "tick": 150,
-            "hash": "eff1546c761d8711"
+            "hash": "0d085781b4ee5ee7"
         },
         {
             "tick": 175,
-            "hash": "4b0a0a834261b7e6"
+            "hash": "68aad55a7d004b20"
         },
         {
             "tick": 200,
-            "hash": "eb3ff7c320278d8f"
+            "hash": "53930b78e352e4ac"
         }
     ],
     "finalTick": 217,
-    "finalHash": "1166c79f88fd3477",
+    "finalHash": "9b9eb62e03c8e3a1",
     "gaps": [],
     "startingEpochTicks": 0,
     "startingWorldSwitches": {},

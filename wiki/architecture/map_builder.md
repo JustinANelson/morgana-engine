@@ -32,6 +32,8 @@ A recipe may name an `anchor` tile; enemy camp spawns that cannot be walked to f
 
 `path` also takes `meander` (tiles of sideways wander) and `wavelength`, so roads and rivers bend. `MapCompiler.build` returns the map plus a `MapAnalysis` (terrain, blocked and occupied rows, spawns), which the CLI writes with `--analysis <folder>`; see [AI-assisted mapping](/playbooks/ai_assisted_mapping.md) for the loop that reads it.
 
+A recipe may also name `worldX`/`worldY`, its place in a seamless world ([seamless world](/systems/seamless_world.md)); the compiler copies them to the map.
+
 ## Running it
 `.\gradlew.bat :map-builder:installDist`, then run `com.morgana.mapbuilder.MapBuilderCliKt build --game games/<id> --recipes <folder|a.json,b.json> [--index <file>] [--only <id,id>] [--force true]` with the install's `lib/*` on the classpath (`:map-builder:run` does the same through Gradle). It writes `data/maps/map_<id>.json` for the ids its recipes name and nothing else. A map that has been edited since (revision above 1; every `F1` edit raises it) is not overwritten unless `--force true`, so hand edits survive a re-run. The compiler rejects an unknown name, a prop that leaves the map, and an NPC spawn on a blocked tile.
 

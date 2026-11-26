@@ -428,8 +428,26 @@ class WorldSimulation(
 
     fun registerMap(map: MapDefinition) {
         maps[map.id] = map
+        if (map.worldX != null && game.definition.worldLayout?.enabled == true) relinkWorld()
         syncMapNpcSpawns(map)
         syncMapResourceNodes(map)
+    }
+
+    /**
+     * The seamless world: the placed maps as one grid (see [com.morgana.domain.map.WorldLayout]). Empty unless the game turns on
+     * `worldLayout` and maps name a position, in which case the older neighbour links and warps are all there is.
+     */
+    var layout: com.morgana.domain.map.WorldLayout = com.morgana.domain.map.WorldLayout(emptyList())
+        private set
+
+    /** Rebuilds [layout] from the registered maps and makes each placed map's N/S/E/W links say what the geometry says. */
+    private fun relinkWorld() {
+        layout = com.morgana.domain.map.WorldLayout(maps.values)
+        if (layout.isEmpty) return
+        for (m in maps.values.toList()) if (layout.isPlaced(m.id)) {
+            val links = layout.linksOf(m)
+            if (links != m.neighbors) maps[m.id] = m.copy(neighbors = links)
+        }
     }
 
 

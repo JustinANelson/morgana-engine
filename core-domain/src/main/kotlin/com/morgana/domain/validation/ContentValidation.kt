@@ -154,6 +154,9 @@ object ContentValidator {
     private class Collector(val cat: ContentCatalog, val game: GameDefinition) {
         val issues = mutableListOf<ContentIssue>()
 
+        /** The placed maps as one world, built once (only maps that name a position take part). */
+        val worldLayout: com.morgana.domain.map.WorldLayout by lazy { com.morgana.domain.map.WorldLayout(cat.maps.values) }
+
         fun error(col: ContentCollection, id: Int, pointer: String, code: String, msg: String) {
             issues += ContentIssue(IssueSeverity.ERROR, col, id, pointer, code, msg)
         }
@@ -208,8 +211,25 @@ object ContentValidator {
                 Triple("eastMapId", m.neighbors.eastMapId, Direction.RIGHT),
                 Triple("westMapId", m.neighbors.westMapId, Direction.LEFT)
             )
+            if ((m.worldX == null) != (m.worldY == null)) {
+                error(col, m.id, "/worldX", "world_position_incomplete", "worldX and worldY go together: set both or neither")
+            }
+            val seamless = game.worldLayout?.enabled == true && m.worldX != null && m.worldY != null && !m.instanced
+            if (seamless) {
+                // In a seamless world the links are worked out from where maps sit, so the hand-written ones are not checked; instead the
+                // placement is: no two maps may overlap, and where two maps meet the border should be open on both sides or neither.
+                val layout = worldLayout
+                for ((a, b) in layout.overlaps()) if (a == m.id) error(col, m.id, "/worldX", "world_overlap", "Map $a overlaps map $b in the world grid")
+                for ((other, offset) in layout.around(m.id, 0)) {
+                    if (other.id < m.id) continue
+                    val bad = layout.mismatchedBorderTiles(m, other)
+                    if (bad.isNotEmpty()) {
+                        warn(col, m.id, "/worldX", "world_border_mismatch", "The border with map ${other.id} is open on one side and blocked on the other at ${bad.size} tile(s), first at world (${bad.first().x}, ${bad.first().y})")
+                    }
+                }
+            }
             for ((field, target, dir) in links) {
-                if (target == 0) continue
+                if (target == 0 || seamless) continue
                 val other = cat.maps[target]
                 if (other == null) {
                     mapLink(col, m.id, "/neighbors/$field", target, "Neighbor link")

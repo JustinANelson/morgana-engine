@@ -135,7 +135,7 @@ class MorganaWorldRenderer(
         batch.begin()
 
         // 1. Render seamless N/S/E/W stitched neighbor maps (Lower Layers)
-        renderNeighborMapsPass(batch, activeMap, worldState.neighborMaps, aboveEntities = false)
+        renderNeighborMapsPass(batch, activeMap, worldState.neighborMaps, worldState.neighborOffsets, aboveEntities = false)
 
         // 2. Render Active Map Lower Layers (GROUND, MASK_1, MASK_2)
         val editing = worldState.mapEditorActive
@@ -156,7 +156,7 @@ class MorganaWorldRenderer(
         val playerUnderRoof = localChar?.let {
             activeMap.getCell(it.position.tileX, it.position.tileY)?.layers?.containsKey(MapLayer.ROOF)
         } ?: false
-        renderNeighborMapsPass(batch, activeMap, worldState.neighborMaps, aboveEntities = true)
+        renderNeighborMapsPass(batch, activeMap, worldState.neighborMaps, worldState.neighborOffsets, aboveEntities = true)
         renderMapLayers(batch, activeMap, offsetX = 0f, offsetY = 0f, aboveEntities = true, fadeRoof = playerUnderRoof, hidden = hiddenLayers, dimExcept = dimmed)
 
         // 5. Dynamic 2D Ambient Tint + Point Lights + Weather Particles
@@ -228,11 +228,24 @@ class MorganaWorldRenderer(
         batch: SpriteBatch,
         activeMap: MapDefinition,
         neighbors: Map<Int, MapDefinition>,
+        offsets: Map<Int, com.morgana.domain.map.TileOffset>,
         aboveEntities: Boolean
     ) {
         val ts = activeMap.tileSize.toFloat()
         batch.color = Color(0.78f, 0.78f, 0.82f, 1f)
 
+        if (offsets.isNotEmpty()) {
+            // A seamless world: each neighbour sits at its own offset (any size, any edge or corner).
+            for ((id, offset) in offsets) {
+                val other = neighbors[id] ?: continue
+                renderMapLayers(
+                    batch, other, offsetX = offset.x * ts, offsetY = (activeMap.height - offset.y - other.height) * ts,
+                    aboveEntities = aboveEntities, fadeRoof = false
+                )
+            }
+            batch.color = Color.WHITE
+            return
+        }
         neighbors[activeMap.neighbors.eastMapId]?.let { east ->
             renderMapLayers(batch, east, offsetX = activeMap.width * ts, offsetY = sideNeighborOffsetY(activeMap.height, east.height, ts), aboveEntities = aboveEntities, fadeRoof = false)
         }

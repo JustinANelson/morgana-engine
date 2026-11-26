@@ -102,7 +102,9 @@ data class GameDefinition(
     /** A SAFE / PvE / PvP stance each character chooses, over the PK mode. See [CombatStanceDefinition]. */
     val combatStance: CombatStanceDefinition? = null,
     /** How much a map keeps supplied (monster respawns, resource regrowth) by how many players are on it. See [PopulationScalingDefinition]. */
-    val populationScaling: PopulationScalingDefinition? = null
+    val populationScaling: PopulationScalingDefinition? = null,
+    /** One continuous world: maps that name a `worldX`/`worldY` meet at any edge or corner with no warp or reload. See [com.morgana.domain.map.WorldLayoutDefinition]. */
+    val worldLayout: com.morgana.domain.map.WorldLayoutDefinition? = null
 ) {
     /** The passive of class [classId], or none. */
     fun passiveOf(classId: Int): ClassPassive = classPassives[classId] ?: ClassPassive.NONE
