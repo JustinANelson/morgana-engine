@@ -387,7 +387,7 @@ class PlayerHudAndWindows(
         actionRing = buildActionRing().also { stage.root.addActorAt(1, it) }
         playerFrame?.remove()
         cornerButtons?.remove()
-        playerFrame = PlayerFrame(worldState, shapes, { VisUI.getSkin().getFont("default-font") }) { portraitRegion() }.also { stage.addActor(it) }
+        playerFrame = PlayerFrame(worldState, shapes, { VisUI.getSkin().getFont("default-font") }, { toggleCharacterWindow() }) { portraitRegion() }.also { stage.addActor(it) }
         cornerButtons = CornerButtons(shapes, { toggleMenuWindow() }, { toggleCharacterAndInventoryWindow() }).also { stage.addActor(it) }
         targetFrame?.remove()
         targetFrame = TargetFrame(shapes, { VisUI.getSkin().getFont("default-font") }, { targetInfo() }) { worldState.lockedNpcId = null }
@@ -2604,6 +2604,8 @@ class PlayerHudAndWindows(
         compactStatus?.isVisible = false
         menuButton?.isVisible = false
         playerFrame?.setPosition(12f + insetLeft, stage.height - PlayerFrame.FRAME_HEIGHT - 10f - insetTop)
+        // The movement stick does not start in the band the player frame sits in, so tapping the frame opens the character screen.
+        touchControls?.joystickTopInset = PlayerFrame.FRAME_HEIGHT + 22f + insetTop
         // The ring layout shows no place name or ping above the minimap (the link indicator at the top already shows latency).
         minimapHeader?.let { h ->
             if (h.isVisible) {
@@ -2858,8 +2860,31 @@ class PlayerHudAndWindows(
 
     /** The weapon-set skill that the action input [token] ("LMB", "RMB", "SPACE", "Q", "TAB", "F") starts, or null. */
     fun skillForToken(token: String): com.morgana.domain.content.ActionSkillDefinition? {
-        val id = activeWeaponSet()?.entries?.firstOrNull { it.input == token }?.skillId ?: return null
+        val ws = activeWeaponSet() ?: return null
+        var id = ws.entries.firstOrNull { it.input == token }?.skillId ?: return null
+        // While empowered, the upgraded skill stands in for the plain one.
+        if (ws.empowerSkillId != 0 && ws.empoweredSkillId != 0 && id == ws.empowerSkillId && worldState.isEmpowered()) id = ws.empoweredSkillId
         return worldState.catalog.actionSkills.firstOrNull { it.id == id }
+    }
+
+    /** True when the skill on [token] is showing its empowered upgrade right now. */
+    private fun skillUpgraded(token: String): Boolean {
+        val ws = activeWeaponSet() ?: return false
+        val id = ws.entries.firstOrNull { it.input == token }?.skillId ?: return false
+        return ws.empowerSkillId != 0 && id == ws.empowerSkillId && worldState.isEmpowered()
+    }
+
+    /** The dodge's momentum meter 0..1: how full it is, or while empowered how much of the empowerment is left. */
+    private fun momentumMeter(): Float {
+        val ws = activeWeaponSet()
+        if (ws == null || ws.empowerSkillId == 0) return 0f
+        if (com.morgana.client.render.ClientDebug.empower == "meter") return 0.68f
+        if (com.morgana.client.render.ClientDebug.empower == "on") return 0.7f
+        if (worldState.isEmpowered()) {
+            val total = (ws.empowerTicks * 50L).coerceAtLeast(1L)
+            return ((worldState.empoweredUntilMs - System.currentTimeMillis()).toFloat() / total).coerceIn(0f, 1f)
+        }
+        return (worldState.momentum / 100f).coerceIn(0f, 1f)
     }
 
     /** Milliseconds left before the skill on action input [token] can be used again (0 when ready or it has no cooldown). */
@@ -2896,8 +2921,7 @@ class PlayerHudAndWindows(
     /** The name of the weapon-set skill on ring slot [k], or null when the set has none there (the slot then falls back to the quickbar). */
     private fun kitSkillName(k: Int): String? {
         if (!actionCombatOn()) return null
-        val id = activeWeaponSet()?.entries?.firstOrNull { it.input == kitTokens[k] }?.skillId ?: return null
-        return worldState.catalog.actionSkills.firstOrNull { it.id == id }?.name
+        return skillForToken(kitTokens[k])?.name
     }
 
     /** Asks for the next combat stance (SAFE, PvE, PvP); the server arms PvP after a short channel. */
@@ -3111,6 +3135,7 @@ class PlayerHudAndWindows(
                 cooldownLabel = { if (kit() != null) skillCooldownLabel(kitTokens[k]) else "" },
                 dimmed = { if (kit() != null) skillCooldownLeftMs(kitTokens[k]) > 0L || skillCantPay(kitTokens[k]) else slotDimmed(k) },
                 empty = { kit() == null && slot(k) == null },
+                highlighted = { kit() != null && skillUpgraded(kitTokens[k]) },
                 // A weapon-set skill can be aimed by dragging (a held guard is never aimed).
                 aimable = { kit() != null && skillForToken(kitTokens[k])?.guard == null }
             ) {
@@ -3133,6 +3158,8 @@ class PlayerHudAndWindows(
             val b = RingButton(
                 key = key, glyph = { button.label }, tint = tint, visible = visible, keyHint = { if (keyHints) keyName else "" },
                 cooldown = { skillCooldownFraction(button.token) },
+                meter = { if (button == com.morgana.client.input.ActionCombatInput.Button.DODGE) momentumMeter() else 0f },
+                meterHot = { button == com.morgana.client.input.ActionCombatInput.Button.DODGE && worldState.isEmpowered() },
                 cooldownLabel = { skillCooldownLabel(button.token) },
                 dimmed = { skillCooldownLeftMs(button.token) > 0L || skillCantPay(button.token) }
             ) { onCombatInput(button) }

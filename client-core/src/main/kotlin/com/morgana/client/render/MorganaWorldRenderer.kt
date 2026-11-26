@@ -614,8 +614,130 @@ class MorganaWorldRenderer(
             )
         }
 
+        // Built-in skill visuals: arrow rain, dodge dust, spin whirl
+        renderSkillFx(batch, map, worldState)
+
         // Active Spell/Combat Animations drawn above entities
         renderAnimations(batch, map, worldState, aboveEntities = true)
+    }
+
+    /** Draws the built-in skill effects (see [com.morgana.client.state.SkillFx]) from plain shapes and the arrow sprite. */
+    private fun renderSkillFx(batch: SpriteBatch, map: MapDefinition, worldState: ClientWorldState) {
+        val ts = map.tileSize
+        val half = ts * 0.5f
+        fun ry(mapY: Float) = pixelToRenderY(map.height, mapY, ts)
+        fun dot(x: Float, y: Float, size: Float) = batch.draw(assets.whitePixel, x - size / 2f, ry(y) + half - size / 2f, size, size)
+        // While empowered, golden sparks orbit and rise around the local player.
+        if (worldState.isEmpowered()) {
+            worldState.playerCentre()?.let { c ->
+                val t = elapsedSeconds
+                for (i in 0 until 12) {
+                    val ang = t * 2.4f + i * (2f * Math.PI.toFloat() / 12f)
+                    val rise = ((t * 36f + i * 11f) % 38f)
+                    val flick = 0.55f + 0.45f * kotlin.math.sin(t * 9f + i * 1.7f)
+                    batch.setColor(1f, 0.78f + 0.15f * flick, 0.25f, flick)
+                    dot(c.first + kotlin.math.cos(ang) * (19f + 3f * kotlin.math.sin(t * 5f + i)), c.second + 6f + kotlin.math.sin(ang) * 8f - rise, 3.2f)
+                }
+                batch.setColor(1f, 0.85f, 0.35f, 0.25f + 0.1f * kotlin.math.sin(t * 6f))
+                for ((px, py) in com.morgana.client.state.SkillFxMath.ring(c.first, c.second + 10f, 17f, 14, t * 0.5f)) dot(px, py, 2.5f)
+            }
+            batch.color = Color.WHITE
+        }
+        for (fx in worldState.skillFx) {
+            when (fx.effect) {
+                com.morgana.client.state.SkillFx.EMPOWER_BURST -> {
+                    // The empowerment starts: two rings burst out and a column of sparks rises.
+                    val t = fx.elapsed
+                    for ((delay, scale) in listOf(0f to 1f, 0.14f to 0.7f)) {
+                        val u = ((t - delay) / 0.45f).coerceIn(0f, 1f)
+                        if (t >= delay && u < 1f) {
+                            batch.setColor(1f, 0.82f, 0.3f, 1f - u)
+                            for ((px, py) in com.morgana.client.state.SkillFxMath.ring(fx.fromX, fx.fromY + 8f, fx.radius * scale * u, 30, 0f)) dot(px, py, 5f * (1f - u) + 2f)
+                        }
+                    }
+                    for (i in 0 until 18) {
+                        val ang = i * 2.3f
+                        val u = ((t - 0.05f * (i % 6)) / 0.9f).coerceIn(0f, 1f)
+                        if (u > 0f && u < 1f) {
+                            batch.setColor(1f, 0.9f, 0.5f, 1f - u)
+                            dot(fx.fromX + kotlin.math.cos(ang) * 26f * (0.4f + u), fx.fromY + 6f - 120f * u, 4f)
+                        }
+                    }
+                }
+                com.morgana.client.state.SkillFx.EMPOWER_PULSE -> {
+                    val u = (fx.elapsed / 0.45f).coerceIn(0f, 1f)
+                    batch.setColor(1f, 0.85f, 0.4f, 1f - u)
+                    for ((px, py) in com.morgana.client.state.SkillFxMath.ring(fx.fromX, fx.fromY + 8f, 6f + fx.radius * u, 14, 0f)) dot(px, py, 3.5f)
+                }
+                com.morgana.client.state.SkillFx.BOLT -> {
+                    // A jagged bolt: a wide yellow glow under a thin white core, flickering each frame.
+                    val pts = com.morgana.client.state.SkillFxMath.bolt(fx)
+                    val fade = (1f - fx.elapsed / 0.3f).coerceIn(0f, 1f)
+                    for (pass in 0..1) {
+                        if (pass == 0) batch.setColor(1f, 0.9f, 0.2f, 0.55f * fade) else batch.setColor(1f, 1f, 1f, fade)
+                        val size = if (pass == 0) 7f else 3f
+                        for (i in 0 until pts.size - 1) {
+                            val (ax, ay) = pts[i]
+                            val (bx, by) = pts[i + 1]
+                            val steps = (kotlin.math.hypot(bx - ax, by - ay) / 3f).toInt().coerceAtLeast(1)
+                            for (s in 0..steps) dot(ax + (bx - ax) * s / steps, ay + (by - ay) * s / steps, size)
+                        }
+                    }
+                    // A flash where it lands.
+                    batch.setColor(1f, 1f, 0.7f, 0.8f * fade)
+                    for ((px, py) in com.morgana.client.state.SkillFxMath.ring(fx.toX, fx.toY, 10f + 14f * (1f - fade), 8, 0f)) dot(px, py, 4f)
+                }
+                com.morgana.client.state.SkillFx.SHOCKWAVE -> {
+                    val u = (fx.elapsed / 0.35f).coerceIn(0f, 1f)
+                    if (u < 1f) {
+                        batch.setColor(0.85f, 0.9f, 1f, 1f - u)
+                        for ((px, py) in com.morgana.client.state.SkillFxMath.ring(fx.fromX, fx.fromY + 6f, 20f + (fx.radius + 30f) * u, 32, 0f)) dot(px, py, 5f * (1f - u) + 2f)
+                    }
+                }
+                com.morgana.client.state.SkillFx.ARROW_RAIN -> {
+                    for (k in 0 until com.morgana.client.state.SkillFxMath.ARROWS) {
+                        val a = com.morgana.client.state.SkillFxMath.rainArrow(fx, k) ?: continue
+                        if (!a.landed) {
+                            // A short fading trail behind the arrow (below it while it climbs, above it while it falls), then the arrow itself, large.
+                            val dir = if (a.angleDegrees == 90f) 1f else -1f
+                            for (i in 1..3) {
+                                batch.setColor(1f, 0.95f, 0.7f, 0.5f - 0.13f * i)
+                                dot(a.x, a.y + dir * i * 9f, 4f - i * 0.6f)
+                            }
+                            batch.color = Color.WHITE
+                            batch.draw(assets.getProjectileRegion(1), a.x - half, ry(a.y) + half, half, half, ts.toFloat(), ts.toFloat(), 1.8f, 1.8f, a.angleDegrees)
+                        } else {
+                            // The impact: a puff of dust and a ring spreading from the spot.
+                            val u = (a.sinceLanding / com.morgana.client.state.SkillFxMath.IMPACT_SECONDS).coerceIn(0f, 1f)
+                            batch.setColor(1f, 0.92f, 0.6f, 1f - u)
+                            for ((px, py) in com.morgana.client.state.SkillFxMath.ring(a.x, a.y, 4f + 14f * u, 8, 0f)) dot(px, py, 3f)
+                        }
+                    }
+                }
+                com.morgana.client.state.SkillFx.SPIN -> {
+                    val t = fx.elapsed - fx.delaySeconds
+                    if (t >= -0.15f) {
+                        val fade = (1f - (fx.elapsed - fx.delaySeconds - fx.spanSeconds) / 0.4f).coerceIn(0f, 1f)
+                        batch.setColor(0.95f, 0.95f, 1f, 0.9f * fade)
+                        for ((px, py) in com.morgana.client.state.SkillFxMath.ring(fx.toX, fx.toY, fx.radius * 0.95f, 14, t * 1.6f)) dot(px, py, 4f)
+                        batch.setColor(0.75f, 0.85f, 1f, 0.7f * fade)
+                        for ((px, py) in com.morgana.client.state.SkillFxMath.ring(fx.toX, fx.toY, fx.radius * 0.6f, 9, -t * 2.2f)) dot(px, py, 3f)
+                    }
+                }
+                else -> {
+                    // Dodge dust: a streak along the dash and puffs left where it began.
+                    val (drawn, fade) = com.morgana.client.state.SkillFxMath.dodgeProgress(fx)
+                    batch.setColor(0.85f, 0.8f, 0.7f, 0.6f * fade)
+                    val steps = 9
+                    for (i in 0..steps) {
+                        val f = i.toFloat() / steps * drawn
+                        dot(fx.fromX + (fx.toX - fx.fromX) * f, fx.fromY + (fx.toY - fx.fromY) * f + 6f - 10f * f * fade, 5f - 2.5f * i / steps)
+                    }
+                    for ((px, py) in com.morgana.client.state.SkillFxMath.ring(fx.fromX, fx.fromY + 8f, 6f + 18f * (1f - fade), 7, 0f)) dot(px, py, 3f)
+                }
+            }
+            batch.color = Color.WHITE
+        }
     }
 
     /** Soft elliptical ground shadow under an entity; shrinks and fades when jumping. */

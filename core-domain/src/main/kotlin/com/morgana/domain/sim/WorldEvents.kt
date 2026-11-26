@@ -52,6 +52,27 @@ sealed interface WorldSimulationEvent {
         val targetCharacterId: String? = null
     ) : WorldSimulationEvent
 
+    /**
+     * A built-in skill visual (see `ActionSkillDefinition.effect`) from ([fromX], [fromY]) to ([toX], [toY]) in world pixels, around the
+     * tile ([tileX], [tileY]) for who should see it; [radius] is the area it shows; it starts [delayTicks] in and runs [spanTicks].
+     */
+    data class SkillEffect(
+        val mapId: Int,
+        val tileX: Int,
+        val tileY: Int,
+        val effect: String,
+        val fromX: Float,
+        val fromY: Float,
+        val toX: Float,
+        val toY: Float,
+        val radius: Float,
+        val delayTicks: Int,
+        val spanTicks: Int
+    ) : WorldSimulationEvent
+
+    /** The momentum meter of one character changed: its fill (0..99) and the ticks of empowerment left (0 when not empowered). */
+    data class MomentumChanged(val characterId: String, val momentum: Int, val empoweredTicks: Int) : WorldSimulationEvent
+
     data class AnimationTriggered(
         val mapId: Int,
         val tileX: Int,

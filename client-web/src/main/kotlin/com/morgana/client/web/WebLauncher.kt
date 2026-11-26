@@ -141,6 +141,8 @@ fun main() {
     val port = direct?.port ?: queryPort
     // Read the effects choice before the address is scrubbed: location.search is empty afterwards.
     val fxChoice = com.morgana.client.render.fxFromQuery(location.search ?: "")
+    // `?empower=meter|on` previews the momentum meter or the empowered state without earning it (client only).
+    com.morgana.client.render.ClientDebug.empower = (location.search ?: "").removePrefix("?").split('&').firstNotNullOfOrNull { p -> p.split('=', limit = 2).takeIf { it.size == 2 && it[0] == "empower" }?.get(1) }
     if (direct?.ticket != null) scrubAddressQuery()
     // `?fx=none` / `?fx=lighting,shadows,hd2d` / `?fx=all` picks the experimental visual effects (default: all on).
     com.morgana.client.render.VisualFx.applyList(fxChoice)

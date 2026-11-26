@@ -104,6 +104,9 @@ class RingButton(
     val count: () -> String = { "" },
     /** Cooldown left, 0..1. */
     val cooldown: () -> Float = { 0f },
+    /** A meter drawn as a ring of beads around the button (0..1), and whether it is full and burning (empowered). */
+    val meter: () -> Float = { 0f },
+    val meterHot: () -> Boolean = { false },
     /** The seconds left on the cooldown ("3", "0.8"), drawn over the button; empty for none. */
     val cooldownLabel: () -> String = { "" },
     /** Cannot be used right now (cooldown, cost, level). */
@@ -247,6 +250,22 @@ class ActionRing(
             val rim = if (lit) Color(1f, 0.82f, 0.4f, 1f) else if (empty) Color(0.35f, 0.3f, 0.26f, 1f) else Color(0.62f, 0.48f, 0.3f, 1f)
             drawDisc(batch, cx, cy, r, rim, (if (empty) 0.6f else 0.95f) * a)
             drawDisc(batch, cx, cy, r * 0.9f, Color(0.07f, 0.06f, 0.06f, 1f), (if (empty) 0.55f else 0.92f) * a)
+            val meter = def.meter()
+            val hot = def.meterHot()
+            if (meter > 0f || hot) {
+                // A ring of beads that fills clockwise from the top; when full and burning it pulses gold.
+                val n = 16
+                val filled = if (hot) n else (meter * n + 0.5f).toInt().coerceIn(0, n)
+                val pulse = 0.5f + 0.5f * kotlin.math.sin(System.currentTimeMillis() / 110.0).toFloat()
+                for (i in 0 until n) {
+                    val ang = Math.PI / 2 - i * 2 * Math.PI / n
+                    val bx = cx + (kotlin.math.cos(ang) * (r + 7f)).toFloat()
+                    val by = cy + (kotlin.math.sin(ang) * (r + 7f)).toFloat()
+                    val lit = i < filled
+                    val color = if (hot) Color(1f, 0.75f + 0.2f * pulse, 0.2f, 1f) else if (lit) Color(1f, 0.82f, 0.3f, 1f) else Color(0.35f, 0.3f, 0.22f, 1f)
+                    drawDisc(batch, bx, by, if (hot) 3.4f + pulse * 1.2f else if (lit) 3.2f else 2.2f, color, (if (lit || hot) 1f else 0.6f) * a)
+                }
+            }
             if (!empty) drawDisc(batch, cx, cy, r * 0.82f, def.tint, (if (pressed) 0.75f else 0.38f) * a)
 
             val icon = def.icon()

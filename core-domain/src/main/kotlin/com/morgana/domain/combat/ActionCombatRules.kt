@@ -48,7 +48,13 @@ data class ActionState(
     /** Where a leap (`SkillMove.toAim`) lands, in world pixels (the character's centre), set when the skill starts. */
     val leapX: Double = 0.0,
     val leapY: Double = 0.0,
-    val leapSet: Boolean = false
+    val leapSet: Boolean = false,
+    /** The momentum meter (0..99) filled by successful dodges, when it empties by expiring, and the dodge (by its start tick) that last filled it. */
+    val momentum: Int = 0,
+    val momentumExpires: Long = 0L,
+    val momentumFrom: Long = -1L,
+    /** The tick until which the character is empowered (an upgraded skill is in effect); 0 when not. */
+    val empoweredUntil: Long = 0L
 ) {
     val idle: Boolean get() = skillId == 0
 }

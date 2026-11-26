@@ -88,6 +88,9 @@
                 },
                 "schemaVersion": {
                     "type": "integer"
+                },
+                "effect": {
+                    "type": "string"
                 }
             },
             "required": [
@@ -258,6 +261,9 @@
                 },
                 "freeAngle": {
                     "type": "boolean"
+                },
+                "angleOffsetDegrees": {
+                    "type": "integer"
                 }
             },
             "required": [],

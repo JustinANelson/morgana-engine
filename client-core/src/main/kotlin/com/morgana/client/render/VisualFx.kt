@@ -40,6 +40,11 @@ fun VisualFx.applyList(list: String?) {
     tiltShift = all || "tilt" in on
 }
 
+/** Client-only switches for looking at HUD states without playing to them (`?empower=meter` shows a part-full momentum meter, `?empower=on` an empowered character). */
+object ClientDebug {
+    @JvmField var empower: String? = null
+}
+
 /** The `fx` value in a page address's query string, or null when there is none. */
 fun fxFromQuery(search: String): String? =
     search.removePrefix("?").split('&').firstNotNullOfOrNull { p -> p.split('=', limit = 2).takeIf { it.size == 2 && it[0] == "fx" }?.get(1) }

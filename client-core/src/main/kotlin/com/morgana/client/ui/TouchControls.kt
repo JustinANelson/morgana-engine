@@ -189,6 +189,9 @@ class TouchControls(
         hotkeyActors.forEach { addActor(it) }
     }
 
+    /** How much of the top of the left half the joystick may not start in (the player frame sits there and takes taps). */
+    var joystickTopInset: Float = 0f
+
     /** Positions everything for the current stage size. Called every frame (cheap) so resizes and zoom just work. */
     internal fun layoutFor(w: Float, h: Float) {
         setSize(w, h)
@@ -235,7 +238,7 @@ class TouchControls(
             m.setSize(md, md)
             m.setPosition(margin, bottomLeftInset)
         }
-        zone.setSize(w * 0.5f, h)
+        zone.setSize(w * 0.5f, (h - joystickTopInset).coerceAtLeast(0f))
         zone.setPosition(0f, 0f)
         zone.baseRadius = d * 0.95f
     }

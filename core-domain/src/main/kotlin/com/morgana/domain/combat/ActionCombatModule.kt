@@ -121,7 +121,11 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
             }
         }
         val entry = ActionCombatRules.findEntry(set, token)
-        if (entry != null) return startSkill(sim, player, state, entry.skillId, aim, out)
+        if (entry != null) {
+            // An empowered character's upgraded skill replaces the plain one.
+            val upgraded = set.empowerSkillId != 0 && set.empoweredSkillId != 0 && entry.skillId == set.empowerSkillId && state.empoweredUntil > now
+            return startSkill(sim, player, state, if (upgraded) set.empoweredSkillId else entry.skillId, aim, out)
+        }
         return if (state != st) state else null
     }
 
@@ -154,6 +158,7 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
             out.add(WorldSimulationEvent.CharacterUpdated(updated))
         }
         if (skill.animationId > 0) out.add(WorldSimulationEvent.AnimationTriggered(updated.position.mapId, updated.position.tileX, updated.position.tileY, skill.animationId))
+        if (skill.effect.isNotBlank()) out.add(skillEffect(sim, updated, skill, cx, cy, vector, aim, tileSize))
         val guard = skill.guard
         // A leap lands on the aimed point, held within the move's range of where the skill began.
         val leapMove = skill.moves.firstOrNull { it.toAim }
@@ -180,6 +185,47 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         )
     }
 
+    /** The built-in visual for a skill that is starting: where it goes (the ground point, the leap, or the dash's end) and its timing. */
+    private fun skillEffect(
+        sim: WorldSimulation, player: CharacterState, skill: ActionSkillDefinition, cx: Double, cy: Double,
+        vector: Pair<Double, Double>, aim: Pair<Double, Double>?, tileSize: Int
+    ): WorldSimulationEvent.SkillEffect {
+        var toX = cx
+        var toY = cy
+        val ground = skill.hitboxes.firstOrNull { it.groundTarget }
+        val leap = skill.moves.firstOrNull { it.toAim }
+        if (ground != null) {
+            var gx = (aim?.first ?: (cx + vector.first * ground.maxRangePixels * 0.6)) - cx
+            var gy = (aim?.second ?: (cy + vector.second * ground.maxRangePixels * 0.6)) - cy
+            val dist = StrictMath.sqrt(gx * gx + gy * gy)
+            if (ground.maxRangePixels > 0 && dist > ground.maxRangePixels && dist > 1e-6) {
+                gx = gx / dist * ground.maxRangePixels
+                gy = gy / dist * ground.maxRangePixels
+            }
+            toX = cx + gx
+            toY = cy + gy
+        } else if (leap != null) {
+            var lx = aim?.let { it.first - cx } ?: (vector.first * leap.maxPixels * 0.5)
+            var ly = aim?.let { it.second - cy } ?: (vector.second * leap.maxPixels * 0.5)
+            val len = StrictMath.sqrt(lx * lx + ly * ly)
+            if (leap.maxPixels > 0 && len > leap.maxPixels && len > 1e-6) { lx = lx / len * leap.maxPixels; ly = ly / len * leap.maxPixels }
+            toX = cx + lx
+            toY = cy + ly
+        } else {
+            val forward = skill.moves.sumOf { it.forwardPixels }.toDouble()
+            toX = cx + vector.first * forward
+            toY = cy + vector.second * forward
+        }
+        val first = skill.hitboxes.minOfOrNull { it.fromTick } ?: 0
+        val last = skill.hitboxes.maxOfOrNull { it.toTick } ?: first
+        val radius = skill.hitboxes.maxOfOrNull { it.radiusPixels } ?: 0
+        return WorldSimulationEvent.SkillEffect(
+            mapId = player.position.mapId, tileX = player.position.tileX, tileY = player.position.tileY, effect = skill.effect,
+            fromX = cx.toFloat(), fromY = cy.toFloat(), toX = toX.toFloat(), toY = toY.toFloat(), radius = radius.toFloat(),
+            delayTicks = first, spanTicks = (last - first).coerceAtLeast(1)
+        )
+    }
+
     // ---- the tick ----
 
     private fun step(sim: WorldSimulation, charId: String, out: MutableList<WorldSimulationEvent>) {
@@ -189,6 +235,15 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         if (player == null || stored == null) { sim.actionStates.remove(charId); return }
         var st: ActionState = stored
         if (!player.isAlive(sim.game.lifeVitalId) || player.isGhost) { sim.actionStates.remove(charId); return }
+        // Momentum fades if it is not fed, and an empowerment ends when its time is up.
+        if (st.empoweredUntil != 0L && now >= st.empoweredUntil) {
+            st = st.copy(empoweredUntil = 0L)
+            out.add(WorldSimulationEvent.MomentumChanged(charId, st.momentum, 0))
+        }
+        if (st.momentum > 0 && now >= st.momentumExpires) {
+            st = st.copy(momentum = 0)
+            out.add(WorldSimulationEvent.MomentumChanged(charId, 0, if (st.empoweredUntil > now) (st.empoweredUntil - now).toInt() else 0))
+        }
         val skill = sim.actionSkills[st.skillId]
         if (st.skillId != 0 && skill == null) st = st.copy(skillId = 0)
         if (skill == null || st.skillId == 0) { finish(sim, charId, st); return }
@@ -243,7 +298,7 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
     private fun finish(sim: WorldSimulation, charId: String, st: ActionState) {
         val now = sim.currentTick
         val cooldowns = st.cooldowns.filterValues { it > now }
-        if (st.skillId == 0 && cooldowns.isEmpty()) sim.actionStates.remove(charId)
+        if (st.skillId == 0 && cooldowns.isEmpty() && st.momentum == 0 && st.empoweredUntil <= now) sim.actionStates.remove(charId)
         else sim.actionStates[charId] = st.copy(cooldowns = cooldowns)
     }
 
@@ -398,6 +453,12 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
             val live = sim.mapNpcs[from.mapId]?.firstOrNull { it.instanceId == other.instanceId && it.isAlive } ?: continue
             sim.applyDamageToNpc(sim.players[player.id] ?: player, live, damage.coerceAtLeast(1), false, out)
             out.add(WorldSimulationEvent.FloatingTextEmitted(mapId = from.mapId, tileX = live.tileX, tileY = live.tileY, text = "Shock!", category = "SPELL", colorHex = "#FACC15"))
+            out.add(
+                WorldSimulationEvent.SkillEffect(
+                    from.mapId, from.tileX, from.tileY, "bolt", fx.toFloat(), fy.toFloat(),
+                    (live.bodyX(ts) + ts / 2.0).toFloat(), (live.bodyY(ts) + ts / 2.0).toFloat(), 0f, 0, 6
+                )
+            )
         }
     }
 
@@ -427,15 +488,19 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
             // Flies along the exact aim: a position in pixels that moves every tick, so it hits what it passes at any angle.
             val ts = sim.maps[player.position.mapId]?.tileSize ?: 32
             val speed = maxOf(1, p.speedPixelsPerTick).toDouble()
-            val startX = player.position.pixelX + ts / 2.0 + st.fx * 14.0
-            val startY = player.position.pixelY + ts / 2.0 + st.fy * 14.0
+            // A fan: turn the aim by the projectile's offset, so one skill can fire arrows at several angles.
+            val rad = Math.toRadians(p.angleOffsetDegrees.toDouble())
+            val dirX = st.fx * StrictMath.cos(rad) - st.fy * StrictMath.sin(rad)
+            val dirY = st.fx * StrictMath.sin(rad) + st.fy * StrictMath.cos(rad)
+            val startX = player.position.pixelX + ts / 2.0 + dirX * 14.0
+            val startY = player.position.pixelY + ts / 2.0 + dirY * 14.0
             val free = MapProjectile(
                 projectileId = sim.nextId("aproj"), sourceEntityId = player.id, isFromPlayer = true, mapId = player.position.mapId,
                 currentTileX = (startX / ts).toInt(), currentTileY = (startY / ts).toInt(), direction = dir, remainingTiles = tiles,
                 spriteId = maxOf(1, p.spriteId), damage = maxOf(1, damage), ticksPerTile = 1,
                 nextStepTick = sim.currentTick + 1L, pierce = p.pierce,
                 free = true, px = startX.toFloat(), py = startY.toFloat(),
-                vx = (st.fx * speed).toFloat(), vy = (st.fy * speed).toFloat(), remainingPixels = p.rangePixels.toFloat()
+                vx = (dirX * speed).toFloat(), vy = (dirY * speed).toFloat(), remainingPixels = p.rangePixels.toFloat()
             )
             val freeList = sim.mapProjectiles.getOrPut(player.position.mapId) { mutableListOf() }
             freeList.add(free)
@@ -512,6 +577,7 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         val t = (sim.currentTick - st.start).toInt()
         if (ActionCombatRules.hasArmor(skill, t, SkillArmorType.INVULNERABLE)) {
             out.add(WorldSimulationEvent.FloatingTextEmitted(player.position.mapId, player.position.tileX, player.position.tileY, "Dodge!", "MISS_DODGE", "#38BDF8"))
+            chargeMomentum(sim, player, st, out)
             return 0
         }
         val guard = skill.guard ?: return damage
@@ -538,6 +604,31 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         }
         out.add(WorldSimulationEvent.FloatingTextEmitted(player.position.mapId, player.position.tileX, player.position.tileY, "Blocked", "MISS_DODGE", "#94A3B8"))
         return (damage.toLong() * (100 - guard.damageReductionPercent) / 100).toInt()
+    }
+
+    /**
+     * A dodge that took a blow feeds the momentum meter (once per dodge, however many blows it dodged). A full meter empowers the
+     * character: the upgraded skill replaces its plain skill until the time is up, and a burst and a banner announce it.
+     */
+    private fun chargeMomentum(sim: WorldSimulation, player: CharacterState, st: ActionState, out: MutableList<WorldSimulationEvent>) {
+        val set = sim.weaponSets[st.setId] ?: return
+        val now = sim.currentTick
+        if (set.empowerSkillId == 0 || set.empoweredSkillId == 0 || st.empoweredUntil > now || st.momentumFrom == st.start) return
+        val ts = sim.maps[player.position.mapId]?.tileSize ?: 32
+        val cx = (player.position.pixelX + ts / 2.0).toFloat()
+        val cy = (player.position.pixelY + ts / 2.0).toFloat()
+        var meter = st.momentum + set.momentumPerDodge
+        var until = 0L
+        if (meter >= 100) {
+            meter = 0
+            until = now + set.empowerTicks
+            out.add(WorldSimulationEvent.SkillEffect(player.position.mapId, player.position.tileX, player.position.tileY, "empower_burst", cx, cy, cx, cy, 90f, 0, 14))
+            out.add(WorldSimulationEvent.FloatingTextEmitted(player.position.mapId, player.position.tileX, player.position.tileY, "EMPOWERED!", "SPELL", "#FBBF24"))
+        } else {
+            out.add(WorldSimulationEvent.SkillEffect(player.position.mapId, player.position.tileX, player.position.tileY, "empower_pulse", cx, cy, cx, cy, 36f, 0, 6))
+        }
+        sim.actionStates[player.id] = st.copy(momentum = meter, momentumExpires = now + 240L, momentumFrom = st.start, empoweredUntil = until)
+        out.add(WorldSimulationEvent.MomentumChanged(player.id, meter, if (until > 0L) set.empowerTicks else 0))
     }
 
     private fun notice(player: CharacterState, text: String) =

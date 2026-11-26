@@ -55,6 +55,18 @@
                 },
                 "schemaVersion": {
                     "type": "integer"
+                },
+                "empowerSkillId": {
+                    "type": "integer"
+                },
+                "empoweredSkillId": {
+                    "type": "integer"
+                },
+                "momentumPerDodge": {
+                    "type": "integer"
+                },
+                "empowerTicks": {
+                    "type": "integer"
                 }
             },
             "required": [

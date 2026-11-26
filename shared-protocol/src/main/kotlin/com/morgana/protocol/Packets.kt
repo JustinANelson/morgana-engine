@@ -928,6 +928,26 @@ sealed interface ServerPacket {
         val colorHex: String = category.defaultColorHex
     ) : ServerPacket
 
+    /** The local player's momentum meter (0..99) and the ticks of empowerment left (0 when not empowered). */
+    @Serializable
+    @SerialName("s_momentum")
+    data class Momentum(val momentum: Int, val empoweredTicks: Int) : ServerPacket
+
+    /** A built-in skill visual (arrow rain, dodge dust, spin whirl) the client draws with no art; positions are world pixels. */
+    @Serializable
+    @SerialName("s_skill_fx")
+    data class SkillEffect(
+        val mapId: Int,
+        val effect: String,
+        val fromX: Float,
+        val fromY: Float,
+        val toX: Float,
+        val toY: Float,
+        val radius: Float = 0f,
+        val delayTicks: Int = 0,
+        val spanTicks: Int = 1
+    ) : ServerPacket
+
     @Serializable
     @SerialName("s_play_anim")
     data class TriggerAnimation(

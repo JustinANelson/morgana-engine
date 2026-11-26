@@ -433,6 +433,15 @@ class ClientWorldState {
     val activeAnimations: MutableList<ActiveSpriteAnimation> = mutableListOf()
     /** Arrows and bolts in flight for ranged spells (anyone's); visual only. */
     val spellShots: MutableList<SpellShot> = mutableListOf()
+
+    /** The momentum meter (0..99) filled by successful dodges, and when the current empowerment ends (wall-clock ms; 0 = not empowered). */
+    var momentum: Int = 0
+    var empoweredUntilMs: Long = 0L
+
+    fun isEmpowered(nowMs: Long = System.currentTimeMillis()): Boolean = com.morgana.client.render.ClientDebug.empower == "on" || empoweredUntilMs > nowMs
+
+    /** Built-in skill visuals (arrow rain, dodge dust, spin whirl) in progress; see [SkillFx]. */
+    val skillFx: MutableList<SkillFx> = mutableListOf()
     val playerCastProgress: MutableMap<String, Float> = linkedMapOf()
 
     /** Windows the server's plugins have opened (by window id); the HUD draws them and removes ones the server closed. */
@@ -822,6 +831,9 @@ class ClientWorldState {
         spellCooldowns.clear()
         activeAnimations.clear()
         spellShots.clear()
+        skillFx.clear()
+        momentum = 0
+        empoweredUntilMs = 0L
         playerCastProgress.clear()
         activeTrade = null
         activeParty = null
@@ -1160,6 +1172,21 @@ class ClientWorldState {
                             )
                         )
                     }
+                }
+            }
+            is ServerPacket.Momentum -> {
+                momentum = packet.momentum
+                empoweredUntilMs = if (packet.empoweredTicks > 0) System.currentTimeMillis() + packet.empoweredTicks * 50L else 0L
+            }
+            is ServerPacket.SkillEffect -> {
+                if (activeMap?.id == packet.mapId) {
+                    skillFx.add(
+                        SkillFx(
+                            effect = packet.effect, fromX = packet.fromX, fromY = packet.fromY, toX = packet.toX, toY = packet.toY, radius = packet.radius,
+                            delaySeconds = packet.delayTicks * SkillFx.TICK_SECONDS, spanSeconds = packet.spanTicks * SkillFx.TICK_SECONDS
+                        )
+                    )
+                    while (skillFx.size > 40) skillFx.removeAt(0)
                 }
             }
             is ServerPacket.TriggerAnimation -> {
@@ -1637,6 +1664,13 @@ class ClientWorldState {
             val cb = cbIter.next().value
             cb.remainingSeconds -= deltaSeconds
             if (cb.remainingSeconds <= 0f) cbIter.remove()
+        }
+
+        val fxIter = skillFx.iterator()
+        while (fxIter.hasNext()) {
+            val fx = fxIter.next()
+            fx.elapsed += deltaSeconds
+            if (fx.finished) fxIter.remove()
         }
 
         val shotIter = spellShots.iterator()

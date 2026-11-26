@@ -110,7 +110,9 @@ data class SkillProjectile(
     /** Keeps flying after its first hit. */
     val pierce: Boolean = false,
     /** True: flies along the exact aim, at any angle, and hits whatever its body touches. False (the default): one of the eight directions, tile by tile. */
-    val freeAngle: Boolean = false
+    val freeAngle: Boolean = false,
+    /** Turns a free-angle projectile this many degrees off the aim, so one skill can fire a fan of arrows. */
+    val angleOffsetDegrees: Int = 0
 )
 
 /** One hit area, live from [fromTick] to [toTick] inclusive; both must lie inside the skill's active window. */
@@ -209,6 +211,11 @@ data class ActionSkillDefinition(
     val guard: SkillGuard? = null,
     val animationId: Int = 0,
     val soundId: String = "",
+    /**
+     * A built-in visual the client draws when the skill starts, needing no art: "arrow_rain" (arrows rise and fall on the aimed spot),
+     * "dodge" (a dust trail along the dash) or "spin" (a whirl at the landing point). Empty for none.
+     */
+    val effect: String = "",
     /** On-disk document schema version; see [ContentSchema]. */
     val schemaVersion: Int = ContentSchema.CURRENT_VERSION
 ) {
@@ -262,6 +269,15 @@ data class WeaponSetDefinition(
     val skillIds: List<Int> = emptyList(),
     val entries: List<ComboEntry> = emptyList(),
     val edges: List<ComboEdge> = emptyList(),
+    /**
+     * Momentum: each dodge that really avoids a hit (an `INVULNERABLE` window took a blow) adds [momentumPerDodge] to a meter of 100;
+     * a full meter empowers the character for [empowerTicks], during which pressing the entry for [empowerSkillId] starts
+     * [empoweredSkillId] instead. 0 = this set has no momentum.
+     */
+    val empowerSkillId: Int = 0,
+    val empoweredSkillId: Int = 0,
+    val momentumPerDodge: Int = 34,
+    val empowerTicks: Int = 200,
     /** On-disk document schema version; see [ContentSchema]. */
     val schemaVersion: Int = ContentSchema.CURRENT_VERSION
 )

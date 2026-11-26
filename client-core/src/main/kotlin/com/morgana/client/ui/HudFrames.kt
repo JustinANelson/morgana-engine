@@ -56,6 +56,8 @@ class PlayerFrame(
     private val worldState: ClientWorldState,
     private val shapes: HudShapes,
     private val font: () -> BitmapFont,
+    /** Called when the frame is tapped: opens the character and status screen. */
+    private val onTap: () -> Unit,
     /** The character's face (a sprite region), or null. */
     private val portrait: () -> TextureRegion?
 ) : Actor() {
@@ -64,8 +66,17 @@ class PlayerFrame(
     private var crop: TextureRegion? = null
 
     init {
-        touchable = Touchable.disabled
         setSize(FRAME_WIDTH, FRAME_HEIGHT)
+        addListener(object : InputListener() {
+            override fun touchDown(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int): Boolean {
+                stage?.keyboardFocus = null
+                return true
+            }
+
+            override fun touchUp(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int) {
+                if (x in 0f..width && y in 0f..height) onTap()
+            }
+        })
     }
 
     /** The top-left square of the sprite (its head and chest), cached so a frame allocates nothing. */
