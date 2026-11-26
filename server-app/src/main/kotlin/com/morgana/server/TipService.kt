@@ -29,6 +29,17 @@ class TipService(
     private val lastTipTick = HashMap<String, Long>()
     private val lastCheckTick = HashMap<String, Long>()
 
+    /**
+     * Accounts that never get tips this server run: those that signed in with a dev ticket (an LLM or a script driving the
+     * client, or a developer testing), for whom a tip window is only in the way. Not saved, so the account's own tip
+     * settings and history are untouched and a normal login shows tips as usual.
+     */
+    private val quiet = HashSet<String>()
+
+    fun quietAccount(accountId: String) {
+        quiet += accountId
+    }
+
     private fun stateOf(accountId: String): AccountTips? = byAccount[accountId] ?: accounts.findById(accountId)?.let {
         AccountTips(it.tipsSeen, it.tipsOff).also { s -> byAccount[accountId] = s }
     }
@@ -85,6 +96,7 @@ class TipService(
         val game = simulation.game.definition
         if (!OnboardingRules.enabled(game)) return
         val player = simulation.players[characterId] ?: return
+        if (player.accountId in quiet) return
         val state = stateOf(player.accountId) ?: return
         if (state.off) return
         val tips = OnboardingRules.tips(game)

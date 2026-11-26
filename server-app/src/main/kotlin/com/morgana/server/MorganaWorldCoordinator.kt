@@ -900,6 +900,8 @@ class MorganaWorldCoordinator(
                 return
             }
             org.slf4j.LoggerFactory.getLogger("Security").warn("Dev ticket login for account '{}' from {}", ticketAccount.username, session.sessionId)
+            // Automation and developers get no tip windows (they only cover the screen).
+            tips.quietAccount(ticketAccount.id)
             completeLogin(session, ticketAccount, null)
             return
         }

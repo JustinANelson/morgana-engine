@@ -867,6 +867,10 @@
                 },
                 "xpOrbs": {
                     "type": "boolean"
+                },
+                "layout": {
+                    "type": "string",
+                    "enum": ["classic", "ring"]
                 }
             },
             "required": [],

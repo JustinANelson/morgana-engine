@@ -445,8 +445,20 @@ data class UiProfile(
     /** Party button and window (`P`). */
     val party: Boolean = true,
     /** Floating essence/spirit orbs fly from slain enemies to the player and visually accrue XP on arrival. */
-    val xpOrbs: Boolean = false
+    val xpOrbs: Boolean = false,
+    /**
+     * Where the action buttons go: `classic` (the bottom hotbar on a keyboard, a button grid on touch) or `ring` (a large
+     * Attack button with four round skill buttons in an arc, a potion and a Dodge button, the same on every platform).
+     */
+    val layout: String = UiLayout.CLASSIC
 )
+
+/** The values of [UiProfile.layout]. */
+object UiLayout {
+    const val CLASSIC = "classic"
+    const val RING = "ring"
+    val ALL = listOf(CLASSIC, RING)
+}
 
 /** Logical animation states supported by multi-state character and NPC sprite sheets. */
 @Serializable

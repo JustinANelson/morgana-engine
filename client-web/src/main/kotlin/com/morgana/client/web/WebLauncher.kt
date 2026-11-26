@@ -56,12 +56,13 @@ private fun webBundledDirectory(pageHost: String, port: Int, secure: Boolean): R
 }
 
 /**
- * True when the browser reports a touch screen. Also prepares the page for touch play: a fixed, non-zoomable viewport,
+ * True when the browser reports a touch screen (or the page is opened with `?touch=1`, to try the touch interface on a desktop). Also prepares the page for touch play: a fixed, non-zoomable viewport,
  * and no browser panning/pull-to-refresh/double-tap-zoom stealing gestures from the game canvas.
  */
 @JSBody(script = """
     var touch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0)
-        || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+        || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches)
+        || /[?&]touch=1(&|$)/.test(location.search);
     var meta = document.querySelector('meta[name=viewport]');
     if (!meta) { meta = document.createElement('meta'); meta.name = 'viewport'; document.head.appendChild(meta); }
     meta.content = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no';
@@ -138,9 +139,11 @@ fun main() {
     // `?connect=host:port&ticket=dev_...` goes straight to that server and logs in with the one-time ticket (automation).
     val direct = com.morgana.client.net.DirectConnect.fromQuery(location.search ?: "", pageHost, queryPort, secure)
     val port = direct?.port ?: queryPort
+    // Read the effects choice before the address is scrubbed: location.search is empty afterwards.
+    val fxChoice = com.morgana.client.render.fxFromQuery(location.search ?: "")
     if (direct?.ticket != null) scrubAddressQuery()
     // `?fx=none` / `?fx=lighting,shadows,hd2d` / `?fx=all` picks the experimental visual effects (default: all on).
-    com.morgana.client.render.VisualFx.applyList(com.morgana.client.render.fxFromQuery(location.search ?: ""))
+    com.morgana.client.render.VisualFx.applyList(fxChoice)
     val touch = prepareTouchPage()
     val config = WebApplicationConfiguration().apply {
         // 0 = fill the browser window (the stage resizes with it).

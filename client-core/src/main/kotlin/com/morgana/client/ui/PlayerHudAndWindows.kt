@@ -89,7 +89,11 @@ class PlayerHudAndWindows(
     /** Ends the session and returns to the login screen. */
     private val onLogout: () -> Unit = {},
     /** The accessibility settings in force; the Accessibility window changes them through it. */
-    private val accessibility: AccessibilityController = AccessibilityController(AccessibilityStore(MemoryKeyValueStore()))
+    private val accessibility: AccessibilityController = AccessibilityController(AccessibilityStore(MemoryKeyValueStore())),
+    /** Sends an action-combat input (see [com.morgana.client.input.ActionCombatInput]); the game adds the held movement and modifier. */
+    private val onCombatInput: (com.morgana.client.input.ActionCombatInput.Button) -> Unit = {},
+    /** Ends a held guard. */
+    private val onCombatRelease: () -> Unit = {}
 ) {
     private val theme = GameTheme.shared
     private val toastOverlay = ToastOverlay(stage, worldState.toasts)
@@ -151,8 +155,19 @@ class PlayerHudAndWindows(
     private var mailShown: List<MailMessageDocument>? = null
     private var mailSelectedId: String? = null
     private var touchControls: TouchControls? = null
+    private var actionRing: ActionRing? = null
+    private val shapes = HudShapes()
+    private var playerFrame: PlayerFrame? = null
+    private var cornerButtons: CornerButtons? = null
+    private var chatToggle: ChatToggleButton? = null
+    private var chatAlpha = 1f
+    private var chatLastUseMs = 0L
+    private var chatLastFadeMs = 0L
+    private var chatMissed = 0
+    private var chatPointerOver = false
     private var settingsWindow: VisWindow? = null
     private var menuWindow: VisWindow? = null
+    private var actionListWindow: VisWindow? = null
     private var compactStatus: CompactStatus? = null
     private var dungeonHudOverlay: DungeonHudOverlay? = null
     private var partyFramesOverlay: PartyFramesOverlay? = null
@@ -168,6 +183,8 @@ class PlayerHudAndWindows(
     var touchControlsEnabled: Boolean = touchDevice
         set(value) { field = value; updateHudVisibility() }
     private var minimapWindow: VisTable? = null
+    private var minimapHeader: VisTable? = null
+    private var minimapHeaderCell: com.badlogic.gdx.scenes.scene2d.ui.Cell<VisTable>? = null
     private var hotbarWindow: VisTable? = null
     private var topFrameWindow: VisTable? = null
     private var menuDockWindow: VisTable? = null
@@ -199,6 +216,26 @@ class PlayerHudAndWindows(
 
     internal val touchControlsForTest: TouchControls?
         get() = touchControls
+
+    /** The on-screen Run button is latched on: the hero sprints like holding the sprint key. */
+    var touchRun: Boolean = false
+        private set
+    private var touchModHeld = false
+    private var touchAttackPressed = false
+
+    private val touchVisible: Boolean get() = touchControls?.isVisible == true
+
+    /** Sprint asked for from the touch pad: Run latched, or the modifier held (as holding Shift sprints and chords). */
+    val touchSprint: Boolean get() = touchVisible && (touchRun || touchModHeld)
+
+    /** The touch modifier (the keyboard's Shift) is held: action inputs get `SHIFT+`. */
+    val touchShift: Boolean get() = touchVisible && touchModHeld
+
+    /** The on-screen attack button is held down: the game repeats the attack while it is. */
+    val touchAttackHeld: Boolean get() = touchVisible && touchAttackPressed
+
+    private fun actionCombatOn(): Boolean =
+        worldState.authenticated && !worldState.mapEditorActive && com.morgana.client.input.ActionCombatInput.isActive(worldState.gameDefinition)
 
     val isDialogueWindowOpen: Boolean
         get() = dialogueWindow?.stage != null || textInputWindow?.stage != null
@@ -331,6 +368,15 @@ class PlayerHudAndWindows(
         }
         touchControls?.let { it.remove(); it.dispose() }
         touchControls = buildTouchControls().also { stage.root.addActorAt(0, it) }
+        actionRing?.let { it.remove(); it.dispose() }
+        actionRing = buildActionRing().also { stage.root.addActorAt(1, it) }
+        playerFrame?.remove()
+        cornerButtons?.remove()
+        playerFrame = PlayerFrame(worldState, shapes, { VisUI.getSkin().getFont("default-font") }) { portraitRegion() }.also { stage.addActor(it) }
+        cornerButtons = CornerButtons(shapes, { toggleMenuWindow() }, { toggleCharacterAndInventoryWindow() }).also { stage.addActor(it) }
+        chatToggle?.remove()
+        chatToggle = ChatToggleButton(shapes, { VisUI.getSkin().getFont("default-font") }, { if (chatAlpha < 0.5f) chatMissed else 0 }) { toggleChatShown() }
+            .also { it.setPosition(12f, 10f); stage.addActor(it) }
 
         // Top-Right Minimap Radar Window
         if (worldState.showMinimap && worldState.authenticated) {
@@ -417,6 +463,17 @@ class PlayerHudAndWindows(
             chatWindow = chatBox
         }
 
+        chatWindow?.let { chat ->
+            // Any touch or click inside the chat counts as using it (the hover test below covers the mouse).
+            chat.addCaptureListener(object : com.badlogic.gdx.scenes.scene2d.InputListener() {
+                override fun touchDown(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: Float, y: Float, pointer: Int, button: Int): Boolean {
+                    chatLastUseMs = System.currentTimeMillis()
+                    return false
+                }
+            })
+            chat.setPosition(12f + ChatToggleButton.SIZE + 10f, chat.y)
+        }
+
         updateHudVisibility()
     }
 
@@ -490,6 +547,7 @@ class PlayerHudAndWindows(
             if (!showTouch && tc.isVisible) tc.releaseAll()
             tc.isVisible = showTouch
         }
+        applyRingHud()
     }
 
     private fun buildHotbar() {
@@ -518,6 +576,9 @@ class PlayerHudAndWindows(
     }
 
     fun refreshHotbar() {
+        placeMenuDock()
+        applyRingHud()
+        updateChatFade()
         val invSlots = worldState.localCharacter?.inventory?.slots
         hotbarButtons.forEachIndexed { idx, btn ->
             val keyChar = hotbarKey(idx)
@@ -546,7 +607,7 @@ class PlayerHudAndWindows(
             )
             btn.setText("")
         }
-        hotbarWindow?.isVisible = worldState.authenticated && !touchDevice && worldState.showAnyHotbarSlot()
+        hotbarWindow?.isVisible = worldState.authenticated && !touchDevice && !ringOn() && worldState.showAnyHotbarSlot()
         // The Controls window's quickbar rows show what each slot holds: rebuild it only when that changed (this runs every
         // frame, and rebuilding every frame would replace a button between the press and the release of a click).
         val slots = worldState.hotbarSlots.toList()
@@ -633,7 +694,9 @@ class PlayerHudAndWindows(
         radar.defaults().pad(2f)
 
         val canvas = MinimapCanvas(assets, worldState)
-        canvas.setSize(136f, 136f)
+        // Smaller on a phone, so it stays clear of the top of the action ring.
+        val radarSize = if (touchDevice) 92f else 136f
+        canvas.setSize(radarSize, radarSize)
 
         val radarStack = com.badlogic.gdx.scenes.scene2d.ui.Stack()
         radarStack.add(canvas)
@@ -651,8 +714,10 @@ class PlayerHudAndWindows(
         headerBg.add(minimapCoordLabel).right().row()
         headerBg.add(minimapMetaLabel).right()
 
-        radar.add(headerBg).right().padBottom(3f).row()
-        radar.add(radarStack).size(136f, 136f).right().row()
+        minimapHeader = headerBg
+        minimapHeaderCell = radar.add(headerBg).right().padBottom(3f)
+        radar.row()
+        radar.add(radarStack).size(radarSize, radarSize).right().row()
         radar.pack()
         radar.setPosition(stage.width - radar.width - 10f, stage.height - radar.height - 10f)
         stage.addActor(radar)
@@ -805,10 +870,11 @@ class PlayerHudAndWindows(
                 }
             }
             val moral = worldState.activeMap?.moral?.name ?: "SAFE"
-            minimapCoordLabel.setText("$mapName [$moral] (${ch.position.tileX}, ${ch.position.tileY})")
+            // A phone shows just the place, not its rules and tile position.
+            minimapCoordLabel.setText(if (touchDevice) mapName else "$mapName [$moral] (${ch.position.tileX}, ${ch.position.tileY})")
             val pingStr = if (worldState.latestRttMs > 0L) "${worldState.latestRttMs}ms" else "--"
             val fpsStr = com.badlogic.gdx.Gdx.graphics.framesPerSecond
-            minimapMetaLabel.setText("Ping: $pingStr / FPS: $fpsStr")
+            minimapMetaLabel.setText(if (touchDevice) "" else "Ping: $pingStr / FPS: $fpsStr")
             minimapWindow?.let { m ->
                 m.pack()
                 m.setPosition(stage.width - m.width - 10f, stage.height - m.height - 10f)
@@ -836,6 +902,8 @@ class PlayerHudAndWindows(
         val chatKey = "${activeChatTab.name}|" + visibleMessages.joinToString("\n") { "${it.channel}:${it.senderName}:${it.message}" }
         if (chatKey != lastChatRenderKey) {
             lastChatRenderKey = chatKey
+            chatLastUseMs = System.currentTimeMillis()
+            if (chatAlpha < 0.5f) chatMissed++
             chatHistoryTable.clearChildren()
             chatHistoryTable.defaults().left().growX().padBottom(1f)
             for (msg in visibleMessages) {
@@ -1584,7 +1652,9 @@ class PlayerHudAndWindows(
             trackerWindow?.isVisible = false
             return
         }
-        val defaultTop = if (touchDevice) {
+        val defaultTop = if (ringOn()) {
+            ((playerFrame?.y ?: (stage.height - 110f)) - 10f).coerceAtLeast(160f)
+        } else if (touchDevice) {
             ((compactStatus?.y ?: (stage.height - 56f)) - 8f).coerceAtLeast(160f)
         } else {
             ((topFrameWindow?.y ?: (stage.height - 230f)) - 12f).coerceAtLeast(160f)
@@ -1608,9 +1678,10 @@ class PlayerHudAndWindows(
         val key = entries.flatMap { e -> listOf("#${e.questId}|${e.name}|${e.ready}") + e.lines.map { QuestTracker.lineText(it) + "|${it.done}" } }
         if (key == trackerShown || win.collapsed) return
         trackerShown = key
-        val unitBottom = topFrameWindow?.let { it.y - 12f }
+        val unitBottom = if (ringOn()) playerFrame?.let { it.y - 10f } else topFrameWindow?.let { it.y - 12f }
         var top = if (!createdNow && win.height > 0f) win.y + win.height else defaultTop
-        if (unitBottom != null && win.x < (topFrameWindow?.x ?: 0f) + (topFrameWindow?.width ?: 220f)) {
+        val unitRight = if (ringOn()) (playerFrame?.let { it.x + it.width } ?: 240f) else (topFrameWindow?.x ?: 0f) + (topFrameWindow?.width ?: 220f)
+        if (unitBottom != null && win.x < unitRight) {
             top = minOf(top, unitBottom)
         }
         content.clearChildren()
@@ -1852,10 +1923,15 @@ class PlayerHudAndWindows(
             val guideRows = listOf(
                 "Move" to "Drag anywhere on the left half of the screen (floating joystick)",
                 "Tap map" to "Tap a tile or entity to walk or interact",
-                "Attack" to "Red button: swing weapon or harvest facing node",
-                "Use / Jump" to "Blue button: talk, shop, bank, craft, or leap",
-                "Get" to "Gold button: pick up nearby ground items",
+                "Attack" to "Red button (hold to repeat): swing weapon or harvest facing node. Joystick direction adds FORWARD/BACK/LEFT/RIGHT, like the movement keys",
+                "Dodge / Alt / Guard" to "Action combat only: Space, right click and Q (hold) on a keyboard",
+                "Spc / F" to "Action combat: the Tab key; F when jump is off",
+                "Use" to "Blue button: talk, shop, bank, craft, harvest (E)",
+                "Jump" to "Green button: leap the way you face (F)",
+                "Get" to "Gold button: pick up nearby ground items (G)",
                 "Skill / Spell" to "Purple button: cast quickbar slot 1 or your first skill",
+                "Run" to "Orange button: latch sprinting on or off",
+                "Mod" to "Hold with the left thumb (bottom-left) while pressing an action: the keyboard's Shift, so Mod + Atk is SHIFT+LMB. Also sprints",
                 "Quickbar 1-10" to "Right-edge buttons (fill via +Bar in Spellbook or Quickbar in Inventory)",
                 "Menu" to "Top-right button: Character, Inventory, Quests, Settings, and more"
             )
@@ -2433,6 +2509,8 @@ class PlayerHudAndWindows(
     fun heldTouchDirection(): Direction? = touchControls?.takeIf { it.isVisible }?.heldDirection
 
     fun dispose() {
+        shapes.dispose()
+        actionRing?.dispose()
         touchControls?.dispose()
         compactStatus?.dispose()
         dungeonHudOverlay?.dispose()
@@ -2440,54 +2518,262 @@ class PlayerHudAndWindows(
         lowHpVignetteOverlay?.dispose()
     }
 
-    private fun buildTouchControls(): TouchControls {
-        fun slot(i: Int) = worldState.hotbarSlots.getOrNull(i)
-        /** The blue face button is Jump while there is nothing to talk to, harvest, shop at or open; otherwise it names the action. */
-        fun showJumpOnFaceButton(): Boolean =
-            worldState.gameDefinition?.jump?.enabled == true && jumpEnabled && !worldState.hasInteractTarget()
-        fun hasNearbyLoot(): Boolean {
-            val ch = worldState.localCharacter ?: return false
-            val pos = ch.position
-            val range = worldState.gameDefinition?.gameplayTuning?.pickupRangeTiles ?: com.morgana.domain.sim.GROUND_PICKUP_RANGE_TILES
-            return worldState.groundItemsOnMap.any {
-                it.mapId == pos.mapId && kotlin.math.abs(it.tileX - pos.tileX) <= range && kotlin.math.abs(it.tileY - pos.tileY) <= range
+    private fun slot(i: Int) = worldState.hotbarSlots.getOrNull(i)
+
+    /** A menu label with its key on a keyboard ("Inventory (I)"); phones have no keys, so just the label. */
+    private fun withKey(label: String, action: GameAction): String = if (touchDevice) label else "$label (${keyHint(action)})"
+
+    /** The local character's sprite, for the portrait. */
+    private fun portraitRegion(): com.badlogic.gdx.graphics.g2d.TextureRegion? {
+        val ch = worldState.localCharacter ?: return null
+        val layers = worldState.playersOnMap[ch.id]?.paperdollLayers.orEmpty()
+        return if (layers.isNotEmpty()) {
+            assets.getOrComposeCharacterRegion(characterId = ch.id, spriteId = ch.spriteId, layers = layers, direction = Direction.DOWN, walkFrame = 0)
+                ?: assets.getSpriteRegion(ch.spriteId, Direction.DOWN, 0)
+        } else {
+            assets.getSpriteRegion(ch.spriteId, Direction.DOWN, 0)
+        }
+    }
+
+    /**
+     * In the ring layout the new frames replace the old top-left window, the bottom-right dock and the phone's compact status
+     * and Menu button. Run every frame, because the game definition (which says which layout) arrives after the HUD is built.
+     */
+    private fun applyRingHud() {
+        val ring = ringOn() && worldState.authenticated
+        val playing = ring && !holdBack && !editorOpen
+        playerFrame?.isVisible = playing && worldState.localCharacter != null
+        cornerButtons?.isVisible = playing
+        if (!ring) return
+        topFrameWindow?.isVisible = false
+        menuDockWindow?.isVisible = false
+        compactStatus?.isVisible = false
+        menuButton?.isVisible = false
+        playerFrame?.setPosition(12f + insetLeft, stage.height - PlayerFrame.FRAME_HEIGHT - 10f - insetTop)
+        // The ring layout shows no place name or ping above the minimap (the link indicator at the top already shows latency).
+        minimapHeader?.let { h ->
+            if (h.isVisible) {
+                h.isVisible = false
+                minimapHeaderCell?.height(0f)?.padBottom(0f)
+                minimapWindow?.invalidateHierarchy()
             }
         }
-        fun slotCooldown(i: Int): Float {
-            val spell = slot(i) as? HotbarSlotAction.CastSpell ?: return 0f
-            return worldState.spellCooldowns.fractionLeft(spell.spellId, ToastClock.now())
+        cornerButtons?.let { b ->
+            b.setPosition(stage.width - CornerButtons.SIZE - 12f - insetRight, stage.height - b.height - 10f - insetTop)
+            minimapWindow?.let { m -> m.setPosition(b.x - m.width - 14f, stage.height - m.height - 10f - insetTop) }
         }
-        fun slotDimmed(i: Int): Boolean {
-            val spell = slot(i) as? HotbarSlotAction.CastSpell ?: return false
-            if (worldState.spellCooldowns.fractionLeft(spell.spellId, ToastClock.now()) > 0f) return true
-            val ch = worldState.localCharacter ?: return false
-            val def = worldState.catalog.spells.firstOrNull { it.id == spell.spellId } ?: return false
-            if (ch.level < def.levelReq || (def.classReqIds.isNotEmpty() && ch.classId !in def.classReqIds)) return true
-            return def.costs.any { (vitalId, cost) -> (ch.vitals[vitalId]?.cur ?: 0) < cost }
+    }
+
+    /** How many items sit on the quickbar slots the More list shows (5 to 0), for the badge on the More button. */
+    private fun moreActionCount(): Int = (MORE_FIRST_SLOT..9).count { slot(it) != null }
+
+    /**
+     * The More button's list: the items on quickbar slots 5 to 0 (potions, food, drink, scrolls) and the combat stance, each as a
+     * row that does what its key does. The keyboard keys `5`-`0` and `T` still work without opening it.
+     */
+    fun toggleActionList() {
+        openOrNull(actionListWindow)?.let {
+            it.remove()
+            actionListWindow = null
+            return
         }
-        val faces = listOf(
-            TouchFaceButton(
-                glyph = { worldState.attackButtonLabel() },
-                color = Color(0.85f, 0.25f, 0.25f, 1f),
-                visible = { worldState.showCombatUi() }
-            ) {
-                if (worldState.swingReady(System.currentTimeMillis())) {
-                    netClient.send(ClientPacket.Attack)
-                    worldState.triggerLocalAttackOrHarvest()
-                    audio.play(RetroSoundEngine.Sfx.SWING)
+        actionListWindow = null
+        val win = HudWindow("Other actions")
+        win.addCloseButton()
+        win.isMovable = true
+        win.defaults().pad(3f)
+        fun row(label: String, action: () -> Unit) {
+            val b = VisTextButton(label)
+            b.label.setAlignment(com.badlogic.gdx.utils.Align.left)
+            b.addListener(object : ChangeListener() {
+                override fun changed(event: ChangeEvent?, actor: Actor?) {
+                    actionListWindow?.remove()
+                    actionListWindow = null
+                    action()
                 }
-            },
+            })
+            win.add(b).width(236f).height(42f).row()
+        }
+        for (i in MORE_FIRST_SLOT..9) {
+            val a = slot(i) ?: continue
+            val badge = slotBadge(i).let { if (it.isNotEmpty()) "  x$it" else "" }
+            val key = if (touchDevice) "" else "[${hotbarKey(i)}]  "
+            row("$key${a.label}$badge") { triggerHotbar(i) }
+        }
+        val stance = worldState.localCharacter?.stance
+        if (worldState.gameDefinition?.combatStance != null && stance != null) {
+            val key = if (touchDevice) "" else "[${keyHint(GameAction.STANCE)}]  "
+            row("${key}Stance: ${stance.label}") { cycleStance() }
+        }
+        if (win.children.size <= 1) {
+            win.add(VisLabel("Nothing here yet. Put potions, food and scrolls on quickbar slots 5 to 0 from your bag.", theme.mutedLabelStyle).apply { setWrap(true) }).width(236f).row()
+        }
+        win.pack()
+        win.setPosition(
+            (stage.width - ringReach(stage.width, stage.height) - win.width - 12f).coerceAtLeast(8f),
+            14f
+        )
+        stage.addActor(win)
+        actionListWindow = win
+    }
+
+    /** True while the mouse is over the chat box (a phone has no hover; its touches mark use directly). */
+    private fun pointerOverChat(chat: com.badlogic.gdx.scenes.scene2d.Actor): Boolean {
+        if (touchDevice) return false
+        val p = stage.screenToStageCoordinates(com.badlogic.gdx.math.Vector2(com.badlogic.gdx.Gdx.input.x.toFloat(), com.badlogic.gdx.Gdx.input.y.toFloat()))
+        return p.x in chat.x..(chat.x + chat.width) && p.y in chat.y..(chat.y + chat.height)
+    }
+
+    /** Fades the chat box out when it has not been used for a few seconds, and in again when it is; run every frame. */
+    private fun updateChatFade() {
+        val chat = chatWindow ?: return
+        val now = System.currentTimeMillis()
+        val delta = if (chatLastFadeMs == 0L) 0L else (now - chatLastFadeMs).coerceIn(0L, 100L)
+        chatLastFadeMs = now
+        val typing = stage.keyboardFocus === chatInputField || chatInputField.text.isNotEmpty()
+        val wanted = ChatFade.wanted(typing, pointerOverChat(chat), now - chatLastUseMs)
+        chatAlpha = ChatFade.step(chatAlpha, wanted, delta)
+        if (chatAlpha >= 0.5f) chatMissed = 0
+        chat.color.a = chatAlpha
+        chat.touchable = if (chatAlpha > 0.05f) com.badlogic.gdx.scenes.scene2d.Touchable.enabled else com.badlogic.gdx.scenes.scene2d.Touchable.disabled
+        chatToggle?.isVisible = worldState.authenticated && !holdBack && !editorOpen && worldState.showChatUi()
+    }
+
+    /** The small chat button: shows the chat (and, on a keyboard, focuses its input), or hides it at once if it is showing. */
+    private fun toggleChatShown() {
+        if (chatAlpha > 0.5f && stage.keyboardFocus !== chatInputField) {
+            chatLastUseMs = 0L
+            chatAlpha = 0.49f
+        } else {
+            chatLastUseMs = System.currentTimeMillis()
+            chatMissed = 0
+            if (!touchDevice) stage.keyboardFocus = chatInputField
+        }
+    }
+
+    /** Asks for the next combat stance (SAFE, PvE, PvP); the server arms PvP after a short channel. */
+    fun cycleStance() {
+        if (worldState.gameDefinition?.combatStance == null) return
+        val next = when (worldState.localCharacter?.stance) {
+            com.morgana.domain.game.Stance.SAFE -> "pve"
+            com.morgana.domain.game.Stance.PVE -> "pvp"
+            else -> "safe"
+        }
+        netClient.send(ClientPacket.AdminSlashCommand("/stance $next"))
+    }
+
+    private fun hasNearbyLoot(): Boolean {
+        val ch = worldState.localCharacter ?: return false
+        val pos = ch.position
+        val range = worldState.gameDefinition?.gameplayTuning?.pickupRangeTiles ?: com.morgana.domain.sim.GROUND_PICKUP_RANGE_TILES
+        return worldState.groundItemsOnMap.any {
+            it.mapId == pos.mapId && kotlin.math.abs(it.tileX - pos.tileX) <= range && kotlin.math.abs(it.tileY - pos.tileY) <= range
+        }
+    }
+
+    private fun slotCooldown(i: Int): Float {
+        val spell = slot(i) as? HotbarSlotAction.CastSpell ?: return 0f
+        return worldState.spellCooldowns.fractionLeft(spell.spellId, ToastClock.now())
+    }
+
+    private fun slotDimmed(i: Int): Boolean {
+        val spell = slot(i) as? HotbarSlotAction.CastSpell ?: return false
+        if (worldState.spellCooldowns.fractionLeft(spell.spellId, ToastClock.now()) > 0f) return true
+        val ch = worldState.localCharacter ?: return false
+        val def = worldState.catalog.spells.firstOrNull { it.id == spell.spellId } ?: return false
+        if (ch.level < def.levelReq || (def.classReqIds.isNotEmpty() && ch.classId !in def.classReqIds)) return true
+        return def.costs.any { (vitalId, cost) -> (ch.vitals[vitalId]?.cur ?: 0) < cost }
+    }
+
+    private fun jumpAvailable(): Boolean = worldState.gameDefinition?.jump?.enabled == true && jumpEnabled
+
+    /** The stack or cost badge of quickbar slot [i]: how many of an item are in the bag, or a spell's cost. */
+    private fun slotBadge(i: Int): String = when (val action = slot(i)) {
+        is HotbarSlotAction.UseItem -> {
+            val total = worldState.localCharacter?.inventory?.slots?.filterNotNull()?.filter { it.itemId == action.itemId }?.sumOf { it.amount } ?: 0
+            if (total > 0) total.toString() else ""
+        }
+        is HotbarSlotAction.CastSpell -> {
+            val cost = worldState.catalog.spells.firstOrNull { it.id == action.spellId }?.costs?.values?.firstOrNull { it > 0 } ?: 0
+            if (cost > 0) cost.toString() else ""
+        }
+        null -> ""
+    }
+
+    private companion object {
+        /** The first quickbar slot (0-based) the More list shows: slots 1 to 4 are the ring's skills. */
+        const val MORE_FIRST_SLOT = 4
+    }
+
+    /** The game asks for the ring layout (`ui.layout`). */
+    private fun ringOn(): Boolean = worldState.uiProfile.layout == com.morgana.domain.game.UiLayout.RING
+
+    /** The ring is on screen: asked for, in the world, not behind a modal screen and not while a map is being edited. */
+    private fun ringShown(): Boolean = ringOn() && worldState.authenticated && !holdBack && !editorOpen && !worldState.mapEditorActive
+
+    /** The game defines weapon sets, so right click, guard and the special and free keys do something and get buttons. */
+    private fun weaponSetsOn(): Boolean = worldState.catalog.weaponSets.isNotEmpty()
+
+    private fun pressAttack() {
+        touchAttackPressed = true
+        if (actionCombatOn()) {
+            onCombatInput(com.morgana.client.input.ActionCombatInput.Button.ATTACK)
+        } else if (worldState.swingReady(System.currentTimeMillis())) {
+            netClient.send(ClientPacket.Attack)
+            worldState.triggerLocalAttackOrHarvest()
+            audio.play(RetroSoundEngine.Sfx.SWING)
+        }
+    }
+
+    private fun pressInteract() {
+        if (worldState.actionReady("interact", System.currentTimeMillis(), 250L)) {
+            netClient.send(ClientPacket.InteractFacing)
+            worldState.triggerLocalInteract()
+        }
+    }
+
+    private fun pressPickup() {
+        if (worldState.actionReady("pickup", System.currentTimeMillis(), 250L)) {
+            netClient.send(ClientPacket.PickupGroundItem)
+            audio.play(RetroSoundEngine.Sfx.PICKUP)
+        }
+    }
+
+    private fun pressJump() {
+        worldState.findDirectionalJumpLanding()?.let { landing -> netClient.send(ClientPacket.JumpTo(landing.x, landing.y)) }
+    }
+
+    private fun buildTouchControls(): TouchControls {
+        fun combatButton(
+            button: com.morgana.client.input.ActionCombatInput.Button,
+            color: Color,
+            visible: () -> Boolean = { actionCombatOn() }
+        ): TouchFaceButton {
+            val face = TouchFaceButton({ button.label }, color, visible) { onCombatInput(button) }
+            return if (button.holdToRelease) face.withRelease { onCombatRelease() } else face
+        }
+        val attack = TouchFaceButton(
+            glyph = { worldState.attackButtonLabel() },
+            color = Color(0.85f, 0.25f, 0.25f, 1f),
+            visible = { worldState.showCombatUi() }
+        ) { pressAttack() }.withRelease { touchAttackPressed = false }.asPrimary()
+        val faces = listOf(
+            attack,
+            combatButton(com.morgana.client.input.ActionCombatInput.Button.DODGE, Color(0.2f, 0.65f, 0.65f, 1f)),
+            combatButton(com.morgana.client.input.ActionCombatInput.Button.HEAVY, Color(0.8f, 0.45f, 0.2f, 1f)),
+            combatButton(com.morgana.client.input.ActionCombatInput.Button.GUARD, Color(0.35f, 0.45f, 0.75f, 1f)),
             TouchFaceButton(
-                glyph = { if (showJumpOnFaceButton()) "Jump" else worldState.interactButtonLabel() },
+                glyph = { worldState.interactButtonLabel() },
                 color = Color(0.25f, 0.5f, 0.9f, 1f)
             ) {
-                if (showJumpOnFaceButton()) {
-                    worldState.findDirectionalJumpLanding()?.let { landing ->
-                        netClient.send(ClientPacket.JumpTo(landing.x, landing.y))
-                    }
-                } else if (worldState.actionReady("interact", System.currentTimeMillis(), 250L)) {
+                if (worldState.actionReady("interact", System.currentTimeMillis(), 250L)) {
                     netClient.send(ClientPacket.InteractFacing)
                     worldState.triggerLocalInteract()
+                }
+            },
+            TouchFaceButton({ "Jump" }, Color(0.3f, 0.7f, 0.4f, 1f), { jumpAvailable() }) {
+                worldState.findDirectionalJumpLanding()?.let { landing ->
+                    netClient.send(ClientPacket.JumpTo(landing.x, landing.y))
                 }
             },
             TouchFaceButton(
@@ -2500,6 +2786,8 @@ class PlayerHudAndWindows(
                     audio.play(RetroSoundEngine.Sfx.PICKUP)
                 }
             },
+            combatButton(com.morgana.client.input.ActionCombatInput.Button.SPECIAL, Color(0.6f, 0.4f, 0.6f, 1f)),
+            combatButton(com.morgana.client.input.ActionCombatInput.Button.FREE, Color(0.5f, 0.5f, 0.55f, 1f)) { actionCombatOn() && !jumpAvailable() },
             TouchFaceButton(
                 glyph = { worldState.abilityTerminology().singularLabel },
                 color = Color(0.6f, 0.35f, 0.85f, 1f),
@@ -2520,8 +2808,21 @@ class PlayerHudAndWindows(
                         }
                     }
                 }
-            }
+            },
+            TouchFaceButton(
+                glyph = { "Run" },
+                color = Color(0.9f, 0.55f, 0.15f, 1f),
+                visible = { worldState.gameDefinition?.sprint?.enabled == true },
+                highlighted = { touchRun }
+            ) { touchRun = !touchRun }
         )
+        // The keyboard's Shift, held with the left thumb: sprints, and adds SHIFT+ to the action inputs pressed meanwhile.
+        val modifier = TouchFaceButton(
+            glyph = { "Mod" },
+            color = Color(0.55f, 0.55f, 0.6f, 1f),
+            visible = { if (ringOn()) actionCombatOn() && weaponSetsOn() else actionCombatOn() || worldState.gameDefinition?.sprint?.enabled == true },
+            highlighted = { touchModHeld }
+        ) { touchModHeld = true }.withRelease { touchModHeld = false }
         val keys = (1..10).map { n ->
             TouchHotkey(
                 caption = { "$n\n${slot(n - 1)?.label?.take(4) ?: "-"}" },
@@ -2537,8 +2838,87 @@ class PlayerHudAndWindows(
             font = { VisUI.getSkin().getFont("default-font") },
             faceButtons = faces,
             hotkeys = keys,
-            allowDiagonals = { worldState.movementMode == com.morgana.domain.spatial.MovementMode.SUB_TILE }
+            allowDiagonals = { worldState.movementMode == com.morgana.domain.spatial.MovementMode.SUB_TILE },
+            modifierButton = modifier,
+            clusterHidden = { ringOn() }
         )
+    }
+
+    /** The action ring: attack, four skills, a potion and a dodge, plus context, jump and the weapon-set extras. Same on every platform. */
+    private fun buildActionRing(): ActionRing {
+        val keyHints = !touchDevice
+        fun hint(i: Int) = if (keyHints) hotbarKey(i) else ""
+        fun skill(k: Int, role: RingRole, tint: Color, label: String) = RingButton(
+            key = RingKey(role, if (role == RingRole.SKILL) k else 0),
+            glyph = { label },
+            tint = tint,
+            visible = { ringShown() && worldState.showCombatUi() },
+            icon = { slot(k)?.let { assets.getItemIconRegion(it.iconId) } },
+            keyHint = { hint(k) },
+            count = { slotBadge(k) },
+            cooldown = { slotCooldown(k) },
+            dimmed = { slotDimmed(k) },
+            empty = { slot(k) == null }
+        ) { triggerHotbar(k) }
+        fun combat(button: com.morgana.client.input.ActionCombatInput.Button, key: RingKey, tint: Color, visible: () -> Boolean): RingButton {
+            // The keyboard's own key for this input: Space dodges, Q guards, Tab is the special, F the free key.
+            val keyName = when (button) {
+                com.morgana.client.input.ActionCombatInput.Button.DODGE -> "Spac"
+                com.morgana.client.input.ActionCombatInput.Button.GUARD -> "Q"
+                com.morgana.client.input.ActionCombatInput.Button.SPECIAL -> "Tab"
+                com.morgana.client.input.ActionCombatInput.Button.FREE -> "F"
+                else -> ""
+            }
+            val b = RingButton(key = key, glyph = { button.label }, tint = tint, visible = visible, keyHint = { if (keyHints) keyName else "" }) { onCombatInput(button) }
+            return if (button.holdToRelease) b.withRelease { onCombatRelease() } else b
+        }
+        val extrasOn = { ringShown() && actionCombatOn() && weaponSetsOn() }
+        val buttons = buildList {
+            add(RingButton(
+                key = RingKey(RingRole.ATTACK),
+                glyph = { worldState.attackButtonLabel() },
+                tint = Color(0.85f, 0.25f, 0.25f, 1f),
+                visible = { ringShown() && worldState.showCombatUi() },
+                // In action combat Space dodges, so the attack's key is Ctrl.
+                keyHint = { if (!keyHints) "" else if (actionCombatOn()) "Ctrl" else KeyBindings.shortKeyName(Accessibility.keys.keysFor(GameAction.ATTACK).firstOrNull() ?: 0) }
+            ) { pressAttack() }.withRelease { touchAttackPressed = false })
+            for (k in 0 until RING_SKILLS) add(skill(k, RingRole.SKILL, Color(0.5f, 0.35f, 0.8f, 1f), "${k + 1}"))
+            add(RingButton(
+                key = RingKey(RingRole.MORE),
+                glyph = { "More" },
+                tint = Color(0.45f, 0.5f, 0.6f, 1f),
+                visible = { ringShown() && worldState.showCombatUi() },
+                keyHint = { if (keyHints) KeyBindings.shortKeyName(Accessibility.keys.keysFor(GameAction.MORE_ACTIONS).firstOrNull() ?: 0) else "" },
+                count = { moreActionCount().let { if (it > 0) it.toString() else "" } },
+                highlighted = { openOrNull(actionListWindow) != null }
+            ) { toggleActionList() })
+            add(combat(com.morgana.client.input.ActionCombatInput.Button.DODGE, RingKey(RingRole.DODGE), Color(0.2f, 0.65f, 0.65f, 1f)) { ringShown() && actionCombatOn() })
+            add(RingButton(
+                key = RingKey(RingRole.CONTEXT),
+                glyph = { if (hasNearbyLoot()) "Get" else worldState.interactButtonLabel() },
+                tint = Color(0.9f, 0.75f, 0.2f, 1f),
+                visible = { ringShown() && (hasNearbyLoot() || worldState.hasInteractTarget()) },
+                highlighted = { hasNearbyLoot() }
+            ) { if (hasNearbyLoot()) pressPickup() else pressInteract() })
+            add(RingButton(
+                key = RingKey(RingRole.JUMP),
+                glyph = { "Jump" },
+                tint = Color(0.3f, 0.7f, 0.4f, 1f),
+                visible = { ringShown() && jumpAvailable() }
+            ) { pressJump() })
+            add(RingButton(
+                key = RingKey(RingRole.EXTRA, 0),
+                glyph = { "Run" },
+                tint = Color(0.9f, 0.55f, 0.15f, 1f),
+                visible = { ringShown() && worldState.gameDefinition?.sprint?.enabled == true },
+                highlighted = { touchRun }
+            ) { touchRun = !touchRun })
+            add(combat(com.morgana.client.input.ActionCombatInput.Button.HEAVY, RingKey(RingRole.EXTRA, 1), Color(0.8f, 0.45f, 0.2f, 1f), extrasOn))
+            add(combat(com.morgana.client.input.ActionCombatInput.Button.GUARD, RingKey(RingRole.EXTRA, 2), Color(0.35f, 0.45f, 0.75f, 1f), extrasOn))
+            add(combat(com.morgana.client.input.ActionCombatInput.Button.SPECIAL, RingKey(RingRole.EXTRA, 3), Color(0.6f, 0.4f, 0.6f, 1f), extrasOn))
+            add(combat(com.morgana.client.input.ActionCombatInput.Button.FREE, RingKey(RingRole.EXTRA, 4), Color(0.5f, 0.5f, 0.55f, 1f)) { extrasOn() && !jumpAvailable() })
+        }
+        return ActionRing(font = { VisUI.getSkin().getFont("default-font") }, buttons = buttons)
     }
 
     private fun layoutCompactHud() {
@@ -2586,28 +2966,28 @@ class PlayerHudAndWindows(
             })
         }
         val entries = buildList<Pair<String, () -> Unit>> {
-            add("Character" to { toggleCharacterWindow() })
-            add("Inventory" to { toggleCharacterAndInventoryWindow() })
-            if (worldState.showSpellsUi()) add(worldState.abilityTerminology().pluralLabel to { toggleSpellbookWindow() })
-            add("Quests" to { toggleQuestWindow() })
+            add(withKey("Character", GameAction.CHARACTER) to { toggleCharacterWindow() })
+            add(withKey("Inventory", GameAction.INVENTORY) to { toggleCharacterAndInventoryWindow() })
+            if (worldState.showSpellsUi()) add(withKey(worldState.abilityTerminology().pluralLabel, GameAction.SPELLBOOK) to { toggleSpellbookWindow() })
+            add(withKey("Quests", GameAction.QUESTS) to { toggleQuestWindow() })
             if (worldState.gameDefinition?.bestiary?.enabled == true) add("Bestiary" to { bestiaryWindow.toggle() })
             if (PetsModel.gameHasPets(worldState.catalog.npcs)) add("Pets" to { petsWindow.toggle() })
-            if (worldState.showCraftingUi()) add("Crafting" to { toggleCraftingWindow() })
-            if (worldState.showPartyUi()) add("Party" to { togglePartyWindow() })
+            if (worldState.showCraftingUi()) add(withKey("Crafting", GameAction.CRAFTING) to { toggleCraftingWindow() })
+            if (worldState.showPartyUi()) add(withKey("Party", GameAction.PARTY) to { togglePartyWindow() })
             if (worldState.isModuleEnabled("guilds")) add("Guild" to { toggleGuildWindow() })
             if (worldState.isModuleEnabled("ignore")) add("Ignore" to { toggleIgnoreWindow() })
             if (worldState.isModuleEnabled("friends")) add("Friends" to { toggleFriendsWindow() })
             if (worldState.isModuleEnabled("market")) add("Market" to { toggleMarketWindow() })
             if (worldState.isModuleEnabled("mail")) add("Mail" to { toggleMailWindow() })
-            if (worldState.showMinimapUi()) add("Map" to { toggleMinimap() })
-            if (worldState.isModuleEnabled("exploration")) add("World map" to { toggleWorldMapWindow() })
+            if (worldState.showMinimapUi()) add(withKey("Map", GameAction.MINIMAP) to { toggleMinimap() })
+            if (worldState.isModuleEnabled("exploration")) add(withKey("World map", GameAction.WORLD_MAP) to { toggleWorldMapWindow() })
             if (worldState.showChatUi()) add("Chat" to {
                 (chatWindow as? HudWindow)?.let { c ->
                     c.setCollapsed(!c.collapsed)
                     if (!c.collapsed) c.toFront()
                 }
             })
-            add("Controls" to { toggleControlsWindow() })
+            add(withKey("Controls", GameAction.CONTROLS) to { toggleControlsWindow() })
             add("Accessibility" to { toggleAccessibilityWindow() })
             add("Settings" to { toggleSettingsWindow() })
             add("Admin (F1)" to { onToggleF1Admin() })
@@ -2794,7 +3174,14 @@ class PlayerHudAndWindows(
         r2.clearChildren()
         menuDockRow2Buttons.filter { it.isVisible }.forEach { r2.add(it) }
         dock.pack()
-        dock.setPosition(stage.width - dock.width - 10f, 10f)
+        placeMenuDock()
+    }
+
+    /** Bottom-right, but left of the action ring when the game uses it, so the dock never covers a button. */
+    private fun placeMenuDock() {
+        val dock = menuDockWindow ?: return
+        val clear = if (ringOn()) ringReach(stage.width, stage.height) + 8f else 10f
+        dock.setPosition(stage.width - dock.width - clear, 10f)
     }
 
     private fun actionButton(label: String, onClick: () -> Unit): VisTextButton {
