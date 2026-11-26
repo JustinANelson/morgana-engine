@@ -2,6 +2,8 @@
 
 ## 2026-11-26
 
+* **Fix** - **Holding the Attack button aimed repeats at the finger** ([input and HUD](/client/input_and_hud.md)): the hold-to-attack repeat in action combat aimed at the cursor position even when the hold was on the ring button, so about half the shots (the repeats) flew towards the button instead of the target. Repeats now aim at the cursor only for a mouse hold on the world or Ctrl; a held ring button auto-targets like its first press.
+
 * **Fix / Add** - **Moving presses work, monsters move freely, the dodge backs away** ([action combat](/systems/action_combat.md)): a press made while the stick is held ("BACK+LMB") now falls back to the plain key, so attacking and shooting while running works (before, it did nothing but play the swing sound). Games with `subTileMovement` now move monsters in free pixel steps instead of tile hops. The client dodge aims away from the enemy being fought.
 
 * **Add** - **Free-angle projectiles, ground-targeted area hitboxes and auto-lock in action combat** ([action combat](/systems/action_combat.md)): `SkillProjectile.freeAngle` makes shots fly at any angle (swept pixel collision), `SkillHitbox.groundTarget`/`maxRangePixels` land an area skill where it was aimed, and the client locks on to the enemy a skill auto-picked. New fields are in `action_skills.schema.json`. Free-angle and ground fields are not in the F1 form yet.

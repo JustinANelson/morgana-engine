@@ -1269,7 +1269,10 @@ class MorganaGame(
         if (actionCombatActive() && !isTypingInTextField() && !adminPanel.isPanelFinderOpen()) {
             val heldAttack = lmbHeldOnWorld || hud.touchAttackHeld || Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) || Gdx.input.isKeyPressed(Input.Keys.CONTROL_RIGHT)
             if (holdAttackRepeat.update(heldAttack, delta)) {
-                sendActionInput("LMB", cursorAim(Gdx.input.x, Gdx.input.y))
+                // The cursor aims a repeat only while the mouse is held on the world (or with Ctrl); a held ring button has the finger
+                // or pointer on the button, not on the map, so it auto-targets like its first press did.
+                val aimAtCursor = !hud.touchAttackHeld && (lmbHeldOnWorld || Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) || Gdx.input.isKeyPressed(Input.Keys.CONTROL_RIGHT))
+                sendActionInput("LMB", if (aimAtCursor) cursorAim(Gdx.input.x, Gdx.input.y) else null)
             }
         } else {
             holdAttackRepeat.reset()
