@@ -126,6 +126,8 @@ class WorldPostProcessor {
         sh.setUniformf("u_tone", if (VisualFx.lighting) 1f else 0f)
         sh.setUniformf("u_tilt", if (VisualFx.hd2d) 1f else 0f)
         sh.setUniformf("u_hd", if (VisualFx.hd2d) 1f else 0f)
+        // Bloom is stronger at night, when lit windows and fires are the brightest things on screen.
+        sh.setUniformf("u_bloom", if (VisualFx.hd2d) 0.9f + 0.9f * (1f - (sky?.daylight ?: 1f)) else 0f)
         val warm = sky?.warmth ?: 0f
         val ambientLum = if (sky != null) (sky.ambientR + sky.ambientG + sky.ambientB) / 3f else 1f
         sh.setUniformf("u_mist", if (VisualFx.lighting && sky != null) 0.05f + 0.14f * warm else 0f)
@@ -235,6 +237,7 @@ uniform float u_lighting;
 uniform float u_tone;
 uniform float u_tilt;
 uniform float u_hd;
+uniform float u_bloom;
 uniform float u_mist;
 uniform vec3 u_mistColor;
 
@@ -271,6 +274,23 @@ void main() {
     // Light map: sky ambient with point lights added on top.
     vec3 light = texture2D(u_light, uv).rgb;
     c *= mix(vec3(1.0), light, u_lighting);
+
+    // Bloom: bright pixels (lit windows, fires, magic, sunlit highlights) bleed a soft halo. Two rings of taps from the scene, lit by the light map.
+    if (u_bloom > 0.001) {
+        vec3 glow = vec3(0.0);
+        for (int i = 0; i < 8; i++) {
+            float a = float(i) * 0.785398;
+            vec2 d = vec2(cos(a), sin(a));
+            vec3 s1 = texture2D(u_texture, uv + d * u_texel * 5.0).rgb;
+            vec3 s2 = texture2D(u_texture, uv + d * u_texel * 11.0).rgb;
+            vec3 l1 = texture2D(u_light, uv + d * u_texel * 5.0).rgb;
+            vec3 l2 = texture2D(u_light, uv + d * u_texel * 11.0).rgb;
+            s1 *= mix(vec3(1.0), l1, u_lighting);
+            s2 *= mix(vec3(1.0), l2, u_lighting);
+            glow += max(s1 - 0.68, 0.0) * 0.6 + max(s2 - 0.68, 0.0) * 0.4;
+        }
+        c += glow * (u_bloom / 8.0);
+    }
 
     // Split-toned palette: shadows lean cool blue-violet, highlights lean warm yellow.
     float lum = dot(c, vec3(0.299, 0.587, 0.114));

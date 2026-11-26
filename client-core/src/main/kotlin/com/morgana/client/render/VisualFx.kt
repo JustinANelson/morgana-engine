@@ -11,7 +11,7 @@ object VisualFx {
     /** Sun/moon projected cast shadows for characters instead of a fixed oval (Ctrl+F7). */
     @JvmField var shadows: Boolean = true
 
-    /** "HD-2D" look: tilt-shift depth of field, saturation lift and vignette on the flat 2D world (Ctrl+F8). */
+    /** "HD-2D" look: tilt-shift depth of field, bloom, saturation lift and vignette on the flat 2D world (Ctrl+F8). */
     @JvmField var hd2d: Boolean = true
 
     /** Set false when the platform could not create framebuffers or compile the shader; everything falls back to the plain renderer. */

@@ -141,6 +141,8 @@ class MorganaWorldRenderer(
         val dimmed = if (editing && worldState.editor.dimOtherLayers) worldState.editor.layer else null
         renderMapLayers(batch, activeMap, offsetX = 0f, offsetY = 0f, aboveEntities = false, fadeRoof = false, hidden = hiddenLayers, dimExcept = dimmed)
 
+        if (!editing) castShadowSky()?.let { renderTileShadows(batch, activeMap, it) }
+
         // 3. Render Y-Sorted Entities (Ground Items, Resource Nodes, active & seam NPCs/Players + Paperdoll, Projectiles, Animations)
         if (!editing) {
             renderFacingTargetReticle(batch, activeMap, worldState)
@@ -664,6 +666,51 @@ class MorganaWorldRenderer(
     }
 
     private val shadowVertices = FloatArray(20)
+    private val shadowPoint = FloatArray(2)
+
+    /**
+     * Sun/moon shadows for standing props (trees, boulders, buildings, towers): every tile of a prop's column is flipped about
+     * the base tile's bottom edge and leaned away from the light (see [TileShadowModel]), drawn after the ground and before the
+     * entities so characters walk over them. Only the active map is shadowed; neighbour maps are drawn plain.
+     */
+    private fun renderTileShadows(batch: SpriteBatch, map: MapDefinition, sky: SkyState) {
+        val ts = map.tileSize
+        val vis = VisibleTiles.of(map.width, map.height, ts, 0f, 0f, viewLeft, viewRight, viewBottom, viewTop)
+        // A base above the view still throws its shadow down into it, so look a few rows further up.
+        val firstRow = (vis.firstRow - TileShadowModel.MAX_STACK).coerceAtLeast(0)
+        val color = Color.toFloatBits(0f, 0f, 0f, sky.shadowAlpha * 0.9f)
+        val tsf = ts.toFloat()
+        for (ty in firstRow until vis.lastRow) {
+            for (tx in (vis.firstCol - TileShadowModel.MAX_STACK).coerceAtLeast(0) until (vis.lastCol + TileShadowModel.MAX_STACK).coerceAtMost(map.width)) {
+                if (!TileShadowModel.isBase(map, tx, ty)) continue
+                val rootY = toRenderY(map.height, ty, ts) + tsf * 0.04f
+                val left = tx * tsf
+                val right = left + tsf
+                val stack = TileShadowModel.stackHeight(map, tx, ty)
+                for (k in 0..stack) {
+                    val cell = map.getCell(tx, ty - k) ?: continue
+                    val layers = if (k == 0) SHADOW_BASE_LAYERS else SHADOW_UPPER_LAYERS
+                    for (layer in layers) {
+                        val placement = cell.layers[layer] ?: continue
+                        val (srcX, srcY) = com.morgana.domain.map.TileAnimation.sourceAt(placement, animationClockMs())
+                        val region = assets.getTileRegion(placement.tilesetId, srcX, srcY)
+                        val v = shadowVertices
+                        fun put(i: Int, hh: Float, x: Float, u: Float, vv: Float) {
+                            TileShadowModel.project(hh, sky, shadowPoint)
+                            v[i] = x + shadowPoint[0]; v[i + 1] = rootY + shadowPoint[1]; v[i + 2] = color; v[i + 3] = u; v[i + 4] = vv
+                        }
+                        // Bottom edge of this tile sits k tiles above the base; its top edge one tile higher.
+                        put(0, k * tsf, left, region.u, region.v2)
+                        put(5, (k + 1) * tsf, left, region.u, region.v)
+                        put(10, (k + 1) * tsf, right, region.u2, region.v)
+                        put(15, k * tsf, right, region.u2, region.v2)
+                        batch.draw(region.texture, v, 0, 20)
+                    }
+                }
+            }
+        }
+    }
+
 
     /** The cast-shadow sky for this frame, or null when the oval blob should be used (no clock, indoors, or the effect is off). */
     private fun castShadowSky(): SkyState? = if (VisualFx.shadows) VisualFx.sky else null
@@ -1382,6 +1429,8 @@ class MorganaWorldRenderer(
     }
 
     companion object {
+        private val SHADOW_BASE_LAYERS = listOf(MapLayer.MASK_1, MapLayer.MASK_2)
+        private val SHADOW_UPPER_LAYERS = listOf(MapLayer.FRINGE_1, MapLayer.FRINGE_2, MapLayer.ROOF)
         /** A ghost is drawn pale blue and see-through. */
         private val GHOST_TINT = Color(0.7f, 0.85f, 1f, 0.5f)
 
