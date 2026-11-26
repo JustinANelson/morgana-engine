@@ -4,6 +4,7 @@ import com.morgana.domain.content.ActionSkillDefinition
 import com.morgana.domain.content.ComboEdge
 import com.morgana.domain.content.ComboEntry
 import com.morgana.domain.content.HitboxShape
+import com.morgana.domain.content.InputTokens
 import com.morgana.domain.content.SkillHitbox
 import com.morgana.domain.content.WeaponSetDefinition
 import com.morgana.domain.content.WeaponSetSlot
@@ -62,10 +63,26 @@ object ActionCombatRules {
         sets.values.sortedBy { it.id }.firstOrNull { it.slot == WeaponSetSlot.MAIN && it.levelReq <= level && (it.classIds.isEmpty() || classId in it.classIds) }
 
     /**
-     * The edge out of [from] for [token]. With [hit] null any edge counts (to decide whether to buffer an early press); otherwise
-     * an edge that needs a hit is taken only when the skill connected, and is preferred when it did.
+     * The tokens to try for a press, most specific first: the token as sent ("BACK+LMB"), then without the direction ("LMB"... keeping
+     * any SHIFT or CTRL), then the key alone. A weapon set that defines only plain keys therefore still answers a press made while
+     * moving, and one that defines a directional move (a back-step on BACK+SPACE) still wins when the press matches it.
      */
-    fun findEdge(set: WeaponSetDefinition, from: Int, token: String, hit: Boolean?): ComboEdge? {
+    fun tokenFallbacks(token: String): List<String> {
+        val parts = token.split('+')
+        val key = parts.last()
+        val noDirection = parts.filter { it !in InputTokens.DIRECTIONS }.joinToString("+")
+        return listOf(token, noDirection, key).distinct()
+    }
+
+    /**
+     * The edge out of [from] for [token] (or its plainer fallbacks, see [tokenFallbacks]). With [hit] null any edge counts (to decide
+     * whether to buffer an early press); otherwise an edge that needs a hit is taken only when the skill connected, and is preferred
+     * when it did.
+     */
+    fun findEdge(set: WeaponSetDefinition, from: Int, token: String, hit: Boolean?): ComboEdge? =
+        tokenFallbacks(token).firstNotNullOfOrNull { findEdgeExact(set, from, it, hit) }
+
+    private fun findEdgeExact(set: WeaponSetDefinition, from: Int, token: String, hit: Boolean?): ComboEdge? {
         var plain: ComboEdge? = null
         for (e in set.edges) {
             if (e.fromSkillId == from && e.input == token) {
@@ -77,7 +94,8 @@ object ActionCombatRules {
         return plain
     }
 
-    fun findEntry(set: WeaponSetDefinition, token: String): ComboEntry? = set.entries.firstOrNull { it.input == token }
+    fun findEntry(set: WeaponSetDefinition, token: String): ComboEntry? =
+        tokenFallbacks(token).firstNotNullOfOrNull { t -> set.entries.firstOrNull { it.input == t } }
 
     fun skillLength(skill: ActionSkillDefinition): Int = skill.startupTicks + skill.activeTicks + skill.recoveryTicks
 

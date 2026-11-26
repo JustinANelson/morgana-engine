@@ -196,7 +196,7 @@ private fun WorldSimulation.stepFreeProjectile(proj: MapProjectile, mapId: Int, 
     if (attacker != null) {
         for (npc in mapNpcs[mapId].orEmpty().toList()) {
             if (!npc.isAlive || npc.instanceId in hitIds || !isHostileNpc(npc)) continue
-            if (segmentDistance2(proj.px, proj.py, nx, ny, npc.tileX * ts + ts / 2f, npc.tileY * ts + ts / 2f) > reach2) continue
+            if (segmentDistance2(proj.px, proj.py, nx, ny, npc.bodyX(ts) + ts / 2f, npc.bodyY(ts) + ts / 2f) > reach2) continue
             applyDamageToNpc(attacker, npc, proj.damage, isCrit = false, out = out)
             hitSomething = true
             hitIds = hitIds + npc.instanceId

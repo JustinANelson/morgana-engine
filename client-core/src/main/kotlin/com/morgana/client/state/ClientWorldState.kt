@@ -320,8 +320,8 @@ class ClientWorldState {
                 def.eventId == 0 && def.shopId == 0
             if (!monster) continue
             val vis = npcVisuals[npc.instanceId]
-            val x = (vis?.renderPixelX ?: (npc.tileX * ts.toFloat())) + ts / 2f
-            val y = (vis?.renderPixelY ?: (npc.tileY * ts.toFloat())) + ts / 2f
+            val x = (vis?.renderPixelX ?: npc.bodyX(ts)) + ts / 2f
+            val y = (vis?.renderPixelY ?: npc.bodyY(ts)) + ts / 2f
             val hp = npc.vitals["hp"] ?: npc.vitals.values.firstOrNull()
             val frac = if (hp == null || hp.max <= 0) 1f else hp.cur.toFloat() / hp.max
             out += com.morgana.client.input.TargetCandidate(
@@ -942,8 +942,8 @@ class ClientWorldState {
                     }
                     syncNpcVisualTarget(
                         id = n.instanceId,
-                        px = n.tileX * ts,
-                        py = n.tileY * ts,
+                        px = n.bodyX(snapshotMap.tileSize),
+                        py = n.bodyY(snapshotMap.tileSize),
                         dir = n.direction,
                         snapImmediately = n.instanceId !in npcVisuals
                     )
@@ -1066,8 +1066,8 @@ class ClientWorldState {
                 }
                 syncNpcVisualTarget(
                     id = n.instanceId,
-                    px = n.tileX * ts,
-                    py = n.tileY * ts,
+                    px = n.bodyX(ts.toInt()),
+                    py = n.bodyY(ts.toInt()),
                     dir = n.direction,
                     snapImmediately = n.instanceId !in npcVisuals || !n.isAlive
                 )
@@ -1287,7 +1287,7 @@ class ClientWorldState {
             for (n in m.npcs) {
                 val key = "${m.mapId}:${n.instanceId}"
                 liveNpcs.add(key)
-                syncSeamVisual(seamNpcVisuals, key, n.tileX * ts + ox, n.tileY * ts + oy, n.direction)
+                syncSeamVisual(seamNpcVisuals, key, n.bodyX(active.tileSize) + ox, n.bodyY(active.tileSize) + oy, n.direction)
             }
             for (p in m.players) {
                 livePlayers.add(p.characterId)

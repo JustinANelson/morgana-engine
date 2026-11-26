@@ -51,9 +51,9 @@ class FreeAimCombatTest {
 
     private fun WorldSimulation.dummyHp() = mapNpcs.getValue(1).single().vitals.getValue("hp").cur
 
-    private fun WorldSimulation.fire(aimTileX: Int?, aimTileY: Int?) {
+    private fun WorldSimulation.fire(aimTileX: Int?, aimTileY: Int?, token: String = "RMB") {
         val params = buildMap {
-            put("token", "RMB")
+            put("token", token)
             if (aimTileX != null && aimTileY != null) {
                 put("aimX", (aimTileX * 32 + 16).toString())
                 put("aimY", (aimTileY * 32 + 16).toString())
@@ -104,5 +104,21 @@ class FreeAimCombatTest {
         val sim = world(burst(maxRange = 96), 12 to 5) // the aimed point is 8 tiles away; the burst lands 3 tiles out
         sim.fire(12, 5)
         assertEquals(100_000, sim.dummyHp())
+    }
+
+    @Test
+    fun `a press made while moving still fires the plain skill on that key`() {
+        for (token in listOf("FORWARD+RMB", "BACK+RMB", "LEFT+RMB", "SHIFT+RIGHT+RMB")) {
+            val sim = world(shot(free = true), 11 to 8)
+            sim.fire(11, 8, token)
+            assertTrue(sim.dummyHp() < 100_000, "$token fired the RMB shot")
+        }
+    }
+
+    @Test
+    fun `a directional move defined by the weapon set beats the plain fallback`() {
+        assertEquals(listOf("BACK+SPACE", "SPACE"), com.morgana.domain.combat.ActionCombatRules.tokenFallbacks("BACK+SPACE"))
+        assertEquals(listOf("SHIFT+BACK+LMB", "SHIFT+LMB", "LMB"), com.morgana.domain.combat.ActionCombatRules.tokenFallbacks("SHIFT+BACK+LMB"))
+        assertEquals(listOf("LMB"), com.morgana.domain.combat.ActionCombatRules.tokenFallbacks("LMB"))
     }
 }

@@ -351,10 +351,26 @@ data class MapNpcInstance(
     /** The telegraphed ground attack this boss has under way, or null. */
     val zone: BossZone? = null,
     /** When each boss ability (by spell id) may next be used. */
-    val abilityReadyTicks: Map<Int, Long> = emptyMap()
+    val abilityReadyTicks: Map<Int, Long> = emptyMap(),
+    /** True once the monster has moved in free pixel steps (game with `subTileMovement`); [pixelX] and [pixelY] are then its top-left in map pixels. */
+    val subPixel: Boolean = false,
+    val pixelX: Float = 0f,
+    val pixelY: Float = 0f,
+    /** The tile a free-moving idle monster is wandering to, or -1 when it is not wandering. */
+    val wanderX: Int = -1,
+    val wanderY: Int = -1
 ) {
     val isAlive: Boolean
         get() = (vitals["hp"]?.cur ?: (vitals.values.firstOrNull()?.cur ?: 0)) > 0 && respawnAtTick == 0L
+
+    /**
+     * The monster's top-left in map pixels. With free pixel movement ([subPixel]) it is [pixelX] and [pixelY], as long as they still
+     * lie in the monster's tile; if something else moved the monster by tile (knockback, a leash reset, a respawn) the tile wins and
+     * the monster stands on it.
+     */
+    fun bodyX(tileSize: Int): Float = if (subPixel && ((pixelX + tileSize / 2f) / tileSize).toInt() == tileX && ((pixelY + tileSize / 2f) / tileSize).toInt() == tileY) pixelX else tileX * tileSize.toFloat()
+
+    fun bodyY(tileSize: Int): Float = if (subPixel && ((pixelX + tileSize / 2f) / tileSize).toInt() == tileX && ((pixelY + tileSize / 2f) / tileSize).toInt() == tileY) pixelY else tileY * tileSize.toFloat()
 
     fun isAlive(lifeVitalId: String): Boolean =
         (vitals[lifeVitalId]?.cur ?: 0) > 0

@@ -2,6 +2,8 @@
 
 ## 2026-11-26
 
+* **Fix / Add** - **Moving presses work, monsters move freely, the dodge backs away** ([action combat](/systems/action_combat.md)): a press made while the stick is held ("BACK+LMB") now falls back to the plain key, so attacking and shooting while running works (before, it did nothing but play the swing sound). Games with `subTileMovement` now move monsters in free pixel steps instead of tile hops. The client dodge aims away from the enemy being fought.
+
 * **Add** - **Free-angle projectiles, ground-targeted area hitboxes and auto-lock in action combat** ([action combat](/systems/action_combat.md)): `SkillProjectile.freeAngle` makes shots fly at any angle (swept pixel collision), `SkillHitbox.groundTarget`/`maxRangePixels` land an area skill where it was aimed, and the client locks on to the enemy a skill auto-picked. New fields are in `action_skills.schema.json`. Free-angle and ground fields are not in the F1 form yet.
 
 * **Change** - **Phone chat is centred and no longer opens by accident; tilt-shift blur is off by default** ([input and HUD](/client/input_and_hud.md)): the compact chat box is centred on the screen when both thumbs leave room (`touchChatSlot`), dragging it scrolls the history, only its small chat button opens the full panel, and the panel no longer raises the keyboard until the typing line is tapped. `VisualFx.tiltShift` (the top/bottom blur) is off unless `?fx=tilt` or `all`.

@@ -3,6 +3,7 @@ package com.morgana.domain.sim
 import com.morgana.domain.combat.actionDefence
 import com.morgana.domain.content.NpcBehavior
 import com.morgana.domain.content.SpellTargetType
+import com.morgana.domain.entity.MapNpcInstance
 import com.morgana.domain.entity.MapProjectile
 import com.morgana.domain.game.VitalRole
 import com.morgana.domain.map.MapDefinition
@@ -39,6 +40,7 @@ internal fun WorldSimulation.slotIsSupplied(map: com.morgana.domain.map.MapDefin
 
 internal fun WorldSimulation.tickNpcs(out: MutableList<WorldSimulationEvent>) {
     val npcRules = game.definition.combat.npcs
+    val freeNpcMovement = modules.isEnabled(com.morgana.domain.sim.OptionalModule.SUB_TILE_MOVEMENT)
     // How many live monsters already hunt each player (for combat.npcs.maxAttackersPerTarget).
     val hunters = HashMap<String, Int>()
     if (npcRules.maxAttackersPerTarget > 0) {
@@ -460,7 +462,19 @@ internal fun WorldSimulation.tickNpcs(out: MutableList<WorldSimulationEvent>) {
                         }
                     } else if (npcRules.casterKeepsDistance && npcAttackSpell != null && dist <= npcAttackSpell.rangeTiles) {
                         // A caster in spell range holds its ground while the spell recharges instead of closing to melee.
-                    } else if (currentTick - npc.lastMoveTick >= effectiveMoveSpeedTicks && !npc.statusEffects.any { it.preventsMovement }) {
+                    } else if (freeNpcMovement && !npc.statusEffects.any { it.preventsMovement }) {
+                        // Free pixel movement: walk straight at the target every tick instead of hopping tile by tile.
+                        val ts = map.tileSize
+                        val moved = stepNpcPixels(
+                            npc, map, targetPlayer.position.pixelX + ts / 2f, targetPlayer.position.pixelY + ts / 2f,
+                            ts.toFloat() / effectiveMoveSpeedTicks
+                        )
+                        if (moved !== npc) {
+                            npc = moved.copy(lastMoveTick = currentTick)
+                            npcList[idx] = npc
+                            out.add(WorldSimulationEvent.NpcUpdated(npc))
+                        }
+                    } else if (!freeNpcMovement && currentTick - npc.lastMoveTick >= effectiveMoveSpeedTicks && !npc.statusEffects.any { it.preventsMovement }) {
                         val dx = (targetPlayer.position.tileX - npc.tileX).coerceIn(-1, 1)
                         val dy = (targetPlayer.position.tileY - npc.tileY).coerceIn(-1, 1)
                         val stepDir = if (abs(targetPlayer.position.tileX - npc.tileX) >= abs(targetPlayer.position.tileY - npc.tileY)) {
@@ -479,6 +493,28 @@ internal fun WorldSimulation.tickNpcs(out: MutableList<WorldSimulationEvent>) {
                             npcList[idx] = npc
                             out.add(WorldSimulationEvent.NpcUpdated(npc))
                         }
+                    }
+                }
+            } else if (freeNpcMovement && effectiveBehavior in setOf(NpcBehavior.PASSIVE, NpcBehavior.ATTACK_ON_SIGHT, NpcBehavior.FRIENDLY_ROAM)) {
+                // Idle with free movement: amble towards a spot near home, then stand a while before picking the next.
+                val ts = map.tileSize
+                if (npc.wanderX >= 0) {
+                    val goalX = npc.wanderX * ts + ts / 2f
+                    val goalY = npc.wanderY * ts + ts / 2f
+                    val moved = stepNpcPixels(npc, map, goalX, goalY, ts.toFloat() / effectiveMoveSpeedTicks * 0.6f)
+                    val arrived = moved === npc || kotlin.math.hypot((moved.bodyX(ts) + ts / 2f - goalX).toDouble(), (moved.bodyY(ts) + ts / 2f - goalY).toDouble()) < 2.0
+                    val next = (if (moved !== npc) moved.copy(lastMoveTick = currentTick) else npc).let { if (arrived) it.copy(wanderX = -1, wanderY = -1) else it }
+                    if (next != npc) {
+                        npc = next
+                        npcList[idx] = npc
+                        out.add(WorldSimulationEvent.NpcUpdated(npc))
+                    }
+                } else if (currentTick - npc.lastMoveTick >= effectiveMoveSpeedTicks * 3L && rng.rollBasisPoints(2000)) {
+                    val dir = Direction.CARDINALS[rng.nextInt(Direction.CARDINALS.size)]
+                    val nextTile = npc.tileCoord.step(dir)
+                    if (nextTile.manhattanDistanceTo(TileCoord(npc.homeX, npc.homeY)) <= 4 && canNpcStepTo(map, npc.tileCoord, nextTile, dir)) {
+                        npc = npc.copy(wanderX = nextTile.x, wanderY = nextTile.y, lastMoveTick = currentTick)
+                        npcList[idx] = npc
                     }
                 }
             } else if (
@@ -504,6 +540,55 @@ internal fun WorldSimulation.tickNpcs(out: MutableList<WorldSimulationEvent>) {
             }
         }
     }
+}
+
+/** Half the width of a monster's body in pixels: how close two bodies may come when monsters move freely. */
+private const val NPC_BODY_RADIUS = 11f
+
+/**
+ * One free-movement step of [npc] towards the point ([goalX], [goalY]) (a body centre, map pixels), [speed] pixels long. A step that
+ * would enter a blocked tile, or a tile another body holds, or crowd another monster or a player, is dropped; a blocked diagonal slides
+ * along whichever axis is open, so monsters walk round corners instead of sticking. Returns [npc] itself when it did not move.
+ */
+internal fun WorldSimulation.stepNpcPixels(npc: MapNpcInstance, map: MapDefinition, goalX: Float, goalY: Float, speed: Float): MapNpcInstance {
+    val ts = map.tileSize
+    val px = npc.bodyX(ts)
+    val py = npc.bodyY(ts)
+    val dx = goalX - (px + ts / 2f)
+    val dy = goalY - (py + ts / 2f)
+    val dist = kotlin.math.sqrt(dx * dx + dy * dy)
+    if (dist < 1f) return npc
+    val step = minOf(speed, dist)
+    val vx = dx / dist * step
+    val vy = dy / dist * step
+    val gap = NPC_BODY_RADIUS * 2f
+    val npcs = mapNpcs[map.id].orEmpty()
+
+    fun attempt(mx: Float, my: Float): MapNpcInstance? {
+        if (mx == 0f && my == 0f) return null
+        val nx = px + mx
+        val ny = py + my
+        if (nx + ts / 2f < 0f || ny + ts / 2f < 0f) return null
+        val tile = TileCoord(((nx + ts / 2f) / ts).toInt(), ((ny + ts / 2f) / ts).toInt())
+        if (tile != npc.tileCoord) {
+            if (!map.isInBounds(tile)) return null
+            val dir = Direction.fromDelta((tile.x - npc.tileX).coerceIn(-1, 1), (tile.y - npc.tileY).coerceIn(-1, 1)) ?: return null
+            if (!canNpcStepTo(map, npc.tileCoord, tile, dir)) return null
+        }
+        val ncx = nx + ts / 2f
+        val ncy = ny + ts / 2f
+        // Bodies keep their distance: a step is refused only if it brings it closer than the gap and closer than it already was.
+        fun crowds(ox: Float, oy: Float): Boolean {
+            val before = kotlin.math.hypot((ox - (px + ts / 2f)).toDouble(), (oy - (py + ts / 2f)).toDouble())
+            val after = kotlin.math.hypot((ox - ncx).toDouble(), (oy - ncy).toDouble())
+            return after < gap && after < before
+        }
+        if (npcs.any { it.instanceId != npc.instanceId && it.isAlive && crowds(it.bodyX(ts) + ts / 2f, it.bodyY(ts) + ts / 2f) }) return null
+        if (players.values.any { it.position.mapId == map.id && it.isAlive(game.lifeVitalId) && crowds(it.position.pixelX + ts / 2f, it.position.pixelY + ts / 2f) }) return null
+        val dir = if (kotlin.math.abs(mx) >= kotlin.math.abs(my)) (if (mx >= 0f) Direction.RIGHT else Direction.LEFT) else (if (my >= 0f) Direction.DOWN else Direction.UP)
+        return npc.copy(subPixel = true, pixelX = nx, pixelY = ny, tileX = tile.x, tileY = tile.y, direction = dir)
+    }
+    return attempt(vx, vy) ?: attempt(vx, 0f) ?: attempt(0f, vy) ?: npc
 }
 
 internal fun WorldSimulation.canNpcStepTo(map: MapDefinition, from: TileCoord, to: TileCoord, dir: Direction): Boolean {

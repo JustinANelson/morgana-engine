@@ -669,6 +669,21 @@ class MorganaGame(
     private fun resolveAim(key: String, cursor: Pair<Float, Float>?, moveX: Int, moveY: Int): Pair<Float, Float>? {
         val centre = worldState.playerCentre()
         if (key == "SPACE") {
+            if (centre != null) {
+                // A dodge backs away from the enemy being fought (the locked one, else the nearest in reach), whichever way the stick points.
+                // A back-step skill already moves opposite its aim, so it aims at the enemy instead.
+                val candidates = worldState.targetCandidates()
+                val locked = worldState.lockedNpcId?.let { id -> candidates.firstOrNull { it.id == id } }
+                val threat = locked ?: candidates.filter { com.morgana.client.input.CombatTargeting.distance(centre.first, centre.second, it) <= com.morgana.client.input.CombatTargeting.AUTO_RANGE }
+                    .minByOrNull { com.morgana.client.input.CombatTargeting.distance(centre.first, centre.second, it) }
+                if (threat != null) {
+                    val sign = if ((hud.skillForToken("SPACE")?.moves?.sumOf { it.forwardPixels } ?: 1) < 0) -1f else 1f
+                    var ax = (centre.first - threat.x) * sign
+                    var ay = (centre.second - threat.y) * sign
+                    val len = kotlin.math.hypot(ax, ay)
+                    if (len > 1f) return (centre.first + ax / len * 100f) to (centre.second + ay / len * 100f)
+                }
+            }
             return if (centre != null && (moveX != 0 || moveY != 0)) (centre.first + moveX * 100f) to (centre.second + moveY * 100f) else null
         }
         hud.manualAim()?.let { return it }

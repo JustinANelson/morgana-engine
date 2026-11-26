@@ -279,7 +279,7 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
                 val key = "${hb.hitGroup}:${npc.instanceId}"
                 val count = st.groupCounts[hb.hitGroup] ?: 0
                 if (key in st.hits || (hb.maxTargets > 0 && count >= hb.maxTargets)) continue
-                if (!ActionCombatRules.inShape(shape, ox, oy, st.fx, st.fy, npc.tileX * ts + ts / 2.0, npc.tileY * ts + ts / 2.0, targetRadius)) continue
+                if (!ActionCombatRules.inShape(shape, ox, oy, st.fx, st.fy, npc.bodyX(ts) + ts / 2.0, npc.bodyY(ts) + ts / 2.0, targetRadius)) continue
                 st = st.copy(hits = st.hits + key, groupCounts = st.groupCounts + (hb.hitGroup to count + 1), hit = true)
                 hitNpc(sim, sim.players[player.id] ?: player, npc, hb.hit, st, out)
                 bestStop = maxOf(bestStop, hb.hit.hitStopTicks)
