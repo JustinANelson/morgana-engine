@@ -229,7 +229,8 @@ data class ActionSkillDefinition(
     val soundId: String = "",
     /**
      * A built-in visual the client draws when the skill starts, needing no art: "arrow_rain" (arrows rise and fall on the aimed spot),
-     * "dodge" (a dust trail along the dash) or "spin" (a whirl at the landing point). Empty for none.
+     * "dodge" (a dust trail along the dash) or "spin" (a whirl at the landing point). Several can be given separated by commas
+     * ("arrow_rain,electrify"). Empty for none.
      */
     val effect: String = "",
     /** On-disk document schema version; see [ContentSchema]. */
@@ -294,6 +295,11 @@ data class WeaponSetDefinition(
     val empoweredSkillId: Int = 0,
     val momentumPerDodge: Int = 34,
     val empowerTicks: Int = 200,
+    /**
+     * True: instead of a dodge meter, a critical hit by the character arms the transformation: for [empowerTicks] the button for
+     * [empowerSkillId] becomes [empoweredSkillId], and using it spends the transformation. The player chooses when to cast it.
+     */
+    val empowerOnCrit: Boolean = false,
     /** On-disk document schema version; see [ContentSchema]. */
     val schemaVersion: Int = ContentSchema.CURRENT_VERSION
 )

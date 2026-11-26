@@ -2,6 +2,8 @@
 
 ## 2026-11-26
 
+* **Change** - **A crit arms a skill transformation instead of electrifying the cast** ([action combat](/systems/action_combat.md)): with `empowerOnCrit` a critical hit arms a transformed version of a chosen skill (Scatter Shot -> Thunder Volley, Lightning Strike -> Storm Strike) that the player casts when they like; it is spent on use. The Cyclone leap now keeps the sprite with the server during its hop.
+
 * **Add** - **Per-skill crits, electric hits that stun, radial knockback, a hopping leap** ([action combat](/systems/action_combat.md)): skills get their own crit chance from agility, electrical hits stun with a crackling effect, a crit electrifies Scatter Shot, Shield Bash rushes and pushes everything round its target away, and Cyclone is a faster leap with a hop.
 
 * **Add** - **Momentum from successful dodges, built-in skill visuals, tappable player frame** ([action combat](/systems/action_combat.md)): dodges that avoid a hit fill a meter that empowers one skill per class (Storm Strike, Arrow Storm); skills can name a built-in effect (arrow rain, dodge dust, spin, shockwave, bolt); the player frame opens the character screen and the joystick no longer starts under it.

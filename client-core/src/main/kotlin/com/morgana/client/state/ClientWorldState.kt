@@ -1200,7 +1200,7 @@ class ClientWorldState {
                         playerVisuals[packet.sourceId]?.let { v ->
                             v.hopTimer = 0f
                             v.hopDuration = maxOf(0.12f, (packet.delayTicks - 1) * SkillFx.TICK_SECONDS)
-                            v.hopPeak = 30f
+                            v.hopPeak = 38f
                         }
                     }
                 }
@@ -1756,12 +1756,15 @@ class ClientWorldState {
         } else {
             vis.isMoving = true
             vis.walkCycleTimer += deltaSeconds
-            if (dist <= maxStep) {
+            // While a skill's leap hop is in the air the sprite keeps up with the server (which carries the character across in a few
+            // ticks) instead of crawling at walking speed, so it arrives with the jump rather than rushing in after it.
+            val step = if (vis.hopDuration > 0f) maxOf(maxStep, dist * (deltaSeconds * 28f).coerceAtMost(1f)) else maxStep
+            if (dist <= step) {
                 vis.renderPixelX = vis.targetPixelX
                 vis.renderPixelY = vis.targetPixelY
             } else {
-                vis.renderPixelX += (dx / dist) * maxStep
-                vis.renderPixelY += (dy / dist) * maxStep
+                vis.renderPixelX += (dx / dist) * step
+                vis.renderPixelY += (dy / dist) * step
             }
         }
     }

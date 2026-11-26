@@ -124,7 +124,13 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         if (entry != null) {
             // An empowered character's upgraded skill replaces the plain one.
             val upgraded = set.empowerSkillId != 0 && set.empoweredSkillId != 0 && entry.skillId == set.empowerSkillId && state.empoweredUntil > now
-            return startSkill(sim, player, state, if (upgraded) set.empoweredSkillId else entry.skillId, aim, out)
+            val started = startSkill(sim, player, state, if (upgraded) set.empoweredSkillId else entry.skillId, aim, out)
+            if (upgraded && set.empowerOnCrit && started != null) {
+                // A crit-armed transformation is spent when it is cast.
+                out.add(WorldSimulationEvent.MomentumChanged(player.id, 0, 0))
+                return started.copy(empoweredUntil = 0L)
+            }
+            return started
         }
         return if (state != st) state else null
     }
@@ -158,7 +164,7 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
             out.add(WorldSimulationEvent.CharacterUpdated(updated))
         }
         if (skill.animationId > 0) out.add(WorldSimulationEvent.AnimationTriggered(updated.position.mapId, updated.position.tileX, updated.position.tileY, skill.animationId))
-        if (skill.effect.isNotBlank()) out.add(skillEffect(sim, updated, skill, cx, cy, vector, aim, tileSize))
+        for (name in skill.effect.split(',').map { it.trim() }.filter { it.isNotEmpty() }) out.add(skillEffect(sim, updated, skill, name, cx, cy, vector, aim, tileSize))
         val guard = skill.guard
         // A leap lands on the aimed point, held within the move's range of where the skill began.
         val leapMove = skill.moves.firstOrNull { it.toAim }
@@ -187,7 +193,7 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
 
     /** The built-in visual for a skill that is starting: where it goes (the ground point, the leap, or the dash's end) and its timing. */
     private fun skillEffect(
-        sim: WorldSimulation, player: CharacterState, skill: ActionSkillDefinition, cx: Double, cy: Double,
+        sim: WorldSimulation, player: CharacterState, skill: ActionSkillDefinition, effectName: String, cx: Double, cy: Double,
         vector: Pair<Double, Double>, aim: Pair<Double, Double>?, tileSize: Int
     ): WorldSimulationEvent.SkillEffect {
         var toX = cx
@@ -220,7 +226,7 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         val last = skill.hitboxes.maxOfOrNull { it.toTick } ?: first
         val radius = skill.hitboxes.maxOfOrNull { it.radiusPixels } ?: 0
         return WorldSimulationEvent.SkillEffect(
-            mapId = player.position.mapId, tileX = player.position.tileX, tileY = player.position.tileY, effect = skill.effect,
+            mapId = player.position.mapId, tileX = player.position.tileX, tileY = player.position.tileY, effect = effectName,
             fromX = cx.toFloat(), fromY = cy.toFloat(), toX = toX.toFloat(), toY = toY.toFloat(), radius = radius.toFloat(),
             delayTicks = first, spanTicks = (last - first).coerceAtLeast(1), sourceId = player.id
         )
@@ -353,6 +359,7 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
                 if (!ActionCombatRules.inShape(shape, ox, oy, st.fx, st.fy, npc.bodyX(ts) + ts / 2.0, npc.bodyY(ts) + ts / 2.0, targetRadius)) continue
                 st = st.copy(hits = st.hits + key, groupCounts = st.groupCounts + (hb.hitGroup to count + 1), hit = true)
                 val result = hitNpc(sim, sim.players[player.id] ?: player, npc, hb.hit, st, out)
+                if (result.crit) st = armOnCrit(sim, player, st, out)
                 if (result.crit && hb.hit.critElectrifies && !st.electrified) {
                     // A critical hit electrifies the rest of the skill: a flash crackles over the area it is hitting.
                     st = st.copy(electrified = true)
@@ -406,6 +413,31 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
     private fun defenderAttributes(sim: WorldSimulation, npc: MapNpcInstance?): Map<String, Int> {
         val def = npc?.let { sim.npcs[it.npcId] }
         return sim.game.definition.attributes.associate { a -> a.id to (def?.attributes?.get(a.id) ?: a.base) }
+    }
+
+    /**
+     * A critical hit by a character whose weapon set transforms a skill on crits arms the transformation (when it is not already
+     * armed, and not while the transformed skill itself is the one being used, so it cannot re-arm itself).
+     */
+    private fun armOnCrit(sim: WorldSimulation, player: CharacterState, st: ActionState, out: MutableList<WorldSimulationEvent>): ActionState {
+        val set = sim.weaponSets[st.setId] ?: return st
+        val now = sim.currentTick
+        if (!set.empowerOnCrit || set.empowerSkillId == 0 || set.empoweredSkillId == 0 || st.empoweredUntil > now || st.skillId == set.empoweredSkillId) return st
+        val ts = sim.maps[player.position.mapId]?.tileSize ?: 32
+        val cx = (player.position.pixelX + ts / 2.0).toFloat()
+        val cy = (player.position.pixelY + ts / 2.0).toFloat()
+        out.add(WorldSimulationEvent.SkillEffect(player.position.mapId, player.position.tileX, player.position.tileY, "empower_burst", cx, cy, cx, cy, 70f, 0, 10, player.id))
+        val name = sim.actionSkills[set.empoweredSkillId]?.name ?: "Upgrade"
+        out.add(WorldSimulationEvent.FloatingTextEmitted(player.position.mapId, player.position.tileX, player.position.tileY, "$name ready!", "SPELL", "#FBBF24"))
+        out.add(WorldSimulationEvent.MomentumChanged(player.id, 0, set.empowerTicks))
+        return st.copy(empoweredUntil = now + set.empowerTicks)
+    }
+
+    /** A crit by a free-flight arrow (resolved outside the character's own tick) arms the transformation the same way. */
+    fun projectileCrit(sim: WorldSimulation, player: CharacterState, out: MutableList<WorldSimulationEvent>) {
+        val st = sim.actionStates[player.id] ?: return
+        val armed = armOnCrit(sim, player, st, out)
+        if (armed !== st) sim.actionStates[player.id] = armed
     }
 
     /** What landing one hit did: whether it was a critical hit and whether it was electrical. */
@@ -687,5 +719,9 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
  * The damage a player takes from a monster, a boss zone or a monster's projectile after action-combat defence: an `INVULNERABLE`
  * window takes none, a guard takes less. Other combat modules leave [damage] alone.
  */
+internal fun WorldSimulation.actionCrit(player: CharacterState, out: MutableList<WorldSimulationEvent>) {
+    (combat as? ActionCombatModule)?.projectileCrit(this, player, out)
+}
+
 internal fun WorldSimulation.actionDefence(player: CharacterState, sourceTileX: Int, sourceTileY: Int, damage: Int, out: MutableList<WorldSimulationEvent>): Int =
     (combat as? ActionCombatModule)?.incomingDamage(this, player, sourceTileX, sourceTileY, damage, out) ?: damage

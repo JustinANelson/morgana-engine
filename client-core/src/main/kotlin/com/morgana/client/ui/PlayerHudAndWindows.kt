@@ -2877,7 +2877,8 @@ class PlayerHudAndWindows(
     /** The dodge's momentum meter 0..1: how full it is, or while empowered how much of the empowerment is left. */
     private fun momentumMeter(): Float {
         val ws = activeWeaponSet()
-        if (ws == null || ws.empowerSkillId == 0) return 0f
+        // Only a dodge-meter set shows the meter; a crit-armed transformation shows on the skill's own button instead.
+        if (ws == null || ws.empowerSkillId == 0 || ws.empowerOnCrit) return 0f
         if (com.morgana.client.render.ClientDebug.empower == "meter") return 0.68f
         if (com.morgana.client.render.ClientDebug.empower == "on") return 0.7f
         if (worldState.isEmpowered()) {
@@ -3159,7 +3160,7 @@ class PlayerHudAndWindows(
                 key = key, glyph = { button.label }, tint = tint, visible = visible, keyHint = { if (keyHints) keyName else "" },
                 cooldown = { skillCooldownFraction(button.token) },
                 meter = { if (button == com.morgana.client.input.ActionCombatInput.Button.DODGE) momentumMeter() else 0f },
-                meterHot = { button == com.morgana.client.input.ActionCombatInput.Button.DODGE && worldState.isEmpowered() },
+                meterHot = { button == com.morgana.client.input.ActionCombatInput.Button.DODGE && worldState.isEmpowered() && activeWeaponSet()?.empowerOnCrit == false },
                 cooldownLabel = { skillCooldownLabel(button.token) },
                 dimmed = { skillCooldownLeftMs(button.token) > 0L || skillCantPay(button.token) }
             ) { onCombatInput(button) }

@@ -1,5 +1,6 @@
 package com.morgana.domain.sim
 
+import com.morgana.domain.combat.actionCrit
 import com.morgana.domain.combat.actionDefence
 import com.morgana.domain.content.NpcBehavior
 import com.morgana.domain.content.NpcDefinition
@@ -198,6 +199,7 @@ private fun WorldSimulation.stepFreeProjectile(proj: MapProjectile, mapId: Int, 
             if (!npc.isAlive || npc.instanceId in hitIds || !isHostileNpc(npc)) continue
             if (segmentDistance2(proj.px, proj.py, nx, ny, npc.bodyX(ts) + ts / 2f, npc.bodyY(ts) + ts / 2f) > reach2) continue
             applyDamageToNpc(attacker, npc, proj.damage, isCrit = proj.crit, out = out)
+            if (proj.crit) actionCrit(attacker, out)
             hitSomething = true
             hitIds = hitIds + npc.instanceId
             if (!proj.pierce) break

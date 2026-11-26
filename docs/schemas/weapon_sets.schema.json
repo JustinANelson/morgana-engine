@@ -67,6 +67,9 @@
                 },
                 "empowerTicks": {
                     "type": "integer"
+                },
+                "empowerOnCrit": {
+                    "type": "boolean"
                 }
             },
             "required": [

@@ -29,6 +29,9 @@ Every key press is an **input token** (`LMB`, `RMB`, `SPACE`, `Q`, `E`, `F`, `TA
 - **Super armour**: while a `SUPER_ARMOR` (or invulnerable) window is open, a stun or root on the character is removed instead of ending the skill; otherwise a stun ends the skill.
 - **State**: `WorldSimulation.actionStates` (`ActionState` per character, a sorted map), part of the state hash; cleaned up when idle. Not saved.
 
+## Crit-armed transformations (2026-11-26)
+`WeaponSetDefinition.empowerOnCrit` turns the empower machinery (`empowerSkillId`, `empoweredSkillId`, `empowerTicks`) into a crit reward: a critical hit by the character (any skill, arrows included through `actionCrit`) arms the transformation for `empowerTicks`; while armed the entry for `empowerSkillId` starts `empoweredSkillId` instead, and casting it spends the transformation. The transformed skill cannot re-arm itself. The client shows a "<name> ready!" banner, renames the button with a gold rim, and keeps the golden sparks; a skill's `effect` may list several effects separated by commas. Tests: `CritTransformTest`.
+
 ## Crits, electric hits, bashes (2026-11-26)
 - **Per-skill crit chance**: a hit's chance is the game's agility-based `combat.critChanceBp` scaled by `SkillHit.critScalePercent` (100 = as is), plus `critBonusBp` flat, plus gear and build bonuses. Free-angle projectiles roll their crit when fired (`MapProjectile.crit`).
 - **Electric hits**: `SkillHit.electric` stuns the monster for `stunTicks` (status `action-shock`) and the client shows a crackling `shock` effect on it (and stars over any stunned monster). `critElectrifies` makes a critical hit electrify the rest of the skill's hits (and flash an `electrify` effect over the area). Chain lightning stuns everything it strikes. Tests: `ElectricHitTest`.
