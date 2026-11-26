@@ -2,6 +2,8 @@
 
 ## 2026-11-26
 
+* **Fix** - **Monsters no longer blink across the field on dashes, pulls and knockbacks** ([client state](/client/client_state_and_prediction.md)): a gap of more than 40 px between where the server put an entity and where it is drawn is now closed in about 0.2 s instead of at walking speed, and only a gap over 320 px (was 96) snaps. Wolf lunges, Gathering Cry pulls and Shield Bash pushes glide instead of teleporting.
+
 * **Fix** - **Melee arcs forgive a close target** ([action combat](/systems/action_combat.md)): an ARC hitbox now widens its cone by the angle the target's body radius covers from where the attacker stands, so a monster that circles during the windup is still hit when any part of it is inside the cone (before, it was tested as a point, and at close range a small sidestep was a miss).
 
 * **Add / Fix** - **Bot load test; a crowd costs a fifth of the bandwidth; NaN aim no longer breaks the tick** ([load testing](/server/load_testing.md)): `tools/morgana-ctl/loadtest.mjs` runs N bots against a throwaway or running server and reports tick time and per-client bandwidth by packet type. Its first run showed monsters and players re-sent whole on every step and the projectile list re-sent per shot, so 60 bots in one spot cost 437 KB/s each. Moves now go out as compact `s_npc_pos`/`s_player_pos` batched in `s_moves` at 10 Hz, projectiles as `s_proj_delta` (clients fly free shots on), and changes no client reads are not sent: 90 KB/s each. A non-finite `aimX`/`aimY` made a NaN projectile that failed every tick's encoding; such aims are now ignored.

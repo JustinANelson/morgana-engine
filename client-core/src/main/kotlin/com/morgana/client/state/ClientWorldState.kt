@@ -1488,7 +1488,7 @@ class ClientWorldState {
 
     private fun syncNpcVisualTarget(id: String, px: Float, py: Float, dir: Direction, snapImmediately: Boolean) {
         val existing = npcVisuals[id]
-        if (existing == null || snapImmediately || hypot((existing.renderPixelX - px).toDouble(), (existing.renderPixelY - py).toDouble()) > 96.0) {
+        if (existing == null || snapImmediately || hypot((existing.renderPixelX - px).toDouble(), (existing.renderPixelY - py).toDouble()) > 320.0) {
             npcVisuals[id] = EntityVisualSmoothing(
                 renderPixelX = px,
                 renderPixelY = py,
@@ -1870,7 +1870,13 @@ class ClientWorldState {
             vis.walkCycleTimer += deltaSeconds
             // While a skill's leap hop is in the air the sprite keeps up with the server (which carries the character across in a few
             // ticks) instead of crawling at walking speed, so it arrives with the jump rather than rushing in after it.
-            val step = if (vis.hopDuration > 0f) maxOf(maxStep, dist * (deltaSeconds * 28f).coerceAtMost(1f)) else maxStep
+            // A long gap is a dash, pull or knockback the server carried out in a tick or two: close it fast (about a fifth of a second)
+            // instead of crawling at walking speed, which looked like the monster blinking across the field.
+            val step = when {
+                vis.hopDuration > 0f -> maxOf(maxStep, dist * (deltaSeconds * 28f).coerceAtMost(1f))
+                dist > 40f -> maxOf(maxStep, dist * (deltaSeconds * 14f).coerceAtMost(1f))
+                else -> maxStep
+            }
             if (dist <= step) {
                 vis.renderPixelX = vis.targetPixelX
                 vis.renderPixelY = vis.targetPixelY
