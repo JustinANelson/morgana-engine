@@ -1,7 +1,7 @@
 {
     "formatVersion": 1,
     "seed": 4208861222,
-    "contentFingerprint": "0d7d577d931f6cb3",
+    "contentFingerprint": "4090088516d0e8b6",
     "inputs": [
         {
             "_type": "com.morgana.domain.replay.SimInput.SpawnPlayer",
@@ -226,6 +226,19 @@
                 "restedXp": 0,
                 "lastSeenWorldTick": 0,
                 "upgradePityStacks": 0,
+                "skillMasteryLevels": {},
+                "skillMasteryProgress": {},
+                "trainingState": {
+                    "focusKind": "",
+                    "focusId": "",
+                    "foodTier": 0,
+                    "fueledSeconds": 0,
+                    "capSeconds": 0,
+                    "lastOnlineEpochMs": 0,
+                    "afkActive": false,
+                    "afkDayIndex": 0,
+                    "afkUsedSecondsToday": 0
+                },
                 "schemaVersion": 2
             }
         },
@@ -1229,39 +1242,39 @@
     "checkpoints": [
         {
             "tick": 25,
-            "hash": "e1e3f903883f9e72"
+            "hash": "045f4e04cd942bb0"
         },
         {
             "tick": 50,
-            "hash": "84ac3d75048a6d5b"
+            "hash": "8b2f1a8e3d3bd8f3"
         },
         {
             "tick": 75,
-            "hash": "e3610ddc2ba917c8"
+            "hash": "d5189f3bb63db776"
         },
         {
             "tick": 100,
-            "hash": "88d348346f3b6487"
+            "hash": "de052b09b288279f"
         },
         {
             "tick": 125,
-            "hash": "9b7e726571e27f36"
+            "hash": "9177722da89e6780"
         },
         {
             "tick": 150,
-            "hash": "0d085781b4ee5ee7"
+            "hash": "3a41923a065a1d27"
         },
         {
             "tick": 175,
-            "hash": "68aad55a7d004b20"
+            "hash": "df2617cf62028102"
         },
         {
             "tick": 200,
-            "hash": "53930b78e352e4ac"
+            "hash": "cfd0a2bba512f412"
         }
     ],
     "finalTick": 217,
-    "finalHash": "9b9eb62e03c8e3a1",
+    "finalHash": "51dd063d4f3212ab",
     "gaps": [],
     "startingEpochTicks": 0,
     "startingWorldSwitches": {},

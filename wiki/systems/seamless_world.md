@@ -1,5 +1,5 @@
 ---
-type: System
+type: Simulation System
 title: "Seamless World (worldLayout)"
 description: "An option that places maps in one shared world grid, so walking off an edge lands on the map that lies there, at the same place, with no warp or reload."
 tags: [system, maps, world, client, server]

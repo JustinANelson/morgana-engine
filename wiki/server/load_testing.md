@@ -1,3 +1,11 @@
+---
+type: Playbook
+title: "Load Testing with Bots"
+description: "How to run tools/morgana-ctl/loadtest.mjs against a throwaway or live server to measure tick time and bandwidth."
+tags: [server, performance, loadtest, tooling]
+generated: { by: antigravity, at: 2026-11-27T14:53:00-05:00 }
+---
+
 # Load testing with bots
 
 `tools/morgana-ctl/loadtest.mjs` logs N bots into a server with one-time dev tickets, puts them all on one map and has them walk and fight at the rate of a real client (a move every 50 ms, a skill every 350-500 ms, a ping every 2 s). It reports what the server saw (tick time, heap) and what each client received (kilobytes and packets per second by packet type, round trip), so you can see where a crowded fight spends its bandwidth.

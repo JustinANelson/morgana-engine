@@ -25,9 +25,10 @@ class RpgSpriteGeneratorTest {
         assertEquals(12, RpgNpcKind.entries.size)
         assertEquals(22, RpgEnemyKind.entries.size)
         val (npcSheet, npcTiles) = rpgGen.generateNpcSheet(RpgNpcKind.CAPTAIN)
-        assertEquals(4 * 32, npcSheet.width)
+        val expectedCols = PaperDollAction.EXTENDED.maxOf { it.defaultFrames }
+        assertEquals(expectedCols * 32, npcSheet.width)
         assertEquals(36 * 48, npcSheet.height)
-        assertEquals(36 * 4, npcTiles.size)
+        assertEquals(36 * expectedCols, npcTiles.size)
 
         for (enemy in RpgEnemyKind.entries) {
             val frame = rpgGen.generateEnemyFrame(enemy, Direction8.S, PaperDollAction.IDLE, 0)

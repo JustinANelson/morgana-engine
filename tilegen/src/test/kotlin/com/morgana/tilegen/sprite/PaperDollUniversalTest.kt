@@ -131,9 +131,10 @@ class PaperDollUniversalTest {
         val sheet1 = gen.generateUniversalSheet("archmage", loadout, actions, dirs)
         val sheet2 = gen.generateUniversalSheet("archmage", loadout, actions, dirs)
         assertArrayEquals(sheet1.compositeSheet.pixels, sheet2.compositeSheet.pixels)
-        assertEquals(4, sheet1.columns)
+        val expectedCols = actions.maxOf { it.defaultFrames }
+        assertEquals(expectedCols, sheet1.columns)
         assertEquals(actions.size * dirs.size, sheet1.rows)
-        assertEquals(4 * 64, sheet1.compositeSheet.width)
+        assertEquals(expectedCols * 64, sheet1.compositeSheet.width)
         assertEquals(actions.size * dirs.size * 64, sheet1.compositeSheet.height)
         assertTrue(sheet1.layerSheets.containsKey(PaperDollSlot.BODY))
         assertTrue(sheet1.layerSheets.containsKey(PaperDollSlot.BACK_ATTACHMENT))

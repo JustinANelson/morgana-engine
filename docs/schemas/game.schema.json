@@ -151,6 +151,26 @@
                         }
                     ]
                 },
+                "skillMastery": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.game.SkillMasteryConfig"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "training": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.game.TrainingConfig"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
                 "nobility": {
                     "anyOf": [
                         {
@@ -1195,6 +1215,47 @@
                 "id",
                 "name"
             ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.SkillMasteryConfig": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "maxLevel": {
+                    "type": "integer"
+                },
+                "usesPerLevel": {
+                    "type": "integer"
+                },
+                "damagePercentPerLevel": {
+                    "type": "integer"
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.TrainingConfig": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "offlineHitsPerMinute": {
+                    "type": "integer"
+                },
+                "onlineAfkDailyLimitMinutes": {
+                    "type": "integer"
+                },
+                "onlineAfkHitsPerMinute": {
+                    "type": "integer"
+                },
+                "onlineAfkIntervalTicks": {
+                    "type": "integer"
+                }
+            },
+            "required": [],
             "additionalProperties": false
         },
         "com.morgana.domain.game.NobilityDefinition": {

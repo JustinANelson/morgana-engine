@@ -67,6 +67,7 @@ Maintenance knowledge base for Morgana ORPG, written for human and AI contributo
 * [Role-Play Chat](/systems/roleplay_chat.md) - The rolePlayChat module: /me actions, out-of-character talk, shouts, quiet speech and staff narration, speech range, and how older clients see it.
 * [Scheduler](/systems/scheduler.md) - Real-world-time events (a weekly reset, a daily bonus, a booked window) with advance warnings, announced in chat and passed to Lua and other systems, deterministic through a recorded wall-clock input.
 * [Script Host and Sandbox](/systems/scripting.md) - Sandboxed Lua scripting runtime powered by Luak with deterministic instruction budgets, memory ceilings, world queries, and declarative effects.
+* [Seamless World (worldLayout)](/systems/seamless_world.md) - An option that places maps in one shared world grid, so walking off an edge lands on the map that lies there, at the same place, with no warp or reload.
 * [System Seams and Installed Systems](/systems/system_seams.md) - How the kernel reaches the systems built on it: twelve seam interfaces, WorldSimulation.install, the installed systems, the boundary test and what stays in the kernel.
 * [Territory (claims)](/systems/territory.md) - Claiming land: only owners build inside a claim, claims keep apart and hold limited pieces, claims can be safe zones opened to attack by timed windows. Built on world state and the scheduler.
 * [Tick Loop and System Layout](/systems/tick_loop.md) - The exact order of work in one simulation tick and how WorldSimulation delegates to system files.
@@ -77,7 +78,6 @@ Maintenance knowledge base for Morgana ORPG, written for human and AI contributo
 
 * [Admin Web Panel and REST API](/server/admin_panel.md) - The operator's web panel and JSON API: how to turn it on, the token, every endpoint, what it can do, the security rules and how it is built.
 * [Agent Control (admin API for LLMs and scripts)](/server/agent_control.md) - How an LLM or script makes accounts and characters, logs in without a password, and changes the live world through the admin API, the morgana-ctl CLI and its MCP server.
-* [Load testing with bots](/server/load_testing.md) - A bot load test (morgana-ctl loadtest.mjs) that reports tick time and per-client bandwidth by packet type, and the numbers before and after the movement and projectile packets were slimmed.
 * [Characters per Account](/server/characters.md) - How one account holds several characters: the list after login, creating, choosing and deleting, the rules, and what older clients see.
 * [Connection Limits and IP Bans](/server/connection_limits.md) - Per-address connection caps, connection-rate limits, strikes and temporary bans, the pre-login timeout, and operator commands.
 * [World Coordinator](/server/coordinator.md) - The single synchronized authority: sessions, authentication, packet handling, persistence triggers, and event dispatch.
@@ -85,6 +85,7 @@ Maintenance knowledge base for Morgana ORPG, written for human and AI contributo
 * [Game-Owned Art](/server/game_assets.md) - A game ships its own tileset and sprite PNGs in its assets/ folder; the server validates, advertises and serves them.
 * [Game Wiki: a Browsable Wiki Generated from the Data Files](/server/game_wiki.md) - A cross-linked wiki of every item, monster, spell, quest, recipe, shop, resource, map and class, with a Balance report, built from game.json and the content JSON; static files or served live at /wiki/.
 * [Kotlin Hook API](/server/hook_api.md) - Typed server plugin callbacks (login, items, spells, kills, deaths, chat, custom events) and where game rules now live.
+* [Load Testing with Bots](/server/load_testing.md) - How to run tools/morgana-ctl/loadtest.mjs against a throwaway or live server to measure tick time and bandwidth.
 * [Moderation Tools](/server/moderation.md) - Bans, mutes, kicks with reasons, a player report queue and an audit log: commands, who may use them, what is stored and what is not done yet.
 * [New Realm Wizard](/server/new_realm_wizard.md) - The guided flow (and matching CLI) for creating a realm: pick a starting template and which optional systems are on.
 * [Optional Modules and server.json](/server/optional_modules.md) - Which systems an operator can switch off, how server.json configures them, and where each switch is enforced.
@@ -150,13 +151,12 @@ Maintenance knowledge base for Morgana ORPG, written for human and AI contributo
 
 ## Playbooks
 
-* [Seamless World](/systems/seamless_world.md) - The `worldLayout` option: maps placed in one shared tile grid are walked between without warps or reloads, at any edge or corner.
-* [AI-Assisted Mapping](/playbooks/ai_assisted_mapping.md) - Noise for the land, a picture and text summary to read it, then an LLM places roads, camps and landmarks on what exists.
 * [Add a New Content Type](/playbooks/add_content_type.md) - Every file to touch when adding a content collection (model to editor), in order.
 * [Add an Event Command](/playbooks/add_event_command.md) - Steps to add a new page-event command.
 * [Add a Network Packet](/playbooks/add_packet.md) - Checklist for a new client or server packet.
 * [Add a Simulation Rule](/playbooks/add_simulation_rule.md) - How to add gameplay behavior in the right system file while preserving determinism.
 * [Add a Tile Attribute](/playbooks/add_tile_attribute.md) - Steps to introduce a new TileAttribute subtype end to end.
+* [AI-Assisted Mapping](/playbooks/ai_assisted_mapping.md) - How a person or an LLM builds an organic, varied map: noise for the land, a picture and a text summary to read it, then placement of camps and landmarks on what the land made.
 * [Author Content as Files (Humans and Agents)](/playbooks/author_content_as_files.md) - The file-first content authoring loop with validation and hot reload.
 * [Browser Smoke Test](/playbooks/browser_smoke_test.md) - Run and extend the headless-Chrome smoke test of the web client: what it covers, how the client describes itself to it, and how to add a step.
 * [Build and Try the SDK](/playbooks/build_the_sdk.md) - Package the engine as a self-contained SDK folder and zip for other developers, what is in it, and how to test it as a newcomer would.

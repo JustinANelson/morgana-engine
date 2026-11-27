@@ -157,6 +157,15 @@
                 "mountSpeedPercent": {
                     "type": "integer"
                 },
+                "trainingTier": {
+                    "type": "integer"
+                },
+                "trainingMinutes": {
+                    "type": "integer"
+                },
+                "trainingCapMinutes": {
+                    "type": "integer"
+                },
                 "statusEffectToApply": {
                     "anyOf": [
                         {
@@ -229,7 +238,8 @@
                                 "MAIN_HAND",
                                 "OFF_HAND",
                                 "ACCESSORY",
-                                "HANDS"
+                                "HANDS",
+                                "MOUNT"
                             ]
                         },
                         {
@@ -268,7 +278,8 @@
                             "MAIN_HAND",
                             "OFF_HAND",
                             "ACCESSORY",
-                            "HANDS"
+                            "HANDS",
+                            "MOUNT"
                         ]
                     }
                 },
