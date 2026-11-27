@@ -2,6 +2,8 @@
 
 ## 2026-11-26
 
+* **Add** - **`nodes` recipe op: gathering nodes from a map recipe** ([AI-assisted mapping](/playbooks/ai_assisted_mapping.md)): scatters a prop over cells of the given terrains and makes the middle of its base row a `resource_node` tile for `resourceId` (count or one per `perTiles` eligible tiles, `spacing` apart, never on other props or reserved ground). The prop is the node's picture; a depleted node is covered by the ground under it (the rest of a tall prop stays). Test: `MapCompilerTest`.
+
 * **Add** - **`ItemDefinition.upgradeCost`: a per-item price for chain upgrades** ([combat](/systems/combat.md)): several materials plus gold. An `upgrade_gear` level upgrade that names no material charges the item's own cost, so each link of an item chain (`nextTierItemId`) can cost its own mix; everything is taken together, only if the player has the level and all of it, and the piece keeps its `+` level, quality roll and gems (and gains any starting sockets of the new item). Validation checks the materials exist. Test: `ChainUpgradeTest`.
 
 * **Add** - **`ItemDefinition.sockets`: gear that starts with its sockets** ([combat](/systems/combat.md)): a count of empty sockets (0 to 6) a new piece starts with, applied wherever a new item is created (`Inventory.addItem`, monster drops, generated floor loot). A game that gives all gear its maximum sockets sets it on each piece and offers no way to add more; 0 (the default) keeps the old behaviour (sockets only from drops and upgrades). Validation checks the range. Test: `StartingSocketsTest`.

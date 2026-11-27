@@ -273,6 +273,38 @@ object MapCompiler {
                     if (ok) placeProp(name, px, py, emptyList(), op.walkable)
                 }
             }
+            is NodesOp -> {
+                require(op.props.isNotEmpty()) { "nodes needs at least one prop" }
+                val allowed = op.terrains.map { terrain(it) }.toSet()
+                val rnd = Random(recipe.seed * 41 + op.salt)
+                val region = op.region ?: listOf(0, 0, w, h)
+                val pool = ArrayList<Pair<Int, Int>>()
+                for (y in region[1] until minOf(region[1] + region[3], h)) for (x in region[0] until minOf(region[0] + region[2], w)) {
+                    val c = at(x, y)
+                    if (c.terrain in allowed && !c.occupied && !c.blocked && c.attribute == null) pool += x to y
+                }
+                val wanted = op.count ?: (pool.size / op.perTiles.coerceAtLeast(1))
+                pool.shuffle(rnd)
+                val placed = ArrayList<Pair<Int, Int>>()
+                for ((x, y) in pool) {
+                    if (placed.size >= wanted) break
+                    if (placed.any { abs(it.first - x) < op.spacing && abs(it.second - y) < op.spacing }) continue
+                    val name = op.props[rnd.nextInt(op.props.size)]
+                    val p = index.props[name] ?: throw RecipeException("Map ${recipe.id}: unknown prop '$name'")
+                    val px = x - p.w / 2
+                    val py = y - p.h + 1
+                    var ok = true
+                    scan@ for (yy in py until py + p.h) for (xx in px until px + p.w) {
+                        if (!inb(xx, yy)) { ok = false; break@scan }
+                        val c = at(xx, yy)
+                        if (c.occupied || c.blocked || c.terrain !in allowed || c.attribute != null) { ok = false; break@scan }
+                    }
+                    if (!ok) continue
+                    placeProp(name, px, py, emptyList(), false)
+                    at(px + p.w / 2, py + p.h - 1).attribute = TileAttribute.ResourceNode(op.resourceId)
+                    placed += x to y
+                }
+            }
             is TileOp -> {
                 val t = index.tiles[op.tile] ?: throw RecipeException("Map ${recipe.id}: unknown tile '${op.tile}'")
                 if (!inb(op.x, op.y)) throw RecipeException("Map ${recipe.id}: tile at (${op.x},${op.y}) leaves the map")

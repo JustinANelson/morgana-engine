@@ -252,6 +252,24 @@ data class WarpOp(val x: Int, val y: Int, val toMap: Int, val toX: Int, val toY:
 @Serializable @SerialName("reserve")
 data class ReserveOp(val x: Int, val y: Int, val w: Int, val h: Int) : MapOp
 
+/**
+ * Gathering nodes: scatters the prop [props] (it is the node's picture) over cells of [terrains] and makes the middle of its bottom row
+ * a `resource_node` for [resourceId] (see `ResourceDefinition`), so the player harvests it by facing that tile; the rest of the prop
+ * stays an ordinary blocked body. Candidate cells follow [region]; the count is [count] or one node per [perTiles] eligible tiles;
+ * nodes keep [spacing] tiles apart and never sit on other props or reserved ground.
+ */
+@Serializable @SerialName("nodes")
+data class NodesOp(
+    val resourceId: Int,
+    val props: List<String>,
+    val terrains: List<String>,
+    val region: List<Int>? = null,
+    val count: Int? = null,
+    val perTiles: Int = 400,
+    val spacing: Int = 5,
+    val salt: Int = 0
+) : MapOp
+
 /** One NPC (a spawn slot) at a cell. */
 @Serializable @SerialName("spawn")
 data class SpawnOp(val npcId: Int, val x: Int, val y: Int, val respawnTicks: Int = 100) : MapOp

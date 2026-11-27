@@ -112,6 +112,25 @@ class MapCompilerTest {
     }
 
     @Test
+    fun `nodes put a resource node on the base of a prop, on the right terrain, apart from each other, deterministically`() {
+        val ops = """{"op": "rect", "terrain": "rock", "x": 0, "y": 0, "w": 30, "h": 6},
+                     {"op": "nodes", "resourceId": 7, "props": ["tree"], "terrains": ["grass"], "count": 12, "spacing": 4, "salt": 3}"""
+        val a = MapCompiler.compile(recipe(ops), index)
+        val b = MapCompiler.compile(recipe(ops), index)
+        assertEquals(a, b)
+        val nodes = a.cells.withIndex().filter { (it.value.attribute as? TileAttribute.ResourceNode)?.resourceId == 7 }.map { it.index % 30 to it.index / 30 }
+        assertEquals(12, nodes.size)
+        assertTrue(nodes.all { (_, y) -> y >= 6 }, "never on the rock")
+        for (i in nodes.indices) for (j in i + 1 until nodes.size) {
+            assertTrue(kotlin.math.abs(nodes[i].first - nodes[j].first) >= 4 || kotlin.math.abs(nodes[i].second - nodes[j].second) >= 4, "spaced apart")
+        }
+        // the node tile carries the prop's base row; the tile above it carries the crown
+        val (nx, ny) = nodes.first()
+        assertTrue(a.cells[ny * 30 + nx].layers.containsKey(MapLayer.MASK_1))
+        assertTrue(a.cells[(ny - 1) * 30 + nx].layers.containsKey(MapLayer.FRINGE_1))
+    }
+
+    @Test
     fun `warps and spawns land where asked and camps keep to open terrain with the requested density`() {
         val m = MapCompiler.compile(
             recipe(
