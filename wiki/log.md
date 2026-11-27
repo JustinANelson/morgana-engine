@@ -2,6 +2,8 @@
 
 ## 2026-11-26
 
+* **Add** - **`ItemDefinition.sockets`: gear that starts with its sockets** ([combat](/systems/combat.md)): a count of empty sockets (0 to 6) a new piece starts with, applied wherever a new item is created (`Inventory.addItem`, monster drops, generated floor loot). A game that gives all gear its maximum sockets sets it on each piece and offers no way to add more; 0 (the default) keeps the old behaviour (sockets only from drops and upgrades). Validation checks the range. Test: `StartingSocketsTest`.
+
 * **Add** - **`worldgen`: a whole continent from noise, with maps built on top** ([playbook](/playbooks/ai_assisted_mapping.md)): a recipe op that paints terrain from world-wide noise fields (scale, warp, ridged rivers, tilt, edge falloff, mixing, `bumps`) and first-match biome rules, sampled at world coordinates so maps that touch agree tile for tile (tested: one map equals its two halves). `worldLayout.borderWarnings` turns off the open/blocked border warning for generated worlds.
 
 * **Add** - **More of the seamless world** ([seamless world](/systems/seamless_world.md)): using what is in front of you across a border (resource nodes, doors, shop tiles, people), trading and stalls across a border, a minimap and exploration that carry on past a border, and a *World position* section in the F1 map properties panel. Trevena gained two areas (the Fen south of the Weald and the Marches, the Frostmarch Approach north of them) built from noise with `scripts/gen_ring2_recipes.py`. Tests in `CrossBorderWorldTest` and `MapPropertiesFormTest`.

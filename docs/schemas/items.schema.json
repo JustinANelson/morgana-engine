@@ -288,6 +288,9 @@
                 "nextTierItemId": {
                     "type": "integer"
                 },
+                "sockets": {
+                    "type": "integer"
+                },
                 "schemaVersion": {
                     "type": "integer"
                 }

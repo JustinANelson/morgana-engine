@@ -336,6 +336,12 @@ data class ItemDefinition(
     val gem: GemEffect? = null,
     /** The next tier of this piece of gear (same slot) that a level upgrade turns it into; 0 = none. */
     val nextTierItemId: Int = 0,
+    /**
+     * How many empty sockets a new piece of this gear starts with (0 to [ItemStack.MAX_SOCKETS]). A game that gives all gear its
+     * maximum sockets from the start sets this on each piece and has no way to add more; 0 (the default) keeps sockets coming
+     * only from drops and upgrades.
+     */
+    val sockets: Int = 0,
     /** On-disk document schema version; see [ContentSchema]. */
     val schemaVersion: Int = ContentSchema.CURRENT_VERSION
 ) {
@@ -366,6 +372,9 @@ data class ItemDefinition(
 
     val effectiveMaxStack: Int
         get() = if (isEffectivelyStackable) maxOf(maxStack, 999) else 1
+
+    /** The socket list of a brand new piece of this gear: [sockets] empty sockets (none for anything that stacks). */
+    fun freshSockets(): List<Int> = if (isEffectivelyStackable) emptyList() else List(sockets.coerceIn(0, ItemStack.MAX_SOCKETS)) { 0 }
 }
 
 /**
@@ -457,7 +466,7 @@ data class Inventory(
             if (remaining <= 0) break
             if (mutableSlots[i] == null) {
                 val toPlace = if (itemDef.isEffectivelyStackable) min(remaining, stackLimit) else 1
-                mutableSlots[i] = ItemStack(itemId = itemDef.id, amount = toPlace)
+                mutableSlots[i] = ItemStack(itemId = itemDef.id, amount = toPlace, sockets = itemDef.freshSockets())
                 remaining -= toPlace
             }
         }

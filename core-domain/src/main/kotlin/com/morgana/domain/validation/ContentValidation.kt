@@ -24,6 +24,7 @@ import com.morgana.domain.event.QuestObjectiveType
 import com.morgana.domain.game.GameDefinition
 import com.morgana.domain.game.VitalRole
 import com.morgana.domain.item.ItemDefinition
+import com.morgana.domain.item.ItemStack
 import com.morgana.domain.map.TileAnimation
 import com.morgana.domain.map.FloorGeneration
 import com.morgana.domain.map.MapDefinition
@@ -385,6 +386,7 @@ object ContentValidator {
                     next.id == d.id -> error(col, d.id, "/nextTierItemId", "self_reference", "an item cannot be its own next tier")
                 }
             }
+            if (d.sockets !in 0..ItemStack.MAX_SOCKETS) error(col, d.id, "/sockets", "out_of_range", "sockets must be 0 to ${ItemStack.MAX_SOCKETS}")
             d.gem?.let { gem ->
                 gem.attributeBonuses.keys.forEach { attrId ->
                     if (game.attributes.none { it.id == attrId }) error(col, d.id, "/gem/attributeBonuses/$attrId", "unknown_attribute", "Unknown attribute '$attrId'")

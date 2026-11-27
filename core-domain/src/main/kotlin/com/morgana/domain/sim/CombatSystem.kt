@@ -1451,10 +1451,11 @@ internal fun WorldSimulation.handleNpcKilled(
                         val maxSockets = game.definition.gearUpgrade?.takeIf { it.enabled }?.maxSockets ?: 0
                         repeat(qty) {
                             val rolled = ItemRoller.roll(dropDef, effectiveNpcLevel, loot, rng)
-                            lay(ItemStack(drop.itemId, 1, rolls = rolled, sockets = ItemRoller.rollDropSockets(rolled, loot, maxSockets, rng)))
+                            val rolledSockets = ItemRoller.rollDropSockets(rolled, loot, maxSockets, rng)
+                            lay(ItemStack(drop.itemId, 1, rolls = rolled, sockets = dropDef.freshSockets().ifEmpty { rolledSockets }))
                         }
                     } else {
-                        lay(ItemStack(drop.itemId, qty))
+                        lay(ItemStack(drop.itemId, qty, sockets = if (qty == 1) dropDef?.freshSockets().orEmpty() else emptyList()))
                     }
                     if (dropDef != null) {
                         if (dropDef.dropSoundId.isNotBlank() && playedDropSounds.add(dropDef.dropSoundId)) {
