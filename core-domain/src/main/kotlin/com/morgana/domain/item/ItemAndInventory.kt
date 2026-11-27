@@ -316,6 +316,12 @@ data class ItemDefinition(
     val placesObject: String = "",
     /** A mount: while this is worn, free-movement steps are this percent of a normal step (0 = not a mount, 101 to 200 = faster). */
     val mountSpeedPercent: Int = 0,
+    /** Offline training food tier (`0` = not training food; `1+` = single-tier lock group). */
+    val trainingTier: Int = 0,
+    /** Offline training minutes added per 1 unit loaded into the ration bar (`0` = not training food). */
+    val trainingMinutes: Int = 0,
+    /** Maximum offline training ration bar cap in minutes for this food's tier (`0` = not training food). */
+    val trainingCapMinutes: Int = 0,
     val statusEffectToApply: StatusEffectType? = null,
     val statusEffectMagnitude: Int = 0,
     val statusEffectDurationTicks: Int = 0,

@@ -179,6 +179,19 @@ sealed interface WorldSimulationEvent {
     /** A Guild War ended and these guilds changed hands (the new holder and the old one); the server saves them. */
     data class GuildWarResult(val guilds: List<GuildDocument>) : WorldSimulationEvent
 
+    /** Offline food-fueled mastery training resolved when [characterId] logged in; the server sends `s_offline_training_report`. */
+    data class OfflineTrainingCompleted(
+        val characterId: String,
+        val minutesTrained: Int,
+        val focusKind: String,
+        val focusId: String,
+        val focusName: String,
+        val hitsAwarded: Int,
+        val startLevel: Int,
+        val endLevel: Int,
+        val remainingFuelSeconds: Int
+    ) : WorldSimulationEvent
+
     data class GuildUpdated(
         val memberIds: List<String>,
         val guild: GuildDocument?

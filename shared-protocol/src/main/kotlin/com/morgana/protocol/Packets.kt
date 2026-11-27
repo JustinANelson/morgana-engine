@@ -763,6 +763,26 @@ sealed interface ClientPacket {
     @Serializable
     @SerialName("c_delete_character")
     data class DeleteCharacter(val characterId: String, val confirmName: String) : ClientPacket
+
+    /** Sets the character's active mastery training focus (`WEAPON` + weaponTypeId or `SKILL` + actionSkillId). */
+    @Serializable
+    @SerialName("c_training_focus")
+    data class SetTrainingFocus(val focusKind: String, val focusId: String) : ClientPacket
+
+    /** Loads food from [slotIndex] into the single-tier offline training ration bar. */
+    @Serializable
+    @SerialName("c_training_fuel")
+    data class FuelOfflineTraining(val slotIndex: Int, val amount: Int = 1) : ClientPacket
+
+    /** Clears loaded offline training rations and unlocks the food tier. */
+    @Serializable
+    @SerialName("c_training_clear")
+    data object ClearOfflineTrainingFuel : ClientPacket
+
+    /** Toggles daily-capped online AFK training mode (does not consume offline food). */
+    @Serializable
+    @SerialName("c_training_afk")
+    data class ToggleAfkTraining(val active: Boolean) : ClientPacket
 }
 
 /**
@@ -1088,6 +1108,20 @@ sealed interface ServerPacket {
     @Serializable
     @SerialName("s_skill_cooldown")
     data class ActionSkillCooldown(val skillId: Int, val durationTicks: Int) : ServerPacket
+
+    /** Sent on login when offline food-fueled mastery training resolved progress while the player was away. */
+    @Serializable
+    @SerialName("s_offline_training_report")
+    data class OfflineTrainingReport(
+        val minutesTrained: Int,
+        val focusKind: String,
+        val focusId: String,
+        val focusName: String,
+        val hitsAwarded: Int,
+        val startLevel: Int,
+        val endLevel: Int,
+        val remainingFuelSeconds: Int
+    ) : ServerPacket
 
     @Serializable
     @SerialName("s_show_picture")

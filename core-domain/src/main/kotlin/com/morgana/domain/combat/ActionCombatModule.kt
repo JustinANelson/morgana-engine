@@ -21,7 +21,10 @@ import com.morgana.domain.sim.WorldSimulation
 import com.morgana.domain.sim.WorldSimulationEvent
 import com.morgana.domain.sim.applyDamageToNpc
 import com.morgana.domain.sim.isHostileNpc
+import com.morgana.domain.sim.onActionCombatHitLanded
 import com.morgana.domain.sim.rollOffHandStrike
+import com.morgana.domain.sim.skillMasteryDamageMultiplierPercent
+import com.morgana.domain.sim.weaponProficiencyDamageMultiplierPercent
 import com.morgana.domain.spatial.Direction
 import com.morgana.domain.stats.ActiveStatusEffect
 import com.morgana.domain.stats.StatusEffectType
@@ -474,7 +477,7 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         return (player.equipment.weaponBaseDamage(weapon, sim.items, broken) + player.equipment.rolledAttackDamage(sim.items, broken) + com.morgana.domain.game.BuildBonuses.attackDamageBonus(player, sim.game.definition)).toLong()
     }
 
-    private fun damageOf(sim: WorldSimulation, player: CharacterState, npc: MapNpcInstance?, hit: SkillHit): Pair<Int, Boolean> {
+    private fun damageOf(sim: WorldSimulation, player: CharacterState, npc: MapNpcInstance?, hit: SkillHit, skillId: Int = 0): Pair<Int, Boolean> {
         if (hit.damagePercent <= 0) return 0 to false
         val attrs = player.effectiveAttributes(sim.game, sim.items)
         val defender = defenderAttributes(sim, npc)
@@ -488,7 +491,10 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
             SkillDamageKind.RANGED -> sim.game.rangedDamage(attrs, defender, weapon, 0L, 0L, crit)
             SkillDamageKind.SPELL -> sim.game.spellOutput(attrs, defender, weapon, true, false)
         }
-        return (raw * hit.damagePercent / 100L).toInt().coerceAtLeast(1) to crit
+        val weaponType = player.equipment.getActive(EquipmentSlot.WEAPON, sim.game.definition.gearRules)?.let { sim.items[it.itemId]?.weaponType }.orEmpty()
+        val profMult = sim.weaponProficiencyDamageMultiplierPercent(player, weaponType)
+        val skillMult = sim.skillMasteryDamageMultiplierPercent(player, skillId)
+        return (raw * hit.damagePercent / 100L * profMult / 100L * skillMult / 100L).toInt().coerceAtLeast(1) to crit
     }
 
     private fun defenderAttributes(sim: WorldSimulation, npc: MapNpcInstance?): Map<String, Int> {
@@ -536,10 +542,13 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         /** The attacker with their position in the monster's own map coordinates (differs only across a map border); used for pulls and pushes. */
         geometry: CharacterState = player
     ): HitResult {
-        val (damage, crit) = damageOf(sim, player, npc, hit)
+        val (damage, crit) = damageOf(sim, player, npc, hit, st.skillId)
         val electric = hit.electric || (hit.critElectrifies && (crit || st.electrified))
         val result = HitResult(crit, electric)
-        if (damage > 0) sim.applyDamageToNpc(player, npc, damage, crit, out)
+        if (damage > 0) {
+            sim.applyDamageToNpc(player, npc, damage, crit, out)
+            sim.onActionCombatHitLanded(player.id, st.skillId, out)
+        }
         if (damage > 0 && hit.chainTargets > 0 && hit.chainRadiusPixels > 0) chainLightning(sim, player, npc, damage * hit.chainDamagePercent / 100, hit, out)
         // Dual-wielding works under action combat as it does under realtime: each landed melee hit may be followed by a second
         // strike from the off-hand weapon. No random number is drawn unless a usable off-hand weapon is worn.
@@ -666,7 +675,7 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         if (!sim.modules.isEnabled(OptionalModule.PROJECTILES)) return
         val p = hb.projectile ?: return
         val dir = ActionCombatRules.nearestDirection(st.fx, st.fy)
-        val (damage, projectileCrit) = damageOf(sim, player, null, hb.hit)
+        val (damage, projectileCrit) = damageOf(sim, player, null, hb.hit, st.skillId)
         val tiles = maxOf(2, p.rangePixels / 32)
         if (p.freeAngle) {
             // Flies along the exact aim: a position in pixels that moves every tick, so it hits what it passes at any angle.
@@ -684,7 +693,8 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
                 spriteId = maxOf(1, p.spriteId), damage = maxOf(1, damage), ticksPerTile = 1,
                 nextStepTick = sim.currentTick + 1L, pierce = p.pierce,
                 free = true, px = startX.toFloat(), py = startY.toFloat(),
-                vx = (dirX * speed).toFloat(), vy = (dirY * speed).toFloat(), remainingPixels = p.rangePixels.toFloat(), crit = projectileCrit
+                vx = (dirX * speed).toFloat(), vy = (dirY * speed).toFloat(), remainingPixels = p.rangePixels.toFloat(), crit = projectileCrit,
+                actionSkillId = st.skillId
             )
             val freeList = sim.mapProjectiles.getOrPut(player.position.mapId) { mutableListOf() }
             freeList.add(free)

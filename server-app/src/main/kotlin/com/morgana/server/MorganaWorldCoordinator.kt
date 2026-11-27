@@ -1090,6 +1090,10 @@ class MorganaWorldCoordinator(
                 }
             }
         }
+        TrainingPacketHandlers.handle(simulation, charId, packet)?.let { events ->
+            dispatchEvents(events)
+            return
+        }
         when (packet) {
             is ClientPacket.MoveInput -> {
                 // Steps bunched by the network wait for a later tick instead of being dropped (see MoveInputQueue).
@@ -3329,6 +3333,9 @@ class MorganaWorldCoordinator(
                 }
                 is WorldSimulationEvent.ActionSkillCooldownStarted -> {
                     sessionByCharacterId[ev.characterId]?.send(ServerPacket.ActionSkillCooldown(ev.skillId, ev.durationTicks))
+                }
+                is WorldSimulationEvent.OfflineTrainingCompleted -> {
+                    sessionByCharacterId[ev.characterId]?.send(TrainingPacketHandlers.toPacket(ev))
                 }
                 is WorldSimulationEvent.SpellCastStarted -> {
                     // Casting state is already broadcast via CharacterUpdated

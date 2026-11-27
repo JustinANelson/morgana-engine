@@ -298,6 +298,9 @@ class ClientWorldState {
     /** Authoritative action-skill cooldowns keyed by `ActionSkillDefinition.id` (set from `ServerPacket.ActionSkillCooldown`). */
     val actionSkillCooldowns = SpellCooldowns()
 
+    /** Login offline-training summary report queued for the HUD modal, cleared once shown. */
+    var pendingOfflineTrainingReport: ServerPacket.OfflineTrainingReport? = null
+
     /** True when floating XP essence orbs are enabled by the game and not suppressed by reduced motion. */
     fun xpOrbsEnabled(): Boolean =
         gameDefinition?.ui?.xpOrbs == true && !com.morgana.client.access.Accessibility.reduceMotion
@@ -1289,6 +1292,9 @@ class ClientWorldState {
             }
             is ServerPacket.ActionSkillCooldown -> {
                 actionSkillCooldowns.set(packet.skillId, packet.durationTicks / SpellCooldowns.TICKS_PER_SECOND, com.morgana.client.ui.ToastClock.now())
+            }
+            is ServerPacket.OfflineTrainingReport -> {
+                pendingOfflineTrainingReport = packet
             }
             is ServerPacket.FloatingText -> {
                 val active = activeMap

@@ -47,6 +47,10 @@ data class GameDefinition(
     val townGate: TownGateDefinition? = null,
     /** Optional per-weapon-type proficiency progression; null or `enabled = false` disables proficiencies. */
     val weaponProficiency: WeaponProficiencyConfig? = null,
+    /** Optional per-action-skill mastery progression; null or `enabled = false` disables skill mastery. */
+    val skillMastery: SkillMasteryConfig? = null,
+    /** Optional food-fueled offline training & daily-capped online AFK training; null or `enabled = false` disables it. */
+    val training: TrainingConfig? = null,
     /** Optional donation-ranked nobility; null disables it. See [NobilityDefinition]. */
     val nobility: NobilityDefinition? = null,
     /** Optional Battle Power summary number; null disables it. See [BattlePowerDefinition]. */

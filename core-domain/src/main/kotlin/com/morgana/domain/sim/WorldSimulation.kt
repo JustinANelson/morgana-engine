@@ -597,7 +597,9 @@ class WorldSimulation(
             )
         } else roomy
         val rested = if (isNewSpawn) withRestedPoolFromAbsence(classSafe) else classSafe
-        val recalculated = rested.recalculateVitals(game, items, refill = false)
+        val loginOut = mutableListOf<WorldSimulationEvent>()
+        val trained = if (isNewSpawn) resolveOfflineTrainingOnLogin(rested, loginOut) else rested
+        val recalculated = trained.recalculateVitals(game, items, refill = false)
         players[recalculated.id] = recalculated
         // A character who logged out as a ghost wakes at home: the revive window belongs to the session they died in.
         val settled = if (isNewSpawn && recalculated.isGhost) {
@@ -608,6 +610,7 @@ class WorldSimulation(
             WorldSimulationEvent.CharacterUpdated(settled),
             WorldSimulationEvent.PlayerMoved(settled, settled.position.mapId, settled.position.mapId)
         )
+        out.addAll(loginOut)
         if (isNewSpawn) {
             if (game.definition.rested?.enabled == true && settled.restedXp > 0L) {
                 out.add(tellPlayer(settled, "You feel rested: kills pay bonus XP for a while.", "GOOD"))
@@ -647,7 +650,10 @@ class WorldSimulation(
         val out = mutableListOf<WorldSimulationEvent>()
         finishPendingEventsOnDisconnect(characterId, out)
         stalls.remove(characterId)
-        val removed = players.remove(characterId) ?: return out
+        val removed = players.remove(characterId)?.let { stampTrainingLogout(it) } ?: return out
+        if (game.definition.training?.enabled == true) {
+            out.add(WorldSimulationEvent.CharacterUpdated(removed))
+        }
         lastPvpCombatTick.remove(characterId)
         craftingAnchors.remove(characterId)
         shopSessions.remove(characterId)
@@ -733,6 +739,9 @@ class WorldSimulation(
 
         // 8b. Systems that run after events (arena fights are paired and run, pets follow their owners and help in fights)
         tickSystems(TickStage.AFTER_EVENTS, out)
+
+        // 8b. Online AFK mastery training (daily-capped, no offline food consumed)
+        tickOnlineAfkTraining(out)
 
         // 9. Close instances that have stood empty long enough
         tickInstances(out)

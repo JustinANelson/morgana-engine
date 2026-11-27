@@ -153,6 +153,12 @@ data class CharacterState(
     val lastSeenWorldTick: Long = 0L,
     /** Upgrade pity (see `QualityUpgradeDefinition` and `EnhancementDefinition`): failed chancy attempts since the last chancy success. */
     val upgradePityStacks: Int = 0,
+    /** Per-action-skill mastery levels (`actionSkillId -> level`, default 1). */
+    val skillMasteryLevels: Map<Int, Int> = emptyMap(),
+    /** Per-action-skill mastery hits/uses accumulated toward the next level. */
+    val skillMasteryProgress: Map<Int, Int> = emptyMap(),
+    /** Persisted offline food-fueled training and daily online AFK training state. */
+    val trainingState: com.morgana.domain.game.CharacterTrainingState = com.morgana.domain.game.CharacterTrainingState(),
     val schemaVersion: Int = 2
 ) {
     val isAlive: Boolean
@@ -170,6 +176,12 @@ data class CharacterState(
 
     fun weaponProficiencyHitsFor(weaponType: String): Int =
         (weaponProficiencyHits[weaponType] ?: 0).coerceAtLeast(0)
+
+    fun skillMasteryLevel(skillId: Int): Int =
+        (skillMasteryLevels[skillId] ?: 1).coerceAtLeast(1)
+
+    fun skillMasteryProgressFor(skillId: Int): Int =
+        (skillMasteryProgress[skillId] ?: 0).coerceAtLeast(0)
 
     /**
      * Computes effective attributes (base + equipment + active status buffs/debuffs) clamped to floor/cap.
@@ -437,7 +449,9 @@ data class MapProjectile(
     val vy: Float = 0f,
     val remainingPixels: Float = 0f,
     /** Whether the shot was rolled as a critical hit when it was fired. */
-    val crit: Boolean = false
+    val crit: Boolean = false,
+    /** Non-zero when fired by an action-combat skill, so landing a hit advances weapon & skill mastery. */
+    val actionSkillId: Int = 0
 )
 
 /**

@@ -117,6 +117,7 @@ class PlayerHudAndWindows(
     private var spellbookWindow: VisWindow? = null
     private var questWindow: VisWindow? = null
     private var craftingWindow: VisWindow? = null
+    private var masteryWindow: VisWindow? = null
     private var shopWindow: VisWindow? = null
     private var bankWindow: VisWindow? = null
     private var dialogueWindow: VisWindow? = null
@@ -615,6 +616,10 @@ class PlayerHudAndWindows(
         placeMenuDock()
         applyRingHud()
         updateChatFade()
+        worldState.pendingOfflineTrainingReport?.let { report ->
+            worldState.pendingOfflineTrainingReport = null
+            stage.addActor(com.morgana.client.ui.mastery.OfflineTrainingReportWindow(stage, report))
+        }
         val invSlots = worldState.localCharacter?.inventory?.slots
         hotbarButtons.forEachIndexed { idx, btn ->
             val keyChar = hotbarKey(idx)
@@ -1200,6 +1205,19 @@ class PlayerHudAndWindows(
         val win = com.morgana.client.ui.bag.CraftingWindow(stage, worldState, netClient, assets)
         stage.addActor(win)
         craftingWindow = win
+    }
+
+    fun toggleMasteryWindow() {
+        openOrNull(masteryWindow)?.let {
+            it.remove()
+            masteryWindow = null
+            return
+        }
+        masteryWindow = null
+        if (worldState.localCharacter == null) return
+        val win = com.morgana.client.ui.mastery.MasteryAndTrainingWindow(stage, worldState, netClient, assets)
+        stage.addActor(win)
+        masteryWindow = win
     }
 
     private fun openShopWindow(shopId: Int) {
@@ -3317,6 +3335,10 @@ class PlayerHudAndWindows(
             if (worldState.gameDefinition?.bestiary?.enabled == true) add("Bestiary" to { bestiaryWindow.toggle() })
             if (PetsModel.gameHasPets(worldState.catalog.npcs)) add("Pets" to { petsWindow.toggle() })
             if (worldState.showCraftingUi()) add(withKey("Crafting", GameAction.CRAFTING) to { toggleCraftingWindow() })
+            val def = worldState.gameDefinition
+            if (def?.weaponProficiency?.enabled == true || def?.skillMastery?.enabled == true || def?.training?.enabled == true) {
+                add("Mastery & Training" to { toggleMasteryWindow() })
+            }
             if (worldState.showPartyUi()) add(withKey("Party", GameAction.PARTY) to { togglePartyWindow() })
             if (worldState.isModuleEnabled("guilds")) add("Guild" to { toggleGuildWindow() })
             if (worldState.isModuleEnabled("ignore")) add("Ignore" to { toggleIgnoreWindow() })

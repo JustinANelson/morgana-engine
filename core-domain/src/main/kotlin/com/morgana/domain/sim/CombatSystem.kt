@@ -205,6 +205,7 @@ private fun WorldSimulation.stepFreeProjectile(proj: MapProjectile, mapId: Int, 
             if (segmentDistance2(proj.px, proj.py, nx, ny, npc.bodyX(ts) + reachNpc.shiftTilesX * ts + ts / 2f, npc.bodyY(ts) + reachNpc.shiftTilesY * ts + ts / 2f) > reach2) continue
             applyDamageToNpc(attacker, npc, proj.damage, isCrit = proj.crit, out = out)
             if (proj.crit) actionCrit(attacker, out)
+            if (proj.actionSkillId > 0) onActionCombatHitLanded(attacker.id, proj.actionSkillId, out)
             hitSomething = true
             hitIds = hitIds + npc.instanceId
             if (!proj.pierce) break
