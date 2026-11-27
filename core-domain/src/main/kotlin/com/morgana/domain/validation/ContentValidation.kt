@@ -642,7 +642,7 @@ object ContentValidator {
                     is EventCommand.UpgradeGear -> {
                         if (cmd.amount < 1) error(col, id, "$p/amount", "out_of_range", "upgrade_gear needs an amount of at least 1")
                         if (cmd.successPercent !in 1..100) error(col, id, "$p/successPercent", "out_of_range", "successPercent must be 1 to 100")
-                        itemRef(col, id, "$p/materialItemId", cmd.materialItemId, optional = cmd.materialItemId == 0 && (cmd.kind == GearUpgradeKind.SOCKET_GEM || cmd.kind == GearUpgradeKind.ENHANCE))
+                        itemRef(col, id, "$p/materialItemId", cmd.materialItemId, optional = cmd.materialItemId == 0 && (cmd.kind == GearUpgradeKind.SOCKET_GEM || cmd.kind == GearUpgradeKind.ENHANCE || cmd.kind == GearUpgradeKind.UPGRADE_LEVEL))
                     }
                     is EventCommand.Rebirth ->
                         if (cmd.classId != 0) ref(col, id, "$p/classId", ContentCollection.CLASSES, cmd.classId, cmd.classId in cat.classes, optional = false)
