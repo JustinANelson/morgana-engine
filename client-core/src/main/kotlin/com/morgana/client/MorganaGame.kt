@@ -252,11 +252,11 @@ class MorganaGame(
         if (!VisUI.isLoaded()) {
             VisUI.load()
         }
+        HudWindow.touchMode = touchDevice
         com.morgana.client.ui.SkinThemer.apply()
         batch = SpriteBatch()
         font = BitmapFont()
         camera = OrthographicCamera(Gdx.graphics.width.toFloat(), Gdx.graphics.height.toFloat())
-        HudWindow.touchMode = touchDevice
         stage = Stage(ScreenViewport())
         accessibility.load()
         applyUiScaleToViewport(accessibility.current.uiScale)
@@ -642,7 +642,21 @@ class MorganaGame(
         val facing = worldState.localCharacter?.position?.direction ?: com.morgana.domain.spatial.Direction.DOWN
         val token = com.morgana.client.input.ActionCombatInput.token(key, shift, moveX, moveY, facing)
         netClient.send(com.morgana.client.input.ActionCombatInput.packet(token, resolveAim(key, aim, moveX, moveY)))
-        if (swingAudible(key)) audio.play(RetroSoundEngine.Sfx.SWING)
+        if (swingAudible(key)) {
+            audio.play(RetroSoundEngine.Sfx.SWING)
+            val skill = hud.skillForToken(key)
+            val animState = when {
+                key == "SPACE" -> com.morgana.domain.game.SpriteState.JUMP
+                skill != null && skill.costs.containsKey("mp") -> com.morgana.domain.game.SpriteState.CAST
+                else -> com.morgana.domain.game.SpriteState.ATTACK
+            }
+            val duration = if (skill != null) {
+                ((skill.startupTicks + skill.activeTicks + skill.recoveryTicks) * 0.05f).coerceIn(0.28f, 0.55f)
+            } else {
+                0.36f
+            }
+            worldState.triggerLocalAction(animState, duration)
+        }
     }
 
     /**
@@ -654,8 +668,9 @@ class MorganaGame(
         val skill = hud.skillForToken(key) ?: return true
         val ch = worldState.localCharacter
         if (ch != null) for ((vital, cost) in skill.costs) if ((ch.vitals[vital]?.cur ?: 0) < cost) return false
+        if (worldState.actionSkillCooldowns.remaining(skill.id, com.morgana.client.ui.ToastClock.now()) > 0f) return false
         val now = System.currentTimeMillis()
-        val gapMs = maxOf(skill.cooldownTicks, skill.startupTicks + skill.activeTicks) * 50L
+        val gapMs = (skill.startupTicks + skill.activeTicks) * 50L
         val last = worldState.skillUsedAtMs[key]
         if (last != null && now - last < gapMs) return false
         worldState.skillUsedAtMs[key] = now
@@ -1166,13 +1181,17 @@ class MorganaGame(
                 // With the map cache the snapshot may name its map only by reference; null means it could not be rebuilt
                 // (the world state then asks the server to resend), so there is nothing to announce yet.
                 val snapshotMap = worldState.activeMapOf(packet)
-                if (snapshotMap != null && worldState.activeMap?.id != snapshotMap.id) {
-                    worldState.pendingGroundSpellId = null
-                    pendingLootTile = null
-                    if (worldState.activeMap != null) {
-                        hud.closeMapWindows()
+                val prevMap = worldState.activeMap
+                if (snapshotMap != null && prevMap?.id != snapshotMap.id) {
+                    val seamlessCrossing = prevMap != null && worldState.isModuleEnabled("softSeams") && worldState.isSeamlessNeighbor(prevMap, snapshotMap)
+                    if (!seamlessCrossing) {
+                        worldState.pendingGroundSpellId = null
+                        pendingLootTile = null
+                        if (prevMap != null) {
+                            hud.closeMapWindows()
+                        }
+                        audio.play(RetroSoundEngine.Sfx.WARP)
                     }
-                    audio.play(RetroSoundEngine.Sfx.WARP)
                 }
                 if (snapshotMap != null) {
                     val bgmTrack = snapshotMap.bgmTrackId

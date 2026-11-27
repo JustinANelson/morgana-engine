@@ -168,7 +168,8 @@
     "clock": null,
     "weather": null,
     "ui": {
-        "xpOrbs": true
+        "xpOrbs": true,
+        "layout": "ring"
     },
     "sprites": {
         "cellWidth": 32,

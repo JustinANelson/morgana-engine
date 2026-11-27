@@ -228,6 +228,7 @@ internal fun WorldSimulation.applyScriptEffectImpl(effect: ScriptEffect): List<W
         is ScriptEffect.PlaceObject -> placeWorldObject(effect.kind, effect.mapId, effect.x, effect.y, effect.ownerId, null, effect.data, out)
         is ScriptEffect.RemoveObject -> removeWorldObject(effect.id, effect.reason, out)
         is ScriptEffect.DamageObject -> damageWorldObject(effect.id, effect.amount, out)
+        is ScriptEffect.HealObject -> healWorldObject(effect.id, effect.amount, out)
         is ScriptEffect.SetObjectData -> setWorldObjectData(effect.id, effect.data, out)
         is ScriptEffect.SetState -> {
             if (effect.values.isEmpty()) scriptState.remove(effect.key) else scriptState[effect.key] = effect.values.toSortedMap()

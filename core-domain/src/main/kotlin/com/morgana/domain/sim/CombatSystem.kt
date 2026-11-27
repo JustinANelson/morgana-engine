@@ -1628,6 +1628,34 @@ internal fun WorldSimulation.grantXpToCharacter(characterId: String, amount: Lon
                 colorHex = "#FACC15"
             )
         )
+        // Announce any action-combat skills newly unlocked at the new level(s).
+        val unlockedIds = weaponSets.values
+            .filter { it.slot == com.morgana.domain.content.WeaponSetSlot.MAIN && (it.classIds.isEmpty() || leveled.classId in it.classIds) && it.levelReq <= leveled.level }
+            .flatMap { it.skillIds }
+            .distinct()
+        for (skillId in unlockedIds) {
+            val skill = actionSkills[skillId] ?: continue
+            if (skill.levelReq in (current.level + 1)..leveled.level) {
+                out.add(
+                    WorldSimulationEvent.ChatEmitted(
+                        channel = "SYSTEM", mapId = leveled.position.mapId, senderId = "system", senderName = "System",
+                        targetCharacterId = leveled.id, message = "You learned ${skill.name}!",
+                        showOverheadBubble = false, notice = "LEVEL"
+                    )
+                )
+                out.add(
+                    WorldSimulationEvent.FloatingTextEmitted(
+                        mapId = leveled.position.mapId,
+                        tileX = leveled.position.tileX,
+                        tileY = leveled.position.tileY,
+                        text = "LEARNED: ${skill.name}!",
+                        category = "LEVEL_UP",
+                        colorHex = "#34D399",
+                        targetCharacterId = leveled.id
+                    )
+                )
+            }
+        }
     }
     out.add(WorldSimulationEvent.CharacterUpdated(leveled))
     if (levelsGained > 0) {

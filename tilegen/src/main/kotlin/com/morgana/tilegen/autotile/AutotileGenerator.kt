@@ -256,12 +256,14 @@ class AutotileGenerator(
 
         val lush = style.edge == AutotileEdge.LUSH
         if (style.shadow > 0f) {
+            val transShadow = rgba(14, 18, 28, (style.shadow * 190f).toInt().coerceIn(0, 255))
             for (py in 0 until tileSize) {
                 for (px in 0 until tileSize) {
                     if (covered(px, py)) continue
                     // Shadow falls down and to the right of the raised terrain (light from the upper left).
                     if (covered(px - 1, py - 1) || covered(px - 2, py - 1) || covered(px - 1, py - 2)) {
-                        out.setPixel(px, py, shade(out.getPixel(px, py), 1f - style.shadow))
+                        val cur = out.getPixel(px, py)
+                        out.setPixel(px, py, if ((cur and 0xFF) == 0) transShadow else shade(cur, 1f - style.shadow))
                     }
                 }
             }

@@ -26,7 +26,7 @@ open class HudWindow(private val windowTitle: String, private val rememberAs: St
     var collapsed: Boolean = false
         private set
 
-    private val minimizeButton = VisTextButton("-")
+    private val minimizeButton = VisTextButton("-", GameTheme.shared.titleButtonStyle)
 
     /** Actors that stay on screen while the window is minimized (the vitals of the status window); empty = everything hides. */
     private val keptWhenCollapsed = mutableSetOf<Actor>()
@@ -62,10 +62,12 @@ open class HudWindow(private val windowTitle: String, private val rememberAs: St
     }
 
     init {
+        style = GameTheme.shared.windowStyle
         color.a = opacity
         val side = if (touchMode) TOUCH_BUTTON_SIZE else DESKTOP_BUTTON_SIZE
         val btnWidth = if (touchMode) TOUCH_BUTTON_WIDTH else DESKTOP_BUTTON_SIZE
-        if (touchMode) padTop(maxOf(padTop, side + 4f))
+        if (touchMode) padTop(maxOf(padTop, side + 6f))
+        titleTable.padLeft(6f).padRight(4f).padTop(1f).padBottom(2f)
         minimizeButton.addListener(object : ChangeListener() {
             override fun changed(event: ChangeEvent?, actor: com.badlogic.gdx.scenes.scene2d.Actor?) {
                 toggleCollapsed()
@@ -92,10 +94,19 @@ open class HudWindow(private val windowTitle: String, private val rememberAs: St
         if (titleTable.parent !== this) addActor(titleTable)
     }
 
-    /** Hardens VisWindow's close button for touchscreens so tapping 'X' never triggers a window drag. */
+    /** Adds a themed bronze RPG 'X' close button matched to the minimize button, hardened for touchscreens. */
     override fun addCloseButton() {
-        super.addCloseButton()
-        hardenLastTitleButton(this)
+        val side = if (touchMode) TOUCH_BUTTON_SIZE else DESKTOP_BUTTON_SIZE
+        val btnWidth = if (touchMode) TOUCH_BUTTON_WIDTH else DESKTOP_BUTTON_SIZE
+        val closeButton = VisTextButton("X", GameTheme.shared.titleButtonStyle).apply {
+            addListener(object : ChangeListener() {
+                override fun changed(event: ChangeEvent?, actor: Actor?) {
+                    close()
+                }
+            })
+        }
+        stopDragOnPress(closeButton)
+        titleTable.add(closeButton).size(btnWidth, side)
     }
 
     override fun close() {
@@ -221,7 +232,7 @@ open class HudWindow(private val windowTitle: String, private val rememberAs: St
         private val positionStore by lazy { com.morgana.client.ui.editor.PreferencesKeyValueStore("morgana-hud-windows") }
 
         /** Window transparency (1 = solid). Change with [applyOpacity] so open windows update too. */
-        var opacity: Float = 0.82f
+        var opacity: Float = 0.94f
             private set
 
         fun applyOpacity(stage: com.badlogic.gdx.scenes.scene2d.Stage, value: Float) {

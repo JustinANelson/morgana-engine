@@ -162,19 +162,32 @@ class ItemGrid(
 
     override fun draw(batch: Batch, parentAlpha: Float) {
         val white = assets.whitePixel
+        val palette = com.morgana.client.ui.GameTheme.shared.palette
         val top = y + height
         for ((i, c) in cells.withIndex()) {
             val cx = x + (i % columns) * cell
             val cy = top - ((i / columns) + 1) * cell
             val empty = c.iconId <= 0
-            // Square, with a 1 px gap between neighbours.
-            val slot = com.morgana.client.ui.GameTheme.shared.palette.let { if (empty) it.background else it.panelRaised }
-            batch.setColor(slot.r, slot.g, slot.b, parentAlpha)
+            // Recessed RPG slot socket: outer dark groove, inner well, top-left shadow and subtle bottom-right bronze rim.
+            batch.setColor(0.05f, 0.04f, 0.04f, 0.92f * parentAlpha)
             batch.draw(white, cx + 1f, cy + 1f, cell - 2f, cell - 2f)
+
+            val slot = if (empty) palette.background else palette.panelRaised
+            batch.setColor(slot.r, slot.g, slot.b, parentAlpha)
+            batch.draw(white, cx + 2f, cy + 2f, cell - 4f, cell - 4f)
+
+            // Subtle inner top-left shadow and bottom-right rim for tactile socket depth.
+            batch.setColor(0f, 0f, 0f, 0.32f * parentAlpha)
+            batch.draw(white, cx + 2f, cy + cell - 3f, cell - 4f, 1f)
+            batch.draw(white, cx + 2f, cy + 2f, 1f, cell - 4f)
+            batch.setColor(palette.border.r, palette.border.g, palette.border.b, if (empty) 0.35f * parentAlpha else 0.65f * parentAlpha)
+            batch.draw(white, cx + 2f, cy + 2f, cell - 4f, 1f)
+            batch.draw(white, cx + cell - 3f, cy + 2f, 1f, cell - 4f)
+
             if (c.key == hoverKey && !empty) {
-                val hi = com.morgana.client.ui.GameTheme.shared.palette.hover
-                batch.setColor(hi.r, hi.g, hi.b, 0.6f * parentAlpha)
-                batch.draw(white, cx + 1f, cy + 1f, cell - 2f, cell - 2f)
+                val hi = palette.hover
+                batch.setColor(hi.r, hi.g, hi.b, 0.65f * parentAlpha)
+                batch.draw(white, cx + 2f, cy + 2f, cell - 4f, cell - 4f)
             }
             if (!empty) {
                 batch.setColor(1f, 1f, 1f, parentAlpha * if (c.dim) 0.35f else 1f)
@@ -182,11 +195,23 @@ class ItemGrid(
                 batch.draw(assets.getItemIconRegion(c.iconId), cx + pad, cy + pad, cell - 2 * pad, cell - 2 * pad)
             }
             if (c.borderColor != null && c.key != selectedKey && c.key != armedKey) {
-                outline(batch, white, cx, cy, c.borderColor, parentAlpha * if (c.dim) 0.5f else 1f, 1f)
+                outline(batch, white, cx, cy, c.borderColor, parentAlpha * if (c.dim) 0.5f else 0.95f, 1.5f)
             }
-            if (c.key == hoverKey && c.key != selectedKey && c.borderColor == null) outline(batch, white, cx, cy, com.morgana.client.ui.GameTheme.shared.palette.accentDim, parentAlpha, 1f)
-            if (c.key == selectedKey) outline(batch, white, cx, cy, com.morgana.client.ui.GameTheme.shared.palette.accent, parentAlpha, 2f)
-            if (c.key == armedKey) outline(batch, white, cx, cy, com.morgana.client.ui.GameTheme.shared.palette.strong, parentAlpha, 2f)
+            if (c.key == hoverKey && c.key != selectedKey && c.borderColor == null) {
+                outline(batch, white, cx, cy, palette.accent, 0.7f * parentAlpha, 1f)
+            }
+            if (c.key == selectedKey) {
+                outline(batch, white, cx, cy, palette.accent, parentAlpha, 2f)
+                // Bright corner highlight ticks on the selected slot.
+                batch.setColor(palette.strong.r, palette.strong.g, palette.strong.b, parentAlpha)
+                batch.draw(white, cx + 1f, cy + cell - 3f, 2f, 2f)
+                batch.draw(white, cx + cell - 3f, cy + cell - 3f, 2f, 2f)
+                batch.draw(white, cx + 1f, cy + 1f, 2f, 2f)
+                batch.draw(white, cx + cell - 3f, cy + 1f, 2f, 2f)
+            }
+            if (c.key == armedKey) {
+                outline(batch, white, cx, cy, palette.strong, parentAlpha, 2f)
+            }
         }
         // Counts last, so a neighbour's square never covers them.
         for ((i, c) in cells.withIndex()) {

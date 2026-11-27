@@ -266,7 +266,9 @@ data class CliffLayerSpec(
     /** Plain 6-tile cliffs only: the cap overhangs the face with a ragged, outlined grass lip. */
     val lush: Boolean = false,
     /** `a4Layout` only: draw the set as a castle rampart (flagstone, merlons, brick face) instead of the dark-void wall. */
-    val castle: Boolean = false
+    val castle: Boolean = false,
+    /** 15-tile natural outdoor cliff set: overhanging lush cap, striated rock face, climbable stairs, and base drop shadows. */
+    val naturalCliff: Boolean = false
 ) {
     init {
         if (name.isBlank()) throw SpecException("CliffLayerSpec 'name' must not be blank")
@@ -356,7 +358,10 @@ data class TilesetSpec(
                     "Autotile '${auto.name}' references unknown foregroundMaterial '${auto.foregroundMaterial}'"
                 )
             }
-            if (auto.backgroundMaterial != null && auto.backgroundMaterial !in materialNames) {
+            if (auto.backgroundMaterial != null &&
+                !auto.backgroundMaterial.equals("transparent", ignoreCase = true) &&
+                auto.backgroundMaterial !in materialNames
+            ) {
                 throw SpecException(
                     "Autotile '${auto.name}' references unknown backgroundMaterial '${auto.backgroundMaterial}'"
                 )

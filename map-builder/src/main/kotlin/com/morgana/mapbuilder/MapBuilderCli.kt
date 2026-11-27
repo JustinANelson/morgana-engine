@@ -9,7 +9,7 @@ import java.nio.file.Paths
 import kotlin.system.exitProcess
 
 /**
- * `:map-builder:run "--args=build --game games/<id> --recipes <folder|a.json,b.json> [--index <file>] [--only <id,id>]"`
+ * `:map-builder:run "--args=build --game <game-dir> --recipes <folder|a.json,b.json> [--index <file>] [--only <id,id>]"`
  *
  * Compiles each recipe and writes `data/maps/map_<id>.json` in the game. It owns only the map ids its recipes name and replaces
  * those; every other map file is left alone. A map that has been edited since (revision above 1, which every `F1` edit raises) is

@@ -1080,6 +1080,15 @@ sealed interface ServerPacket {
     @SerialName("s_spell_cooldown")
     data class SpellCooldown(val spellId: Int, val durationTicks: Int) : ServerPacket
 
+    /**
+     * An action skill the receiving player just executed (or attempted while cooling down) is cooling down for
+     * [durationTicks] (20 per second) from now, keyed by [skillId] rather than input token so empowered upgrades
+     * never corrupt the base skill's timer.
+     */
+    @Serializable
+    @SerialName("s_skill_cooldown")
+    data class ActionSkillCooldown(val skillId: Int, val durationTicks: Int) : ServerPacket
+
     @Serializable
     @SerialName("s_show_picture")
     data class ShowPicture(

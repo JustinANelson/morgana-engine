@@ -3327,6 +3327,9 @@ class MorganaWorldCoordinator(
                 is WorldSimulationEvent.SpellCooldownStarted -> {
                     sessionByCharacterId[ev.characterId]?.send(ServerPacket.SpellCooldown(ev.spellId, ev.durationTicks))
                 }
+                is WorldSimulationEvent.ActionSkillCooldownStarted -> {
+                    sessionByCharacterId[ev.characterId]?.send(ServerPacket.ActionSkillCooldown(ev.skillId, ev.durationTicks))
+                }
                 is WorldSimulationEvent.SpellCastStarted -> {
                     // Casting state is already broadcast via CharacterUpdated
                 }

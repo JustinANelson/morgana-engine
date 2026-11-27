@@ -179,4 +179,22 @@ class RealmWizardModelTest {
         m.name = "Camp"
         assertEquals("Choose a starting point.", m.blockingProblem())
     }
+
+    @Test
+    fun `online rpg and dungeon crawler genres default to ring HUD layout while other genres stay classic`() {
+        val m = model().also { it.name = "Realm" }
+        val rpg = RealmWizardModel.GENRES.first { it.genre == SystemTags.RPG }
+        val roguelike = RealmWizardModel.GENRES.first { it.genre == SystemTags.ROGUELIKE }
+        val farming = RealmWizardModel.GENRES.first { it.genre == SystemTags.FARMING }
+
+        m.applyPreset(rpg)
+        assertEquals(com.morgana.domain.game.UiLayout.RING, m.toSpec().uiLayout)
+        assertTrue(m.summaryLines().any { it.contains("Ring action cluster") })
+
+        m.applyPreset(roguelike)
+        assertEquals(com.morgana.domain.game.UiLayout.RING, m.toSpec().uiLayout)
+
+        m.applyPreset(farming)
+        assertNull(m.toSpec().uiLayout)
+    }
 }

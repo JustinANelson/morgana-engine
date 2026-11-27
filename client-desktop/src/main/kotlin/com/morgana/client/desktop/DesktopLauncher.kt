@@ -66,7 +66,7 @@ internal class EmbeddedWorldHost(
         val enabled = spec.enabledModuleKeys.map {
             OptionalModule.fromConfigKey(it) ?: throw IllegalArgumentException("Unknown feature '$it'")
         }.toSet()
-        val info = library.create(RealmBlueprint(spec.name, template, modules, noCombat = spec.noCombat, modernSprites = spec.modernSprites, enabledModules = enabled))
+        val info = library.create(RealmBlueprint(spec.name, template, modules, noCombat = spec.noCombat, modernSprites = spec.modernSprites, enabledModules = enabled, uiLayout = spec.uiLayout))
         selectedSlug = info.slug
         return LocalWorldChoice(info.slug, info.name, library.classesFor(info.slug))
     }

@@ -49,6 +49,7 @@ value class EquipmentSlot(val id: String) {
         "GLOVES" -> PaperdollSlot.HANDS
         "BOOTS" -> PaperdollSlot.FEET
         "AMMO", "CLOAK" -> PaperdollSlot.BACK
+        "MOUNT" -> PaperdollSlot.MOUNT
         else -> PaperdollSlot.ACCESSORY
     }
 
@@ -90,7 +91,10 @@ enum class PaperdollSlot {
     ACCESSORY,
 
     /** Gloves and gauntlets: drawn over the body's skin hands and the torso's sleeves, under hair, headgear and held weapons. */
-    HANDS
+    HANDS,
+
+    /** Mounts (horses, etc.): drawn underneath the seated rider and all worn gear in every direction. */
+    MOUNT
 }
 
 /**
@@ -111,63 +115,67 @@ data class PaperdollLayer(
  */
 object PaperdollComposer {
 
-    // Facing the viewer (DOWN): capes, quivers and packs (BACK) hang behind the body; held gear is drawn over it.
+    // Facing the viewer (DOWN): mounts sit underneath everything; capes, quivers and packs (BACK) hang behind the body; held gear is drawn over it.
     private val DRAW_ORDER_DOWN: Map<PaperdollSlot, Int> = mapOf(
-        PaperdollSlot.BACK to 0,
-        PaperdollSlot.BODY to 1,
-        PaperdollSlot.FEET to 2,
-        PaperdollSlot.LEGS to 3,
-        PaperdollSlot.TORSO to 4,
-        PaperdollSlot.HANDS to 5,
-        PaperdollSlot.HAIR to 6,
-        PaperdollSlot.ACCESSORY to 7,
-        PaperdollSlot.HEAD to 8,
-        PaperdollSlot.OFF_HAND to 9,
-        PaperdollSlot.MAIN_HAND to 10
+        PaperdollSlot.MOUNT to 0,
+        PaperdollSlot.BACK to 1,
+        PaperdollSlot.BODY to 2,
+        PaperdollSlot.FEET to 3,
+        PaperdollSlot.LEGS to 4,
+        PaperdollSlot.TORSO to 5,
+        PaperdollSlot.HANDS to 6,
+        PaperdollSlot.HAIR to 7,
+        PaperdollSlot.ACCESSORY to 8,
+        PaperdollSlot.HEAD to 9,
+        PaperdollSlot.OFF_HAND to 10,
+        PaperdollSlot.MAIN_HAND to 11
     )
 
     // Facing LEFT the main hand is the far hand, so it sits behind the body; RIGHT mirrors it with the off-hand.
     private val DRAW_ORDER_LEFT: Map<PaperdollSlot, Int> = mapOf(
-        PaperdollSlot.BACK to 0,
-        PaperdollSlot.MAIN_HAND to 1,
-        PaperdollSlot.BODY to 2,
-        PaperdollSlot.FEET to 3,
-        PaperdollSlot.LEGS to 4,
-        PaperdollSlot.TORSO to 5,
-        PaperdollSlot.HANDS to 6,
-        PaperdollSlot.HAIR to 7,
-        PaperdollSlot.ACCESSORY to 8,
-        PaperdollSlot.HEAD to 9,
-        PaperdollSlot.OFF_HAND to 10
+        PaperdollSlot.MOUNT to 0,
+        PaperdollSlot.BACK to 1,
+        PaperdollSlot.MAIN_HAND to 2,
+        PaperdollSlot.BODY to 3,
+        PaperdollSlot.FEET to 4,
+        PaperdollSlot.LEGS to 5,
+        PaperdollSlot.TORSO to 6,
+        PaperdollSlot.HANDS to 7,
+        PaperdollSlot.HAIR to 8,
+        PaperdollSlot.ACCESSORY to 9,
+        PaperdollSlot.HEAD to 10,
+        PaperdollSlot.OFF_HAND to 11
     )
 
     private val DRAW_ORDER_RIGHT: Map<PaperdollSlot, Int> = mapOf(
-        PaperdollSlot.BACK to 0,
-        PaperdollSlot.OFF_HAND to 1,
-        PaperdollSlot.BODY to 2,
-        PaperdollSlot.FEET to 3,
-        PaperdollSlot.LEGS to 4,
-        PaperdollSlot.TORSO to 5,
-        PaperdollSlot.HANDS to 6,
-        PaperdollSlot.HAIR to 7,
-        PaperdollSlot.ACCESSORY to 8,
-        PaperdollSlot.HEAD to 9,
-        PaperdollSlot.MAIN_HAND to 10
+        PaperdollSlot.MOUNT to 0,
+        PaperdollSlot.BACK to 1,
+        PaperdollSlot.OFF_HAND to 2,
+        PaperdollSlot.BODY to 3,
+        PaperdollSlot.FEET to 4,
+        PaperdollSlot.LEGS to 5,
+        PaperdollSlot.TORSO to 6,
+        PaperdollSlot.HANDS to 7,
+        PaperdollSlot.HAIR to 8,
+        PaperdollSlot.ACCESSORY to 9,
+        PaperdollSlot.HEAD to 10,
+        PaperdollSlot.MAIN_HAND to 11
     )
 
     // When facing UP, held gear draws behind the body/torso while capes/quivers (BACK) draw over the back.
     private val DRAW_ORDER_UP: Map<PaperdollSlot, Int> = mapOf(
-        PaperdollSlot.MAIN_HAND to 0,
-        PaperdollSlot.OFF_HAND to 1,
-        PaperdollSlot.BODY to 2,
-        PaperdollSlot.FEET to 3,
-        PaperdollSlot.LEGS to 4,
-        PaperdollSlot.TORSO to 5,
-        PaperdollSlot.HANDS to 6,
-        PaperdollSlot.HAIR to 7,
-        PaperdollSlot.ACCESSORY to 8,
-        PaperdollSlot.HEAD to 9,
-        PaperdollSlot.BACK to 10
+        PaperdollSlot.MOUNT to 0,
+        PaperdollSlot.MAIN_HAND to 1,
+        PaperdollSlot.OFF_HAND to 2,
+        PaperdollSlot.BODY to 3,
+        PaperdollSlot.FEET to 4,
+        PaperdollSlot.LEGS to 5,
+        PaperdollSlot.TORSO to 6,
+        PaperdollSlot.HANDS to 7,
+        PaperdollSlot.HAIR to 8,
+        PaperdollSlot.ACCESSORY to 9,
+        PaperdollSlot.HEAD to 10,
+        PaperdollSlot.BACK to 11
     )
 
     /** Returns draw order rank (`0` drawn first / furthest back) for [slot] when facing [direction]. */

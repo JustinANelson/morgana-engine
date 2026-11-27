@@ -171,6 +171,7 @@ sealed interface ScriptEffect {
     /** Hurts a world object; it is destroyed when its hit points run out. */
     @Serializable
     data class DamageObject(val id: String, val amount: Int) : ScriptEffect
+    data class HealObject(val id: String, val amount: Int) : ScriptEffect
 
     /** Replaces what is kept on a world object. */
     @Serializable

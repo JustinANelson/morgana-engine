@@ -24,7 +24,7 @@ import com.morgana.domain.sim.tellPlayer
  *   A [com.morgana.domain.sim.StanceForcer] (territory, inside an open attack window) forces it too.
  * - **Arming**: asking for PvP takes `armTicks` and is cancelled by taking a hit. Leaving it needs `disarmTicks` without combat; switching
  *   between SAFE and PvE needs `switchTicks`. Hitting with a weapon while SAFE makes the character PvE.
- * - **In combat** means having dealt or taken damage; [ticksSinceCombat] and [isInCombat] share that with other rules (a totem lockout).
+ * - **In combat** means having dealt or taken damage; [ticksSinceCombat] and [isInCombat] share that with other rules (such as claim lockouts).
  * - State is on the character (`stance`, `stanceArmsAtTick`, `lastCombatTick`), so it is saved, hashed and replayed. `/stance` asks for a change.
  * - Without a `combatStance` section the system does nothing.
  */
@@ -58,7 +58,7 @@ object CombatStanceSystem : CombatArbiter, CombatObserver, TickParticipant, Chat
         return if (last < 0) null else sim.effectiveWorldTick() - last
     }
 
-    /** True when [characterId] dealt or took damage within the last [withinTicks] ticks (the 15-minute totem lockout is such a check). */
+    /** True when [characterId] dealt or took damage within the last [withinTicks] ticks (e.g. for a combat lockout). */
     fun isInCombat(sim: WorldSimulation, characterId: String, withinTicks: Long): Boolean =
         ticksSinceCombat(sim, characterId)?.let { it < withinTicks } ?: false
 

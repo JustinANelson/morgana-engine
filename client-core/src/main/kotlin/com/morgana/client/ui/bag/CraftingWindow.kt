@@ -133,18 +133,22 @@ class CraftingWindow(
         toolbar.add().growX()
         body.add(toolbar).growX().colspan(2).padBottom(4f).row()
 
-        val gridW = winW * 0.56f
-        val detailW = winW - gridW - 36f
-        val bodyH = winH - 96f
+        val gridW = ((winW - 32f) * 0.56f).coerceAtLeast(180f)
+        val detailW = (winW - 32f - gridW - 6f).coerceAtLeast(150f)
+        grid.columns = ((gridW - 22f) / cell).toInt().coerceIn(4, 10)
+        val gridWell = VisTable().apply {
+            background = GameTheme.shared.insetWellBackground
+            add(BagUi.scroll(grid, this@CraftingWindow.stage)).grow().top()
+        }
         val leftCol = VisTable()
-        leftCol.add(BagUi.scroll(grid, stage)).width(gridW).height(bodyH - 24f).top().row()
-        leftCol.add(summaryHolder).left().padTop(4f).row()
+        leftCol.add(gridWell).grow().row()
+        leftCol.add(summaryHolder).left().growX().padTop(4f).row()
         val detailCard = VisTable().apply {
             background = GameTheme.shared.cardBackground
             add(BagUi.scroll(detail, this@CraftingWindow.stage)).grow().top()
         }
-        body.add(leftCol).width(gridW).height(bodyH).top()
-        body.add(detailCard).width(detailW).height(bodyH).top().padLeft(6f).row()
+        body.add(leftCol).width(gridW).growY().top()
+        body.add(detailCard).width(detailW).growY().top().padLeft(6f).row()
     }
 
     private fun refresh() {
@@ -266,10 +270,9 @@ class CraftingWindow(
         }
 
         val craftable = canCraft(ch, recipe)
-        val craftBtn = BagUi.button("Craft") {
+        val craftBtn = BagUi.primaryButton("Craft", enabled = craftable) {
             netClient.send(ClientPacket.CraftRecipe(recipe.id))
         }
-        craftBtn.isDisabled = !craftable
-        detail.add(craftBtn).padLeft(6f).padTop(8f).left().row()
+        detail.add(craftBtn).height(BagUi.buttonHeight).padLeft(6f).padTop(8f).left().row()
     }
 }

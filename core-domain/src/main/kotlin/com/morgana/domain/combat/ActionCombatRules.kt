@@ -35,6 +35,9 @@ data class ActionState(
     val fy: Double = 1.0,
     val bufferedToken: String? = null,
     val bufferedAt: Long = 0L,
+    val bufferedAimX: Double = 0.0,
+    val bufferedAimY: Double = 0.0,
+    val bufferedAimSet: Boolean = false,
     /** First tick each skill may start again. */
     val cooldowns: Map<Int, Long> = emptyMap(),
     /** A guard skill holds its timeline until this tick unless released. */

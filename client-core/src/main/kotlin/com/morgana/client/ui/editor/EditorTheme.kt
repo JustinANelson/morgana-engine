@@ -208,6 +208,164 @@ class EditorTheme(
     /** A window frame with room above its content for the title (a window draws its title in the top padding). */
     fun withTitleBar(frame: Drawable): Drawable = frame.also { it.topHeight = TITLE_BAR_HEIGHT }
 
+    /**
+     * An ornate RPG window frame with a distinct shaded title bar band, bronze/accent top-left bevel,
+     * metallic corner studs, and a burnished separator rule between the title bar and body well.
+     */
+    fun windowFrame(
+        fill: Color = palette.panel,
+        headerFill: Color = Color(
+            (fill.r * 0.72f).coerceIn(0f, 1f),
+            (fill.g * 0.68f).coerceIn(0f, 1f),
+            (fill.b * 0.64f).coerceIn(0f, 1f),
+            fill.a
+        ),
+        outerBorder: Color = Color(0.05f, 0.04f, 0.04f, fill.a),
+        highlight: Color = Color(
+            (palette.border.r * 0.58f + palette.accent.r * 0.42f).coerceIn(0f, 1f),
+            (palette.border.g * 0.58f + palette.accent.g * 0.42f).coerceIn(0f, 1f),
+            (palette.border.b * 0.58f + palette.accent.b * 0.42f).coerceIn(0f, 1f),
+            fill.a
+        ),
+        shadow: Color = Color(0.09f, 0.07f, 0.06f, fill.a),
+        cornerAccent: Color = Color(
+            (highlight.r * 0.55f + palette.accent.r * 0.45f).coerceIn(0f, 1f),
+            (highlight.g * 0.55f + palette.accent.g * 0.45f).coerceIn(0f, 1f),
+            (highlight.b * 0.55f + palette.accent.b * 0.45f).coerceIn(0f, 1f),
+            fill.a
+        ),
+        titleHeight: Int = TITLE_BAR_HEIGHT.toInt(),
+        padX: Float = 8f,
+        padY: Float = 8f
+    ): Drawable {
+        val topH = titleHeight.coerceAtLeast(24)
+        val w = 13
+        val h = topH + 10
+        val topLit = Color(
+            (highlight.r * 1.18f).coerceIn(0f, 1f),
+            (highlight.g * 1.18f).coerceIn(0f, 1f),
+            (highlight.b * 1.18f).coerceIn(0f, 1f),
+            fill.a
+        )
+        val headerSheen = Color(
+            (headerFill.r * 1.24f).coerceIn(0f, 1f),
+            (headerFill.g * 1.22f).coerceIn(0f, 1f),
+            (headerFill.b * 1.18f).coerceIn(0f, 1f),
+            fill.a
+        )
+        val innerLine = Color(
+            (fill.r * 0.68f).coerceIn(0f, 1f),
+            (fill.g * 0.65f).coerceIn(0f, 1f),
+            (fill.b * 0.62f).coerceIn(0f, 1f),
+            fill.a
+        )
+        val tex = texture(w, h) { pm ->
+            for (y in 0 until h) for (x in 0 until w) {
+                val isTopCorner = y in 1..2 && (x in 1..2 || x in (w - 3)..(w - 2))
+                val isBotCorner = y in (h - 3)..(h - 2) && (x in 1..2 || x in (w - 3)..(w - 2))
+                val isCorner = isTopCorner || isBotCorner
+                val isCornerTip = isCorner && (x == 1 || x == w - 2) && (y == 1 || y == h - 2)
+                val color = when {
+                    x == 0 || x == w - 1 || y == 0 || y == h - 1 -> outerBorder
+                    isCornerTip -> cornerAccent
+                    isCorner -> shadow
+                    y == 1 -> topLit
+                    y == h - 2 -> shadow
+                    x == 1 -> topLit
+                    x == w - 2 -> shadow
+                    y == 2 && x in 2..(w - 3) -> headerSheen
+                    y == topH - 2 && x in 2..(w - 3) -> highlight
+                    y == topH - 1 && x in 2..(w - 3) -> shadow
+                    y < topH - 2 -> headerFill
+                    x == 2 || x == w - 3 || y == h - 3 -> innerLine
+                    else -> fill
+                }
+                pm.drawPixel(x, y, Color.rgba8888(color))
+            }
+        }
+        val patch = NinePatch(TextureRegion(tex), 4, 4, topH, 4)
+        return NinePatchDrawable(patch).also {
+            it.leftWidth = padX.coerceAtLeast(4f)
+            it.rightWidth = padX.coerceAtLeast(4f)
+            it.topHeight = topH.toFloat()
+            it.bottomHeight = padY.coerceAtLeast(4f)
+        }
+    }
+
+    /** A recessed dark scrollbar channel with a subtle outer rim. */
+    fun scrollTrack(thickness: Int = 10): Drawable {
+        val fill = Color(
+            (palette.background.r * 0.8f).coerceIn(0f, 1f),
+            (palette.background.g * 0.8f).coerceIn(0f, 1f),
+            (palette.background.b * 0.8f).coerceIn(0f, 1f),
+            0.9f
+        )
+        val border = Color(palette.border.r, palette.border.g, palette.border.b, 0.55f)
+        val tex = texture(5, 5) { pm ->
+            for (y in 0 until 5) for (x in 0 until 5) {
+                val c = if (x == 0 || x == 4 || y == 0 || y == 4) border else fill
+                pm.drawPixel(x, y, Color.rgba8888(c))
+            }
+        }
+        return NinePatchDrawable(NinePatch(TextureRegion(tex), 1, 1, 1, 1)).also {
+            it.minWidth = thickness.toFloat()
+            it.minHeight = thickness.toFloat()
+        }
+    }
+
+    /** A beveled bronze scrollbar thumb. */
+    fun scrollKnob(thickness: Int = 10): Drawable {
+        val base = Color(
+            (palette.border.r * 0.65f + palette.accent.r * 0.35f).coerceIn(0f, 1f),
+            (palette.border.g * 0.65f + palette.accent.g * 0.35f).coerceIn(0f, 1f),
+            (palette.border.b * 0.65f + palette.accent.b * 0.35f).coerceIn(0f, 1f),
+            1f
+        )
+        val lit = Color((base.r * 1.25f).coerceIn(0f, 1f), (base.g * 1.25f).coerceIn(0f, 1f), (base.b * 1.25f).coerceIn(0f, 1f), 1f)
+        val dark = Color((base.r * 0.55f).coerceIn(0f, 1f), (base.g * 0.55f).coerceIn(0f, 1f), (base.b * 0.55f).coerceIn(0f, 1f), 1f)
+        val tex = texture(7, 7) { pm ->
+            for (y in 0 until 7) for (x in 0 until 7) {
+                val c = when {
+                    x == 0 || x == 6 || y == 0 || y == 6 -> Color(0.05f, 0.04f, 0.04f, 0.9f)
+                    x == 1 || y == 1 -> lit
+                    x == 5 || y == 5 -> dark
+                    else -> base
+                }
+                pm.drawPixel(x, y, Color.rgba8888(c))
+            }
+        }
+        return NinePatchDrawable(NinePatch(TextureRegion(tex), 2, 2, 2, 2)).also {
+            it.minWidth = thickness.toFloat()
+            it.minHeight = thickness.toFloat()
+        }
+    }
+
+    /** A crisp 16x16 RPG checkbox square (recessed box with bronze rim and warm gold tick when [checked]). */
+    fun checkboxIcon(checked: Boolean, hovered: Boolean = false): Drawable {
+        val rim = if (hovered || checked) palette.accent else palette.border
+        val bg = if (checked) palette.accentDim else palette.background
+        val outer = Color(0.05f, 0.04f, 0.04f, 1f)
+        val tick = palette.strong
+        val tex = texture(16, 16) { pm ->
+            for (y in 0 until 16) for (x in 0 until 16) {
+                val c = when {
+                    x == 0 || x == 15 || y == 0 || y == 15 -> outer
+                    x == 1 || x == 14 || y == 1 || y == 14 -> rim
+                    else -> bg
+                }
+                pm.drawPixel(x, y, Color.rgba8888(c))
+            }
+            if (checked) {
+                val pts = listOf(4 to 8, 5 to 9, 6 to 10, 7 to 9, 8 to 8, 9 to 7, 10 to 6, 11 to 5)
+                for ((px, py) in pts) {
+                    pm.drawPixel(px, py, Color.rgba8888(tick))
+                    pm.drawPixel(px, py + 1, Color.rgba8888(tick))
+                }
+            }
+        }
+        return TextureRegionDrawable(TextureRegion(tex))
+    }
+
     /** An icon from [IconArt], tinted. */
     fun icon(name: String, tint: Color = palette.text): Drawable {
         val region = iconRegions[name] ?: error("Unknown editor icon '$name'")

@@ -85,6 +85,8 @@ data class EntityVisualSmoothing(
     var direction: Direction = Direction.DOWN,
     var walkCycleTimer: Float = 0f,
     var isMoving: Boolean = false,
+    /** Short grace window so continuous movement does not flicker to IDLE between step ticks. */
+    var moveGraceTimer: Float = 0f,
     var actionState: SpriteState? = null,
     var actionTimer: Float = 0f,
     var actionDuration: Float = 0f,
@@ -176,6 +178,9 @@ private const val PIXEL_STEP = 8f
 
 /** Unacknowledged steps kept for replay (about 3 s of free movement); older ones are assumed handled. */
 private const val MAX_UNACKED_MOVES = 64
+
+/** Grace window (seconds) keeping walk state active between discrete step ticks so movement animations never stutter. */
+private const val MOVE_GRACE_SECONDS = 0.095f
 
 /** Largest same-map position change (pixels) that is animated as a leap rather than snapped; jumps stay well within it. */
 private const val MAX_LEAP_PIXELS = 640.0
@@ -289,6 +294,9 @@ class ClientWorldState {
 
     /** Quickbar cooldown sweeps; display only, the server enforces the real cooldown. */
     val spellCooldowns = SpellCooldowns()
+
+    /** Authoritative action-skill cooldowns keyed by `ActionSkillDefinition.id` (set from `ServerPacket.ActionSkillCooldown`). */
+    val actionSkillCooldowns = SpellCooldowns()
 
     /** True when floating XP essence orbs are enabled by the game and not suppressed by reduced motion. */
     fun xpOrbsEnabled(): Boolean =
@@ -632,9 +640,11 @@ class ClientWorldState {
             ?: gameDefinition?.vitals?.firstOrNull()?.id
             ?: "hp"
 
-    /** Effective UI profile for the connected realm, falling back to all-enabled defaults. */
+    /** Effective UI profile for the connected realm, defaulting to the ring layout for Online RPG and dungeon crawler tags when `ui` is omitted. */
     val uiProfile: UiProfile
-        get() = gameDefinition?.ui ?: UiProfile()
+        get() = gameDefinition?.ui ?: UiProfile(
+            layout = com.morgana.domain.game.UiLayout.defaultForTags(gameDefinition?.tags.orEmpty())
+        )
 
     /** True when the realm enables combat UI and its combat module is not `noop`. */
     fun showCombatUi(): Boolean =
@@ -901,6 +911,8 @@ class ClientWorldState {
         runTracker.reset()
         pendingRunSummary = null
         spellCooldowns.clear()
+        actionSkillCooldowns.clear()
+        skillUsedAtMs.clear()
         activeAnimations.clear()
         spellShots.clear()
         skillFx.clear()
@@ -993,20 +1005,30 @@ class ClientWorldState {
                         shiftVisuals(seamPlayerVisuals, dx, dy)
                         shiftVisuals(npcVisuals, dx, dy)
                         shiftVisuals(seamNpcVisuals, dx, dy)
-                        // Everything that was on the old map (except us) is now across the border.
+                        // Everything that was on the old map (except us) is now across the border: preserve it in seamMaps
+                        // immediately so chasing enemies and nearby players never blink out while waiting for the next SeamView.
                         val localId = localCharacter?.id
+                        val prevNpcs = npcsOnMap.values.filter { it.isAlive }
+                        val prevPlayers = playersOnMap.values.filter { it.characterId != localId }
+                        val prevItems = groundItemsOnMap.toList()
+                        val keptSeams = seamMaps.filter { it.mapId != snapshotMap.id && it.mapId != previousMap!!.id && it.mapId in snapshotNeighbors }
+                        seamMaps = if (prevNpcs.isNotEmpty() || prevPlayers.isNotEmpty() || prevItems.isNotEmpty()) {
+                            keptSeams + com.morgana.protocol.NeighborMapEntities(previousMap!!.id, prevNpcs, prevPlayers, prevItems)
+                        } else {
+                            keptSeams
+                        }
                         for ((id, v) in playerVisuals) if (id != localId) seamPlayerVisuals[id] = v
                         playerVisuals.keys.retainAll { it == localId }
                         for ((id, v) in npcVisuals) seamNpcVisuals["${previousMap!!.id}:$id"] = v
                         npcVisuals.clear()
                     } else {
+                        seamMaps = emptyList()
                         playerVisuals.clear()
                         npcVisuals.clear()
                         seamPlayerVisuals.clear()
                         seamNpcVisuals.clear()
                     }
                 }
-                seamMaps = emptyList() // the server resends the view across the borders right after this snapshot
                 activeMap = snapshotMap
                 if (workingMapDraft == null || mapChanged) {
                     workingMapDraft = snapshotMap
@@ -1062,7 +1084,7 @@ class ClientWorldState {
                     )?.let { summary ->
                         pendingRunSummary = summary
                     }
-                    if (previousMap != null) {
+                    if (previousMap != null && (shift == null || snapshotMap.generator != null)) {
                         val notice = com.morgana.client.ui.DungeonHudModel.floorEntryToast(
                             mapName = snapshotMap.name,
                             hasGenerator = snapshotMap.generator != null,
@@ -1193,12 +1215,13 @@ class ClientWorldState {
                         xpOrbTracker.onNpcKilled(n.mapId, n.tileX * ts + ts * 0.5f, n.tileY * ts + ts - spriteH * 0.5f)
                     }
                 }
+                val respawned = !wasAlive && n.isAlive
                 syncNpcVisualTarget(
                     id = n.instanceId,
                     px = n.bodyX(ts.toInt()),
                     py = n.bodyY(ts.toInt()),
                     dir = n.direction,
-                    snapImmediately = n.instanceId !in npcVisuals || !n.isAlive
+                    snapImmediately = n.instanceId !in npcVisuals || !n.isAlive || respawned
                 )
             }
             is ServerPacket.GroundItemsUpdated -> {
@@ -1263,6 +1286,9 @@ class ClientWorldState {
             is ServerPacket.SpellCooldown -> {
                 serverReportsCooldowns = true
                 spellCooldowns.set(packet.spellId, packet.durationTicks / SpellCooldowns.TICKS_PER_SECOND, com.morgana.client.ui.ToastClock.now())
+            }
+            is ServerPacket.ActionSkillCooldown -> {
+                actionSkillCooldowns.set(packet.skillId, packet.durationTicks / SpellCooldowns.TICKS_PER_SECOND, com.morgana.client.ui.ToastClock.now())
             }
             is ServerPacket.FloatingText -> {
                 val active = activeMap
@@ -1470,6 +1496,9 @@ class ClientWorldState {
         }
     }
 
+    /** True when [from] and [to] are adjacent in the seamless world (a border crossing, not a warp). */
+    fun isSeamlessNeighbor(from: MapDefinition, to: MapDefinition): Boolean = crossingShift(from, to) != null
+
     /** Where neighbouring map [mapId]'s pixel (0,0) sits in the active map's pixel space, for drawing its seam entities. */
     fun seamOffsetOf(mapId: Int): Pair<Float, Float>? = activeMap?.let { seamOffset(it, mapId) }
 
@@ -1509,10 +1538,11 @@ class ClientWorldState {
         val key = "${n.mapId}:${n.instanceId}"
         val existing = seamMaps.firstOrNull { it.mapId == n.mapId }
         val others = seamMaps.filter { it.mapId != n.mapId }
+        val wasAlive = existing?.npcs?.firstOrNull { it.instanceId == n.instanceId }?.isAlive == true
         val npcs = (existing?.npcs.orEmpty().filter { it.instanceId != n.instanceId }) + (if (n.isAlive) listOf(n) else emptyList())
         seamMaps = if (npcs.isEmpty() && existing?.players.isNullOrEmpty() && existing?.groundItems.isNullOrEmpty()) others
             else others + com.morgana.protocol.NeighborMapEntities(n.mapId, npcs, existing?.players.orEmpty(), existing?.groundItems.orEmpty())
-        if (n.isAlive) syncSeamVisual(seamNpcVisuals, key, n.bodyX(active.tileSize) + offset.first, n.bodyY(active.tileSize) + offset.second, n.direction)
+        if (n.isAlive) syncSeamVisual(seamNpcVisuals, key, n.bodyX(active.tileSize) + offset.first, n.bodyY(active.tileSize) + offset.second, n.direction, snapImmediately = !wasAlive)
         else seamNpcVisuals.remove(key)
     }
 
@@ -1544,9 +1574,9 @@ class ClientWorldState {
         )
     }
 
-    private fun syncSeamVisual(visuals: MutableMap<String, EntityVisualSmoothing>, key: String, px: Float, py: Float, dir: Direction) {
+    private fun syncSeamVisual(visuals: MutableMap<String, EntityVisualSmoothing>, key: String, px: Float, py: Float, dir: Direction, snapImmediately: Boolean = false) {
         val existing = visuals[key]
-        if (existing == null || hypot((existing.renderPixelX - px).toDouble(), (existing.renderPixelY - py).toDouble()) > 96.0) {
+        if (existing == null || snapImmediately || hypot((existing.renderPixelX - px).toDouble(), (existing.renderPixelY - py).toDouble()) > 96.0) {
             visuals[key] = EntityVisualSmoothing(px, py, px, py, dir, isMoving = false)
         } else {
             existing.targetPixelX = px
@@ -1597,7 +1627,7 @@ class ClientWorldState {
 
     private fun syncNpcVisualTarget(id: String, px: Float, py: Float, dir: Direction, snapImmediately: Boolean) {
         val existing = npcVisuals[id]
-        if (existing == null || snapImmediately || hypot((existing.renderPixelX - px).toDouble(), (existing.renderPixelY - py).toDouble()) > 320.0) {
+        if (existing == null || snapImmediately || hypot((existing.renderPixelX - px).toDouble(), (existing.renderPixelY - py).toDouble()) > 96.0) {
             npcVisuals[id] = EntityVisualSmoothing(
                 renderPixelX = px,
                 renderPixelY = py,
@@ -1677,6 +1707,7 @@ class ClientWorldState {
             )
             playerVisuals[ch.id]?.let { vis ->
                 vis.isMoving = true
+                vis.moveGraceTimer = MOVE_GRACE_SECONDS
                 vis.walkCycleTimer += 0.12f
             }
         }
@@ -1821,11 +1852,15 @@ class ClientWorldState {
     fun triggerLocalPickup(): Boolean {
         val ch = localCharacter ?: return false
         val vis = playerVisuals[ch.id] ?: return false
-        if (vis.actionState != null) return false
-        // Only games whose sprite sheets have a harvest column: without one the pose would fall back to a walk cycle.
-        if ((gameDefinition?.sprites?.stateFrames?.get(SpriteState.HARVEST) ?: 0) <= 0) return false
+        if (vis.actionState == SpriteState.PICKUP) return false
+        val frames = gameDefinition?.sprites?.stateFrames
+        val pickupState = when {
+            (frames?.get(SpriteState.PICKUP) ?: 0) > 0 -> SpriteState.PICKUP
+            (frames?.get(SpriteState.HARVEST) ?: 0) > 0 -> SpriteState.HARVEST
+            else -> return false
+        }
         if (!AutoLootModel.lootInReach(groundItemsInView(), ch.id, ch.position.mapId, ch.position.tileX, ch.position.tileY, gameDefinition?.gameplayTuning?.pickupRangeTiles ?: com.morgana.domain.sim.GROUND_PICKUP_RANGE_TILES)) return false
-        vis.triggerAction(SpriteState.HARVEST, PICKUP_POSE_SECONDS)
+        vis.triggerAction(pickupState, PICKUP_POSE_SECONDS)
         return true
     }
 
@@ -1991,9 +2026,19 @@ class ClientWorldState {
         if (dist <= 0.5f) {
             vis.renderPixelX = vis.targetPixelX
             vis.renderPixelY = vis.targetPixelY
-            vis.isMoving = false
+            if (vis.moveGraceTimer > 0f) {
+                vis.moveGraceTimer = (vis.moveGraceTimer - deltaSeconds).coerceAtLeast(0f)
+                if (vis.moveGraceTimer > 0f) {
+                    vis.walkCycleTimer += deltaSeconds
+                } else {
+                    vis.isMoving = false
+                }
+            } else {
+                vis.isMoving = false
+            }
         } else {
             vis.isMoving = true
+            vis.moveGraceTimer = MOVE_GRACE_SECONDS
             vis.walkCycleTimer += deltaSeconds
             // While a skill's leap hop is in the air the sprite keeps up with the server (which carries the character across in a few
             // ticks) instead of crawling at walking speed, so it arrives with the jump rather than rushing in after it.

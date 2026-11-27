@@ -164,9 +164,19 @@ private fun WorldSimulation.tickNpcsInner(out: MutableList<WorldSimulationEvent>
             val effectiveBehavior = if (variant?.forceAggro == true) NpcBehavior.ATTACK_ON_SIGHT else npcDef.behavior
             // A SLOW status stretches both walking and striking by its magnitude in percent (the strongest one counts).
             val slowPercent = npc.statusEffects.filter { it.type == StatusEffectType.SLOW }.maxOfOrNull { it.magnitude.coerceIn(0, 300) } ?: 0
-            val effectiveMoveSpeedTicks = ((npcDef.moveSpeedTicks * (variant?.moveSpeedPercent ?: 100) / 100) * (100 + slowPercent) / 100).coerceAtLeast(4)
+            val canMove = npcDef.moveSpeedTicks > 0
+            val canAttack = npcDef.attackDamage > 0
+            val effectiveMoveSpeedTicks = if (canMove) {
+                ((npcDef.moveSpeedTicks * (variant?.moveSpeedPercent ?: 100) / 100) * (100 + slowPercent) / 100).coerceAtLeast(4)
+            } else {
+                0
+            }
             val effectiveAttackSpeedTicks = npcDef.attackSpeedTicks * (100 + slowPercent) / 100
-            val effectiveAttackDamage = ((npcDef.attackDamage * (variant?.attackPercent ?: 100)) / 100).coerceAtLeast(1)
+            val effectiveAttackDamage = if (canAttack) {
+                ((npcDef.attackDamage * (variant?.attackPercent ?: 100)) / 100).coerceAtLeast(1)
+            } else {
+                0
+            }
 
             // Acquire target if ATTACK_ON_SIGHT or GUARD
             var targetPlayer = npc.targetEntityId?.let { playerOnOrNear(mapId, it) }?.takeIf { it.isAlive(game.lifeVitalId) }
@@ -221,8 +231,9 @@ private fun WorldSimulation.tickNpcsInner(out: MutableList<WorldSimulationEvent>
                 npcList[idx] = npc
             }
 
-            // Leash check
-            if (npc.tileCoord.manhattanDistanceTo(TileCoord(npc.homeX, npc.homeY)) > npcDef.leashRangeTiles) {
+            // Leash check (Chebyshev distance so diagonal kiting gets full leash range)
+            val distFromHome = maxOf(kotlin.math.abs(npc.tileX - npc.homeX), kotlin.math.abs(npc.tileY - npc.homeY))
+            if (distFromHome > npcDef.leashRangeTiles) {
                 npc = npc.copy(
                     tileX = npc.homeX,
                     tileY = npc.homeY,
@@ -425,7 +436,7 @@ private fun WorldSimulation.tickNpcsInner(out: MutableList<WorldSimulationEvent>
                 }
 
                 if (!castSpellThisTick) {
-                    val strikeReady = currentTick - npc.lastAttackTick >= effectiveAttackSpeedTicks && currentTick >= npc.strikeReadyTick && !targetPlayer.isFlying
+                    val strikeReady = canAttack && currentTick - npc.lastAttackTick >= effectiveAttackSpeedTicks && currentTick >= npc.strikeReadyTick && !targetPlayer.isFlying
                     if (npc.windUpUntil > 0L) {
                         // Winding up a telegraphed strike: stand and wait, then hit whoever is in the zone.
                         if (currentTick >= npc.windUpUntil) {
@@ -451,7 +462,7 @@ private fun WorldSimulation.tickNpcsInner(out: MutableList<WorldSimulationEvent>
                         }
                     } else if (npcRules.casterKeepsDistance && npcAttackSpell != null && dist <= npcAttackSpell.rangeTiles) {
                         // A caster in spell range holds its ground while the spell recharges instead of closing to melee.
-                    } else if (freeNpcMovement && !npc.statusEffects.any { it.preventsMovement }) {
+                    } else if (canMove && freeNpcMovement && !npc.statusEffects.any { it.preventsMovement }) {
                         // Free pixel movement: walk straight at the target every tick instead of hopping tile by tile.
                         val ts = map.tileSize
                         val moved = stepNpcPixels(
@@ -463,7 +474,7 @@ private fun WorldSimulation.tickNpcsInner(out: MutableList<WorldSimulationEvent>
                             npcList[idx] = npc
                             out.add(WorldSimulationEvent.NpcUpdated(npc))
                         }
-                    } else if (!freeNpcMovement && currentTick - npc.lastMoveTick >= effectiveMoveSpeedTicks && !npc.statusEffects.any { it.preventsMovement }) {
+                    } else if (canMove && !freeNpcMovement && currentTick - npc.lastMoveTick >= effectiveMoveSpeedTicks && !npc.statusEffects.any { it.preventsMovement }) {
                         val dx = (targetPlayer.position.tileX - npc.tileX).coerceIn(-1, 1)
                         val dy = (targetPlayer.position.tileY - npc.tileY).coerceIn(-1, 1)
                         val stepDir = if (abs(targetPlayer.position.tileX - npc.tileX) >= abs(targetPlayer.position.tileY - npc.tileY)) {
@@ -484,7 +495,7 @@ private fun WorldSimulation.tickNpcsInner(out: MutableList<WorldSimulationEvent>
                         }
                     }
                 }
-            } else if (freeNpcMovement && effectiveBehavior in setOf(NpcBehavior.PASSIVE, NpcBehavior.ATTACK_ON_SIGHT, NpcBehavior.FRIENDLY_ROAM)) {
+            } else if (canMove && freeNpcMovement && effectiveBehavior in setOf(NpcBehavior.PASSIVE, NpcBehavior.ATTACK_ON_SIGHT, NpcBehavior.FRIENDLY_ROAM)) {
                 // Idle with free movement: amble towards a spot near home, then stand a while before picking the next.
                 val ts = map.tileSize
                 if (npc.wanderX >= 0) {
@@ -507,6 +518,7 @@ private fun WorldSimulation.tickNpcsInner(out: MutableList<WorldSimulationEvent>
                     }
                 }
             } else if (
+                canMove &&
                 effectiveBehavior in setOf(NpcBehavior.PASSIVE, NpcBehavior.ATTACK_ON_SIGHT, NpcBehavior.FRIENDLY_ROAM) &&
                 currentTick - npc.lastMoveTick >= effectiveMoveSpeedTicks * 3L &&
                 rng.rollBasisPoints(2000)

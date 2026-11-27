@@ -9,7 +9,11 @@ data class Toast(val text: String, val kind: ToastKind, val shownAtSeconds: Floa
  * The pure side of toasts: a short list of recent messages that expire. The overlay draws [visible]; the game feeds it
  * with [offer]. Time is passed in, so the rules are deterministic and unit-tested.
  */
-class ToastQueue(private val maxVisible: Int = 4, private val lifetimeSeconds: Float = 4f) {
+class ToastQueue(
+    private val maxVisible: Int = 5,
+    private val lifetimeSeconds: Float = 1.9f,
+    private val staggerSeconds: Float = 0.35f
+) {
     private val shown = ArrayList<Toast>()
 
     /** Toasts added since the overlay last looked; the overlay drains these to start their animations. */
@@ -17,7 +21,7 @@ class ToastQueue(private val maxVisible: Int = 4, private val lifetimeSeconds: F
 
     val visible: List<Toast> get() = shown
 
-    /** Adds a toast; an identical message already showing just has its timer restarted. */
+    /** Adds a toast; an identical message already showing just has its timer restarted. Batched toasts stagger their expiry so they fade one at a time. */
     fun add(text: String, kind: ToastKind, nowSeconds: Float) {
         val clean = text.trim()
         if (clean.isEmpty()) return
@@ -26,10 +30,19 @@ class ToastQueue(private val maxVisible: Int = 4, private val lifetimeSeconds: F
             shown[existing] = shown[existing].copy(shownAtSeconds = nowSeconds)
             return
         }
-        val toast = Toast(clean, kind, nowSeconds)
+        val lastShown = shown.lastOrNull()?.shownAtSeconds
+        val effectiveShownAt = if (lastShown != null && kind != ToastKind.BROADCAST) {
+            maxOf(nowSeconds, lastShown + staggerSeconds)
+        } else {
+            nowSeconds
+        }
+        val toast = Toast(clean, kind, effectiveShownAt)
         shown += toast
         fresh += toast
-        while (shown.size > maxVisible) shown.removeAt(0)
+        while (shown.size > maxVisible) {
+            val evicted = shown.removeAt(0)
+            fresh.remove(evicted)
+        }
     }
 
     /** Offers a server system message; shown only when [ToastClassifier] thinks it is worth a toast. */

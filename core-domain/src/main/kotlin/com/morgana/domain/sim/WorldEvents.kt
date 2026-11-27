@@ -207,6 +207,9 @@ sealed interface WorldSimulationEvent {
     /** A player's [spellId] is now cooling down for [durationTicks] (the client draws the quickbar sweep from this). */
     data class SpellCooldownStarted(val characterId: String, val spellId: Int, val durationTicks: Int) : WorldSimulationEvent
 
+    /** A player's action skill [skillId] is now cooling down for [durationTicks] (authoritative client ring sweep). */
+    data class ActionSkillCooldownStarted(val characterId: String, val skillId: Int, val durationTicks: Int) : WorldSimulationEvent
+
     /** A player began channeling / casting a spell with a non-zero castTimeTicks. */
     data class SpellCastStarted(val characterId: String, val spellId: Int, val mapId: Int, val castTimeTicks: Int) : WorldSimulationEvent
 

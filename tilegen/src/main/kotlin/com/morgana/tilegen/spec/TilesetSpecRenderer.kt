@@ -112,6 +112,13 @@ object TilesetSpecRenderer {
                     windowGlow = cliff.castShadow,
                     timberColor = trimRgba ?: PaletteRamp.rgba(104, 58, 38)
                 )
+                cliff.naturalCliff -> structureGen.generateNaturalCliffSet(
+                    name = cliff.name,
+                    topMaterial = top,
+                    faceMaterial = face,
+                    style = cliffStyle,
+                    lush = cliff.lush
+                )
                 cliff.a4Layout && cliff.castle -> com.morgana.tilegen.structure.CastleWalls.generate(cliff.name, spec.tileSize)
                 cliff.a4Layout -> structureGen.generateA4WallSet(
                     name = cliff.name,
@@ -177,8 +184,12 @@ object TilesetSpecRenderer {
             } else {
                 val fg = baseTilesByName[auto.foregroundMaterial]
                     ?: throw SpecException("Unknown foregroundMaterial '${auto.foregroundMaterial}'")
-                val bg = baseTilesByName[auto.backgroundMaterial]
-                    ?: throw SpecException("Unknown backgroundMaterial '${auto.backgroundMaterial}'")
+                val bg = if (auto.backgroundMaterial.equals("transparent", ignoreCase = true)) {
+                    TileImage(spec.tileSize, spec.tileSize)
+                } else {
+                    baseTilesByName[auto.backgroundMaterial]
+                        ?: throw SpecException("Unknown backgroundMaterial '${auto.backgroundMaterial}'")
+                }
                 val style = auto.style?.toAutotileStyle(spec.style) ?: AutotileStyle(pixelStyle = spec.style)
                 autotileGen.generateAutotile(fg, bg, auto.mode, style, cols)
             }

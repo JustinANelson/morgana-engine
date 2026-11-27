@@ -95,13 +95,14 @@ class MorganaWorldRenderer(
         val activeMap = worldState.activeMap ?: return
         val tileSize = activeMap.tileSize
 
-        // Smoothly center camera on local player's interpolated pixel position
+        // Smoothly center camera on local player's interpolated pixel position.
+        // Keep following playerVisuals even during the 1-frame window between MapSnapshot and CharacterSync on a seam crossing.
         val localChar = worldState.localCharacter
         val spriteProfile = worldState.gameDefinition?.sprites
-        if (localChar != null && localChar.position.mapId == activeMap.id) {
-            val vis = worldState.playerVisuals[localChar.id]
-            val px = vis?.renderPixelX ?: (localChar.position.tileX * tileSize.toFloat())
-            val py = vis?.renderPixelY ?: (localChar.position.tileY * tileSize.toFloat())
+        val localVis = localChar?.let { worldState.playerVisuals[it.id] }
+        if (localChar != null && (localChar.position.mapId == activeMap.id || localVis != null)) {
+            val px = localVis?.renderPixelX ?: (localChar.position.tileX * tileSize.toFloat())
+            val py = localVis?.renderPixelY ?: (localChar.position.tileY * tileSize.toFloat())
             val heroBox = SpritePlacement.place(px, py, activeMap.height, tileSize, spriteProfile, spriteId = localChar.spriteId)
             camera.position.set(
                 heroBox.centerX,
@@ -134,22 +135,29 @@ class MorganaWorldRenderer(
 
         batch.begin()
 
-        // 1. Render seamless N/S/E/W stitched neighbor maps (Lower Layers)
-        renderNeighborMapsPass(batch, activeMap, worldState.neighborMaps, worldState.neighborOffsets, aboveEntities = false)
-
-        // 2. Render Active Map Lower Layers (GROUND, MASK_1, MASK_2)
         val editing = worldState.mapEditorActive
         val hiddenLayers = if (editing) worldState.editor.hiddenLayers else emptySet()
         val dimmed = if (editing && worldState.editor.dimOtherLayers) worldState.editor.layer else null
-        renderMapLayers(batch, activeMap, offsetX = 0f, offsetY = 0f, aboveEntities = false, fadeRoof = false, hidden = hiddenLayers, dimExcept = dimmed)
 
-        if (!editing) castShadowSky()?.let { renderTileShadows(batch, activeMap, it) }
+        // 1. Render seamless N/S/E/W stitched neighbor maps (Lower Layers: GROUND + walkable MASK)
+        renderNeighborMapsPass(batch, activeMap, worldState.neighborMaps, worldState.neighborOffsets, aboveEntities = false, skipBlockedMask = !editing)
 
-        // 3. Render Y-Sorted Entities (Ground Items, Resource Nodes, active & seam NPCs/Players + Paperdoll, Projectiles, Animations)
+        // 2. Render Active Map Lower Layers (GROUND + walkable MASK; blocked MASK props are Y-sorted with entities)
+        renderMapLayers(batch, activeMap, offsetX = 0f, offsetY = 0f, aboveEntities = false, fadeRoof = false, hidden = hiddenLayers, dimExcept = dimmed, skipBlockedMask = !editing)
+
+        // 2b. Render Tile Cast Shadows across both neighbor maps and active map so shadows never cut off at seams
+        if (!editing) {
+            castShadowSky()?.let { sky ->
+                renderNeighborTileShadowsPass(batch, activeMap, worldState.neighborMaps, worldState.neighborOffsets, sky)
+                renderTileShadows(batch, activeMap, sky, offsetX = 0f, offsetY = 0f)
+            }
+        }
+
+        // 3. Render Y-Sorted Entities interleaved with blocked MASK_1/MASK_2 prop rows (Ground Items, Resource Nodes, active & seam NPCs/Players + Paperdoll, Projectiles, Animations)
         if (!editing) {
             renderFacingTargetReticle(batch, activeMap, worldState)
         }
-        renderEntitiesAndProjectiles(batch, activeMap, worldState)
+        renderEntitiesAndProjectiles(batch, activeMap, worldState, ySortBlockedMasks = !editing)
         renderXpOrbs(batch, activeMap, worldState)
 
         // 4. Render Upper Layers (FRINGE_1, FRINGE_2, and auto-fading ROOF)
@@ -215,13 +223,43 @@ class MorganaWorldRenderer(
 
     private fun resolveCharacterState(
         vis: EntityVisualSmoothing?,
-        isCasting: Boolean
+        isCasting: Boolean,
+        isMounted: Boolean = false
     ): Pair<SpriteState?, Float?> {
         if (isCasting) return SpriteState.CAST to ((elapsedSeconds * 3f) % 1f)
         if (vis != null && vis.leapDuration > 0f) return SpriteState.JUMP to (vis.leapTimer / vis.leapDuration).coerceIn(0f, 1f)
         vis?.actionState?.let { return it to vis.actionProgress }
+        if (isMounted) return SpriteState.RIDE to null
         if (vis?.isMoving == true) return SpriteState.WALK to null
         return SpriteState.IDLE to null
+    }
+
+    private inline fun forEachNeighborPlacement(
+        activeMap: MapDefinition,
+        neighbors: Map<Int, MapDefinition>,
+        offsets: Map<Int, com.morgana.domain.map.TileOffset>,
+        action: (map: MapDefinition, offsetX: Float, offsetY: Float) -> Unit
+    ) {
+        val ts = activeMap.tileSize.toFloat()
+        if (offsets.isNotEmpty()) {
+            for ((id, offset) in offsets) {
+                val other = neighbors[id] ?: continue
+                action(other, offset.x * ts, (activeMap.height - offset.y - other.height) * ts)
+            }
+            return
+        }
+        neighbors[activeMap.neighbors.eastMapId]?.let { east ->
+            action(east, activeMap.width * ts, sideNeighborOffsetY(activeMap.height, east.height, ts))
+        }
+        neighbors[activeMap.neighbors.westMapId]?.let { west ->
+            action(west, -west.width * ts, sideNeighborOffsetY(activeMap.height, west.height, ts))
+        }
+        neighbors[activeMap.neighbors.northMapId]?.let { north ->
+            action(north, 0f, activeMap.height * ts)
+        }
+        neighbors[activeMap.neighbors.southMapId]?.let { south ->
+            action(south, 0f, -south.height * ts)
+        }
     }
 
     private fun renderNeighborMapsPass(
@@ -229,36 +267,29 @@ class MorganaWorldRenderer(
         activeMap: MapDefinition,
         neighbors: Map<Int, MapDefinition>,
         offsets: Map<Int, com.morgana.domain.map.TileOffset>,
-        aboveEntities: Boolean
+        aboveEntities: Boolean,
+        skipBlockedMask: Boolean = false
     ) {
-        val ts = activeMap.tileSize.toFloat()
-        batch.color = Color(0.78f, 0.78f, 0.82f, 1f)
-
-        if (offsets.isNotEmpty()) {
-            // A seamless world: each neighbour sits at its own offset (any size, any edge or corner).
-            for ((id, offset) in offsets) {
-                val other = neighbors[id] ?: continue
-                renderMapLayers(
-                    batch, other, offsetX = offset.x * ts, offsetY = (activeMap.height - offset.y - other.height) * ts,
-                    aboveEntities = aboveEntities, fadeRoof = false
-                )
-            }
-            batch.color = Color.WHITE
-            return
-        }
-        neighbors[activeMap.neighbors.eastMapId]?.let { east ->
-            renderMapLayers(batch, east, offsetX = activeMap.width * ts, offsetY = sideNeighborOffsetY(activeMap.height, east.height, ts), aboveEntities = aboveEntities, fadeRoof = false)
-        }
-        neighbors[activeMap.neighbors.westMapId]?.let { west ->
-            renderMapLayers(batch, west, offsetX = -west.width * ts, offsetY = sideNeighborOffsetY(activeMap.height, west.height, ts), aboveEntities = aboveEntities, fadeRoof = false)
-        }
-        neighbors[activeMap.neighbors.northMapId]?.let { north ->
-            renderMapLayers(batch, north, offsetX = 0f, offsetY = activeMap.height * ts, aboveEntities = aboveEntities, fadeRoof = false)
-        }
-        neighbors[activeMap.neighbors.southMapId]?.let { south ->
-            renderMapLayers(batch, south, offsetX = 0f, offsetY = -south.height * ts, aboveEntities = aboveEntities, fadeRoof = false)
+        forEachNeighborPlacement(activeMap, neighbors, offsets) { other, ox, oy ->
+            renderMapLayers(
+                batch, other, offsetX = ox, offsetY = oy,
+                aboveEntities = aboveEntities, fadeRoof = false,
+                skipBlockedMask = skipBlockedMask
+            )
         }
         batch.color = Color.WHITE
+    }
+
+    private fun renderNeighborTileShadowsPass(
+        batch: SpriteBatch,
+        activeMap: MapDefinition,
+        neighbors: Map<Int, MapDefinition>,
+        offsets: Map<Int, com.morgana.domain.map.TileOffset>,
+        sky: SkyState
+    ) {
+        forEachNeighborPlacement(activeMap, neighbors, offsets) { other, ox, oy ->
+            renderTileShadows(batch, other, sky, offsetX = ox, offsetY = oy)
+        }
     }
 
     private fun renderMapLayers(
@@ -270,7 +301,9 @@ class MorganaWorldRenderer(
         fadeRoof: Boolean,
         hidden: Set<MapLayer> = emptySet(),
         /** When set, every other layer is drawn faded (the editor's "dim other layers" aid). */
-        dimExcept: MapLayer? = null
+        dimExcept: MapLayer? = null,
+        /** When true, MASK_1/MASK_2 tiles on Blocked cells are deferred to the Y-sorted entity pass. */
+        skipBlockedMask: Boolean = false
     ) {
         val ts = map.tileSize
         val targetLayers = MapLayer.entries.filter { it.aboveEntities == aboveEntities && it !in hidden }
@@ -281,6 +314,7 @@ class MorganaWorldRenderer(
         val vis = VisibleTiles.of(map.width, map.height, ts, offsetX, offsetY, viewLeft, viewRight, viewBottom, viewTop)
         val firstCol = vis.firstCol; val lastCol = vis.lastCol; val firstRow = vis.firstRow; val lastRow = vis.lastRow
         for (layer in targetLayers) {
+            val isMaskLayer = layer == MapLayer.MASK_1 || layer == MapLayer.MASK_2
             val roofAlpha = if (layer == MapLayer.ROOF && fadeRoof) 0.25f else 1f
             val alpha = if (dimExcept != null) roofAlpha * com.morgana.client.editor.EditorShortcuts.layerAlpha(layer, dimExcept, dimOthers = true) else roofAlpha
             batch.setColor(1f, 1f, 1f, alpha)
@@ -288,6 +322,7 @@ class MorganaWorldRenderer(
                 val ry = offsetY + toRenderY(map.height, ty, ts)
                 for (tx in firstCol until lastCol) {
                     val cell = map.getCell(tx, ty) ?: continue
+                    if (skipBlockedMask && isMaskLayer && cell.attribute is TileAttribute.Blocked) continue
                     val placement = cell.layers[layer] ?: continue
                     val (srcX, srcY) = if (placement.autotileMode == AutotileMode.ANIMATED_3_FRAME) {
                         waterFrames[waterAnimIdx]
@@ -352,10 +387,76 @@ class MorganaWorldRenderer(
         batch.setColor(1f, 1f, 1f, 1f)
     }
 
+    private data class BlockedMaskRow(
+        val sortY: Float,
+        val map: MapDefinition,
+        val ty: Int,
+        val offsetX: Float,
+        val ry: Float,
+        val firstCol: Int,
+        val lastCol: Int
+    )
+
+    private fun collectBlockedMaskRows(
+        activeMap: MapDefinition,
+        worldState: ClientWorldState
+    ): List<BlockedMaskRow> {
+        val ts = activeMap.tileSize
+        val activeTopBase = (activeMap.height - 1) * ts.toFloat()
+        val rows = ArrayList<BlockedMaskRow>(24)
+        fun scan(m: MapDefinition, ox: Float, oy: Float) {
+            val mts = m.tileSize
+            val vis = VisibleTiles.of(m.width, m.height, mts, ox, oy, viewLeft, viewRight, viewBottom, viewTop)
+            for (ty in vis.firstRow until vis.lastRow) {
+                var hasBlockedMask = false
+                for (tx in vis.firstCol until vis.lastCol) {
+                    val cell = m.getCell(tx, ty) ?: continue
+                    if (cell.attribute is TileAttribute.Blocked &&
+                        (MapLayer.MASK_1 in cell.layers || MapLayer.MASK_2 in cell.layers)
+                    ) {
+                        hasBlockedMask = true
+                        break
+                    }
+                }
+                if (hasBlockedMask) {
+                    val ry = oy + toRenderY(m.height, ty, mts)
+                    rows.add(BlockedMaskRow(activeTopBase - ry, m, ty, ox, ry, vis.firstCol, vis.lastCol))
+                }
+            }
+        }
+        forEachNeighborPlacement(activeMap, worldState.neighborMaps, worldState.neighborOffsets) { other, ox, oy ->
+            scan(other, ox, oy)
+        }
+        scan(activeMap, 0f, 0f)
+        rows.sortBy { it.sortY }
+        return rows
+    }
+
+    private fun drawBlockedMaskRow(batch: SpriteBatch, row: BlockedMaskRow, waterFrames: List<Pair<Int, Int>>, waterAnimIdx: Int) {
+        val ts = row.map.tileSize
+        val tsf = ts.toFloat()
+        batch.color = Color.WHITE
+        for (layer in SHADOW_BASE_LAYERS) {
+            for (tx in row.firstCol until row.lastCol) {
+                val cell = row.map.getCell(tx, row.ty) ?: continue
+                if (cell.attribute !is TileAttribute.Blocked) continue
+                val placement = cell.layers[layer] ?: continue
+                val (srcX, srcY) = if (placement.autotileMode == AutotileMode.ANIMATED_3_FRAME) {
+                    waterFrames[waterAnimIdx]
+                } else {
+                    com.morgana.domain.map.TileAnimation.sourceAt(placement, animationClockMs())
+                }
+                val region = assets.getTileRegion(placement.tilesetId, srcX, srcY)
+                batch.draw(region, row.offsetX + tx * ts, row.ry, tsf, tsf)
+            }
+        }
+    }
+
     private fun renderEntitiesAndProjectiles(
         batch: SpriteBatch,
         map: MapDefinition,
-        worldState: ClientWorldState
+        worldState: ClientWorldState,
+        ySortBlockedMasks: Boolean = false
     ) {
         val ts = map.tileSize
 
@@ -470,9 +571,11 @@ class MorganaWorldRenderer(
 
         val spriteProfile = worldState.gameDefinition?.sprites
 
-        // Seam ground items (muted)
+        val entitySeamTint = if (worldState.isModuleEnabled("softSeams")) Color.WHITE else seamTint
+
+        // Seam ground items
         if (worldState.seamMaps.isNotEmpty()) {
-            batch.color = seamTint
+            batch.color = entitySeamTint
             for (m in worldState.seamMaps) {
                 val (ox, oy) = worldState.seamOffsetOf(m.mapId) ?: continue
                 for (item in m.groundItems) {
@@ -521,7 +624,12 @@ class MorganaWorldRenderer(
             val vis = worldState.playerVisuals[player.characterId]
             val fx = vis?.renderPixelX ?: (player.position.pixelX)
             val fy = vis?.renderPixelY ?: (player.position.pixelY)
-            val (state, progress) = resolveCharacterState(vis, isCasting = player.castingSpellId != null && player.castTotalTicks > 0)
+            val isMounted = player.paperdollLayers.any { it.slot == PaperdollSlot.MOUNT }
+            val (state, progress) = resolveCharacterState(
+                vis,
+                isCasting = player.castingSpellId != null && player.castTotalTicks > 0,
+                isMounted = isMounted
+            )
             drawables.add(
                 DrawableCharacter(
                     sortKey = EntitySortKey(fy, SpritePlacement.KIND_PLAYER, player.characterId),
@@ -541,6 +649,7 @@ class MorganaWorldRenderer(
         }
         for (m in worldState.seamMaps) {
             for (npc in m.npcs) {
+                if (!npc.isAlive || npc.instanceId in worldState.npcsOnMap) continue
                 val key = "${m.mapId}:${npc.instanceId}"
                 val vis = worldState.seamNpcVisuals[key] ?: continue
                 val npcDef = worldState.catalog.npcs.firstOrNull { it.id == npc.npcId }
@@ -557,13 +666,19 @@ class MorganaWorldRenderer(
                         actionProgress = progress,
                         paperdollSpriteIds = emptyList(),
                         paperdollLayers = emptyList(),
-                        tint = seamTint
+                        tint = entitySeamTint
                     )
                 )
             }
             for (player in m.players) {
+                if (player.characterId in worldState.playersOnMap) continue
                 val vis = worldState.seamPlayerVisuals[player.characterId] ?: continue
-                val (state, progress) = resolveCharacterState(vis, isCasting = player.castingSpellId != null && player.castTotalTicks > 0)
+                val isMounted = player.paperdollLayers.any { it.slot == PaperdollSlot.MOUNT }
+                val (state, progress) = resolveCharacterState(
+                    vis,
+                    isCasting = player.castingSpellId != null && player.castTotalTicks > 0,
+                    isMounted = isMounted
+                )
                 drawables.add(
                     DrawableCharacter(
                         sortKey = EntitySortKey(vis.renderPixelY, SpritePlacement.KIND_PLAYER, "seam:${m.mapId}:${player.characterId}"),
@@ -576,7 +691,7 @@ class MorganaWorldRenderer(
                         actionProgress = progress,
                         paperdollSpriteIds = player.paperdollSpriteIds,
                         paperdollLayers = player.paperdollLayers,
-                        tint = seamTint
+                        tint = entitySeamTint
                     )
                 )
             }
@@ -585,8 +700,24 @@ class MorganaWorldRenderer(
         renderAnimations(batch, map, worldState, aboveEntities = false)
 
         drawables.sortBy { it.sortKey }
-        for (entity in drawables) {
-            drawEntityCharacter(batch, entity, ts.toFloat())
+        if (ySortBlockedMasks) {
+            val maskRows = collectBlockedMaskRows(map, worldState)
+            val waterFrames = listOf(3 to 0, 0 to 1, 1 to 1)
+            val waterAnimIdx = ((elapsedSeconds * 3.5f).toInt()) % waterFrames.size
+            var mi = 0
+            var ei = 0
+            while (mi < maskRows.size || ei < drawables.size) {
+                val drawMask = mi < maskRows.size && (ei >= drawables.size || maskRows[mi].sortY <= drawables[ei].sortKey.footPixelY)
+                if (drawMask) {
+                    drawBlockedMaskRow(batch, maskRows[mi++], waterFrames, waterAnimIdx)
+                } else {
+                    drawEntityCharacter(batch, drawables[ei++], ts.toFloat())
+                }
+            }
+        } else {
+            for (entity in drawables) {
+                drawEntityCharacter(batch, entity, ts.toFloat())
+            }
         }
         batch.color = Color.WHITE
 
@@ -594,16 +725,22 @@ class MorganaWorldRenderer(
         val nowMs = System.currentTimeMillis()
         for (proj in worldState.projectilesOnMap) {
             if (proj.free) {
-                // A free-flight shot is drawn at its pixel position, turned along its exact heading. The server sends the list when a
-                // shot is fired or ends, not every tick, so it is flown on from when the list arrived (one tick is 50 ms) until its range runs out.
+                // A free-flight shot is drawn at its pixel position, turned along its exact heading, lifted to the shooter's hand/bow height.
                 val half = ts * 0.5f
+                val sourceSprite = if (proj.isFromPlayer) {
+                    worldState.playersOnMap[proj.sourceEntityId]?.spriteId
+                        ?: worldState.localCharacter?.takeIf { it.id == proj.sourceEntityId }?.spriteId
+                } else {
+                    worldState.npcsOnMap[proj.sourceEntityId]?.let { n -> worldState.catalog.npcs.firstOrNull { it.id == n.npcId }?.spriteId }
+                }
+                val lift = projectileLift(spriteProfile, sourceSprite, ts.toFloat())
                 val angle = Math.toDegrees(kotlin.math.atan2(-proj.vy.toDouble(), proj.vx.toDouble())).toFloat()
                 val speed = kotlin.math.hypot(proj.vx.toDouble(), proj.vy.toDouble()).toFloat()
                 val flownTicks = ((nowMs - (worldState.projectileStampMs[proj.projectileId] ?: nowMs)) / 50f).coerceIn(0f, 40f)
                 val advance = if (speed > 0f) minOf(flownTicks, proj.remainingPixels / speed) else 0f
                 batch.draw(
                     assets.getProjectileRegion(proj.spriteId),
-                    proj.px + proj.vx * advance - half, pixelToRenderY(map.height, proj.py + proj.vy * advance, ts) + half,
+                    proj.px + proj.vx * advance - half, pixelToRenderY(map.height, proj.py + proj.vy * advance, ts) + half + lift,
                     half, half, ts.toFloat(), ts.toFloat(), 1f, 1f, angle
                 )
                 continue
@@ -773,6 +910,77 @@ class MorganaWorldRenderer(
                         var d = 0f
                         while (d <= r) { dot(fx.toX + kotlin.math.cos(ang) * d, fx.toY + kotlin.math.sin(ang) * d, 2.6f); d += 9f }
                     }
+                }
+                com.morgana.client.state.SkillFx.METEOR -> {
+                    // Ground target warning ring, blazing meteor streaking down from the sky, then fiery impact shockwave & embers.
+                    val t = fx.elapsed
+                    val impactT = fx.delaySeconds.coerceAtLeast(0.25f)
+                    if (t < impactT) {
+                        val u = (t / impactT).coerceIn(0f, 1f)
+                        batch.setColor(1f, 0.45f, 0.12f, 0.35f + 0.45f * u)
+                        for ((px, py) in com.morgana.client.state.SkillFxMath.ring(fx.toX, fx.toY, fx.radius * (0.85f + 0.15f * u), 28, 0f)) dot(px, py, 3.5f)
+                        // Falling molten rock + flame tail
+                        val fall = u * u
+                        val mx = fx.toX + (1f - fall) * 70f
+                        val my = fx.toY - (1f - fall) * 230f
+                        for (s in 0..8) {
+                            val f = s / 8f
+                            batch.setColor(1f, 0.35f + 0.55f * (1f - f), 0.1f, (1f - f * 0.8f))
+                            dot(mx + f * 24f, my - f * 72f, 13f * (1f - f * 0.55f))
+                        }
+                        batch.setColor(1f, 0.95f, 0.7f, 1f)
+                        dot(mx, my, 9f)
+                    } else {
+                        val u = ((t - impactT) / 0.7f).coerceIn(0f, 1f)
+                        val fade = 1f - u
+                        // Expanding fiery shockwave rings
+                        for (k in 0..1) {
+                            val r = fx.radius * (0.2f + 0.95f * (u - 0.08f * k).coerceIn(0f, 1f))
+                            batch.setColor(1f, if (k == 0) 0.75f else 0.35f, 0.1f, fade)
+                            for ((px, py) in com.morgana.client.state.SkillFxMath.ring(fx.toX, fx.toY, r, 32, 0f)) dot(px, py, 7f * fade + 2f)
+                        }
+                        // Core flash & rising embers
+                        if (u < 0.35f) {
+                            batch.setColor(1f, 0.96f, 0.75f, 1f - u / 0.35f)
+                            dot(fx.toX, fx.toY, fx.radius * 0.45f * (1f - u))
+                        }
+                        for (i in 0 until 16) {
+                            val ang = i * 2.4f
+                            val dist = fx.radius * (0.15f + 0.8f * u) * (0.5f + 0.5f * ((i % 3) / 2f))
+                            batch.setColor(1f, 0.6f, 0.15f, fade)
+                            dot(fx.toX + kotlin.math.cos(ang) * dist, fx.toY + kotlin.math.sin(ang) * dist - 55f * u, 4.5f * fade + 1.5f)
+                        }
+                    }
+                }
+                com.morgana.client.state.SkillFx.FROST_NOVA -> {
+                    // Expanding icy blue-white ring + 8 frost spokes matching the full AoE radius.
+                    val u = (fx.elapsed / 0.65f).coerceIn(0f, 1f)
+                    val fade = 1f - u
+                    val r = fx.radius * (0.18f + 0.82f * (1f - (1f - u) * (1f - u)))
+                    batch.setColor(0.55f, 0.88f, 1f, 0.95f * fade)
+                    for ((px, py) in com.morgana.client.state.SkillFxMath.ring(fx.fromX, fx.fromY + 4f, r, 32, 0f)) dot(px, py, 5.5f * fade + 2f)
+                    batch.setColor(0.92f, 0.98f, 1f, 0.85f * fade)
+                    for ((px, py) in com.morgana.client.state.SkillFxMath.ring(fx.fromX, fx.fromY + 4f, r * 0.65f, 20, 0f)) dot(px, py, 3.5f * fade + 1.5f)
+                    for (i in 0 until 8) {
+                        val ang = i * (Math.PI.toFloat() / 4f)
+                        var d = 10f
+                        while (d <= r) {
+                            dot(fx.fromX + kotlin.math.cos(ang) * d, fx.fromY + 4f + kotlin.math.sin(ang) * d, 3.2f * fade + 1f)
+                            d += 14f
+                        }
+                    }
+                }
+                com.morgana.client.state.SkillFx.BLINK -> {
+                    // Arcane violet/cyan shimmer trail + arrival ripple ring.
+                    val u = (fx.elapsed / 0.45f).coerceIn(0f, 1f)
+                    val fade = 1f - u
+                    for (i in 0..8) {
+                        val f = i / 8f
+                        batch.setColor(0.68f, 0.45f, 1f, 0.8f * fade * (0.4f + 0.6f * f))
+                        dot(fx.fromX + (fx.toX - fx.fromX) * f, fx.fromY + (fx.toY - fx.fromY) * f, 5.5f * fade + 2f)
+                    }
+                    batch.setColor(0.55f, 0.92f, 1f, 0.9f * fade)
+                    for ((px, py) in com.morgana.client.state.SkillFxMath.ring(fx.toX, fx.toY + 4f, 10f + 26f * u, 16, 0f)) dot(px, py, 3.5f * fade + 1.5f)
                 }
                 com.morgana.client.state.SkillFx.EMPOWER_BURST -> {
                     // The empowerment starts: two rings burst out and a column of sparks rises.
@@ -995,18 +1203,27 @@ class MorganaWorldRenderer(
      * the base tile's bottom edge and leaned away from the light (see [TileShadowModel]), drawn after the ground and before the
      * entities so characters walk over them. Only the active map is shadowed; neighbour maps are drawn plain.
      */
-    private fun renderTileShadows(batch: SpriteBatch, map: MapDefinition, sky: SkyState) {
+    private fun renderTileShadows(
+        batch: SpriteBatch,
+        map: MapDefinition,
+        sky: SkyState,
+        offsetX: Float = 0f,
+        offsetY: Float = 0f
+    ) {
         val ts = map.tileSize
-        val vis = VisibleTiles.of(map.width, map.height, ts, 0f, 0f, viewLeft, viewRight, viewBottom, viewTop)
-        // A base above the view still throws its shadow down into it, so look a few rows further up.
+        val vis = VisibleTiles.of(map.width, map.height, ts, offsetX, offsetY, viewLeft, viewRight, viewBottom, viewTop)
+        // A base above or beside the view still throws its shadow into it, so expand the scan window by MAX_STACK.
         val firstRow = (vis.firstRow - TileShadowModel.MAX_STACK).coerceAtLeast(0)
+        val lastRow = (vis.lastRow + TileShadowModel.MAX_STACK).coerceAtMost(map.height)
+        val firstCol = (vis.firstCol - TileShadowModel.MAX_STACK).coerceAtLeast(0)
+        val lastCol = (vis.lastCol + TileShadowModel.MAX_STACK).coerceAtMost(map.width)
         val color = Color.toFloatBits(0f, 0f, 0f, sky.shadowAlpha * 0.9f)
         val tsf = ts.toFloat()
-        for (ty in firstRow until vis.lastRow) {
-            for (tx in (vis.firstCol - TileShadowModel.MAX_STACK).coerceAtLeast(0) until (vis.lastCol + TileShadowModel.MAX_STACK).coerceAtMost(map.width)) {
+        for (ty in firstRow until lastRow) {
+            for (tx in firstCol until lastCol) {
                 if (!TileShadowModel.isBase(map, tx, ty)) continue
-                val rootY = toRenderY(map.height, ty, ts) + tsf * 0.04f
-                val left = tx * tsf
+                val rootY = offsetY + toRenderY(map.height, ty, ts) + tsf * 0.04f
+                val left = offsetX + tx * tsf
                 val right = left + tsf
                 val stack = TileShadowModel.stackHeight(map, tx, ty)
                 for (k in 0..stack) {
@@ -1055,8 +1272,10 @@ class MorganaWorldRenderer(
 
     private fun drawEntityCharacterBody(batch: SpriteBatch, entity: DrawableCharacter, tileSizePx: Float) {
         val castSky = castShadowSky()
-        // Under a cast shadow the oval shrinks to a small contact shadow so feet still sit on the ground.
-        drawGroundShadow(batch, entity.box, tileSizePx, entity.tint.a * if (castSky != null) 0.55f else 1f)
+        // Under a cast shadow the oval shrinks to a small contact shadow so feet still sit on the ground; mounts draw their own wide shadow.
+        if (entity.paperdollLayers.none { it.slot == PaperdollSlot.MOUNT }) {
+            drawGroundShadow(batch, entity.box, tileSizePx, entity.tint.a * if (castSky != null) 0.55f else 1f)
+        }
         entity.aura?.let { drawVariantAura(batch, entity.box, tileSizePx, it) }
         batch.color = entity.tint
         if (entity.paperdollLayers.isNotEmpty()) {
@@ -1200,22 +1419,29 @@ class MorganaWorldRenderer(
         }
 
         if (lit) {
-
             batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE)
             val pulse = 1f + 0.06f * sin(elapsedSeconds * 6f)
-            for (ty in 0 until map.height) {
-                for (tx in 0 until map.width) {
-                    val attr = map.getCell(tx, ty)?.attribute
-                    if (attr is TileAttribute.LightSource) {
-                        val lCol = runCatching { Color.valueOf(attr.colorHex.removePrefix("#")) }.getOrDefault(Color.ORANGE)
-                        val r = attr.radiusPixels * (if (attr.flicker) pulse else 1f)
-                        val cx = tx * ts + ts * 0.5f
-                        val cy = toRenderY(map.height, ty, ts) + ts * 0.5f
-                        batch.setColor(lCol.r, lCol.g, lCol.b, 0.45f)
-                        batch.draw(assets.radialLightTexture, cx - r, cy - r, r * 2f, r * 2f)
+            fun drawLightsFor(m: MapDefinition, ox: Float, oy: Float) {
+                val mts = m.tileSize
+                val vis = VisibleTiles.of(m.width, m.height, mts, ox, oy, viewLeft - 192f, viewRight + 192f, viewBottom - 192f, viewTop + 192f)
+                for (ty in vis.firstRow until vis.lastRow) {
+                    for (tx in vis.firstCol until vis.lastCol) {
+                        val attr = m.getCell(tx, ty)?.attribute
+                        if (attr is TileAttribute.LightSource) {
+                            val lCol = runCatching { Color.valueOf(attr.colorHex.removePrefix("#")) }.getOrDefault(Color.ORANGE)
+                            val r = attr.radiusPixels * (if (attr.flicker) pulse else 1f)
+                            val cx = ox + tx * mts + mts * 0.5f
+                            val cy = oy + toRenderY(m.height, ty, mts) + mts * 0.5f
+                            batch.setColor(lCol.r, lCol.g, lCol.b, 0.45f)
+                            batch.draw(assets.radialLightTexture, cx - r, cy - r, r * 2f, r * 2f)
+                        }
                     }
                 }
             }
+            forEachNeighborPlacement(map, worldState.neighborMaps, worldState.neighborOffsets) { other, ox, oy ->
+                drawLightsFor(other, ox, oy)
+            }
+            drawLightsFor(map, 0f, 0f)
             batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA)
             batch.color = Color.WHITE
         }
@@ -1589,13 +1815,10 @@ class MorganaWorldRenderer(
             }
         }
 
-        // NPC Nameplates & HP Bars
-        for (npc in worldState.npcsOnMap.values) {
-            if (!npc.isAlive) continue
-            val npcDef = worldState.catalog.npcs.firstOrNull { it.id == npc.npcId } ?: continue
-            val vis = worldState.npcVisuals[npc.instanceId]
-            val fx = vis?.renderPixelX ?: (npc.tileX * ts.toFloat())
-            val fy = vis?.renderPixelY ?: (npc.tileY * ts.toFloat())
+        // NPC Nameplates & HP Bars (active map + seamless neighbors)
+        fun drawNpcOverhead(npc: com.morgana.domain.entity.MapNpcInstance, fx: Float, fy: Float) {
+            if (!npc.isAlive) return
+            val npcDef = worldState.catalog.npcs.firstOrNull { it.id == npc.npcId } ?: return
             val box = SpritePlacement.place(fx, fy, map.height, ts, spriteProfile, spriteId = npcDef.spriteId)
             val cx = box.centerX
             val topY = box.uiTopY
@@ -1668,14 +1891,29 @@ class MorganaWorldRenderer(
             }
         }
 
-        // Player Nameplates (Color-coded by Access Rank & PK Status) + HP Bars + Chat Bubbles
-        for (player in worldState.playersOnMap.values) {
-            val vis = worldState.playerVisuals[player.characterId]
-            val fx = vis?.renderPixelX ?: player.position.pixelX
-            val fy = vis?.renderPixelY ?: player.position.pixelY
+        for (npc in worldState.npcsOnMap.values) {
+            val vis = worldState.npcVisuals[npc.instanceId]
+            val fx = vis?.renderPixelX ?: (npc.tileX * ts.toFloat())
+            val fy = vis?.renderPixelY ?: (npc.tileY * ts.toFloat())
+            drawNpcOverhead(npc, fx, fy)
+        }
+        for (m in worldState.seamMaps) {
+            val offset = worldState.seamOffsetOf(m.mapId) ?: continue
+            for (npc in m.npcs) {
+                if (npc.instanceId in worldState.npcsOnMap) continue
+                val vis = worldState.seamNpcVisuals["${m.mapId}:${npc.instanceId}"]
+                val fx = vis?.renderPixelX ?: (npc.tileX * ts.toFloat() + offset.first)
+                val fy = vis?.renderPixelY ?: (npc.tileY * ts.toFloat() + offset.second)
+                drawNpcOverhead(npc, fx, fy)
+            }
+        }
+
+        // Player Nameplates (Color-coded by Access Rank & PK Status) + HP Bars + Chat Bubbles (active + seam)
+        fun drawPlayerOverhead(player: com.morgana.protocol.PublicPlayerSnapshot, vis: EntityVisualSmoothing?, fx: Float, fy: Float) {
             val box = SpritePlacement.place(fx, fy, map.height, ts, spriteProfile, vis?.hopHeight ?: 0f, player.spriteId)
             val cx = box.centerX
-            val topY = box.uiTopY
+            val mountLift = if (player.paperdollLayers.any { it.slot == PaperdollSlot.MOUNT }) 6f else 0f
+            val topY = box.uiTopY + mountLift
 
             drawHpBar(batch, cx - 14f, topY, 28f, 4f, player.hp, player.maxHp)
             var nameY = topY + 16f
@@ -1703,6 +1941,23 @@ class MorganaWorldRenderer(
 
             worldState.chatBubbles[player.characterId]?.let { bubble ->
                 drawChatBubble(batch, bubble.text, cx, nameY + 16f)
+            }
+        }
+
+        for (player in worldState.playersOnMap.values) {
+            val vis = worldState.playerVisuals[player.characterId]
+            val fx = vis?.renderPixelX ?: player.position.pixelX
+            val fy = vis?.renderPixelY ?: player.position.pixelY
+            drawPlayerOverhead(player, vis, fx, fy)
+        }
+        for (m in worldState.seamMaps) {
+            val offset = worldState.seamOffsetOf(m.mapId) ?: continue
+            for (player in m.players) {
+                if (player.characterId in worldState.playersOnMap) continue
+                val vis = worldState.seamPlayerVisuals[player.characterId]
+                val fx = vis?.renderPixelX ?: (player.position.pixelX + offset.first)
+                val fy = vis?.renderPixelY ?: (player.position.pixelY + offset.second)
+                drawPlayerOverhead(player, vis, fx, fy)
             }
         }
 

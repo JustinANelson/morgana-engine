@@ -364,8 +364,11 @@ internal fun newWorld(root: Path, name: String, pack: String?, template: String 
             return 2
         }
     }
+    val uiLayout = genre.trim().takeIf { it.isNotEmpty() }
+        ?.let { com.morgana.domain.game.UiLayout.defaultForGenre(it) }
+        ?.takeIf { it != com.morgana.domain.game.UiLayout.CLASSIC }
     return try {
-        val blueprint = RealmBlueprint(name, chosen, off, pack?.let { Paths.get(it) }, enabledModules = on)
+        val blueprint = RealmBlueprint(name, chosen, off, pack?.let { Paths.get(it) }, enabledModules = on, uiLayout = uiLayout)
         blueprint.problems().firstOrNull()?.let { System.err.println(it); return 2 }
         val w = lib.create(blueprint)
         println("Created world '${w.name}' (${w.origin}) at ${w.dataDir}")

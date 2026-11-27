@@ -459,7 +459,7 @@ class LuakScriptRuntime(
             }
         })
 
-        // register.schedule{ id = "cleansing" (or ids = {...}; omit both for every schedule), on_warning = fn(info, world), on_fire = fn(info, world) }
+        // register.schedule{ id = "weekly_reset" (or ids = {...}; omit both for every schedule), on_warning = fn(info, world), on_fire = fn(info, world) }
         reg.set("schedule", object : OneArgFunction() {
             override fun call(arg: LuaValue?): LuaValue? {
                 val t = arg?.checktable() ?: return LuaValue.NIL

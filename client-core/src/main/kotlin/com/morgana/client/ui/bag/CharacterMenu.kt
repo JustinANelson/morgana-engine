@@ -46,13 +46,14 @@ class CharacterMenu(
         isMovable = true
         addCloseButton()
         defaults().pad(3f)
-        val (w, h) = BagUi.fit(stage, 680f, 410f)
+        val (w, h) = BagUi.fit(stage, 700f, 430f)
         winW = w
         winH = h
         characterPanel = CharacterPanel(stage, worldState, netClient, assets, winW, winH, CharacterTab.STATS, onAssignHotbar)
         inventoryPanel = InventoryPanel(stage, worldState, netClient, assets, onAssignHotbar, winW, winH)
         if (section !in sections()) section = MenuSection.STATS
-        add(tabBar).growX().row()
+        add(tabBar).growX().padBottom(2f).row()
+        add(GameTheme.shared.divider()).growX().padBottom(3f).row()
         add(body).grow().row()
         showSection(section, force = true)
         setSize(winW, winH)

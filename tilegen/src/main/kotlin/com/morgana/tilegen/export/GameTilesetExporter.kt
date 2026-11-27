@@ -27,8 +27,28 @@ import java.nio.file.Path
  */
 object GameTilesetExporter {
 
-    /** Where one named thing sits: sheet [tilesetId], grid cell ([x], [y]) in tiles, [w] x [h] tiles. */
-    data class Placement(val tilesetId: Int, val x: Int, val y: Int, val w: Int = 1, val h: Int = 1)
+    /** Where one named thing sits: sheet [tilesetId], grid cell ([x], [y]) in tiles, [w] x [h] tiles, plus optional default collision metadata. */
+    data class Placement(
+        val tilesetId: Int,
+        val x: Int,
+        val y: Int,
+        val w: Int = 1,
+        val h: Int = 1,
+        val walkable: Boolean = false,
+        val passableCols: List<Int> = emptyList()
+    )
+
+    private fun propWalkable(kind: PropKind): Boolean = when (kind) {
+        PropKind.GRASS_TUFT, PropKind.WILDFLOWER_PATCH, PropKind.REED_CLUMP, PropKind.WHEAT_SHEAF, PropKind.SKULL_PILE -> true
+        else -> false
+    }
+
+    private fun propPassableCols(p: GeneratedProp): List<Int> = when (p.kind) {
+        PropKind.OAK_TREE, PropKind.LEAFY_TREE, PropKind.FRUIT_TREE, PropKind.EVERGREEN_TREE,
+        PropKind.CHERRY_BLOSSOM_TREE, PropKind.BAMBOO_GROVE ->
+            if (p.widthTiles == 3) listOf(0, 2) else emptyList()
+        else -> emptyList()
+    }
 
     data class AutotileIndex(val tilesetId: Int, val mode: AutotileMode, val columns: Int, val cells: Map<Int, Pair<Int, Int>>)
 
@@ -313,12 +333,16 @@ object GameTilesetExporter {
                 }
                 for ((name, p) in rendered.props) if (name !in multi) {
                     us.indexOfFirst { it.name == p.slicedTiles.first().name }.takeIf { it >= 0 }?.let { i ->
-                        props[name] = Placement(id, unitCells[i].first, unitCells[i].second)
+                        props[name] = Placement(id, unitCells[i].first, unitCells[i].second, walkable = propWalkable(p.kind))
                     }
                 }
                 for ((p, c, r) in packed) {
                     sheet.drawImage(p.fullImage, 0, 0, p.fullImage.width, p.fullImage.height, c * ts, r * ts)
-                    props[p.name] = Placement(id, c, r, p.widthTiles, p.heightTiles)
+                    props[p.name] = Placement(
+                        id, c, r, p.widthTiles, p.heightTiles,
+                        walkable = propWalkable(p.kind),
+                        passableCols = propPassableCols(p)
+                    )
                 }
                 for ((k, entry) in bs.withIndex()) {
                     val (name, auto) = entry
@@ -344,7 +368,9 @@ object GameTilesetExporter {
     }
 
     private fun placement(p: Placement) = "{\"tilesetId\": ${p.tilesetId}, \"x\": ${p.x}, \"y\": ${p.y}" +
-        (if (p.w != 1 || p.h != 1) ", \"w\": ${p.w}, \"h\": ${p.h}" else "") + "}"
+        (if (p.w != 1 || p.h != 1) ", \"w\": ${p.w}, \"h\": ${p.h}" else "") +
+        (if (p.walkable) ", \"walkable\": true" else "") +
+        (if (p.passableCols.isNotEmpty()) ", \"passableCols\": [${p.passableCols.joinToString(", ")}]" else "") + "}"
 
     private fun indexJson(
         firstId: Int,

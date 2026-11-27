@@ -44,9 +44,29 @@ object SkinThemer {
         // Skin.getAll matches the exact class, and VisUI registers its own subclasses of the libgdx styles, so ask for both.
         fun <T> all(c: Class<T>): List<T> = skin.getAll(c)?.values()?.toList() ?: emptyList()
 
+        val rim = com.badlogic.gdx.graphics.Color(
+            (palette.border.r * 0.55f + palette.accent.r * 0.45f).coerceIn(0f, 1f),
+            (palette.border.g * 0.55f + palette.accent.g * 0.45f).coerceIn(0f, 1f),
+            (palette.border.b * 0.55f + palette.accent.b * 0.45f).coerceIn(0f, 1f),
+            1f
+        )
+        val titleCol = com.badlogic.gdx.graphics.Color(
+            (palette.text.r * 0.62f + palette.accent.r * 0.38f).coerceIn(0f, 1f),
+            (palette.text.g * 0.62f + palette.accent.g * 0.38f).coerceIn(0f, 1f),
+            (palette.text.b * 0.62f + palette.accent.b * 0.38f).coerceIn(0f, 1f),
+            1f
+        )
+        val titleHeight = if (HudWindow.touchMode) 40 else 28
+        val winBg = t.windowFrame(fill = palette.panel, highlight = rim, titleHeight = titleHeight, padX = 8f, padY = 8f)
+        val btnUp = t.beveledPanel(palette.panelRaised, highlight = rim, padX = 10f, padY = 4f)
+        val btnOver = t.beveledPanel(palette.hover, highlight = palette.accent, cornerAccent = palette.strong, padX = 10f, padY = 4f)
+        val btnDown = t.beveledPanel(palette.pressed, highlight = palette.border, padX = 10f, padY = 4f)
+        val btnChecked = t.beveledPanel(palette.accentDim, highlight = palette.accent, cornerAccent = palette.strong, padX = 10f, padY = 4f)
+        val btnDisabled = t.beveledPanel(palette.panel, highlight = palette.border, padX = 10f, padY = 4f)
+
         for (s in all(Window.WindowStyle::class.java)) {
-            s.titleFontColor = palette.text
-            s.background = t.windowStyle.background
+            s.titleFontColor = titleCol
+            s.background = winBg
         }
         for (s in all(Label.LabelStyle::class.java)) {
             s.fontColor = palette.text
@@ -55,32 +75,73 @@ object SkinThemer {
             val b = t.buttonStyle
             s.fontColor = b.fontColor
             s.downFontColor = b.downFontColor
-            s.overFontColor = b.overFontColor
+            s.overFontColor = palette.strong
             s.checkedFontColor = b.checkedFontColor
             s.checkedOverFontColor = b.checkedFontColor
             s.disabledFontColor = b.disabledFontColor
-            s.up = b.up
-            s.over = b.over
-            s.down = b.down
-            s.checked = b.checked
-            s.checkedOver = b.checkedOver
-            s.disabled = b.disabled
+            s.up = btnUp
+            s.over = btnOver
+            s.down = btnDown
+            s.checked = btnChecked
+            s.checkedOver = btnChecked
+            s.disabled = btnDisabled
         }
         for (s in all(TextField.TextFieldStyle::class.java) + all(com.kotcrab.vis.ui.widget.VisTextField.VisTextFieldStyle::class.java)) {
             s.fontColor = palette.text
             s.disabledFontColor = palette.textDisabled
             s.messageFontColor = palette.textMuted
-            s.background = t.bordered(palette.background, palette.border, padX = 5f, padY = 3f)
-            s.focusedBackground = t.bordered(palette.background, palette.accent, padX = 5f, padY = 3f)
-            s.disabledBackground = t.bordered(palette.panel, palette.border, padX = 5f, padY = 3f)
+            s.background = t.recessedSlot(palette.background, palette.border, padX = 6f, padY = 4f)
+            s.focusedBackground = t.recessedSlot(palette.background, palette.accent, padX = 6f, padY = 4f)
+            s.disabledBackground = t.recessedSlot(palette.panel, palette.border, padX = 6f, padY = 4f)
             s.selection = t.solid(palette.accentDim)
         }
-        for (s in all(CheckBox.CheckBoxStyle::class.java) + all(com.kotcrab.vis.ui.widget.VisCheckBox.VisCheckBoxStyle::class.java)) {
+        val cbOff = t.checkboxIcon(checked = false, hovered = false)
+        val cbOn = t.checkboxIcon(checked = true, hovered = false)
+        val cbOver = t.checkboxIcon(checked = false, hovered = true)
+        val cbOnOver = t.checkboxIcon(checked = true, hovered = true)
+        for (s in all(CheckBox.CheckBoxStyle::class.java)) {
             s.fontColor = palette.text
             s.overFontColor = palette.strong
             s.checkedFontColor = palette.text
             s.downFontColor = palette.text
             s.disabledFontColor = palette.textDisabled
+            s.checkboxOff = cbOff
+            s.checkboxOn = cbOn
+            s.checkboxOver = cbOver
+            s.checkboxOnOver = cbOnOver
+        }
+        for (s in all(com.kotcrab.vis.ui.widget.VisCheckBox.VisCheckBoxStyle::class.java)) {
+            s.fontColor = palette.text
+            s.overFontColor = palette.strong
+            s.checkedFontColor = palette.text
+            s.downFontColor = palette.text
+            s.disabledFontColor = palette.textDisabled
+            s.checkBackground = cbOff
+            s.checkBackgroundOver = cbOver
+            s.checkBackgroundDown = cbOver
+            s.tick = cbOn
+            s.tickDisabled = cbOff
+        }
+        val track = t.scrollTrack()
+        val knob = t.scrollKnob()
+        for (s in all(com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle::class.java)) {
+            s.vScroll = track
+            s.vScrollKnob = knob
+            s.hScroll = track
+            s.hScrollKnob = knob
+        }
+        for (s in all(com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle::class.java)) {
+            s.background = track
+            s.knob = knob
+            s.knobOver = t.beveledPanel(palette.accent, highlight = palette.strong, padX = 4f, padY = 4f)
+            s.knobDown = t.beveledPanel(palette.accentDim, highlight = palette.accent, padX = 4f, padY = 4f)
+            s.knobBefore = t.solid(palette.accent)
+        }
+        if (skin.has("close-window", com.kotcrab.vis.ui.widget.VisImageButton.VisImageButtonStyle::class.java)) {
+            val closeStyle = skin.get("close-window", com.kotcrab.vis.ui.widget.VisImageButton.VisImageButtonStyle::class.java)
+            closeStyle.up = t.beveledPanel(palette.panelRaised, highlight = rim, padX = 3f, padY = 3f)
+            closeStyle.over = t.beveledPanel(palette.hover, highlight = palette.accent, cornerAccent = palette.strong, padX = 3f, padY = 3f)
+            closeStyle.down = t.beveledPanel(palette.pressed, highlight = palette.border, padX = 3f, padY = 3f)
         }
 
         fun themeList(l: com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle) {

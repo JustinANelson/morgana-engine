@@ -315,36 +315,73 @@ internal fun WorldSimulation.pickupGroundItemImpl(characterId: String): List<Wor
     val player = players[characterId] ?: return emptyList()
     if (!player.isAlive(game.lifeVitalId)) return emptyList()
 
-    // The loot in reach: on this map and, in a seamless world, just across its borders (at where it lies in this map's coordinates).
-    val reachItem = groundItemsInReach(player.position.mapId, player.position.tileX, player.position.tileY, game.definition.gameplayTuning.pickupRangeTiles)
+    // All eligible loot in reach: on this map and, in a seamless world, just across its borders, closest first.
+    val inReach = groundItemsInReach(player.position.mapId, player.position.tileX, player.position.tileY, game.definition.gameplayTuning.pickupRangeTiles)
         .filter { r -> r.item.ownerCharacterId == null || r.item.ownerCharacterId == characterId || currentTick >= r.item.ownerProtectedUntilTick }
-        .minByOrNull { r ->
-            val dx = kotlin.math.abs(r.item.tileX + r.shiftTilesX - player.position.tileX)
-            val dy = kotlin.math.abs(r.item.tileY + r.shiftTilesY - player.position.tileY)
-            maxOf(dx, dy) * 10 + dx + dy
-        } ?: return emptyList()
-    val mapId = reachItem.sourceMapId // the loot lives on its own map, whichever side the player stands
-    val groundList = mapGroundItems[mapId] ?: return emptyList()
-    val itemIdx = groundList.indexOfFirst { it.instanceId == reachItem.item.instanceId }
-    if (itemIdx < 0) return emptyList()
+        .sortedWith(
+            compareBy(
+                { r ->
+                    val dx = kotlin.math.abs(r.item.tileX + r.shiftTilesX - player.position.tileX)
+                    val dy = kotlin.math.abs(r.item.tileY + r.shiftTilesY - player.position.tileY)
+                    maxOf(dx, dy) * 10 + dx + dy
+                },
+                { it.item.instanceId }
+            )
+        )
+    if (inReach.isEmpty()) return emptyList()
 
-    val groundItem = groundList[itemIdx]
-    val itemDef = items[groundItem.stack.itemId] ?: return emptyList()
-    val mut = player.inventory.addStack(itemDef, groundItem.stack)
-    if (mut.addedAmount <= 0) return emptyList()
-
+    var currentPlayer = player
     val out = mutableListOf<WorldSimulationEvent>()
-    if (mut.overflowAmount <= 0) {
-        groundList.removeAt(itemIdx)
-    } else {
-        groundList[itemIdx] = groundItem.copy(stack = groundItem.stack.copy(amount = mut.overflowAmount))
+    val dirtyMaps = linkedSetOf<Int>()
+    val pickedTotals = linkedMapOf<Int, Int>()
+    var hadFullInventory = false
+
+    for (reachItem in inReach) {
+        val mapId = reachItem.sourceMapId
+        val groundList = mapGroundItems[mapId] ?: continue
+        val itemIdx = groundList.indexOfFirst { it.instanceId == reachItem.item.instanceId }
+        if (itemIdx < 0) continue
+
+        val groundItem = groundList[itemIdx]
+        val itemDef = items[groundItem.stack.itemId] ?: continue
+        val mut = currentPlayer.inventory.addStack(itemDef, groundItem.stack)
+        if (mut.addedAmount <= 0) {
+            hadFullInventory = true
+            continue
+        }
+
+        if (mut.overflowAmount <= 0) {
+            groundList.removeAt(itemIdx)
+        } else {
+            groundList[itemIdx] = groundItem.copy(stack = groundItem.stack.copy(amount = mut.overflowAmount))
+            hadFullInventory = true
+        }
+
+        currentPlayer = currentPlayer.copy(inventory = mut.updatedInventory)
+        dirtyMaps.add(mapId)
+        pickedTotals[itemDef.id] = (pickedTotals[itemDef.id] ?: 0) + mut.addedAmount
+        advanceQuestProgress(characterId, QuestObjectiveType.COLLECT_ITEM, itemDef.id, mut.addedAmount, out)
     }
 
-    val updatedPlayer = player.copy(inventory = mut.updatedInventory)
-    players[characterId] = updatedPlayer
-    out.add(WorldSimulationEvent.GroundItemsChanged(mapId, groundList.toList()))
-    out.add(WorldSimulationEvent.CharacterUpdated(updatedPlayer))
-    advanceQuestProgress(characterId, QuestObjectiveType.COLLECT_ITEM, itemDef.id, mut.addedAmount, out)
+    if (pickedTotals.isEmpty()) {
+        return if (hadFullInventory) listOf(tellPlayer(player, "Inventory is full.", "WARNING")) else emptyList()
+    }
+
+    players[characterId] = currentPlayer
+    for (mapId in dirtyMaps) {
+        out.add(WorldSimulationEvent.GroundItemsChanged(mapId, mapGroundItems[mapId]?.toList().orEmpty()))
+    }
+    out.add(WorldSimulationEvent.CharacterUpdated(currentPlayer))
+
+    val entries = pickedTotals.entries.toList()
+    for ((itemId, qty) in entries) {
+        val name = items[itemId]?.name ?: "Item #$itemId"
+        val label = if (qty > 1) "+$name x$qty" else "+$name"
+        out.add(tellPlayer(currentPlayer, label, "GOOD"))
+    }
+    if (hadFullInventory) {
+        out.add(tellPlayer(currentPlayer, "Inventory is full.", "WARNING"))
+    }
     return out
 }
 

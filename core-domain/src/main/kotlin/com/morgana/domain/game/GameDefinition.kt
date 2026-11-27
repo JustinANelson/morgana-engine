@@ -460,6 +460,24 @@ object UiLayout {
     const val CLASSIC = "classic"
     const val RING = "ring"
     val ALL = listOf(CLASSIC, RING)
+
+    /** Genres whose default HUD and mobile controls use the ring layout (`ActionRing` + circular frames + floating joystick). */
+    val RING_GENRES: Set<String> = setOf(
+        com.morgana.domain.sim.SystemTags.RPG,
+        com.morgana.domain.sim.SystemTags.ROGUELIKE
+    )
+
+    /** Game tags that imply the ring layout when a `game.json` omits its `ui` section. */
+    val RING_DEFAULT_TAGS: Set<String> = setOf(
+        "rpg", "orpg", "mmorpg", "roguelike", "dungeon-crawler", "dungeon_crawler", "dungeon"
+    )
+
+    /** Default HUD layout for a genre tag ([com.morgana.domain.sim.SystemTags]). */
+    fun defaultForGenre(genre: String?): String = if (genre in RING_GENRES) RING else CLASSIC
+
+    /** Default HUD layout inferred from a game's `tags` when `ui` is omitted. */
+    fun defaultForTags(tags: Iterable<String>): String =
+        if (tags.any { it.lowercase() in RING_DEFAULT_TAGS }) RING else CLASSIC
 }
 
 /** Logical animation states supported by multi-state character and NPC sprite sheets. */
@@ -486,7 +504,15 @@ enum class SpriteState {
 
     /** A short flinch when the character takes damage. 0 frames falls back to idle. */
     @SerialName("hurt")
-    HURT
+    HURT,
+
+    /** Reaching down to pick up ground loot. 0 frames falls back to walk/harvest. */
+    @SerialName("pickup")
+    PICKUP,
+
+    /** Mounted riding pose (frame 0 = seated idle, full range = riding gait). 0 frames falls back to walk. */
+    @SerialName("ride")
+    RIDE
 }
 
 /** Where a sprite cell attaches to the map tile an entity occupies. */

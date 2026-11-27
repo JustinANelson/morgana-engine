@@ -1045,6 +1045,10 @@ class WorldSimulation(
     fun damageWorldObject(id: String, amount: Int, out: MutableList<WorldSimulationEvent> = mutableListOf()): Boolean =
         WorldStateSystem.damage(this, id, amount, out)
 
+    /** Restores hit points on an object up to its kind's maximum hit points. */
+    fun healWorldObject(id: String, amount: Int, out: MutableList<WorldSimulationEvent> = mutableListOf()): Boolean =
+        WorldStateSystem.heal(this, id, amount, out)
+
     /** Replaces what a system keeps on an object. */
     fun setWorldObjectData(id: String, data: Map<String, String>, out: MutableList<WorldSimulationEvent> = mutableListOf()): Boolean =
         WorldStateSystem.setData(this, id, data, out)

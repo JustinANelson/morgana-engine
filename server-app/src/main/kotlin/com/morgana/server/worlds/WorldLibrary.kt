@@ -144,7 +144,7 @@ class WorldLibrary(
             if (allOff.isNotEmpty()) {
                 ServerConfig.save(dir, ServerConfig.load(dir).withModules(disable = allOff))
             }
-            if (blueprint.noCombat || blueprint.modernSprites) {
+            if (blueprint.noCombat || blueprint.modernSprites || blueprint.uiLayout != null) {
                 val baseGame = if (Files.exists(GameDefinitionLoader.fileIn(dir))) {
                     GameDefinitionLoader.load(dir).game.definition
                 } else {
@@ -155,9 +155,16 @@ class WorldLibrary(
                 } else {
                     baseGame.sprites
                 }
+                val baseUi = baseGame.ui ?: com.morgana.domain.game.UiProfile()
+                val updatedUi = when {
+                    blueprint.noCombat && blueprint.uiLayout != null -> baseUi.copy(combat = false, spells = false, layout = blueprint.uiLayout)
+                    blueprint.noCombat -> baseUi.copy(combat = false, spells = false)
+                    blueprint.uiLayout != null -> baseUi.copy(layout = blueprint.uiLayout)
+                    else -> baseGame.ui
+                }
                 val updatedGame = baseGame.copy(
                     combat = if (blueprint.noCombat) baseGame.combat.copy(module = "noop") else baseGame.combat,
-                    ui = if (blueprint.noCombat) (baseGame.ui ?: com.morgana.domain.game.UiProfile()).copy(combat = false, spells = false) else baseGame.ui,
+                    ui = updatedUi,
                     sprites = targetSprites
                 )
                 Files.writeString(GameDefinitionLoader.fileIn(dir), GameDefinitionLoader.encode(updatedGame))

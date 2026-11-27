@@ -293,4 +293,73 @@ class ActionCombatModuleTest {
         assertTrue(ActionCombatRules.inGuardArc(120, 0.0, 0.0, 1.0, 0.0, 50.0, 10.0))
         assertTrue(!ActionCombatRules.inGuardArc(120, 0.0, 0.0, 1.0, 0.0, -50.0, 0.0))
     }
+
+    @Test
+    fun `a different entry skill cancels recovery frames, buffers during startup with aim, and emits authoritative cooldowns`() {
+        val sim = world(dummyAt = 11 to 5)
+        val shot = ActionSkillDefinition(
+            id = 11, name = "Quick Shot", startupTicks = 2, activeTicks = 2, recoveryTicks = 7, cancelFromTick = 4,
+            hitboxes = listOf(arc)
+        )
+        val volley = ActionSkillDefinition(
+            id = 15, name = "Volley", startupTicks = 2, activeTicks = 2, recoveryTicks = 4, cooldownTicks = 80,
+            hitboxes = listOf(SkillHitbox(2, 2, HitboxShape.CIRCLE, radiusPixels = 64, groundTarget = true, maxRangePixels = 300, hit = SkillHit(damagePercent = 100)))
+        )
+        sim.actionSkills[11] = shot
+        sim.actionSkills[15] = volley
+        sim.weaponSets[1] = WeaponSetDefinition(
+            id = 1, name = "Archer", skillIds = listOf(11, 15, 4), inputBufferTicks = 6,
+            entries = listOf(ComboEntry("LMB", 11), ComboEntry("Q", 15), ComboEntry("SPACE", 4)),
+            edges = emptyList()
+        )
+
+        // 1) Pressing Q during Quick Shot's recovery (t = 5, cancel = 4, length = 11) cancels immediately and emits cooldown.
+        sim.press("LMB")
+        sim.ticks(5)
+        val evs = sim.handleAction("ann", "input", mapOf("token" to "Q", "aimX" to "368.0", "aimY" to "176.0"))
+        assertEquals(15, sim.skill(), "entry skill cancelled out of recovery frames")
+        val cd = evs.filterIsInstance<com.morgana.domain.sim.WorldSimulationEvent.ActionSkillCooldownStarted>().single()
+        assertEquals(15, cd.skillId)
+        assertEquals(80, cd.durationTicks)
+
+        // 2) Re-pressing Q while on cooldown does not start it and resyncs remaining ticks.
+        sim.ticks(10)
+        val retry = sim.handleAction("ann", "input", mapOf("token" to "Q"))
+        val resync = retry.filterIsInstance<com.morgana.domain.sim.WorldSimulationEvent.ActionSkillCooldownStarted>().single()
+        assertEquals(15, resync.skillId)
+        assertEquals(70, resync.durationTicks)
+
+        // 3) Pressing SPACE during Quick Shot's startup buffers it, and a repeated LMB does not overwrite the buffer.
+        sim.ticks(80)
+        sim.press("LMB")
+        sim.ticks(1)
+        sim.handleAction("ann", "input", mapOf("token" to "SPACE", "aimX" to "320.0", "aimY" to "176.0"))
+        sim.press("LMB") // auto-attack repeat must not clobber buffered SPACE
+        assertEquals(11, sim.skill())
+        sim.ticks(3) // reaches cancel tick 4
+        assertEquals(4, sim.skill(), "buffered SPACE fired at cancel tick with its aim preserved")
+        assertTrue(sim.actionStates.getValue("ann").aimSet)
+    }
+
+    @Test
+    fun `root blocks dash movement without cancelling attacks, and un-aimed ground target hits ahead of player`() {
+        val sim = world(dummyAt = 11 to 5)
+        val root = ActiveStatusEffect("net", StatusEffectType.ROOT, "npc", 0, emptyMap(), 30)
+        val volley = ActionSkillDefinition(
+            id = 15, name = "Volley", startupTicks = 2, activeTicks = 2, recoveryTicks = 4,
+            hitboxes = listOf(SkillHitbox(2, 2, HitboxShape.CIRCLE, radiusPixels = 64, groundTarget = true, maxRangePixels = 260, hit = SkillHit(damagePercent = 100)))
+        )
+        sim.actionSkills[15] = volley
+        sim.weaponSets[1] = blades.copy(
+            skillIds = blades.skillIds + 15,
+            entries = blades.entries + ComboEntry("F", 15)
+        )
+        sim.players["ann"] = sim.players.getValue("ann").copy(statusEffects = listOf(root))
+
+        // Un-aimed ground-target lands 0.6 * 260 = 156px (~5 tiles) right of player (tile 6 -> tile 11) even while rooted!
+        val full = sim.dummyHp()
+        sim.press("F")
+        sim.ticks(4)
+        assertTrue(sim.dummyHp() < full, "rooted player still landed un-aimed ground-target skill ahead of them")
+    }
 }

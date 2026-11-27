@@ -171,8 +171,8 @@ class ActionRing(
 
     internal fun visibleCount(): Int = actors.count { it.isVisible }
 
-    /** Lets go of every held button (the overlay was hidden mid-press, so a guard does not stay up). */
-    fun releaseAll() = actors.forEach { it.release() }
+    /** Lets go of every held button (the overlay was hidden mid-press, so a guard does not stay up and an aimable skill does not misfire). */
+    fun releaseAll() = actors.forEach { it.cancel() }
 
     fun dispose() {
         disc?.dispose()
@@ -226,6 +226,16 @@ class ActionRing(
                 // Let go: fire now (the HUD reads the drag as the aim), then clear the aim.
                 def.onPress()
                 if (aiming) def.onAim?.invoke(null)
+                aiming = false
+            }
+            def.onRelease?.invoke()
+        }
+
+        fun cancel() {
+            if (pointer == -2) return
+            pointer = -2
+            if (aiming) {
+                def.onAim?.invoke(null)
                 aiming = false
             }
             def.onRelease?.invoke()

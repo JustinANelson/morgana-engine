@@ -43,6 +43,9 @@ class SkillFx(
             BASH -> delaySeconds + 0.5f
             ELECTRIFY -> 0.8f
             SHOCKWAVE -> 0.45f
+            METEOR -> delaySeconds + 0.7f
+            FROST_NOVA -> 0.65f
+            BLINK -> 0.45f
             else -> 0.6f
         }
 
@@ -64,6 +67,9 @@ class SkillFx(
         const val BASH = "bash"
         const val ELECTRIFY = "electrify"
         const val SHOCKWAVE = "shockwave"
+        const val METEOR = "meteor"
+        const val FROST_NOVA = "frost_nova"
+        const val BLINK = "blink"
         const val TICK_SECONDS = 0.05f
     }
 }

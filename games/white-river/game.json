@@ -187,7 +187,8 @@
     },
     "weather": null,
     "ui": {
-        "xpOrbs": true
+        "xpOrbs": true,
+        "layout": "ring"
     },
     "sprites": null,
     "inventorySlots": 48,

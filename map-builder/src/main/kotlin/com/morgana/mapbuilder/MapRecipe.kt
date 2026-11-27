@@ -55,6 +55,7 @@ data class TerrainDef(
     val tile: String,
     val blocked: Boolean = false,
     val autotile: String? = null,
+    val alphaAutotile: Boolean = false,
     val joins: List<String> = emptyList(),
     val animatedFrames: Int = 1,
     val animationSpeedMs: Int = 250
@@ -198,6 +199,27 @@ data class TerraceOp(
     val salt: Int = 0
 ) : MapOp
 
+/**
+ * Seamless world-space terracing driven by a prior [WorldGenOp]'s noise [field] (default `"height"`). Samples a padded
+ * halo in world coordinates (`worldX + x`, `worldY + y`) so cliff faces, drop shadows, and climbable staircases align
+ * identically across map borders. Selects a biome-matched natural cliff set from [sets] (falling back to [defaultSet]).
+ */
+@Serializable @SerialName("worldTerrace")
+data class WorldTerraceOp(
+    val field: String = "height",
+    val defaultSet: String,
+    val sets: Map<String, String> = emptyMap(),
+    val thresholds: List<Float>,
+    val skipTerrains: List<String> = listOf("sea", "river", "pond", "marsh"),
+    val ramps: Boolean = true,
+    val rampEvery: Int = 18,
+    val rampWidth: Int = 3,
+    val minWidth: Int = 5,
+    val minDepth: Int = 4,
+    val rowStep: Int = 3,
+    val salt: Int = 0
+) : MapOp
+
 /** Paints an organic blob: a circle of [radius] whose edge is pushed in and out by seeded noise ([roughness] 0 to 1). */
 @Serializable @SerialName("blob")
 data class BlobOp(val terrain: String, val cx: Int, val cy: Int, val radius: Int, val roughness: Float = 0.35f, val salt: Int = 0) : MapOp
@@ -237,6 +259,25 @@ data class ScatterOp(
     val region: List<Int>? = null,
     val gap: Int = 1,
     val walkable: Boolean = false,
+    val passableCols: List<Int> = emptyList(),
+    val salt: Int = 0
+) : MapOp
+
+/**
+ * Places walkable bridges/fords across a blocked water terrain (e.g. rivers) so regions separated by narrow channels remain
+ * reachable. Scans for clean horizontal (E-W) and vertical (N-S) water spans of width 1..[maxWidth] with walkable, unoccupied
+ * banks on both sides, keeping crossings at least [spacing] tiles apart, and overlays [bridgeTile] on `MASK_1` (or paints
+ * [fordTerrain]) while marking the span passable (`open = true`).
+ */
+@Serializable @SerialName("crossings")
+data class CrossingsOp(
+    val waterTerrain: String,
+    val bridgeTile: String? = null,
+    val fordTerrain: String? = null,
+    val maxWidth: Int = 4,
+    val bridgeWidth: Int = 2,
+    val spacing: Int = 16,
+    val region: List<Int>? = null,
     val salt: Int = 0
 ) : MapOp
 

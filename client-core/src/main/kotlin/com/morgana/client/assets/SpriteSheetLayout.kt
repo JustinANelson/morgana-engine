@@ -15,6 +15,9 @@ object SpriteSheetLayout {
     /** Frames per second of a walk cycle longer than two frames (about the pace of the two-frame step toggle). */
     const val WALK_FRAMES_PER_SECOND = 7.5f
 
+    /** Frames per second of a mounted riding gait cycle. */
+    const val RIDE_FRAMES_PER_SECOND = 8.5f
+
     /**
      * Returns `[directionRow][column]` rectangles for a sheet of `[sheetWidth] x [sheetHeight]`.
      * When [profile] matches the sheet dimensions (`sheetWidth == profile.sheetWidth && sheetHeight == profile.sheetHeight`),
@@ -62,7 +65,7 @@ object SpriteSheetLayout {
         if (profile == null || gridColumns != profile.totalFrames) {
             val classic = when (state) {
                 SpriteState.IDLE -> 0
-                SpriteState.ATTACK, SpriteState.CAST, SpriteState.HARVEST, SpriteState.JUMP -> {
+                SpriteState.ATTACK, SpriteState.CAST, SpriteState.HARVEST, SpriteState.JUMP, SpriteState.PICKUP -> {
                     val p = (actionProgress ?: ((elapsedSeconds * 4f) % 1f)).coerceIn(0f, 0.999f)
                     if (p < 0.5f) 1 else 2
                 }
@@ -82,7 +85,11 @@ object SpriteSheetLayout {
                 count > 3 && walkFrame > 0 -> floor(elapsedSeconds * WALK_FRAMES_PER_SECOND).toInt().mod(count)
                 else -> (walkFrame - 1).coerceAtLeast(0).mod(count)
             }
-            SpriteState.ATTACK, SpriteState.CAST, SpriteState.HARVEST, SpriteState.JUMP, SpriteState.HURT -> {
+            SpriteState.RIDE -> when {
+                count <= 1 || walkFrame == 0 -> 0
+                else -> floor(elapsedSeconds * RIDE_FRAMES_PER_SECOND).toInt().mod(count)
+            }
+            SpriteState.ATTACK, SpriteState.CAST, SpriteState.HARVEST, SpriteState.JUMP, SpriteState.HURT, SpriteState.PICKUP -> {
                 val progress = actionProgress ?: ((elapsedSeconds * 3f) % 1f)
                 floor(progress.coerceIn(0f, 0.9999f) * count).toInt().coerceIn(0, count - 1)
             }

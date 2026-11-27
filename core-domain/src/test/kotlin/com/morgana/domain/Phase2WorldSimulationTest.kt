@@ -202,9 +202,10 @@ class Phase2WorldSimulationTest {
     }
 
     @Test
-    fun `gather pickup reaches up to 2 tiles away, prefers closest item, and ignores 3+ tiles away`() {
+    fun `gather pickup batches all items within 2 tiles, emits pickup toast, and ignores 3+ tiles away`() {
         val sim = WorldSimulation(SeededRandomSource(42L), game = MorganaClassic.COMPILED)
         sim.items[1] = ItemDefinition(id = 1, name = "Gold", type = ItemType.CURRENCY, stackable = true)
+        sim.items[2] = ItemDefinition(id = 2, name = "Rawhide", type = ItemType.MATERIAL, stackable = true)
         sim.registerMap(MapDefinition(id = 1, name = "Field", width = 10, height = 10))
         val player = CharacterState(
             id = "p1",
@@ -219,18 +220,21 @@ class Phase2WorldSimulationTest {
         sim.mapGroundItems[1] = mutableListOf(
             com.morgana.domain.entity.MapGroundItem(instanceId = "g_far", mapId = 1, tileX = 8, tileY = 5, stack = ItemStack(1, 50)),
             com.morgana.domain.entity.MapGroundItem(instanceId = "g_two", mapId = 1, tileX = 7, tileY = 6, stack = ItemStack(1, 15)),
-            com.morgana.domain.entity.MapGroundItem(instanceId = "g_one", mapId = 1, tileX = 5, tileY = 6, stack = ItemStack(1, 7))
+            com.morgana.domain.entity.MapGroundItem(instanceId = "g_one", mapId = 1, tileX = 5, tileY = 6, stack = ItemStack(1, 7)),
+            com.morgana.domain.entity.MapGroundItem(instanceId = "g_hide", mapId = 1, tileX = 6, tileY = 5, stack = ItemStack(2, 3))
         )
-        // Picks up closest item first (1 tile away)
-        sim.pickupGroundItem("p1")
-        assertEquals(7, sim.players["p1"]!!.inventory.totalCountOf(1))
-        assertEquals(2, sim.mapGroundItems[1]?.size)
-        // Next picks up 2-tile-away item
-        sim.pickupGroundItem("p1")
+        // Single pickup action batches all in-range items (1 and 2 tiles away) and emits one GOOD toast per item type
+        val events = sim.pickupGroundItem("p1")
         assertEquals(22, sim.players["p1"]!!.inventory.totalCountOf(1))
+        assertEquals(3, sim.players["p1"]!!.inventory.totalCountOf(2))
         assertEquals(1, sim.mapGroundItems[1]?.size)
+        val toasts = events.filterIsInstance<com.morgana.domain.sim.WorldSimulationEvent.ChatEmitted>()
+            .filter { it.notice == "GOOD" }
+            .map { it.message }
+        assertEquals(listOf("+Rawhide x3", "+Gold x22"), toasts)
+
         // Far item (3 tiles away) is out of reach
-        sim.pickupGroundItem("p1")
+        assertTrue(sim.pickupGroundItem("p1").isEmpty())
         assertEquals(22, sim.players["p1"]!!.inventory.totalCountOf(1))
     }
 

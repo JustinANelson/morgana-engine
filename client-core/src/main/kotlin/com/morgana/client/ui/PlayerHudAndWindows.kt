@@ -1727,25 +1727,25 @@ class PlayerHudAndWindows(
             top = minOf(top, unitBottom)
         }
         content.clearChildren()
-        // One card per quest: a coloured stripe (orange when ready to hand in, green while in progress) beside the name and objectives.
+        // One recessed RPG card per quest: a coloured left stripe (gold when ready to hand in, emerald while in progress).
         val skin = VisUI.getSkin()
         for (e in entries) {
-            val stripeColor = if (e.ready) Color(0.95f, 0.6f, 0.15f, 1f) else Color(0.35f, 0.7f, 0.4f, 1f)
+            val stripeColor = if (e.ready) Color(0.95f, 0.72f, 0.24f, 1f) else Color(0.38f, 0.78f, 0.46f, 1f)
             val card = VisTable()
-            card.background = skin.newDrawable("white", Color(stripeColor.r * 0.25f, stripeColor.g * 0.25f, stripeColor.b * 0.25f, 0.72f))
+            card.background = theme.insetWellBackground
             val stripe = VisTable()
             stripe.background = skin.newDrawable("white", stripeColor)
-            card.add(stripe).width(4f).growY()
+            card.add(stripe).width(4f).growY().padRight(4f)
             val inner = VisTable()
             val title = VisLabel(if (e.ready) "${e.name} (ready to hand in)" else e.name).apply { color = stripeColor; setWrap(true) }
-            inner.add(title).width(226f).left().row()
+            inner.add(title).width(220f).left().row()
             for (l in e.lines) {
                 val text = QuestTracker.lineText(l)
                 val label = (if (l.done) VisLabel(text, theme.mutedLabelStyle) else VisLabel(text)).apply { setWrap(true) }
-                inner.add(label).width(226f).left().row()
+                inner.add(label).width(220f).left().row()
             }
-            card.add(inner).left().pad(4f)
-            content.add(card).width(250f).padBottom(3f).left().row()
+            card.add(inner).left().pad(2f, 2f, 2f, 4f)
+            content.add(card).width(248f).padBottom(4f).left().row()
         }
         win.pack()
         win.setPosition(win.x, (top - win.height).coerceIn(0f, (stage.height - win.height).coerceAtLeast(0f)))
@@ -2890,13 +2890,14 @@ class PlayerHudAndWindows(
             .minByOrNull { it.id }
     }
 
-    /** The weapon-set skill that the action input [token] ("LMB", "RMB", "SPACE", "Q", "TAB", "F") starts, or null. */
+    /** The weapon-set skill that the action input [token] ("LMB", "RMB", "SPACE", "Q", "TAB", "F") starts, or null if locked or absent. */
     fun skillForToken(token: String): com.morgana.domain.content.ActionSkillDefinition? {
+        val ch = worldState.localCharacter ?: return null
         val ws = activeWeaponSet() ?: return null
         var id = ws.entries.firstOrNull { it.input == token }?.skillId ?: return null
         // While empowered, the upgraded skill stands in for the plain one.
         if (ws.empowerSkillId != 0 && ws.empoweredSkillId != 0 && id == ws.empowerSkillId && worldState.isEmpowered()) id = ws.empoweredSkillId
-        return worldState.catalog.actionSkills.firstOrNull { it.id == id }
+        return worldState.catalog.actionSkills.firstOrNull { it.id == id }?.takeIf { it.levelReq <= ch.level }
     }
 
     /** True when the skill on [token] is showing its empowered upgrade right now. */
@@ -2923,14 +2924,13 @@ class PlayerHudAndWindows(
     /** Milliseconds left before the skill on action input [token] can be used again (0 when ready or it has no cooldown). */
     private fun skillCooldownLeftMs(token: String): Long {
         val skill = skillForToken(token) ?: return 0L
-        val last = worldState.skillUsedAtMs[token] ?: return 0L
-        return (skill.cooldownTicks * 50L - (System.currentTimeMillis() - last)).coerceAtLeast(0L)
+        return (worldState.actionSkillCooldowns.remaining(skill.id, ToastClock.now()) * 1000f).toLong().coerceAtLeast(0L)
     }
 
     /** The cooldown as a fraction left (1 just used, 0 ready), for the shrinking disc on the button. */
     private fun skillCooldownFraction(token: String): Float {
-        val total = (skillForToken(token)?.cooldownTicks ?: 0) * 50L
-        return if (total <= 0L) 0f else (skillCooldownLeftMs(token).toFloat() / total).coerceIn(0f, 1f)
+        val skill = skillForToken(token) ?: return 0f
+        return worldState.actionSkillCooldowns.fractionLeft(skill.id, ToastClock.now())
     }
 
     private fun skillCooldownLabel(token: String): String {
@@ -3042,6 +3042,7 @@ class PlayerHudAndWindows(
         if (worldState.actionReady("pickup", System.currentTimeMillis(), 250L)) {
             netClient.send(ClientPacket.PickupGroundItem)
             audio.play(RetroSoundEngine.Sfx.PICKUP)
+            worldState.triggerLocalPickup()
         }
     }
 
@@ -3087,10 +3088,7 @@ class PlayerHudAndWindows(
                 color = Color(0.9f, 0.75f, 0.2f, 1f),
                 highlighted = { hasNearbyLoot() }
             ) {
-                if (worldState.actionReady("pickup", System.currentTimeMillis(), 250L)) {
-                    netClient.send(ClientPacket.PickupGroundItem)
-                    audio.play(RetroSoundEngine.Sfx.PICKUP)
-                }
+                pressPickup()
             },
             combatButton(com.morgana.client.input.ActionCombatInput.Button.SPECIAL, Color(0.6f, 0.4f, 0.6f, 1f)),
             combatButton(com.morgana.client.input.ActionCombatInput.Button.FREE, Color(0.5f, 0.5f, 0.55f, 1f)) { actionCombatOn() && !jumpAvailable() },
@@ -3161,7 +3159,7 @@ class PlayerHudAndWindows(
                 glyph = { kit() ?: label },
                 tint = tint,
                 visible = { ringShown() && worldState.showCombatUi() },
-                icon = { if (kit() != null) null else slot(k)?.let { assets.getItemIconRegion(it.iconId) } },
+                icon = { if (kit() != null) skillForToken(kitTokens[k])?.let { assets.getItemIconRegion(it.iconId) } else slot(k)?.let { assets.getItemIconRegion(it.iconId) } },
                 keyHint = { if (!keyHints) "" else if (kit() != null) kitKeyNames[k] else hint(k) },
                 count = { if (kit() != null) "" else slotBadge(k) },
                 cooldown = { if (kit() != null) skillCooldownFraction(kitTokens[k]) else slotCooldown(k) },
@@ -3238,7 +3236,7 @@ class PlayerHudAndWindows(
                 keyHint = { if (keyHints) KeyBindings.shortKeyName(Accessibility.keys.keysFor(GameAction.TARGET_NEXT).firstOrNull() ?: 0) else "" },
                 highlighted = { worldState.lockedNpcId != null }
             ) { cycleTarget() })
-            add(combat(com.morgana.client.input.ActionCombatInput.Button.DODGE, RingKey(RingRole.DODGE), Color(0.2f, 0.65f, 0.65f, 1f)) { ringShown() && actionCombatOn() })
+            add(combat(com.morgana.client.input.ActionCombatInput.Button.DODGE, RingKey(RingRole.DODGE), Color(0.2f, 0.65f, 0.65f, 1f)) { ringShown() && actionCombatOn() && (!weaponSetsOn() || skillForToken("SPACE") != null) })
             add(RingButton(
                 key = RingKey(RingRole.CONTEXT),
                 glyph = { if (hasNearbyLoot()) "Get" else worldState.interactButtonLabel() },

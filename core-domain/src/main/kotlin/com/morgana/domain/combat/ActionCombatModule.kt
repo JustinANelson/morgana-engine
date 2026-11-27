@@ -119,24 +119,65 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
                 if (edge != null && t >= cancel && t <= cancel + edge.windowTicks) return startSkill(sim, player, state, edge.toSkillId, aim, out)
                 val any = ActionCombatRules.findEdge(set, state.skillId, token, null)
                 if (any != null && t < cancel && cancel - t <= set.inputBufferTicks && !fromBuffer) {
-                    return state.copy(bufferedToken = token, bufferedAt = now)
+                    return state.copy(
+                        bufferedToken = token, bufferedAt = now,
+                        bufferedAimX = aim?.first ?: 0.0, bufferedAimY = aim?.second ?: 0.0, bufferedAimSet = aim != null
+                    )
                 }
-                if (t < ActionCombatRules.skillLength(skill)) return if (state != st) state else null
+                val length = ActionCombatRules.skillLength(skill)
+                if (t < length) {
+                    // Any other entry skill (e.g. a ranged skill or dodge) can cancel out of recovery frames (t >= cancel)
+                    // or buffer cleanly when pressed slightly early, instead of being silently dropped.
+                    val entry = if (any == null) ActionCombatRules.findEntry(set, token) else null
+                    if (entry != null) {
+                        val upgraded = set.empowerSkillId != 0 && set.empoweredSkillId != 0 && entry.skillId == set.empowerSkillId && state.empoweredUntil > now
+                        val targetSkillId = if (upgraded) set.empoweredSkillId else entry.skillId
+                        val isDifferentSkill = targetSkillId != state.skillId
+                        if (isDifferentSkill && t >= cancel) {
+                            return startEntry(sim, player, set, state, entry, aim, out) ?: if (state != st) state else null
+                        }
+                        val readyTick = if (isDifferentSkill) cancel else length
+                        if (t < readyTick && readyTick - t <= set.inputBufferTicks && !fromBuffer) {
+                            val hasDifferentBuffered = state.bufferedToken != null &&
+                                ActionCombatRules.findEntry(set, state.bufferedToken)?.skillId != state.skillId
+                            if (isDifferentSkill || !hasDifferentBuffered) {
+                                return state.copy(
+                                    bufferedToken = token, bufferedAt = now,
+                                    bufferedAimX = aim?.first ?: 0.0, bufferedAimY = aim?.second ?: 0.0, bufferedAimSet = aim != null
+                                )
+                            }
+                        }
+                    }
+                    return if (state != st) state else null
+                }
             }
         }
         val entry = ActionCombatRules.findEntry(set, token)
         if (entry != null) {
-            // An empowered character's upgraded skill replaces the plain one.
-            val upgraded = set.empowerSkillId != 0 && set.empoweredSkillId != 0 && entry.skillId == set.empowerSkillId && state.empoweredUntil > now
-            val started = startSkill(sim, player, state, if (upgraded) set.empoweredSkillId else entry.skillId, aim, out)
-            if (upgraded && set.empowerOnCrit && started != null) {
-                // A crit-armed transformation is spent when it is cast.
-                out.add(WorldSimulationEvent.MomentumChanged(player.id, 0, 0))
-                return started.copy(empoweredUntil = 0L, armReadyAt = now + set.empowerCooldownTicks)
-            }
-            return started
+            return startEntry(sim, player, set, state, entry, aim, out)
         }
         return if (state != st) state else null
+    }
+
+    private fun startEntry(
+        sim: WorldSimulation,
+        player: CharacterState,
+        set: WeaponSetDefinition,
+        state: ActionState,
+        entry: com.morgana.domain.content.ComboEntry,
+        aim: Pair<Double, Double>?,
+        out: MutableList<WorldSimulationEvent>
+    ): ActionState? {
+        val now = sim.currentTick
+        // An empowered character's upgraded skill replaces the plain one.
+        val upgraded = set.empowerSkillId != 0 && set.empoweredSkillId != 0 && entry.skillId == set.empowerSkillId && state.empoweredUntil > now
+        val started = startSkill(sim, player, state, if (upgraded) set.empoweredSkillId else entry.skillId, aim, out)
+        if (upgraded && set.empowerOnCrit && started != null) {
+            // A crit-armed transformation is spent when it is cast.
+            out.add(WorldSimulationEvent.MomentumChanged(player.id, 0, 0))
+            return started.copy(empoweredUntil = 0L, armReadyAt = now + set.empowerCooldownTicks)
+        }
+        return started
     }
 
     private fun startSkill(
@@ -145,7 +186,11 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         val skill = sim.actionSkills[skillId] ?: return null
         val now = sim.currentTick
         if (skill.levelReq > player.level) return null
-        if (now < (st.cooldowns[skillId] ?: 0L)) return null
+        val readyAt = st.cooldowns[skillId] ?: 0L
+        if (now < readyAt) {
+            out.add(WorldSimulationEvent.ActionSkillCooldownStarted(player.id, skillId, (readyAt - now).toInt()))
+            return null
+        }
         for ((vital, amount) in skill.costs) {
             if ((player.vitals[vital]?.cur ?: 0) < amount) {
                 out.add(notice(player, "Not enough $vital"))
@@ -191,10 +236,13 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
             leapX = cx + lx
             leapY = cy + ly
         }
+        if (skill.cooldownTicks > 0) {
+            out.add(WorldSimulationEvent.ActionSkillCooldownStarted(player.id, skillId, skill.cooldownTicks))
+        }
         return st.copy(
             leapX = leapX, leapY = leapY, leapSet = leapMove != null, electrified = false,
             skillId = skillId, start = now, done = -1, hit = false, hits = emptySet(), groupCounts = emptyMap(), freeze = 0,
-            fx = vector.first, fy = vector.second, bufferedToken = null, bufferedAt = 0L, movedTo = -1,
+            fx = vector.first, fy = vector.second, bufferedToken = null, bufferedAt = 0L, bufferedAimX = 0.0, bufferedAimY = 0.0, bufferedAimSet = false, movedTo = -1,
             aimX = aim?.first ?: 0.0, aimY = aim?.second ?: 0.0, aimSet = aim != null,
             holdUntil = if (guard != null && guard.maxHoldTicks > 0) now + skill.startupTicks + guard.maxHoldTicks else 0L,
             cooldowns = if (skill.cooldownTicks > 0) st.cooldowns + (skillId to now + skill.cooldownTicks) else st.cooldowns
@@ -272,16 +320,23 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
 
         var current = player
         val t0 = (now - st.start).toInt()
-        // A stun or root ends the skill, unless a super-armour window is shrugging it off.
-        if (current.statusEffects.any { it.type == StatusEffectType.STUN || it.type == StatusEffectType.ROOT }) {
+        // A stun ends the skill unless a super-armour or invulnerable window is shrugging it off;
+        // a root only prevents dash/leap movement (in applyMoves), not attacking or firing ranged skills.
+        if (current.statusEffects.any { it.type == StatusEffectType.STUN }) {
             if (ActionCombatRules.hasArmor(skill, t0, SkillArmorType.SUPER_ARMOR) || ActionCombatRules.hasArmor(skill, t0, SkillArmorType.INVULNERABLE)) {
                 current = current.copy(statusEffects = current.statusEffects.filterNot { it.type == StatusEffectType.STUN || it.type == StatusEffectType.ROOT })
                 sim.players[charId] = current
                 out.add(WorldSimulationEvent.CharacterUpdated(current))
             } else {
-                sim.actionStates[charId] = st.copy(skillId = 0, bufferedToken = null, holdUntil = 0L)
+                sim.actionStates[charId] = st.copy(skillId = 0, bufferedToken = null, bufferedAt = 0L, bufferedAimSet = false, holdUntil = 0L)
                 return
             }
+        } else if (current.statusEffects.any { it.type == StatusEffectType.ROOT } &&
+            (ActionCombatRules.hasArmor(skill, t0, SkillArmorType.SUPER_ARMOR) || ActionCombatRules.hasArmor(skill, t0, SkillArmorType.INVULNERABLE))
+        ) {
+            current = current.copy(statusEffects = current.statusEffects.filterNot { it.type == StatusEffectType.ROOT })
+            sim.players[charId] = current
+            out.add(WorldSimulationEvent.CharacterUpdated(current))
         }
 
         if (st.freeze > 0) {
@@ -304,12 +359,17 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         val buffered = st.bufferedToken
         if (buffered != null) {
             val set = sim.weaponSets[st.setId]
+            val sameSkillEntry = set != null &&
+                ActionCombatRules.findEdge(set, st.skillId, buffered, null) == null &&
+                ActionCombatRules.findEntry(set, buffered)?.skillId == st.skillId
+            val readyTick = if (sameSkillEntry) length else ActionCombatRules.cancelTick(skill)
             if (set == null || now - st.bufferedAt > set.inputBufferTicks) {
-                st = st.copy(bufferedToken = null, bufferedAt = 0L)
-            } else if (t >= ActionCombatRules.cancelTick(skill)) {
-                st = st.copy(bufferedToken = null, bufferedAt = 0L)
+                st = st.copy(bufferedToken = null, bufferedAt = 0L, bufferedAimX = 0.0, bufferedAimY = 0.0, bufferedAimSet = false)
+            } else if (t >= readyTick) {
+                val bufAim = if (st.bufferedAimSet) st.bufferedAimX to st.bufferedAimY else null
+                st = st.copy(bufferedToken = null, bufferedAt = 0L, bufferedAimX = 0.0, bufferedAimY = 0.0, bufferedAimSet = false)
                 val live = sim.players[charId] ?: current
-                st = handleInput(sim, live, st, buffered, null, fromBuffer = true, out) ?: st
+                st = handleInput(sim, live, st, buffered, bufAim, fromBuffer = true, out) ?: st
             }
         }
         if (st.skillId == skill.id && t > length + ActionCombatRules.COMBO_GRACE) st = st.copy(skillId = 0, hit = false)
@@ -345,14 +405,15 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
                 return@forEachIndexed
             }
             val targetRadius = sim.game.definition.gameplayTuning.actionTargetRadiusPixels
-            // A ground-targeted hitbox is centred on the aimed point (held within its range of the character); others sit on the character.
-            val ground = hb.groundTarget && st.aimSet
+            // A ground-targeted hitbox is centred on the aimed point (clamped to range), or 60% of range ahead when
+            // tapped without a target (matching skillEffect); others sit on the character.
+            val ground = hb.groundTarget
             var ox = cx
             var oy = cy
             var shape = hb
             if (ground) {
-                var gx = st.aimX - cx
-                var gy = st.aimY - cy
+                var gx = if (st.aimSet) st.aimX - cx else st.fx * hb.maxRangePixels * 0.6
+                var gy = if (st.aimSet) st.aimY - cy else st.fy * hb.maxRangePixels * 0.6
                 val dist = StrictMath.sqrt(gx * gx + gy * gy)
                 if (hb.maxRangePixels > 0 && dist > hb.maxRangePixels && dist > 1e-6) {
                     gx = gx / dist * hb.maxRangePixels
@@ -443,6 +504,9 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         val set = sim.weaponSets[st.setId] ?: return st
         val now = sim.currentTick
         if (!set.empowerOnCrit || set.empowerSkillId == 0 || set.empoweredSkillId == 0 || st.empoweredUntil > now || st.skillId == set.empoweredSkillId) return st
+        val baseReq = sim.actionSkills[set.empowerSkillId]?.levelReq ?: 1
+        val upgReq = sim.actionSkills[set.empoweredSkillId]?.levelReq ?: 1
+        if (player.level < baseReq || player.level < upgReq) return st
         // One roll per use of a skill, and none while the last transformation is still cooling off.
         if (now < st.armReadyAt || st.armRolledFor == st.start) return st
         val rolled = st.copy(armRolledFor = st.start)
@@ -509,8 +573,9 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
             effects += ActiveStatusEffect("action-status-${status.name}", status, player.id, hit.statusMagnitude, emptyMap(), hit.statusDurationTicks)
         }
         if (effects.isNotEmpty()) live = live.copy(statusEffects = live.statusEffects.filterNot { e -> effects.any { it.id == e.id } } + effects)
-        if (hit.knockbackPixels > 0) live = knockedBack(sim, live, st, hit.knockbackPixels, if (hit.knockbackRadial) geometry else null)
-        if (hit.pullPixels > 0) live = pulledToward(sim, live, geometry, hit.pullPixels)
+        val npcCanMove = (sim.npcs[live.npcId]?.moveSpeedTicks ?: 1) > 0
+        if (npcCanMove && hit.knockbackPixels > 0) live = knockedBack(sim, live, st, hit.knockbackPixels, if (hit.knockbackRadial) geometry else null)
+        if (npcCanMove && hit.pullPixels > 0) live = pulledToward(sim, live, geometry, hit.pullPixels)
         if (live != list[idx]) {
             list[idx] = live
             out.add(WorldSimulationEvent.NpcUpdated(live))
@@ -666,6 +731,7 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         }
         if (dx == 0.0 && dy == 0.0) return
         val player = sim.players[charId] ?: return
+        if (player.statusEffects.any { it.type == StatusEffectType.ROOT }) return
         val map = sim.maps[player.position.mapId] ?: return
         val half = map.tileSize / 2.0
         // A fast move (a rush or a leap) goes in short sub-steps, each checked, so it can neither skip a thin wall nor pass through a body.
@@ -742,6 +808,9 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         val set = sim.weaponSets[st.setId] ?: return
         val now = sim.currentTick
         if (set.empowerSkillId == 0 || set.empoweredSkillId == 0 || st.empoweredUntil > now || st.momentumFrom == st.start) return
+        val baseReq = sim.actionSkills[set.empowerSkillId]?.levelReq ?: 1
+        val upgReq = sim.actionSkills[set.empoweredSkillId]?.levelReq ?: 1
+        if (player.level < baseReq || player.level < upgReq) return
         val ts = sim.maps[player.position.mapId]?.tileSize ?: 32
         val cx = (player.position.pixelX + ts / 2.0).toFloat()
         val cy = (player.position.pixelY + ts / 2.0).toFloat()

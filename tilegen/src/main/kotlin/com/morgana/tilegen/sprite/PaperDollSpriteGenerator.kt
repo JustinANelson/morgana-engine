@@ -363,6 +363,31 @@ class PaperDollSpriteGenerator(
         val baseDir = direction.mirrorFrom ?: direction
         val mirrored = direction.mirrorFrom != null
         val theme = loadout.effectiveTheme()
+        if (theme.proportions == PaperDollProportions.LPC_64X64) {
+            val (rawLayers, rawSockets) = LpcPaperDollRenderer.renderLayers(loadout, baseDir, frameIndex, action, style)
+            val outLayers = linkedMapOf<PaperDollSlot, TileImage>()
+            for ((slot, layer64) in rawLayers) {
+                if (!hasVisiblePixels(layer64)) continue
+                val oriented = if (mirrored) mirrorImageX(layer64) else layer64
+                val scaled = if (tileSize == 64 && tileHeight == 64) oriented else scaleNearest(oriented, tileSize, tileHeight)
+                outLayers[slot] = scaled
+            }
+            val finalSockets = if (mirrored) {
+                rawSockets.copy(
+                    pivotX = 64 - 1 - rawSockets.pivotX,
+                    headX = 64 - 1 - rawSockets.headX,
+                    faceX = 64 - 1 - rawSockets.faceX,
+                    backX = 64 - 1 - rawSockets.backX,
+                    shoulderX = 64 - 1 - rawSockets.shoulderX,
+                    waistX = 64 - 1 - rawSockets.waistX,
+                    mainHandX = 64 - 1 - rawSockets.mainHandX,
+                    offHandX = 64 - 1 - rawSockets.offHandX
+                )
+            } else {
+                rawSockets
+            }
+            return outLayers to finalSockets.scaled(tileSize, tileHeight, 64)
+        }
         val nativeH = if (tileHeight == 48 || theme.proportions == PaperDollProportions.RMXP_32X48) 48 else 32
         val (rawLayers, rawSockets) = renderPaperDollLayers32(loadout, baseDir, frameIndex, action, style, nativeH)
 

@@ -24,33 +24,32 @@ import org.teavm.jso.browser.Window
 /** Default port of the server's WebSocket listener (`MORGANA_WS_PORT`). */
 private const val DEFAULT_WEB_PORT = 7002
 
-private const val TAILSCALE_FUNNEL_HOST = "legion-5-laptop.tail4e16.ts.net"
-private const val TAILSCALE_FUNNEL_PORT = 443
-
 private fun webBundledDirectory(pageHost: String, port: Int, secure: Boolean): RealmDirectoryDocument {
     val base = defaultBundledDirectory(pageHost, port, tls = secure)
-    val funnelRealm = RealmSummary(
-        id = "tailscale-funnel",
-        name = "Tailscale Funnel test realm",
-        description = "Live test realm hosted via Tailscale Funnel.",
-        host = TAILSCALE_FUNNEL_HOST,
-        port = TAILSCALE_FUNNEL_PORT,
-        tls = true,
+    val featuredHost = WebBuildConfig.FEATURED_REALM_HOST
+    if (featuredHost.isBlank()) return base
+    val featuredRealm = RealmSummary(
+        id = "featured-realm",
+        name = WebBuildConfig.FEATURED_REALM_NAME,
+        description = WebBuildConfig.FEATURED_REALM_DESCRIPTION.ifBlank { "Live realm hosted at $featuredHost." },
+        host = featuredHost,
+        port = WebBuildConfig.FEATURED_REALM_PORT,
+        tls = WebBuildConfig.FEATURED_REALM_TLS,
         fingerprint = null,
         gameTitle = "",
         engineApi = 1,
         onlinePlayers = 0,
         maxPlayers = 100,
-        tags = listOf("roguelike", "tailscale"),
+        tags = emptyList(),
         classes = DEFAULT_CLASSES
     )
-    val localIsSameOrigin = pageHost == "127.0.0.1" || pageHost == "localhost" || pageHost.endsWith(".ts.net")
+    val localIsSameOrigin = pageHost == "127.0.0.1" || pageHost == "localhost" || pageHost == featuredHost
     return if (localIsSameOrigin) {
-        base.copy(realms = base.realms + funnelRealm)
+        base.copy(realms = base.realms + featuredRealm)
     } else {
         base.copy(
-            realms = listOf(funnelRealm) + base.realms,
-            featuredRealmId = funnelRealm.id
+            realms = listOf(featuredRealm) + base.realms,
+            featuredRealmId = featuredRealm.id
         )
     }
 }

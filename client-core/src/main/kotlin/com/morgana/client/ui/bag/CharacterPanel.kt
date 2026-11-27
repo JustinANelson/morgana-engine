@@ -48,10 +48,11 @@ class CharacterPanel(
     private val content = VisTable()
 
     init {
-        defaults().pad(3f)
+        defaults().pad(2f)
         if (tab !in availableTabs()) tab = CharacterTab.STATS
         add(body).grow().row()
-        body.add(BagUi.scroll(content, uiStage)).grow().width(winW - 24f).height(winH - 92f)
+        body.background = theme.insetWellBackground
+        body.add(BagUi.scroll(content, uiStage)).grow()
         refresh()
     }
 
@@ -162,31 +163,39 @@ class CharacterPanel(
         val mainHandStack = ch.equipment.getEquipped(EquipmentSlot.WEAPON)
         val mainHandDef = mainHandStack?.let { itemMap[it.itemId] }
         val twoHanded = mainHandDef?.twoHanded == true
-        val slotW = if (winW < 400f) 66f else 80f
-        val buttonW = if (HudWindow.touchMode) 96f else 80f
-        val nameW = (winW - 24f - slotW - buttonW - 40f).coerceAtLeast(80f)
+        val rowW = (winW - 44f).coerceAtLeast(220f)
+        val slotW = if (winW < 400f) 66f else 84f
+        val buttonW = if (HudWindow.touchMode) 88f else 76f
+        val nameW = (rowW - slotW - buttonW - 46f).coerceAtLeast(80f)
         val gameSlots = worldState.gameDefinition?.slots ?: com.morgana.domain.game.EquipmentSlotDefinition.CLASSIC
         for (slotDef in gameSlots) {
             val slot = EquipmentSlot(slotDef.id)
             val stack = ch.equipment.getEquipped(slot)
             val def = stack?.let { itemMap[it.itemId] }
-            content.add(BagUi.label(slotDef.name, Tone.MUTED)).width(slotW).top().padTop(6f)
+            val rowCard = VisTable().apply {
+                background = if (stack != null) theme.cardBackground else theme.insetWellBackground
+            }
+            rowCard.add(BagUi.label(slotDef.name, Tone.MUTED)).width(slotW).left().padLeft(2f)
             if (stack == null) {
                 val text = if (slot == EquipmentSlot.SHIELD && twoHanded && mainHandDef != null && mainHandStack != null) {
                     "Occupied (${ItemRollText.displayName(mainHandDef, mainHandStack.rolls, loot, mainHandStack.plus)})"
-                } else "-"
-                content.add(BagUi.wrapped(text, Tone.MUTED)).width(nameW + buttonW + 28f).colspan(2).padTop(6f).row()
-                continue
+                } else "Empty"
+                rowCard.add(BagUi.wrapped(text, Tone.MUTED)).width(nameW + buttonW + 24f).left()
+            } else {
+                val nameCell = VisTable()
+                val iconSocket = VisTable().apply {
+                    background = theme.insetWellBackground
+                    add(BagUi.icon(assets, def?.iconId ?: stack.itemId, 24f)).size(24f)
+                }
+                nameCell.add(iconSocket).size(32f).padRight(6f)
+                val shown = def?.let { ItemRollText.displayName(it, stack.rolls, loot, stack.plus) } ?: "Item #${stack.itemId}"
+                nameCell.add(BagUi.wrapped(shown + if (stack.amount > 1) " x${stack.amount}" else "").also { l ->
+                    BagUi.hexColor(ItemRollText.color(stack.rolls, loot))?.let { l.color = it }
+                }).width((nameW - 38f).coerceAtLeast(50f)).left()
+                rowCard.add(nameCell).width(nameW + 16f).left().growX()
+                rowCard.add(BagUi.button("Unequip") { netClient.send(ClientPacket.UnequipSlot(slot)) }).width(buttonW).height(BagUi.buttonHeight).right()
             }
-            val nameCell = VisTable()
-            nameCell.add(BagUi.icon(assets, def?.iconId ?: stack.itemId, 24f)).size(24f).padRight(4f).top()
-            val shown = def?.let { ItemRollText.displayName(it, stack.rolls, loot, stack.plus) } ?: "Item #${stack.itemId}"
-            nameCell.add(BagUi.wrapped(shown + if (stack.amount > 1) " x${stack.amount}" else "").also { l ->
-                BagUi.hexColor(ItemRollText.color(stack.rolls, loot))?.let { l.color = it }
-            }).width(nameW - 28f).left()
-            content.add(nameCell).width(nameW + 28f).left()
-            content.add(BagUi.button("Unequip") { netClient.send(ClientPacket.UnequipSlot(slot)) }).width(buttonW).height(BagUi.buttonHeight)
-            content.row()
+            content.add(rowCard).width(rowW).padBottom(3f).left().row()
         }
     }
 

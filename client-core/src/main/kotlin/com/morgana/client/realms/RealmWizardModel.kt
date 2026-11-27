@@ -15,7 +15,8 @@ data class FeaturePreset(
     val disabledModuleKeys: Set<String>,
     val noCombat: Boolean = false,
     val modernSprites: Boolean = false,
-    val genre: String? = null
+    val genre: String? = null,
+    val uiLayout: String? = null
 )
 
 /**
@@ -52,6 +53,7 @@ class RealmWizardModel(
         }
     var noCombat: Boolean = false
     var modernSprites: Boolean = false
+    var uiLayout: String? = null
 
     init {
         applyTemplateDefaults()
@@ -64,6 +66,7 @@ class RealmWizardModel(
     private fun applyTemplateDefaults() {
         disabled.clear()
         disabled.addAll(templateDefaults)
+        uiLayout = null
     }
 
     val template: RealmTemplateInfo? get() = templates.firstOrNull { it.id == templateId }
@@ -98,11 +101,14 @@ class RealmWizardModel(
         disabled.addAll(preset.disabledModuleKeys.filter { key -> modules.any { it.configKey == key } })
         noCombat = preset.noCombat
         modernSprites = preset.modernSprites
+        uiLayout = preset.uiLayout
     }
 
     /** The preset whose switches match the current ones, if any (so the UI can show which is active). */
     fun activePreset(): FeaturePreset? =
-        (PRESETS + GENRES).firstOrNull { it.disabledModuleKeys == disabled && it.noCombat == noCombat && it.modernSprites == modernSprites }
+        (PRESETS + GENRES).firstOrNull {
+            it.disabledModuleKeys == disabled && it.noCombat == noCombat && it.modernSprites == modernSprites && it.uiLayout == uiLayout
+        }
 
     /** Why [name] cannot be used, or null if it can. */
     fun nameProblem(): String? = when {
@@ -136,7 +142,7 @@ class RealmWizardModel(
 
     /** Everything collected so far, ready to hand to [com.morgana.client.LocalWorldHost.createRealm]. */
     fun toSpec(): RealmSpec =
-        RealmSpec(name.trim(), templateId, disabledModuleKeys, noCombat, modernSprites, enabledModuleKeys = templateDefaults - disabled)
+        RealmSpec(name.trim(), templateId, disabledModuleKeys, noCombat, modernSprites, enabledModuleKeys = templateDefaults - disabled, uiLayout = uiLayout)
 
     /** Plain-language summary for the review step. */
     fun summaryLines(): List<String> = buildList {
@@ -147,6 +153,9 @@ class RealmWizardModel(
         }
         if (modernSprites) {
             add("Sprites: modern taller 32 x 64 multi-state characters (foot-anchored)")
+        }
+        if (uiLayout == com.morgana.domain.game.UiLayout.RING) {
+            add("HUD & mobile controls: Ring action cluster and floating joystick")
         }
         activePreset()?.genre?.let { add("Genre: ${SystemTags.TITLES[it]}") }
         val off = modules.filter { !isEnabled(it) }
@@ -165,13 +174,16 @@ class RealmWizardModel(
         /**
          * One starter per genre ([SystemTags.TITLES]): the systems tagged for the genre stay on and every other system is switched
          * off, so "Roguelike" is parties, instancing, boss encounters, threat and so on, without guilds, trading or the market.
+         * Online RPG (`rpg`) and Roguelike / dungeon crawler (`roguelike`) default to the mobile-first `ring` HUD and controls.
          * The same choice is `world-new --genre <tag>` on the command line.
          */
         val GENRES: List<FeaturePreset> = SystemTags.TITLES.map { (tag, title) ->
             val off = SystemGroups.disabledKeysFor(tag)
             val kept = OptionalModule.entries.filter { it.configKey !in off }.map { it.displayName }
             val shown = kept.take(6).joinToString() + if (kept.size > 6) " and ${kept.size - 6} more" else ""
-            FeaturePreset("genre:$tag", title, "Keeps $shown. Everything else is switched off.", off, genre = tag)
+            val layout = com.morgana.domain.game.UiLayout.defaultForGenre(tag)
+                .takeIf { it != com.morgana.domain.game.UiLayout.CLASSIC }
+            FeaturePreset("genre:$tag", title, "Keeps $shown. Everything else is switched off.", off, genre = tag, uiLayout = layout)
         }
 
         val PRESETS: List<FeaturePreset> = listOf(

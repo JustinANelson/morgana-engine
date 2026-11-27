@@ -32,9 +32,9 @@ internal object BagUi {
     val font: BitmapFont get() = VisUI.getSkin().getFont("default-font")
 
     /** Side of one grid square: a little bigger on touch screens. */
-    val cellSize: Float get() = if (HudWindow.touchMode) 48f else 42f
+    val cellSize: Float get() = if (HudWindow.touchMode) 46f else 42f
 
-    val buttonHeight: Float get() = if (HudWindow.touchMode) 40f else 28f
+    val buttonHeight: Float get() = if (HudWindow.touchMode) 34f else 26f
 
     fun label(text: String, tone: Tone = Tone.NEUTRAL): VisLabel = VisLabel(text).also { it.color = color(tone) }
 
@@ -52,7 +52,25 @@ internal object BagUi {
     fun wrapped(text: String, tone: Tone = Tone.NEUTRAL): VisLabel = label(text, tone).also { it.setWrap(true) }
 
     fun button(text: String, enabled: Boolean = true, onClick: () -> Unit): VisTextButton =
-        VisTextButton(text).also { b ->
+        VisTextButton(text, com.morgana.client.ui.GameTheme.shared.buttonStyle).also { b ->
+            b.isDisabled = !enabled
+            b.addListener(object : ChangeListener() {
+                override fun changed(event: ChangeEvent?, actor: Actor?) { if (!b.isDisabled) onClick() }
+            })
+        }
+
+    /** High-emphasis RPG button for primary actions (Equip, Use, Buy, Sell, Craft, Withdraw, Deposit). */
+    fun primaryButton(text: String, enabled: Boolean = true, onClick: () -> Unit): VisTextButton =
+        VisTextButton(text, com.morgana.client.ui.GameTheme.shared.primaryButtonStyle).also { b ->
+            b.isDisabled = !enabled
+            b.addListener(object : ChangeListener() {
+                override fun changed(event: ChangeEvent?, actor: Actor?) { if (!b.isDisabled) onClick() }
+            })
+        }
+
+    /** Crimson-tinted RPG button for destructive confirmations (e.g. 'Really drop?'). */
+    fun dangerButton(text: String, enabled: Boolean = true, onClick: () -> Unit): VisTextButton =
+        VisTextButton(text, com.morgana.client.ui.GameTheme.shared.dangerButtonStyle).also { b ->
             b.isDisabled = !enabled
             b.addListener(object : ChangeListener() {
                 override fun changed(event: ChangeEvent?, actor: Actor?) { if (!b.isDisabled) onClick() }
@@ -65,7 +83,7 @@ internal object BagUi {
      * redraw the window, which builds the chips again, without end.
      */
     fun chip(text: String, checked: Boolean, onClick: () -> Unit): VisTextButton =
-        VisTextButton(text, "toggle").also { b ->
+        VisTextButton(text, com.morgana.client.ui.GameTheme.shared.chipStyle).also { b ->
             b.setProgrammaticChangeEvents(false)
             b.isChecked = checked
             b.addListener(object : ChangeListener() {
