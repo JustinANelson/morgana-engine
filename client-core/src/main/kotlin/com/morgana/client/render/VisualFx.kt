@@ -1,0 +1,50 @@
+package com.morgana.client.render
+
+/**
+ * Experimental visual upgrades layered on the 2D renderer. Each can be toggled live (Ctrl+F6 / F7 / F8 in the client) so the
+ * look can be compared with and without it. Nothing here changes game rules or the maps; it only changes how the client draws.
+ */
+object VisualFx {
+    /** Light map + day/night colour grade + split-toned palette + mist (Ctrl+F6). */
+    @JvmField var lighting: Boolean = true
+
+    /** Sun/moon projected cast shadows for characters instead of a fixed oval (Ctrl+F7). */
+    @JvmField var shadows: Boolean = true
+
+    /** "HD-2D" look: bloom, saturation lift and vignette on the flat 2D world (Ctrl+F8). */
+    @JvmField var hd2d: Boolean = true
+
+    /** The tilt-shift blur at the top and bottom edges of the view. Off by default (it read as a smear on a phone); `?fx=tilt` or `all` brings it back. */
+    @JvmField var tiltShift: Boolean = false
+
+    /** Set false when the platform could not create framebuffers or compile the shader; everything falls back to the plain renderer. */
+    @JvmField var available: Boolean = true
+
+    /** The sky for the frame being drawn, or null when the game has no day/night clock (or the map is indoors). Set each frame by the client. */
+    @JvmField var sky: SkyState? = null
+
+    val postProcessing: Boolean get() = available && (lighting || hd2d)
+}
+
+/**
+ * Sets the toggles from a comma list such as `lighting,shadows` (only those on), `all` or `none`, so a launch address
+ * (`?fx=none`) or command line can compare looks without keyboard shortcuts. Unknown words are ignored; null changes nothing.
+ */
+fun VisualFx.applyList(list: String?) {
+    if (list == null) return
+    val on = list.split(',').map { it.trim().lowercase() }.filter { it.isNotEmpty() }.toSet()
+    val all = "all" in on
+    lighting = all || "lighting" in on
+    shadows = all || "shadows" in on
+    hd2d = all || "hd2d" in on
+    tiltShift = all || "tilt" in on
+}
+
+/** Client-only switches for looking at HUD states without playing to them (`?empower=meter` shows a part-full momentum meter, `?empower=on` an empowered character). */
+object ClientDebug {
+    @JvmField var empower: String? = null
+}
+
+/** The `fx` value in a page address's query string, or null when there is none. */
+fun fxFromQuery(search: String): String? =
+    search.removePrefix("?").split('&').firstNotNullOfOrNull { p -> p.split('=', limit = 2).takeIf { it.size == 2 && it[0] == "fx" }?.get(1) }

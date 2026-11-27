@@ -1,5 +1,6 @@
 package com.morgana.domain.sim
 
+import com.morgana.domain.combat.actionCrit
 import com.morgana.domain.combat.actionDefence
 import com.morgana.domain.content.NpcBehavior
 import com.morgana.domain.content.NpcDefinition
@@ -43,6 +44,12 @@ internal fun WorldSimulation.tickProjectiles(out: MutableList<WorldSimulationEve
         var changed = false
 
         for (proj in projList) {
+            if (proj.free) {
+                // A free-flight projectile moves every tick; the others step a tile at a time.
+                changed = true
+                stepFreeProjectile(proj, mapId, map, out)?.let { updatedList.add(it) }
+                continue
+            }
             if (currentTick < proj.nextStepTick) {
                 updatedList.add(proj)
                 continue
@@ -155,6 +162,77 @@ internal fun WorldSimulation.tickProjectiles(out: MutableList<WorldSimulationEve
             out.add(WorldSimulationEvent.ProjectilesChanged(mapId, projList.toList()))
         }
     }
+}
+
+/** The squared distance from the point ([qx], [qy]) to the segment ([ax], [ay])-([bx], [by]). */
+internal fun segmentDistance2(ax: Float, ay: Float, bx: Float, by: Float, qx: Float, qy: Float): Float {
+    val dx = bx - ax
+    val dy = by - ay
+    val len2 = dx * dx + dy * dy
+    val t = if (len2 < 1e-6f) 0f else (((qx - ax) * dx + (qy - ay) * dy) / len2).coerceIn(0f, 1f)
+    val cx = ax + t * dx - qx
+    val cy = ay + t * dy - qy
+    return cx * cx + cy * cy
+}
+
+/**
+ * Moves one free-flight projectile a tick: it stops at a wall or the map's edge, hits the hostile monsters (and, where PvP is on,
+ * players) its body passes within reach of on the way (the whole step is swept, so a fast shot cannot skip a target), and ends when its
+ * range runs out. Returns the projectile still in flight, or null when it has ended.
+ */
+private fun WorldSimulation.stepFreeProjectile(proj: MapProjectile, mapId: Int, map: MapDefinition, out: MutableList<WorldSimulationEvent>): MapProjectile? {
+    val ts = map.tileSize
+    val nx = proj.px + proj.vx
+    val ny = proj.py + proj.vy
+    val seamless = layout.isPlaced(mapId)
+    if (!seamless && (nx < 0f || ny < 0f)) return null
+    val tile = TileCoord(kotlin.math.floor(nx / ts).toInt(), kotlin.math.floor(ny / ts).toInt())
+    if (!map.isInBounds(tile)) {
+        // In a seamless world the shot flies on over the border (its position stays in this map's coordinates) until the world ends or a wall stops it.
+        val across = if (seamless) layout.crossing(map, tile.x, tile.y) else null
+        if (across == null || across.map.getCell(across.tileX, across.tileY)?.attribute is TileAttribute.Blocked) return null
+    } else if (map.getCell(tile)?.attribute is TileAttribute.Blocked) return null
+
+    val reach = (game.definition.gameplayTuning.actionTargetRadiusPixels + 6).toFloat()
+    val reach2 = reach * reach
+    var hitIds = proj.hitEntityIds
+    var hitSomething = false
+    val attacker = players[proj.sourceEntityId]
+    if (attacker != null) {
+        for (reachNpc in hostileNpcsInReach(mapId, tile.x, tile.y, 3)) {
+            val npc = reachNpc.npc
+            if (npc.instanceId in hitIds) continue
+            if (segmentDistance2(proj.px, proj.py, nx, ny, npc.bodyX(ts) + reachNpc.shiftTilesX * ts + ts / 2f, npc.bodyY(ts) + reachNpc.shiftTilesY * ts + ts / 2f) > reach2) continue
+            applyDamageToNpc(attacker, npc, proj.damage, isCrit = proj.crit, out = out)
+            if (proj.crit) actionCrit(attacker, out)
+            if (proj.actionSkillId > 0) onActionCombatHitLanded(attacker.id, proj.actionSkillId, out)
+            hitSomething = true
+            hitIds = hitIds + npc.instanceId
+            if (!proj.pierce) break
+        }
+        if (!hitSomething && map.isInBounds(tile)) {
+            worldObjectAt(mapId, tile.x, tile.y)?.let { obj ->
+                if (com.morgana.domain.systems.WorldStateSystem.strike(this, attacker, obj, proj.damage, out)) hitSomething = true
+            }
+        }
+        if ((!hitSomething || proj.pierce) && map.moral.pvpEnabled) {
+            for (target in players.values.toList()) {
+                if (target.id == proj.sourceEntityId || target.id in hitIds || !target.isAlive(game.lifeVitalId) || target.position.mapId != mapId || !canAttackPlayer(attacker, target)) continue
+                if (segmentDistance2(proj.px, proj.py, nx, ny, target.position.pixelX + ts / 2f, target.position.pixelY + ts / 2f) > reach2) continue
+                applyPvpDamage(attacker, target, proj.damage, isCrit = false, out = out)
+                hitSomething = true
+                hitIds = hitIds + target.id
+                if (!proj.pierce) break
+            }
+        }
+    }
+    if (hitSomething && !proj.pierce) return null
+    val left = proj.remainingPixels - kotlin.math.sqrt(proj.vx * proj.vx + proj.vy * proj.vy)
+    if (left <= 0f) return null
+    return proj.copy(
+        px = nx, py = ny, currentTileX = tile.x, currentTileY = tile.y, remainingPixels = left,
+        nextStepTick = currentTick + 1L, hitEntityIds = hitIds
+    )
 }
 
 private const val LAST_SEEN_STAMP_TICKS = 200L
@@ -1250,6 +1328,66 @@ internal fun WorldSimulation.applyDamageToNpc(
     out.add(WorldSimulationEvent.NpcUpdated(updatedNpc))
 }
 
+/** A slain monster may drop health orbs (a rare or special variant always drops three) where it fell. */
+internal fun WorldSimulation.dropHealthOrbs(npc: MapNpcInstance, special: Boolean, out: MutableList<WorldSimulationEvent>) {
+    val t = game.definition.gameplayTuning
+    if (t.healthOrbChancePercent <= 0 || t.healthOrbHealPercent <= 0) return
+    val count = if (special) 3 else if (rng.nextInt(100) < t.healthOrbChancePercent) 1 else 0
+    if (count == 0) return
+    val ts = maps[npc.mapId]?.tileSize ?: 32
+    val list = healthOrbs.getOrPut(npc.mapId) { mutableListOf() }
+    repeat(count) {
+        list.add(
+            com.morgana.domain.entity.HealthOrb(
+                id = nextId("orb"), x = npc.bodyX(ts) + ts / 2f + (rng.nextInt(41) - 20), y = npc.bodyY(ts) + ts / 2f + (rng.nextInt(41) - 20),
+                expiresAt = currentTick + t.healthOrbLifeTicks, healPercent = t.healthOrbHealPercent
+            )
+        )
+    }
+    out.add(WorldSimulationEvent.OrbsChanged(npc.mapId, list.toList()))
+}
+
+/** Orbs fade, drift towards a hurt player nearby and heal them when reached. */
+internal fun WorldSimulation.tickHealthOrbs(out: MutableList<WorldSimulationEvent>) {
+    for ((mapId, list) in healthOrbs) {
+        if (list.isEmpty()) continue
+        val lifeId = game.lifeVitalId
+        var changed = false
+        val iter = list.listIterator()
+        while (iter.hasNext()) {
+            val orb = iter.next()
+            if (currentTick >= orb.expiresAt) { iter.remove(); changed = true; continue }
+            val ts = maps[mapId]?.tileSize ?: 32
+            // Only a player who is hurt picks an orb up (or draws it in); a healthy one walks over it and leaves it.
+            // A hurt player on this map, or just across a border (their position shifted into this map's pixels for the distance only).
+            fun shifted(p: com.morgana.domain.entity.CharacterState): Pair<Float, Float> {
+                val s = pixelShiftToMap(p, mapId) ?: (0f to 0f)
+                return p.position.pixelX + s.first + ts / 2f to p.position.pixelY + s.second + ts / 2f
+            }
+            val hurt = players.values.filter { p ->
+                isOnOrNearMap(p, mapId) && p.isAlive(lifeId) && (p.vitals[lifeId]?.let { it.cur < it.max } ?: false)
+            }.minByOrNull { p -> shifted(p).let { kotlin.math.hypot((it.first - orb.x).toDouble(), (it.second - orb.y).toDouble()) } } ?: continue
+            val dx = shifted(hurt).first - orb.x
+            val dy = shifted(hurt).second - orb.y
+            val dist = kotlin.math.hypot(dx.toDouble(), dy.toDouble()).toFloat()
+            if (dist <= 24f) {
+                val life = hurt.vitals[lifeId] ?: continue
+                val amount = (life.max * orb.healPercent / 100).coerceAtLeast(1)
+                val healed = hurt.copy(vitals = hurt.vitals + (lifeId to life.heal(amount)))
+                players[healed.id] = healed
+                out.add(WorldSimulationEvent.FloatingTextEmitted(mapId, hurt.position.tileX, hurt.position.tileY, "+$amount", "HEAL", "#22C55E"))
+                out.add(WorldSimulationEvent.CharacterUpdated(healed))
+                iter.remove()
+                changed = true
+            } else if (dist <= 110f) {
+                iter.set(orb.copy(x = orb.x + dx / dist * 6f, y = orb.y + dy / dist * 6f))
+                changed = true
+            }
+        }
+        if (changed) out.add(WorldSimulationEvent.OrbsChanged(mapId, list.toList()))
+    }
+}
+
 internal fun WorldSimulation.handleNpcKilled(
     npc: MapNpcInstance,
     npcDef: NpcDefinition,
@@ -1260,7 +1398,7 @@ internal fun WorldSimulation.handleNpcKilled(
     // A boss with a lockout rewards only the players on the map who are not already saved to it.
     val lockout = monsterKillLockout(npcDef)
     val worldNow = effectiveWorldTick()
-    val fighters = if (lockout > 0) players.values.filter { it.position.mapId == npc.mapId } else emptyList()
+    val fighters = if (lockout > 0) players.values.filter { isOnOrNearMap(it, npc.mapId) } else emptyList()
     val unsaved = fighters.filter { (it.encounterLockouts[npcDef.id] ?: 0L) <= worldNow }
     val killer = if (lockout > 0) (killedBy?.takeIf { k -> unsaved.any { it.id == k.id } } ?: unsaved.firstOrNull()) else killedBy
     val slotRespawn = map?.npcSpawns?.firstOrNull { it.slotIndex == npc.spawnSlotIndex }?.respawnTicks ?: game.definition.combat.defaultNpcRespawnTicks
@@ -1278,6 +1416,7 @@ internal fun WorldSimulation.handleNpcKilled(
     val variant = npcVariant(npc)
     val rolled = rolledVariant(npc)
     val effectiveNpcLevel = (rolled?.effectiveLevel(npcDef.level) ?: npcDef.level) + npcLevelShift(npc)
+    dropHealthOrbs(npc, rolled != null, out)
 
     // Roll loot drops
     val groundList = mapGroundItems.getOrPut(npc.mapId) { mutableListOf() }
@@ -1313,10 +1452,11 @@ internal fun WorldSimulation.handleNpcKilled(
                         val maxSockets = game.definition.gearUpgrade?.takeIf { it.enabled }?.maxSockets ?: 0
                         repeat(qty) {
                             val rolled = ItemRoller.roll(dropDef, effectiveNpcLevel, loot, rng)
-                            lay(ItemStack(drop.itemId, 1, rolls = rolled, sockets = ItemRoller.rollDropSockets(rolled, loot, maxSockets, rng)))
+                            val rolledSockets = ItemRoller.rollDropSockets(rolled, loot, maxSockets, rng)
+                            lay(ItemStack(drop.itemId, 1, rolls = rolled, sockets = dropDef.freshSockets().ifEmpty { rolledSockets }))
                         }
                     } else {
-                        lay(ItemStack(drop.itemId, qty))
+                        lay(ItemStack(drop.itemId, qty, sockets = if (qty == 1) dropDef?.freshSockets().orEmpty() else emptyList()))
                     }
                     if (dropDef != null) {
                         if (dropDef.dropSoundId.isNotBlank() && playedDropSounds.add(dropDef.dropSoundId)) {
@@ -1390,7 +1530,7 @@ internal fun WorldSimulation.awardPartyOrSoloExperience(
     val party = if (modules.isEnabled(OptionalModule.PARTIES)) earner.partyId?.let { parties[it] } else null
     val sameMapMembers = party?.memberCharacterIds
         ?.mapNotNull { players[it] }
-        ?.filter { it.isAlive(game.lifeVitalId) && it.position.mapId == earner.position.mapId }
+        ?.filter { it.isAlive(game.lifeVitalId) && isOnOrNearMap(it, earner.position.mapId) }
         .orEmpty()
 
     if (party != null && party.shareXp && sameMapMembers.size > 1) {
@@ -1489,6 +1629,34 @@ internal fun WorldSimulation.grantXpToCharacter(characterId: String, amount: Lon
                 colorHex = "#FACC15"
             )
         )
+        // Announce any action-combat skills newly unlocked at the new level(s).
+        val unlockedIds = weaponSets.values
+            .filter { it.slot == com.morgana.domain.content.WeaponSetSlot.MAIN && (it.classIds.isEmpty() || leveled.classId in it.classIds) && it.levelReq <= leveled.level }
+            .flatMap { it.skillIds }
+            .distinct()
+        for (skillId in unlockedIds) {
+            val skill = actionSkills[skillId] ?: continue
+            if (skill.levelReq in (current.level + 1)..leveled.level) {
+                out.add(
+                    WorldSimulationEvent.ChatEmitted(
+                        channel = "SYSTEM", mapId = leveled.position.mapId, senderId = "system", senderName = "System",
+                        targetCharacterId = leveled.id, message = "You learned ${skill.name}!",
+                        showOverheadBubble = false, notice = "LEVEL"
+                    )
+                )
+                out.add(
+                    WorldSimulationEvent.FloatingTextEmitted(
+                        mapId = leveled.position.mapId,
+                        tileX = leveled.position.tileX,
+                        tileY = leveled.position.tileY,
+                        text = "LEARNED: ${skill.name}!",
+                        category = "LEVEL_UP",
+                        colorHex = "#34D399",
+                        targetCharacterId = leveled.id
+                    )
+                )
+            }
+        }
     }
     out.add(WorldSimulationEvent.CharacterUpdated(leveled))
     if (levelsGained > 0) {

@@ -80,6 +80,31 @@ internal fun WorldSimulation.movePlayerImpl(
         )
     }
 
+    // 1a. The seamless world: stepping off a placed map lands on whichever map covers that world tile, keeping the sub-tile position.
+    if (!currentMap.isInBounds(targetCoord) && layout.isPlaced(currentMap.id)) {
+        val crossing = layout.crossing(currentMap, targetCoord.x, targetCoord.y) ?: return emptyList()
+        val dest = crossing.map
+        val destCoord = TileCoord(crossing.tileX, crossing.tileY)
+        if (dest.getCell(destCoord)?.attribute is TileAttribute.Blocked) return emptyList()
+        if (mapNpcs[dest.id]?.any { it.isAlive && it.tileX == destCoord.x && it.tileY == destCoord.y } == true) return emptyList()
+        val position = if (mode == MovementMode.SUB_TILE) {
+            player.position.copy(
+                mapId = dest.id, tileX = destCoord.x, tileY = destCoord.y, direction = direction,
+                pixelX = newPosCandidate.pixelX + crossing.shiftTilesX * dest.tileSize,
+                pixelY = newPosCandidate.pixelY + crossing.shiftTilesY * dest.tileSize
+            )
+        } else {
+            WorldPosition.fromTile(dest.id, destCoord.x, destCoord.y, direction, dest.tileSize)
+        }
+        val movedPlayer = player.copy(position = position, movementMode = mode, lastMoveTick = currentTick)
+        players[characterId] = movedPlayer
+        out.add(WorldSimulationEvent.PlayerMoved(movedPlayer, currentMap.id, dest.id))
+        out.add(WorldSimulationEvent.CharacterUpdated(movedPlayer))
+        checkQuestVisitMap(movedPlayer, dest.id, out)
+        fireMapEntryEvents(characterId, out)
+        return out
+    }
+
     // 1. Check seamless N/S/E/W map border crossing
     if (!currentMap.isInBounds(targetCoord)) {
         val borderDirection = when {

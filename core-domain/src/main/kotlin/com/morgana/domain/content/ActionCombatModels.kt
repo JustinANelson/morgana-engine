@@ -85,13 +85,38 @@ data class SkillHit(
     val reaction: HitReaction = HitReaction.NONE,
     /** How long the reaction holds the target. */
     val reactionTicks: Int = 0,
-    /** Push along the attacker's facing. */
+    /** Push along the attacker's facing (or away from the attacker when [knockbackRadial]). */
     val knockbackPixels: Int = 0,
     /** Ticks both sides freeze on impact, for weight. */
     val hitStopTicks: Int = 0,
     val statusEffectType: StatusEffectType? = null,
     val statusMagnitude: Int = 0,
-    val statusDurationTicks: Int = 0
+    val statusDurationTicks: Int = 0,
+    /**
+     * Chain lightning: when this hit lands, it also strikes up to [chainTargets] other hostile monsters within [chainRadiusPixels] of
+     * the one hit (nearest first), each for [chainDamagePercent] of the damage dealt. 0 targets or 0 radius = no chain.
+     */
+    val chainTargets: Int = 0,
+    val chainRadiusPixels: Int = 0,
+    val chainDamagePercent: Int = 60,
+    /**
+     * This skill's own critical chance: the game's agility-based chance scaled by [critScalePercent] (100 = as is), plus [critBonusBp]
+     * basis points flat. A skill that fires many small hits can scale it down; a precise one can scale it up.
+     */
+    val critBonusBp: Int = 0,
+    val critScalePercent: Int = 100,
+    /** An electrical hit: it stuns the monster for [stunTicks] and flashes an electric hit effect. */
+    val electric: Boolean = false,
+    /**
+     * A critical hit electrifies the skill: that hit and every later hit of the same use become electrical (stun and electric effect),
+     * and an electric flash shows over the area.
+     */
+    val critElectrifies: Boolean = false,
+    val stunTicks: Int = 30,
+    /** True: the knockback pushes each monster directly away from the attacker, so a bash sends everything round it outwards. */
+    val knockbackRadial: Boolean = false,
+    /** Drags the monster this many pixels straight towards the attacker (stopping beside them): gathers a crowd for an area skill. */
+    val pullPixels: Int = 0
 )
 
 /** A hitbox that leaves the character: it spawns on the hitbox's `fromTick` and flies forward. */
@@ -101,7 +126,11 @@ data class SkillProjectile(
     val speedPixelsPerTick: Int = 12,
     val rangePixels: Int = 224,
     /** Keeps flying after its first hit. */
-    val pierce: Boolean = false
+    val pierce: Boolean = false,
+    /** True: flies along the exact aim, at any angle, and hits whatever its body touches. False (the default): one of the eight directions, tile by tile. */
+    val freeAngle: Boolean = false,
+    /** Turns a free-angle projectile this many degrees off the aim, so one skill can fire a fan of arrows. */
+    val angleOffsetDegrees: Int = 0
 )
 
 /** One hit area, live from [fromTick] to [toTick] inclusive; both must lie inside the skill's active window. */
@@ -125,7 +154,14 @@ data class SkillHitbox(
     /** Most targets this hitbox may hit; 0 = no limit. */
     val maxTargets: Int = 0,
     val hit: SkillHit = SkillHit(),
-    val projectile: SkillProjectile? = null
+    val projectile: SkillProjectile? = null,
+    /**
+     * True: the shape is centred on the point the player aimed at (a tap's auto-target or a drag), not in front of the character,
+     * so an area skill lands where it is aimed. [maxRangePixels] limits how far from the character the point may be (0 = no limit).
+     * With no aim point (a keyboard press with no cursor) the shape sits in front as usual.
+     */
+    val groundTarget: Boolean = false,
+    val maxRangePixels: Int = 0
 )
 
 /** Ticks [fromTick]..[toTick] (inclusive) during which the character has [type] armor. */
@@ -141,8 +177,16 @@ data class SkillArmorWindow(
 data class SkillMove(
     val fromTick: Int,
     val toTick: Int,
-    val forwardPixels: Int,
-    val sidePixels: Int = 0
+    val forwardPixels: Int = 0,
+    val sidePixels: Int = 0,
+    /**
+     * True: instead of a fixed push, the character travels to the point the player aimed at (a leap), arriving by [toTick]. The point is
+     * held within [maxPixels] of where the skill began (0 = no limit); with no aim point the leap goes half its range forward.
+     */
+    val toAim: Boolean = false,
+    val maxPixels: Int = 0,
+    /** A leap always travels at least this far (towards the aim, or the facing when the aim is on top of the character), so it is a real jump even at point-blank range. */
+    val minPixels: Int = 0
 )
 
 /** Makes the skill a held guard: hits from inside the arc are reduced and cost [blockCosts] each. */
@@ -187,6 +231,12 @@ data class ActionSkillDefinition(
     val guard: SkillGuard? = null,
     val animationId: Int = 0,
     val soundId: String = "",
+    /**
+     * A built-in visual the client draws when the skill starts, needing no art: "arrow_rain" (arrows rise and fall on the aimed spot),
+     * "dodge" (a dust trail along the dash) or "spin" (a whirl at the landing point). Several can be given separated by commas
+     * ("arrow_rain,electrify"). Empty for none.
+     */
+    val effect: String = "",
     /** On-disk document schema version; see [ContentSchema]. */
     val schemaVersion: Int = ContentSchema.CURRENT_VERSION
 ) {
@@ -240,6 +290,26 @@ data class WeaponSetDefinition(
     val skillIds: List<Int> = emptyList(),
     val entries: List<ComboEntry> = emptyList(),
     val edges: List<ComboEdge> = emptyList(),
+    /**
+     * Momentum: each dodge that really avoids a hit (an `INVULNERABLE` window took a blow) adds [momentumPerDodge] to a meter of 100;
+     * a full meter empowers the character for [empowerTicks], during which pressing the entry for [empowerSkillId] starts
+     * [empoweredSkillId] instead. 0 = this set has no momentum.
+     */
+    val empowerSkillId: Int = 0,
+    val empoweredSkillId: Int = 0,
+    val momentumPerDodge: Int = 34,
+    val empowerTicks: Int = 200,
+    /**
+     * True: instead of a dodge meter, a critical hit by the character arms the transformation: for [empowerTicks] the button for
+     * [empowerSkillId] becomes [empoweredSkillId], and using it spends the transformation. The player chooses when to cast it.
+     */
+    val empowerOnCrit: Boolean = false,
+    /**
+     * With [empowerOnCrit]: the chance, in percent, that the first critical hit of a skill's use arms the transformation (one roll per use,
+     * so many small hits do not roll again and again), and the ticks after one is spent or runs out before another can be armed.
+     */
+    val empowerChancePercent: Int = 100,
+    val empowerCooldownTicks: Int = 0,
     /** On-disk document schema version; see [ContentSchema]. */
     val schemaVersion: Int = ContentSchema.CURRENT_VERSION
 )

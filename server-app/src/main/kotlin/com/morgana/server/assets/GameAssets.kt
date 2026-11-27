@@ -224,10 +224,12 @@ class GameAssets private constructor(
                                 SpriteState.HARVEST -> if (i % 2 == 0) 1 else 0
                                 SpriteState.JUMP -> 1
                                 SpriteState.HURT -> 0
+                                SpriteState.PICKUP -> if (i % 2 == 0) 1 else 0
+                                SpriteState.RIDE -> i.coerceAtMost(2)
                             }.coerceIn(0, 2)
                             val yOffset = when {
                                 state == SpriteState.CAST && i % 2 == 1 -> -2
-                                state == SpriteState.HARVEST && i % 2 == 1 -> 2
+                                (state == SpriteState.HARVEST || state == SpriteState.PICKUP) && i % 2 == 1 -> 2
                                 else -> 0
                             }
                             val xOffset = if (state == SpriteState.ATTACK && i % 2 == 1) {

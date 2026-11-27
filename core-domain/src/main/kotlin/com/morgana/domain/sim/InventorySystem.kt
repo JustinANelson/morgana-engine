@@ -37,14 +37,19 @@ internal fun WorldSimulation.playerInteractFacingImpl(characterId: String): List
     val map = maps[mapId] ?: return emptyList()
     val facingTile = player.position.tileCoord.step(player.position.direction)
     val out = mutableListOf<WorldSimulationEvent>()
+    // In a seamless world the tile in front may lie on the map across the border: what stands there (a node, a door, a person) is looked up on that map.
+    val ahead = if (map.isInBounds(facingTile) || !layout.isPlaced(mapId)) null else layout.crossing(map, facingTile.x, facingTile.y)
+    val fMapId = ahead?.map?.id ?: mapId
+    val fMap = ahead?.map ?: map
+    val fTile = if (ahead != null) TileCoord(ahead.tileX, ahead.tileY) else facingTile
 
     // 0. A placed world object in front of the character (a chest, a station, a door of a base) has its own interaction.
-    worldObjectAt(mapId, facingTile.x, facingTile.y)?.let { obj ->
+    worldObjectAt(fMapId, fTile.x, fTile.y)?.let { obj ->
         if (com.morgana.domain.systems.WorldStateSystem.interact(this, player, obj, out)) return out
     }
 
     // 1. Check facing tile attributes (KeyDoor, ResourceNode, ShopTile, BankTile)
-    val cell = map.getCell(facingTile)
+    val cell = fMap.getCell(fTile)
     if (cell != null) {
         when (val attr = cell.attribute) {
             is TileAttribute.KeyDoor -> {
@@ -55,13 +60,13 @@ internal fun WorldSimulation.playerInteractFacingImpl(characterId: String): List
                         players[characterId] = player
                         out.add(WorldSimulationEvent.CharacterUpdated(player))
                     }
-                    val mapDoors = unlockedDoors.getOrPut(mapId) { linkedMapOf() }
-                    mapDoors[facingTile] = currentTick + max(20, attr.unlockDurationTicks)
+                    val mapDoors = unlockedDoors.getOrPut(fMapId) { linkedMapOf() }
+                    mapDoors[fTile] = currentTick + max(20, attr.unlockDurationTicks)
                     out.add(
                         WorldSimulationEvent.FloatingTextEmitted(
-                            mapId = mapId,
-                            tileX = facingTile.x,
-                            tileY = facingTile.y,
+                            mapId = fMapId,
+                            tileX = fTile.x,
+                            tileY = fTile.y,
                             text = "Unlocked!",
                             category = "RESOURCE",
                             colorHex = "#4ADE80"
@@ -85,7 +90,7 @@ internal fun WorldSimulation.playerInteractFacingImpl(characterId: String): List
                 return out
             }
             is TileAttribute.ResourceNode -> {
-                harvestResourceAt(player, facingTile, attr.resourceId, out)
+                harvestResourceAt(player, fTile, attr.resourceId, out, fMapId)
                 return out
             }
             is TileAttribute.ShopTile -> {
@@ -101,8 +106,8 @@ internal fun WorldSimulation.playerInteractFacingImpl(characterId: String): List
     }
 
     // 2. Check facing NPC
-    val facingNpc = mapNpcs[mapId]?.firstOrNull {
-        it.isAlive && it.tileX == facingTile.x && it.tileY == facingTile.y
+    val facingNpc = mapNpcs[fMapId]?.firstOrNull {
+        it.isAlive && it.tileX == fTile.x && it.tileY == fTile.y
     }
     if (facingNpc != null) {
         val npcDef = npcs[facingNpc.npcId]
@@ -157,9 +162,8 @@ internal fun WorldSimulation.playerInteractFacingImpl(characterId: String): List
 
     // 3. Check facing or current tile EventDefinition (ACTION_INTERACT)
     val mapEvent = events.values.firstOrNull {
-        it.mapId == contentMapId(mapId) &&
-            ((it.tileX == facingTile.x && it.tileY == facingTile.y) ||
-                (it.tileX == player.position.tileX && it.tileY == player.position.tileY))
+        (it.mapId == contentMapId(fMapId) && it.tileX == fTile.x && it.tileY == fTile.y) ||
+            (it.mapId == contentMapId(mapId) && it.tileX == player.position.tileX && it.tileY == player.position.tileY)
     }
     if (mapEvent != null) {
         val page = resolveActiveEventPage(player, mapEvent)
@@ -178,9 +182,11 @@ internal fun WorldSimulation.harvestResourceAt(
     player: CharacterState,
     coord: TileCoord,
     resourceId: Int,
-    out: MutableList<WorldSimulationEvent>
+    out: MutableList<WorldSimulationEvent>,
+    /** The map the node lies on: the player's own, or the one across a border in a seamless world. */
+    nodeMapId: Int = player.position.mapId
 ) {
-    val mapId = player.position.mapId
+    val mapId = nodeMapId
     val resDef = resources[resourceId] ?: return
     val mapNodeStates = mapResources.getOrPut(mapId) { linkedMapOf() }
     val state = mapNodeStates[coord] ?: MapResourceState(
@@ -309,40 +315,73 @@ internal fun WorldSimulation.pickupGroundItemImpl(characterId: String): List<Wor
     val player = players[characterId] ?: return emptyList()
     if (!player.isAlive(game.lifeVitalId)) return emptyList()
 
-    val mapId = player.position.mapId
-    val groundList = mapGroundItems[mapId] ?: return emptyList()
-    val itemIdx = groundList.indices
-        .filter { idx ->
-            val it = groundList[idx]
-            val dx = kotlin.math.abs(it.tileX - player.position.tileX)
-            val dy = kotlin.math.abs(it.tileY - player.position.tileY)
-            maxOf(dx, dy) <= game.definition.gameplayTuning.pickupRangeTiles &&
-                (it.ownerCharacterId == null || it.ownerCharacterId == characterId || currentTick >= it.ownerProtectedUntilTick)
-        }
-        .minByOrNull { idx ->
-            val it = groundList[idx]
-            val dx = kotlin.math.abs(it.tileX - player.position.tileX)
-            val dy = kotlin.math.abs(it.tileY - player.position.tileY)
-            maxOf(dx, dy) * 10 + dx + dy
-        } ?: return emptyList()
+    // All eligible loot in reach: on this map and, in a seamless world, just across its borders, closest first.
+    val inReach = groundItemsInReach(player.position.mapId, player.position.tileX, player.position.tileY, game.definition.gameplayTuning.pickupRangeTiles)
+        .filter { r -> r.item.ownerCharacterId == null || r.item.ownerCharacterId == characterId || currentTick >= r.item.ownerProtectedUntilTick }
+        .sortedWith(
+            compareBy(
+                { r ->
+                    val dx = kotlin.math.abs(r.item.tileX + r.shiftTilesX - player.position.tileX)
+                    val dy = kotlin.math.abs(r.item.tileY + r.shiftTilesY - player.position.tileY)
+                    maxOf(dx, dy) * 10 + dx + dy
+                },
+                { it.item.instanceId }
+            )
+        )
+    if (inReach.isEmpty()) return emptyList()
 
-    val groundItem = groundList[itemIdx]
-    val itemDef = items[groundItem.stack.itemId] ?: return emptyList()
-    val mut = player.inventory.addStack(itemDef, groundItem.stack)
-    if (mut.addedAmount <= 0) return emptyList()
-
+    var currentPlayer = player
     val out = mutableListOf<WorldSimulationEvent>()
-    if (mut.overflowAmount <= 0) {
-        groundList.removeAt(itemIdx)
-    } else {
-        groundList[itemIdx] = groundItem.copy(stack = groundItem.stack.copy(amount = mut.overflowAmount))
+    val dirtyMaps = linkedSetOf<Int>()
+    val pickedTotals = linkedMapOf<Int, Int>()
+    var hadFullInventory = false
+
+    for (reachItem in inReach) {
+        val mapId = reachItem.sourceMapId
+        val groundList = mapGroundItems[mapId] ?: continue
+        val itemIdx = groundList.indexOfFirst { it.instanceId == reachItem.item.instanceId }
+        if (itemIdx < 0) continue
+
+        val groundItem = groundList[itemIdx]
+        val itemDef = items[groundItem.stack.itemId] ?: continue
+        val mut = currentPlayer.inventory.addStack(itemDef, groundItem.stack)
+        if (mut.addedAmount <= 0) {
+            hadFullInventory = true
+            continue
+        }
+
+        if (mut.overflowAmount <= 0) {
+            groundList.removeAt(itemIdx)
+        } else {
+            groundList[itemIdx] = groundItem.copy(stack = groundItem.stack.copy(amount = mut.overflowAmount))
+            hadFullInventory = true
+        }
+
+        currentPlayer = currentPlayer.copy(inventory = mut.updatedInventory)
+        dirtyMaps.add(mapId)
+        pickedTotals[itemDef.id] = (pickedTotals[itemDef.id] ?: 0) + mut.addedAmount
+        advanceQuestProgress(characterId, QuestObjectiveType.COLLECT_ITEM, itemDef.id, mut.addedAmount, out)
     }
 
-    val updatedPlayer = player.copy(inventory = mut.updatedInventory)
-    players[characterId] = updatedPlayer
-    out.add(WorldSimulationEvent.GroundItemsChanged(mapId, groundList.toList()))
-    out.add(WorldSimulationEvent.CharacterUpdated(updatedPlayer))
-    advanceQuestProgress(characterId, QuestObjectiveType.COLLECT_ITEM, itemDef.id, mut.addedAmount, out)
+    if (pickedTotals.isEmpty()) {
+        return if (hadFullInventory) listOf(tellPlayer(player, "Inventory is full.", "WARNING")) else emptyList()
+    }
+
+    players[characterId] = currentPlayer
+    for (mapId in dirtyMaps) {
+        out.add(WorldSimulationEvent.GroundItemsChanged(mapId, mapGroundItems[mapId]?.toList().orEmpty()))
+    }
+    out.add(WorldSimulationEvent.CharacterUpdated(currentPlayer))
+
+    val entries = pickedTotals.entries.toList()
+    for ((itemId, qty) in entries) {
+        val name = items[itemId]?.name ?: "Item #$itemId"
+        val label = if (qty > 1) "+$name x$qty" else "+$name"
+        out.add(tellPlayer(currentPlayer, label, "GOOD"))
+    }
+    if (hadFullInventory) {
+        out.add(tellPlayer(currentPlayer, "Inventory is full.", "WARNING"))
+    }
     return out
 }
 

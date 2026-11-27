@@ -547,6 +547,195 @@ class StructureGenerator(
         }
     }
 
+    /**
+     * Generates a 15-tile natural outdoor cliff & terrace set (5 rows of 3 in A4):
+     * - `<name>_top_left/center/right`: upper cliff with overhanging turf/snow lip & vertically striated rock
+     * - `<name>_bot_left/center/right`: lower striated cliff face with talus & ground-contact AO
+     * - `<name>_stair_top_left/center/right`, `<name>_stair_bot_left/center/right`: climbable stone steps with side curbs
+     * - `<name>_shadow_left/center/right`: translucent cliff-base drop shadows for the walkable row below
+     */
+    fun generateNaturalCliffSet(
+        name: String,
+        topMaterial: TileImage,
+        faceMaterial: TileImage,
+        style: PixelStyle = PixelStyle.CLASSIC_RPG,
+        lush: Boolean = true
+    ): List<NamedTile> {
+        require(name.isNotBlank()) { "Cliff name must not be blank" }
+        require(topMaterial.width == tileSize && topMaterial.height == tileSize) { "topMaterial must be ${tileSize}x$tileSize" }
+        require(faceMaterial.width == tileSize && faceMaterial.height == tileSize) { "faceMaterial must be ${tileSize}x$tileSize" }
+
+        val seed = name.hashCode().toLong()
+        fun rockShadeAt(x: Int, y: Int, globalY: Int, leftEdge: Boolean, rightEdge: Boolean): Int {
+            var px = faceMaterial.getPixel(x, y)
+            // Vertical rock buttresses & crevices (seamless across top -> bot via x)
+            val colPhase = ((x + (TileNoise.hash(x / 8, 0, seed + 17L) * 3f).toInt()) % 10)
+            val facet = when {
+                colPhase == 0 -> 0.56f
+                colPhase == 1 -> 1.18f
+                colPhase in 2..4 -> 1.05f
+                colPhase in 5..7 -> 0.92f
+                else -> 0.78f
+            }
+            px = shadePixel(px, facet)
+            // Horizontal geological strata bands
+            val strataY = globalY + (TileNoise.hash(x / 4, globalY / 10, seed + 53L) * 2.5f).toInt()
+            if (strataY % 11 == 0) px = shadePixel(px, 0.72f)
+            else if (strataY % 11 == 1) px = shadePixel(px, 1.12f)
+            // Side edge framing
+            if (leftEdge && x < 2) px = shadePixel(px, if (x == 0) 0.48f else 1.16f)
+            if (rightEdge && x >= tileSize - 2) px = shadePixel(px, if (x == tileSize - 1) 0.44f else 0.66f)
+            return px
+        }
+
+        fun buildTop(leftEdge: Boolean, rightEdge: Boolean): TileImage {
+            val out = TileImage(tileSize, tileSize)
+            val baseLip = (tileSize * 0.28f).toInt().coerceAtLeast(6)
+            for (x in 0 until tileSize) {
+                val n = TileNoise.hash(x / 2, 1, seed + 101L)
+                val tuft = if (lush) ((n - 0.5f) * 5f).toInt() else ((n - 0.5f) * 2.5f).toInt()
+                val edgeTaper = when {
+                    leftEdge && x < 4 -> -(4 - x)
+                    rightEdge && x >= tileSize - 4 -> -(x - (tileSize - 5))
+                    else -> 0
+                }
+                val lipY = (baseLip + tuft + edgeTaper).coerceIn(4, tileSize / 2)
+                for (y in 0 until tileSize) {
+                    val px = when {
+                        y < lipY - 1 -> {
+                            var c = topMaterial.getPixel(x, y)
+                            if (y == lipY - 2) c = shadePixel(c, 1.18f)
+                            if (leftEdge && x == 0) c = shadePixel(c, 0.55f)
+                            if (rightEdge && x == tileSize - 1) c = shadePixel(c, 0.50f)
+                            c
+                        }
+                        y == lipY - 1 -> shadePixel(topMaterial.getPixel(x, y), 0.45f)
+                        else -> {
+                            var c = rockShadeAt(x, y, y, leftEdge, rightEdge)
+                            val under = y - lipY
+                            if (under < 4) c = shadePixel(c, 0.50f + under * 0.11f)
+                            c
+                        }
+                    }
+                    out.setPixel(x, y, px)
+                }
+            }
+            return out
+        }
+
+        fun buildBot(leftEdge: Boolean, rightEdge: Boolean): TileImage {
+            val out = TileImage(tileSize, tileSize)
+            for (y in 0 until tileSize) {
+                for (x in 0 until tileSize) {
+                    var c = rockShadeAt(x, y, y + tileSize, leftEdge, rightEdge)
+                    // Base talus & ground contact ambient occlusion
+                    if (y >= tileSize - 5) {
+                        val d = (tileSize - 1 - y) / 5f
+                        c = shadePixel(c, 0.54f + d * 0.40f)
+                    }
+                    if (y == tileSize - 1) c = shadePixel(c, 0.65f)
+                    out.setPixel(x, y, c)
+                }
+            }
+            return out
+        }
+
+        fun buildStair(isTop: Boolean, leftEdge: Boolean, rightEdge: Boolean): TileImage {
+            val out = TileImage(tileSize, tileSize)
+            val stepH = (tileSize / 4).coerceAtLeast(4)
+            val curbW = (tileSize / 7).coerceAtLeast(3)
+            for (y in 0 until tileSize) {
+                val stepIdx = y / stepH
+                val inStep = y % stepH
+                for (x in 0 until tileSize) {
+                    val isLeftCurb = leftEdge && x < curbW
+                    val isRightCurb = rightEdge && x >= tileSize - curbW
+                    val px = when {
+                        isLeftCurb -> {
+                            val base = faceMaterial.getPixel(x, y)
+                            when (x) {
+                                0 -> shadePixel(base, 0.46f)
+                                curbW - 1 -> shadePixel(base, 0.58f)
+                                1 -> shadePixel(base, 1.22f)
+                                else -> shadePixel(base, 1.05f)
+                            }
+                        }
+                        isRightCurb -> {
+                            val base = faceMaterial.getPixel(x, y)
+                            when (x) {
+                                tileSize - 1 -> shadePixel(base, 0.44f)
+                                tileSize - curbW -> shadePixel(base, 0.56f)
+                                tileSize - curbW + 1 -> shadePixel(base, 1.12f)
+                                else -> shadePixel(base, 0.85f)
+                            }
+                        }
+                        else -> {
+                            // Stone/earth stair tread + riser
+                            var base = faceMaterial.getPixel((x + stepIdx * 5) % tileSize, (y + stepIdx * 3) % tileSize)
+                            // Slightly warmer/lighter than raw cliff face so stairs stand out clearly
+                            base = shadePixel(base, 1.14f)
+                            val treadFactor = when {
+                                inStep == 0 -> 1.26f // lit front lip of step
+                                inStep in 1..(stepH - 4) -> 1.06f // flat tread
+                                inStep == stepH - 3 -> 0.52f // crisp riser top edge
+                                inStep == stepH - 2 -> 0.64f // riser face
+                                else -> 0.48f // shadow under riser
+                            }
+                            var c = shadePixel(base, treadFactor)
+                            // Subtle vertical stone seam every 8-10 px on treads
+                            if (inStep < stepH - 3 && (x + stepIdx * 7) % 10 == 0) c = shadePixel(c, 0.80f)
+                            // Top lip blend into upper plateau
+                            if (isTop && y < 2) c = shadePixel(topMaterial.getPixel(x, y), if (y == 0) 0.95f else 0.72f)
+                            c
+                        }
+                    }
+                    out.setPixel(x, y, px)
+                }
+            }
+            return out
+        }
+
+        fun buildShadow(leftEdge: Boolean, rightEdge: Boolean): TileImage {
+            val out = TileImage(tileSize, tileSize)
+            val depth = (tileSize / 3).coerceAtLeast(8)
+            for (y in 0 until depth) {
+                val baseAlpha = when {
+                    y < depth / 3 -> 125
+                    y < (depth * 2) / 3 -> 80
+                    else -> 38
+                }
+                for (x in 0 until tileSize) {
+                    val taper = when {
+                        leftEdge && x < y -> 0f
+                        rightEdge && (tileSize - 1 - x) < y -> 0f
+                        else -> 1f
+                    }
+                    val a = (baseAlpha * taper).toInt()
+                    if (a > 0) out.setPixel(x, y, PaletteRamp.rgba(10, 14, 24, a))
+                }
+            }
+            return out
+        }
+
+        return listOf(
+            NamedTile("${name}_top_left", buildTop(leftEdge = true, rightEdge = false)),
+            NamedTile("${name}_top_center", buildTop(leftEdge = false, rightEdge = false)),
+            NamedTile("${name}_top_right", buildTop(leftEdge = false, rightEdge = true)),
+            NamedTile("${name}_bot_left", buildBot(leftEdge = true, rightEdge = false)),
+            NamedTile("${name}_bot_center", buildBot(leftEdge = false, rightEdge = false)),
+            NamedTile("${name}_bot_right", buildBot(leftEdge = false, rightEdge = true)),
+            NamedTile("${name}_stair_top_left", buildStair(isTop = true, leftEdge = true, rightEdge = false)),
+            NamedTile("${name}_stair_top_center", buildStair(isTop = true, leftEdge = false, rightEdge = false)),
+            NamedTile("${name}_stair_top_right", buildStair(isTop = true, leftEdge = false, rightEdge = true)),
+            NamedTile("${name}_stair_bot_left", buildStair(isTop = false, leftEdge = true, rightEdge = false)),
+            NamedTile("${name}_stair_bot_center", buildStair(isTop = false, leftEdge = false, rightEdge = false)),
+            NamedTile("${name}_stair_bot_right", buildStair(isTop = false, leftEdge = false, rightEdge = true)),
+            NamedTile("${name}_shadow_left", buildShadow(leftEdge = true, rightEdge = false)),
+            NamedTile("${name}_shadow_center", buildShadow(leftEdge = false, rightEdge = false)),
+            NamedTile("${name}_shadow_right", buildShadow(leftEdge = false, rightEdge = true))
+        )
+    }
+
     private fun shadePixel(rgba: Int, factor: Float): Int {
         val a = rgba and 0xFF
         if (a == 0) return 0

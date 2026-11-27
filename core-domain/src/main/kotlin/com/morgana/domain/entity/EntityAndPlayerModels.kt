@@ -153,6 +153,12 @@ data class CharacterState(
     val lastSeenWorldTick: Long = 0L,
     /** Upgrade pity (see `QualityUpgradeDefinition` and `EnhancementDefinition`): failed chancy attempts since the last chancy success. */
     val upgradePityStacks: Int = 0,
+    /** Per-action-skill mastery levels (`actionSkillId -> level`, default 1). */
+    val skillMasteryLevels: Map<Int, Int> = emptyMap(),
+    /** Per-action-skill mastery hits/uses accumulated toward the next level. */
+    val skillMasteryProgress: Map<Int, Int> = emptyMap(),
+    /** Persisted offline food-fueled training and daily online AFK training state. */
+    val trainingState: com.morgana.domain.game.CharacterTrainingState = com.morgana.domain.game.CharacterTrainingState(),
     val schemaVersion: Int = 2
 ) {
     val isAlive: Boolean
@@ -170,6 +176,12 @@ data class CharacterState(
 
     fun weaponProficiencyHitsFor(weaponType: String): Int =
         (weaponProficiencyHits[weaponType] ?: 0).coerceAtLeast(0)
+
+    fun skillMasteryLevel(skillId: Int): Int =
+        (skillMasteryLevels[skillId] ?: 1).coerceAtLeast(1)
+
+    fun skillMasteryProgressFor(skillId: Int): Int =
+        (skillMasteryProgress[skillId] ?: 0).coerceAtLeast(0)
 
     /**
      * Computes effective attributes (base + equipment + active status buffs/debuffs) clamped to floor/cap.
@@ -351,10 +363,30 @@ data class MapNpcInstance(
     /** The telegraphed ground attack this boss has under way, or null. */
     val zone: BossZone? = null,
     /** When each boss ability (by spell id) may next be used. */
-    val abilityReadyTicks: Map<Int, Long> = emptyMap()
+    val abilityReadyTicks: Map<Int, Long> = emptyMap(),
+    /** True once the monster has moved in free pixel steps (game with `subTileMovement`); [pixelX] and [pixelY] are then its top-left in map pixels. */
+    val subPixel: Boolean = false,
+    val pixelX: Float = 0f,
+    val pixelY: Float = 0f,
+    /** The tile a free-moving idle monster is wandering to, or -1 when it is not wandering. */
+    val wanderX: Int = -1,
+    val wanderY: Int = -1,
+    /** The tick a telegraphed strike lands (0 when the monster is not winding one up) and the point it is aimed at / ends at, in map pixels. */
+    val windUpUntil: Long = 0L,
+    val windUpX: Float = 0f,
+    val windUpY: Float = 0f
 ) {
     val isAlive: Boolean
         get() = (vitals["hp"]?.cur ?: (vitals.values.firstOrNull()?.cur ?: 0)) > 0 && respawnAtTick == 0L
+
+    /**
+     * The monster's top-left in map pixels. With free pixel movement ([subPixel]) it is [pixelX] and [pixelY], as long as they still
+     * lie in the monster's tile; if something else moved the monster by tile (knockback, a leash reset, a respawn) the tile wins and
+     * the monster stands on it.
+     */
+    fun bodyX(tileSize: Int): Float = if (subPixel && ((pixelX + tileSize / 2f) / tileSize).toInt() == tileX && ((pixelY + tileSize / 2f) / tileSize).toInt() == tileY) pixelX else tileX * tileSize.toFloat()
+
+    fun bodyY(tileSize: Int): Float = if (subPixel && ((pixelX + tileSize / 2f) / tileSize).toInt() == tileX && ((pixelY + tileSize / 2f) / tileSize).toInt() == tileY) pixelY else tileY * tileSize.toFloat()
 
     fun isAlive(lifeVitalId: String): Boolean =
         (vitals[lifeVitalId]?.cur ?: 0) > 0
@@ -377,6 +409,10 @@ data class MapGroundItem(
     val ownerProtectedUntilTick: Long = 0L,
     val despawnAtTick: Long = 0L
 )
+
+/** A health orb on the ground (see `tuning.healthOrbChancePercent`): at ([x], [y]) in map pixels, heals [healPercent] of life when a hurt player reaches it, gone at tick [expiresAt]. */
+@Serializable
+data class HealthOrb(val id: String, val x: Float, val y: Float, val expiresAt: Long, val healPercent: Int)
 
 /**
  * Live ranged projectile or directional spell missile in flight on a map.
@@ -401,7 +437,21 @@ data class MapProjectile(
     /** When true, this projectile passes through entities instead of stopping on its first hit. */
     val pierce: Boolean = false,
     /** Entities already struck by a piercing projectile so it hits each target at most once. */
-    val hitEntityIds: Set<String> = emptySet()
+    val hitEntityIds: Set<String> = emptySet(),
+    /**
+     * True for a free-flight projectile (action combat, `SkillProjectile.freeAngle`): it moves every tick by ([vx], [vy]) pixels from
+     * ([px], [py]) at any angle, and ends when [remainingPixels] runs out. [currentTileX] and [currentTileY] follow it for the map's sake.
+     */
+    val free: Boolean = false,
+    val px: Float = 0f,
+    val py: Float = 0f,
+    val vx: Float = 0f,
+    val vy: Float = 0f,
+    val remainingPixels: Float = 0f,
+    /** Whether the shot was rolled as a critical hit when it was fired. */
+    val crit: Boolean = false,
+    /** Non-zero when fired by an action-combat skill, so landing a hit advances weapon & skill mastery. */
+    val actionSkillId: Int = 0
 )
 
 /**

@@ -123,6 +123,19 @@ data class NpcDefinition(
     val encounter: BossEncounter? = null,
     /** Makes this NPC a pet a player can adopt, summon and grow; null for everything else. See [PetTraits]. */
     val pet: PetTraits? = null,
+    /**
+     * A telegraphed strike: when [telegraphTicks] > 0 the monster does not hit at once. It stops, the client marks the danger zone on the
+     * ground, and when the time is up whoever stands in the zone is hit, so a player can step out or dodge. [telegraphKind]: "slam" (a circle
+     * round the monster), "smash" (a circle on where the target stood) or "lunge" (the monster dashes along a line of [telegraphLengthPixels]).
+     * [telegraphRadiusPixels] is the circle's radius or the line's half-width; [telegraphRangeTiles] how far away it starts one;
+     * [telegraphDamagePercent] scales the monster's normal damage.
+     */
+    val telegraphTicks: Int = 0,
+    val telegraphKind: String = "slam",
+    val telegraphRadiusPixels: Int = 48,
+    val telegraphLengthPixels: Int = 0,
+    val telegraphRangeTiles: Int = 1,
+    val telegraphDamagePercent: Int = 100,
     /** On-disk document schema version; see [ContentSchema]. */
     val schemaVersion: Int = ContentSchema.CURRENT_VERSION
 )

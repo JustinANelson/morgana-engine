@@ -86,6 +86,9 @@
                 "soundId": {
                     "type": "string"
                 },
+                "effect": {
+                    "type": "string"
+                },
                 "schemaVersion": {
                     "type": "integer"
                 }
@@ -149,6 +152,12 @@
                             "type": "null"
                         }
                     ]
+                },
+                "groundTarget": {
+                    "type": "boolean"
+                },
+                "maxRangePixels": {
+                    "type": "integer"
                 }
             },
             "required": [
@@ -221,6 +230,36 @@
                 },
                 "statusDurationTicks": {
                     "type": "integer"
+                },
+                "chainTargets": {
+                    "type": "integer"
+                },
+                "chainRadiusPixels": {
+                    "type": "integer"
+                },
+                "chainDamagePercent": {
+                    "type": "integer"
+                },
+                "critBonusBp": {
+                    "type": "integer"
+                },
+                "critScalePercent": {
+                    "type": "integer"
+                },
+                "electric": {
+                    "type": "boolean"
+                },
+                "critElectrifies": {
+                    "type": "boolean"
+                },
+                "stunTicks": {
+                    "type": "integer"
+                },
+                "knockbackRadial": {
+                    "type": "boolean"
+                },
+                "pullPixels": {
+                    "type": "integer"
                 }
             },
             "required": [],
@@ -240,6 +279,12 @@
                 },
                 "pierce": {
                     "type": "boolean"
+                },
+                "freeAngle": {
+                    "type": "boolean"
+                },
+                "angleOffsetDegrees": {
+                    "type": "integer"
                 }
             },
             "required": [],
@@ -282,12 +327,20 @@
                 },
                 "sidePixels": {
                     "type": "integer"
+                },
+                "toAim": {
+                    "type": "boolean"
+                },
+                "maxPixels": {
+                    "type": "integer"
+                },
+                "minPixels": {
+                    "type": "integer"
                 }
             },
             "required": [
                 "fromTick",
-                "toTick",
-                "forwardPixels"
+                "toTick"
             ],
             "additionalProperties": false
         },

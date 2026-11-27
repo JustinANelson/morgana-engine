@@ -157,6 +157,15 @@
                 "mountSpeedPercent": {
                     "type": "integer"
                 },
+                "trainingTier": {
+                    "type": "integer"
+                },
+                "trainingMinutes": {
+                    "type": "integer"
+                },
+                "trainingCapMinutes": {
+                    "type": "integer"
+                },
                 "statusEffectToApply": {
                     "anyOf": [
                         {
@@ -229,7 +238,8 @@
                                 "MAIN_HAND",
                                 "OFF_HAND",
                                 "ACCESSORY",
-                                "HANDS"
+                                "HANDS",
+                                "MOUNT"
                             ]
                         },
                         {
@@ -268,7 +278,8 @@
                             "MAIN_HAND",
                             "OFF_HAND",
                             "ACCESSORY",
-                            "HANDS"
+                            "HANDS",
+                            "MOUNT"
                         ]
                     }
                 },
@@ -287,6 +298,19 @@
                 },
                 "nextTierItemId": {
                     "type": "integer"
+                },
+                "sockets": {
+                    "type": "integer"
+                },
+                "upgradeCost": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.item.UpgradeCost"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
                 },
                 "schemaVersion": {
                     "type": "integer"
@@ -314,6 +338,22 @@
                     "type": "integer"
                 },
                 "xpPercent": {
+                    "type": "integer"
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.item.UpgradeCost": {
+            "type": "object",
+            "properties": {
+                "materials": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "gold": {
                     "type": "integer"
                 }
             },

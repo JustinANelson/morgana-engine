@@ -151,11 +151,13 @@ enum class PaperDollAction(
     IDLE(defaultFrames = 2, defaultFrameDurationMs = 220, looping = true),
     WALK(defaultFrames = 4, defaultFrameDurationMs = 135, looping = true),
     RUN(defaultFrames = 4, defaultFrameDurationMs = 95, looping = true),
-    SLASH(defaultFrames = 4, defaultFrameDurationMs = 90, looping = false),
+    SLASH(defaultFrames = 6, defaultFrameDurationMs = 75, looping = false),
     THRUST(defaultFrames = 4, defaultFrameDurationMs = 90, looping = false),
     SHOOT(defaultFrames = 4, defaultFrameDurationMs = 100, looping = false),
     CAST(defaultFrames = 4, defaultFrameDurationMs = 115, looping = false),
     HARVEST(defaultFrames = 4, defaultFrameDurationMs = 115, looping = false),
+    PICKUP(defaultFrames = 4, defaultFrameDurationMs = 95, looping = false),
+    RIDE(defaultFrames = 4, defaultFrameDurationMs = 115, looping = true),
     JUMP(defaultFrames = 3, defaultFrameDurationMs = 110, looping = false),
     SIT(defaultFrames = 2, defaultFrameDurationMs = 250, looping = true),
     EMOTE(defaultFrames = 3, defaultFrameDurationMs = 160, looping = false),
@@ -167,8 +169,8 @@ enum class PaperDollAction(
      */
     fun toSpriteAnimationClip(): SpriteAnimationClip = when (this) {
         IDLE, SIT, EMOTE -> SpriteAnimationClip.IDLE
-        WALK, RUN, JUMP -> SpriteAnimationClip.WALK
-        SLASH, THRUST, SHOOT, HARVEST -> SpriteAnimationClip.ATTACK
+        WALK, RUN, RIDE, JUMP -> SpriteAnimationClip.WALK
+        SLASH, THRUST, SHOOT, HARVEST, PICKUP -> SpriteAnimationClip.ATTACK
         CAST -> SpriteAnimationClip.CAST
         HURT -> SpriteAnimationClip.HURT
         KO -> SpriteAnimationClip.KO
@@ -210,7 +212,9 @@ enum class BodyAncestry {
 enum class PaperDollProportions {
     STANDARD,
     CHUNKY,
-    RMXP_32X48
+    RMXP_32X48,
+    /** Native 64x64 Liberated Pixel Cup (LPC) proportions and shading. */
+    LPC_64X64
 }
 
 /**
@@ -636,6 +640,7 @@ data class PaperDollPose(
             val bobY = when (action) {
                 PaperDollAction.IDLE -> if (phase % 2 == 1) 1 else 0
                 PaperDollAction.WALK -> if (phase == 1 || phase == 3) -1 else 0
+                PaperDollAction.RIDE -> if (phase == 1 || phase == 3) -1 else 0
                 PaperDollAction.RUN -> if (phase == 1 || phase == 3) -2 else 0
                 PaperDollAction.SLASH -> when (phase) { 0 -> -1; 1 -> 1; 2 -> 1; else -> 0 }
                 PaperDollAction.THRUST -> if (phase == 1) 1 else 0
@@ -646,6 +651,11 @@ data class PaperDollPose(
                     1 -> 4  // crouched, hand at the ground
                     2 -> 4  // grab
                     else -> 2 // rising with the item
+                }
+                PaperDollAction.PICKUP -> when (phase) {
+                    0 -> 2
+                    1 -> 4
+                    else -> 2
                 }
                 PaperDollAction.JUMP -> when (phase) {
                     0 -> 2   // crouch anticipation

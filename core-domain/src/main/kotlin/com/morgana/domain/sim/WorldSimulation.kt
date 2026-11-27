@@ -133,6 +133,9 @@ class WorldSimulation(
     val commonEvents: MutableMap<Int, CommonEventDefinition> = linkedMapOf()
     val animations: MutableMap<Int, AnimationDefinition> = linkedMapOf()
     /** Action-combat skills and the weapon sets (combo graphs) over them; read by an action combat module (ADR 0017). */
+    /** Health orbs lying on each map (not saved: they fade in seconds). */
+    val healthOrbs: MutableMap<Int, MutableList<com.morgana.domain.entity.HealthOrb>> = linkedMapOf()
+
     val actionSkills: MutableMap<Int, com.morgana.domain.content.ActionSkillDefinition> = linkedMapOf()
     val weaponSets: MutableMap<Int, com.morgana.domain.content.WeaponSetDefinition> = linkedMapOf()
 
@@ -425,8 +428,29 @@ class WorldSimulation(
 
     fun registerMap(map: MapDefinition) {
         maps[map.id] = map
+        if (map.worldX != null && game.definition.worldLayout?.enabled == true) relinkWorld()
         syncMapNpcSpawns(map)
         syncMapResourceNodes(map)
+    }
+
+    /**
+     * The seamless world: the placed maps as one grid (see [com.morgana.domain.map.WorldLayout]). Empty unless the game turns on
+     * `worldLayout` and maps name a position, in which case the older neighbour links and warps are all there is.
+     */
+    var layout: com.morgana.domain.map.WorldLayout = com.morgana.domain.map.WorldLayout(emptyList())
+        private set
+
+    /** Players seen across a map border while monsters act (ghost position, real position), to be put right afterwards; see [ghostOf]. Empty between ticks. */
+    internal val borderGhosts: MutableMap<String, MutableSet<Pair<com.morgana.domain.spatial.WorldPosition, com.morgana.domain.spatial.WorldPosition>>> = HashMap()
+
+    /** Rebuilds [layout] from the registered maps and makes each placed map's N/S/E/W links say what the geometry says. */
+    private fun relinkWorld() {
+        layout = com.morgana.domain.map.WorldLayout(maps.values)
+        if (layout.isEmpty) return
+        for (m in maps.values.toList()) if (layout.isPlaced(m.id)) {
+            val links = layout.linksOf(m)
+            if (links != m.neighbors) maps[m.id] = m.copy(neighbors = links)
+        }
     }
 
 
@@ -573,7 +597,9 @@ class WorldSimulation(
             )
         } else roomy
         val rested = if (isNewSpawn) withRestedPoolFromAbsence(classSafe) else classSafe
-        val recalculated = rested.recalculateVitals(game, items, refill = false)
+        val loginOut = mutableListOf<WorldSimulationEvent>()
+        val trained = if (isNewSpawn) resolveOfflineTrainingOnLogin(rested, loginOut) else rested
+        val recalculated = trained.recalculateVitals(game, items, refill = false)
         players[recalculated.id] = recalculated
         // A character who logged out as a ghost wakes at home: the revive window belongs to the session they died in.
         val settled = if (isNewSpawn && recalculated.isGhost) {
@@ -584,6 +610,7 @@ class WorldSimulation(
             WorldSimulationEvent.CharacterUpdated(settled),
             WorldSimulationEvent.PlayerMoved(settled, settled.position.mapId, settled.position.mapId)
         )
+        out.addAll(loginOut)
         if (isNewSpawn) {
             if (game.definition.rested?.enabled == true && settled.restedXp > 0L) {
                 out.add(tellPlayer(settled, "You feel rested: kills pay bonus XP for a while.", "GOOD"))
@@ -623,7 +650,10 @@ class WorldSimulation(
         val out = mutableListOf<WorldSimulationEvent>()
         finishPendingEventsOnDisconnect(characterId, out)
         stalls.remove(characterId)
-        val removed = players.remove(characterId) ?: return out
+        val removed = players.remove(characterId)?.let { stampTrainingLogout(it) } ?: return out
+        if (game.definition.training?.enabled == true) {
+            out.add(WorldSimulationEvent.CharacterUpdated(removed))
+        }
         lastPvpCombatTick.remove(characterId)
         craftingAnchors.remove(characterId)
         shopSessions.remove(characterId)
@@ -691,9 +721,12 @@ class WorldSimulation(
 
         // 5. Tick status effects & natural regeneration on players + HealTrap tiles
         combat.tickPlayers(this, out)
+        // A dash or leap may have carried a player over a map border: hand them to the map that lies there.
+        settleBorderCrossings(out)
 
         // 6. Tick NPC AI, status effects, combat, and respawns
         tickNpcs(out)
+        tickHealthOrbs(out)
 
         // 6b. Systems that run after the monsters (the Guild War starts and ends on schedule)
         tickSystems(TickStage.AFTER_NPCS, out)
@@ -706,6 +739,9 @@ class WorldSimulation(
 
         // 8b. Systems that run after events (arena fights are paired and run, pets follow their owners and help in fights)
         tickSystems(TickStage.AFTER_EVENTS, out)
+
+        // 8b. Online AFK mastery training (daily-capped, no offline food consumed)
+        tickOnlineAfkTraining(out)
 
         // 9. Close instances that have stood empty long enough
         tickInstances(out)
@@ -1017,6 +1053,10 @@ class WorldSimulation(
     /** Hurts an object; it is removed (`destroyed`) when its hit points run out. */
     fun damageWorldObject(id: String, amount: Int, out: MutableList<WorldSimulationEvent> = mutableListOf()): Boolean =
         WorldStateSystem.damage(this, id, amount, out)
+
+    /** Restores hit points on an object up to its kind's maximum hit points. */
+    fun healWorldObject(id: String, amount: Int, out: MutableList<WorldSimulationEvent> = mutableListOf()): Boolean =
+        WorldStateSystem.heal(this, id, amount, out)
 
     /** Replaces what a system keeps on an object. */
     fun setWorldObjectData(id: String, data: Map<String, String>, out: MutableList<WorldSimulationEvent> = mutableListOf()): Boolean =

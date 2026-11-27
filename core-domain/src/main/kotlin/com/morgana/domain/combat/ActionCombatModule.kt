@@ -1,5 +1,9 @@
 package com.morgana.domain.combat
 
+import com.morgana.domain.sim.bodyAtTileThrough
+import com.morgana.domain.sim.hostileNpcsInReach
+import com.morgana.domain.sim.walkableThrough
+import com.morgana.domain.sim.shiftPosition
 import com.morgana.domain.content.ActionSkillDefinition
 import com.morgana.domain.content.HitReaction
 import com.morgana.domain.content.InputTokens
@@ -17,7 +21,10 @@ import com.morgana.domain.sim.WorldSimulation
 import com.morgana.domain.sim.WorldSimulationEvent
 import com.morgana.domain.sim.applyDamageToNpc
 import com.morgana.domain.sim.isHostileNpc
+import com.morgana.domain.sim.onActionCombatHitLanded
 import com.morgana.domain.sim.rollOffHandStrike
+import com.morgana.domain.sim.skillMasteryDamageMultiplierPercent
+import com.morgana.domain.sim.weaponProficiencyDamageMultiplierPercent
 import com.morgana.domain.spatial.Direction
 import com.morgana.domain.stats.ActiveStatusEffect
 import com.morgana.domain.stats.StatusEffectType
@@ -65,8 +72,8 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         when (actionId.lowercase()) {
             "input" -> {
                 val token = params["token"]?.let { InputTokens.canonical(it) }
-                val aimX = params["aimX"]?.toDoubleOrNull()
-                val aimY = params["aimY"]?.toDoubleOrNull()
+                val aimX = params["aimX"]?.toDoubleOrNull()?.takeIf { it.isFinite() && StrictMath.abs(it) < 1.0e7 }
+                val aimY = params["aimY"]?.toDoubleOrNull()?.takeIf { it.isFinite() && StrictMath.abs(it) < 1.0e7 }
                 CombatActionResult(true, if (token == null) emptyList() else input(sim, characterId, token, if (aimX != null && aimY != null) aimX to aimY else null))
             }
             "release" -> {
@@ -115,14 +122,65 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
                 if (edge != null && t >= cancel && t <= cancel + edge.windowTicks) return startSkill(sim, player, state, edge.toSkillId, aim, out)
                 val any = ActionCombatRules.findEdge(set, state.skillId, token, null)
                 if (any != null && t < cancel && cancel - t <= set.inputBufferTicks && !fromBuffer) {
-                    return state.copy(bufferedToken = token, bufferedAt = now)
+                    return state.copy(
+                        bufferedToken = token, bufferedAt = now,
+                        bufferedAimX = aim?.first ?: 0.0, bufferedAimY = aim?.second ?: 0.0, bufferedAimSet = aim != null
+                    )
                 }
-                if (t < ActionCombatRules.skillLength(skill)) return if (state != st) state else null
+                val length = ActionCombatRules.skillLength(skill)
+                if (t < length) {
+                    // Any other entry skill (e.g. a ranged skill or dodge) can cancel out of recovery frames (t >= cancel)
+                    // or buffer cleanly when pressed slightly early, instead of being silently dropped.
+                    val entry = if (any == null) ActionCombatRules.findEntry(set, token) else null
+                    if (entry != null) {
+                        val upgraded = set.empowerSkillId != 0 && set.empoweredSkillId != 0 && entry.skillId == set.empowerSkillId && state.empoweredUntil > now
+                        val targetSkillId = if (upgraded) set.empoweredSkillId else entry.skillId
+                        val isDifferentSkill = targetSkillId != state.skillId
+                        if (isDifferentSkill && t >= cancel) {
+                            return startEntry(sim, player, set, state, entry, aim, out) ?: if (state != st) state else null
+                        }
+                        val readyTick = if (isDifferentSkill) cancel else length
+                        if (t < readyTick && readyTick - t <= set.inputBufferTicks && !fromBuffer) {
+                            val hasDifferentBuffered = state.bufferedToken != null &&
+                                ActionCombatRules.findEntry(set, state.bufferedToken)?.skillId != state.skillId
+                            if (isDifferentSkill || !hasDifferentBuffered) {
+                                return state.copy(
+                                    bufferedToken = token, bufferedAt = now,
+                                    bufferedAimX = aim?.first ?: 0.0, bufferedAimY = aim?.second ?: 0.0, bufferedAimSet = aim != null
+                                )
+                            }
+                        }
+                    }
+                    return if (state != st) state else null
+                }
             }
         }
         val entry = ActionCombatRules.findEntry(set, token)
-        if (entry != null) return startSkill(sim, player, state, entry.skillId, aim, out)
+        if (entry != null) {
+            return startEntry(sim, player, set, state, entry, aim, out)
+        }
         return if (state != st) state else null
+    }
+
+    private fun startEntry(
+        sim: WorldSimulation,
+        player: CharacterState,
+        set: WeaponSetDefinition,
+        state: ActionState,
+        entry: com.morgana.domain.content.ComboEntry,
+        aim: Pair<Double, Double>?,
+        out: MutableList<WorldSimulationEvent>
+    ): ActionState? {
+        val now = sim.currentTick
+        // An empowered character's upgraded skill replaces the plain one.
+        val upgraded = set.empowerSkillId != 0 && set.empoweredSkillId != 0 && entry.skillId == set.empowerSkillId && state.empoweredUntil > now
+        val started = startSkill(sim, player, state, if (upgraded) set.empoweredSkillId else entry.skillId, aim, out)
+        if (upgraded && set.empowerOnCrit && started != null) {
+            // A crit-armed transformation is spent when it is cast.
+            out.add(WorldSimulationEvent.MomentumChanged(player.id, 0, 0))
+            return started.copy(empoweredUntil = 0L, armReadyAt = now + set.empowerCooldownTicks)
+        }
+        return started
     }
 
     private fun startSkill(
@@ -131,7 +189,11 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         val skill = sim.actionSkills[skillId] ?: return null
         val now = sim.currentTick
         if (skill.levelReq > player.level) return null
-        if (now < (st.cooldowns[skillId] ?: 0L)) return null
+        val readyAt = st.cooldowns[skillId] ?: 0L
+        if (now < readyAt) {
+            out.add(WorldSimulationEvent.ActionSkillCooldownStarted(player.id, skillId, (readyAt - now).toInt()))
+            return null
+        }
         for ((vital, amount) in skill.costs) {
             if ((player.vitals[vital]?.cur ?: 0) < amount) {
                 out.add(notice(player, "Not enough $vital"))
@@ -154,12 +216,86 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
             out.add(WorldSimulationEvent.CharacterUpdated(updated))
         }
         if (skill.animationId > 0) out.add(WorldSimulationEvent.AnimationTriggered(updated.position.mapId, updated.position.tileX, updated.position.tileY, skill.animationId))
+        for (name in skill.effect.split(',').map { it.trim() }.filter { it.isNotEmpty() }) out.add(skillEffect(sim, updated, skill, name, cx, cy, vector, aim, tileSize))
         val guard = skill.guard
+        // A leap lands on the aimed point, held within the move's range of where the skill began.
+        val leapMove = skill.moves.firstOrNull { it.toAim }
+        var leapX = 0.0
+        var leapY = 0.0
+        if (leapMove != null) {
+            var lx = aim?.let { it.first - cx } ?: (vector.first * leapMove.maxPixels * 0.5)
+            var ly = aim?.let { it.second - cy } ?: (vector.second * leapMove.maxPixels * 0.5)
+            val len = StrictMath.sqrt(lx * lx + ly * ly)
+            if (leapMove.maxPixels > 0 && len > leapMove.maxPixels && len > 1e-6) {
+                lx = lx / len * leapMove.maxPixels
+                ly = ly / len * leapMove.maxPixels
+            } else if (len < leapMove.minPixels) {
+                // Too close to be a jump: go the minimum distance the same way (the facing when the aim is right on top of us).
+                val ux = if (len > 1e-6) lx / len else vector.first
+                val uy = if (len > 1e-6) ly / len else vector.second
+                lx = ux * leapMove.minPixels
+                ly = uy * leapMove.minPixels
+            }
+            leapX = cx + lx
+            leapY = cy + ly
+        }
+        if (skill.cooldownTicks > 0) {
+            out.add(WorldSimulationEvent.ActionSkillCooldownStarted(player.id, skillId, skill.cooldownTicks))
+        }
         return st.copy(
+            leapX = leapX, leapY = leapY, leapSet = leapMove != null, electrified = false,
             skillId = skillId, start = now, done = -1, hit = false, hits = emptySet(), groupCounts = emptyMap(), freeze = 0,
-            fx = vector.first, fy = vector.second, bufferedToken = null, bufferedAt = 0L, movedTo = -1,
+            fx = vector.first, fy = vector.second, bufferedToken = null, bufferedAt = 0L, bufferedAimX = 0.0, bufferedAimY = 0.0, bufferedAimSet = false, movedTo = -1,
+            aimX = aim?.first ?: 0.0, aimY = aim?.second ?: 0.0, aimSet = aim != null,
             holdUntil = if (guard != null && guard.maxHoldTicks > 0) now + skill.startupTicks + guard.maxHoldTicks else 0L,
             cooldowns = if (skill.cooldownTicks > 0) st.cooldowns + (skillId to now + skill.cooldownTicks) else st.cooldowns
+        )
+    }
+
+    /** The built-in visual for a skill that is starting: where it goes (the ground point, the leap, or the dash's end) and its timing. */
+    private fun skillEffect(
+        sim: WorldSimulation, player: CharacterState, skill: ActionSkillDefinition, effectName: String, cx: Double, cy: Double,
+        vector: Pair<Double, Double>, aim: Pair<Double, Double>?, tileSize: Int
+    ): WorldSimulationEvent.SkillEffect {
+        var toX = cx
+        var toY = cy
+        val ground = skill.hitboxes.firstOrNull { it.groundTarget }
+        val leap = skill.moves.firstOrNull { it.toAim }
+        if (ground != null) {
+            var gx = (aim?.first ?: (cx + vector.first * ground.maxRangePixels * 0.6)) - cx
+            var gy = (aim?.second ?: (cy + vector.second * ground.maxRangePixels * 0.6)) - cy
+            val dist = StrictMath.sqrt(gx * gx + gy * gy)
+            if (ground.maxRangePixels > 0 && dist > ground.maxRangePixels && dist > 1e-6) {
+                gx = gx / dist * ground.maxRangePixels
+                gy = gy / dist * ground.maxRangePixels
+            }
+            toX = cx + gx
+            toY = cy + gy
+        } else if (leap != null) {
+            var lx = aim?.let { it.first - cx } ?: (vector.first * leap.maxPixels * 0.5)
+            var ly = aim?.let { it.second - cy } ?: (vector.second * leap.maxPixels * 0.5)
+            val len = StrictMath.sqrt(lx * lx + ly * ly)
+            if (leap.maxPixels > 0 && len > leap.maxPixels && len > 1e-6) { lx = lx / len * leap.maxPixels; ly = ly / len * leap.maxPixels }
+            else if (len < leap.minPixels) {
+                val ux = if (len > 1e-6) lx / len else vector.first
+                val uy = if (len > 1e-6) ly / len else vector.second
+                lx = ux * leap.minPixels
+                ly = uy * leap.minPixels
+            }
+            toX = cx + lx
+            toY = cy + ly
+        } else {
+            val forward = skill.moves.sumOf { it.forwardPixels }.toDouble()
+            toX = cx + vector.first * forward
+            toY = cy + vector.second * forward
+        }
+        val first = skill.hitboxes.minOfOrNull { it.fromTick } ?: 0
+        val last = skill.hitboxes.maxOfOrNull { it.toTick } ?: first
+        val radius = skill.hitboxes.maxOfOrNull { it.radiusPixels } ?: 0
+        return WorldSimulationEvent.SkillEffect(
+            mapId = player.position.mapId, tileX = player.position.tileX, tileY = player.position.tileY, effect = effectName,
+            fromX = cx.toFloat(), fromY = cy.toFloat(), toX = toX.toFloat(), toY = toY.toFloat(), radius = radius.toFloat(),
+            delayTicks = first, spanTicks = (last - first).coerceAtLeast(1), sourceId = player.id
         )
     }
 
@@ -172,22 +308,38 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         if (player == null || stored == null) { sim.actionStates.remove(charId); return }
         var st: ActionState = stored
         if (!player.isAlive(sim.game.lifeVitalId) || player.isGhost) { sim.actionStates.remove(charId); return }
+        // Momentum fades if it is not fed, and an empowerment ends when its time is up.
+        if (st.empoweredUntil != 0L && now >= st.empoweredUntil) {
+            st = st.copy(empoweredUntil = 0L, armReadyAt = now + (sim.weaponSets[st.setId]?.empowerCooldownTicks ?: 0))
+            out.add(WorldSimulationEvent.MomentumChanged(charId, st.momentum, 0))
+        }
+        if (st.momentum > 0 && now >= st.momentumExpires) {
+            st = st.copy(momentum = 0)
+            out.add(WorldSimulationEvent.MomentumChanged(charId, 0, if (st.empoweredUntil > now) (st.empoweredUntil - now).toInt() else 0))
+        }
         val skill = sim.actionSkills[st.skillId]
         if (st.skillId != 0 && skill == null) st = st.copy(skillId = 0)
         if (skill == null || st.skillId == 0) { finish(sim, charId, st); return }
 
         var current = player
         val t0 = (now - st.start).toInt()
-        // A stun or root ends the skill, unless a super-armour window is shrugging it off.
-        if (current.statusEffects.any { it.type == StatusEffectType.STUN || it.type == StatusEffectType.ROOT }) {
+        // A stun ends the skill unless a super-armour or invulnerable window is shrugging it off;
+        // a root only prevents dash/leap movement (in applyMoves), not attacking or firing ranged skills.
+        if (current.statusEffects.any { it.type == StatusEffectType.STUN }) {
             if (ActionCombatRules.hasArmor(skill, t0, SkillArmorType.SUPER_ARMOR) || ActionCombatRules.hasArmor(skill, t0, SkillArmorType.INVULNERABLE)) {
                 current = current.copy(statusEffects = current.statusEffects.filterNot { it.type == StatusEffectType.STUN || it.type == StatusEffectType.ROOT })
                 sim.players[charId] = current
                 out.add(WorldSimulationEvent.CharacterUpdated(current))
             } else {
-                sim.actionStates[charId] = st.copy(skillId = 0, bufferedToken = null, holdUntil = 0L)
+                sim.actionStates[charId] = st.copy(skillId = 0, bufferedToken = null, bufferedAt = 0L, bufferedAimSet = false, holdUntil = 0L)
                 return
             }
+        } else if (current.statusEffects.any { it.type == StatusEffectType.ROOT } &&
+            (ActionCombatRules.hasArmor(skill, t0, SkillArmorType.SUPER_ARMOR) || ActionCombatRules.hasArmor(skill, t0, SkillArmorType.INVULNERABLE))
+        ) {
+            current = current.copy(statusEffects = current.statusEffects.filterNot { it.type == StatusEffectType.ROOT })
+            sim.players[charId] = current
+            out.add(WorldSimulationEvent.CharacterUpdated(current))
         }
 
         if (st.freeze > 0) {
@@ -210,12 +362,17 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         val buffered = st.bufferedToken
         if (buffered != null) {
             val set = sim.weaponSets[st.setId]
+            val sameSkillEntry = set != null &&
+                ActionCombatRules.findEdge(set, st.skillId, buffered, null) == null &&
+                ActionCombatRules.findEntry(set, buffered)?.skillId == st.skillId
+            val readyTick = if (sameSkillEntry) length else ActionCombatRules.cancelTick(skill)
             if (set == null || now - st.bufferedAt > set.inputBufferTicks) {
-                st = st.copy(bufferedToken = null, bufferedAt = 0L)
-            } else if (t >= ActionCombatRules.cancelTick(skill)) {
-                st = st.copy(bufferedToken = null, bufferedAt = 0L)
+                st = st.copy(bufferedToken = null, bufferedAt = 0L, bufferedAimX = 0.0, bufferedAimY = 0.0, bufferedAimSet = false)
+            } else if (t >= readyTick) {
+                val bufAim = if (st.bufferedAimSet) st.bufferedAimX to st.bufferedAimY else null
+                st = st.copy(bufferedToken = null, bufferedAt = 0L, bufferedAimX = 0.0, bufferedAimY = 0.0, bufferedAimSet = false)
                 val live = sim.players[charId] ?: current
-                st = handleInput(sim, live, st, buffered, null, fromBuffer = true, out) ?: st
+                st = handleInput(sim, live, st, buffered, bufAim, fromBuffer = true, out) ?: st
             }
         }
         if (st.skillId == skill.id && t > length + ActionCombatRules.COMBO_GRACE) st = st.copy(skillId = 0, hit = false)
@@ -226,7 +383,7 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
     private fun finish(sim: WorldSimulation, charId: String, st: ActionState) {
         val now = sim.currentTick
         val cooldowns = st.cooldowns.filterValues { it > now }
-        if (st.skillId == 0 && cooldowns.isEmpty()) sim.actionStates.remove(charId)
+        if (st.skillId == 0 && cooldowns.isEmpty() && st.momentum == 0 && st.empoweredUntil <= now) sim.actionStates.remove(charId)
         else sim.actionStates[charId] = st.copy(cooldowns = cooldowns)
     }
 
@@ -251,29 +408,59 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
                 return@forEachIndexed
             }
             val targetRadius = sim.game.definition.gameplayTuning.actionTargetRadiusPixels
-            val reach = ActionCombatRules.reachTiles(hb, ts, targetRadius)
-            val candidates = (sim.mapNpcs[player.position.mapId] ?: emptyList<MapNpcInstance>()).filter {
-                it.isAlive && sim.isHostileNpc(it) && StrictMath.abs(it.tileX - player.position.tileX) <= reach && StrictMath.abs(it.tileY - player.position.tileY) <= reach
+            // A ground-targeted hitbox is centred on the aimed point (clamped to range), or 60% of range ahead when
+            // tapped without a target (matching skillEffect); others sit on the character.
+            val ground = hb.groundTarget
+            var ox = cx
+            var oy = cy
+            var shape = hb
+            if (ground) {
+                var gx = if (st.aimSet) st.aimX - cx else st.fx * hb.maxRangePixels * 0.6
+                var gy = if (st.aimSet) st.aimY - cy else st.fy * hb.maxRangePixels * 0.6
+                val dist = StrictMath.sqrt(gx * gx + gy * gy)
+                if (hb.maxRangePixels > 0 && dist > hb.maxRangePixels && dist > 1e-6) {
+                    gx = gx / dist * hb.maxRangePixels
+                    gy = gy / dist * hb.maxRangePixels
+                }
+                ox = cx + gx
+                oy = cy + gy
+                shape = hb.copy(forwardPixels = 0, sidePixels = 0)
             }
-            for (npc in candidates) {
+            val originTileX = if (ground) (ox / ts).toInt() else player.position.tileX
+            val originTileY = if (ground) (oy / ts).toInt() else player.position.tileY
+            val reach = ActionCombatRules.reachTiles(shape, ts, targetRadius)
+            // The monsters in reach, including those across a map border in a seamless world, at where they stand on this map.
+            val candidates = sim.hostileNpcsInReach(player.position.mapId, originTileX, originTileY, reach)
+            for (reachNpc in candidates) {
+                val npc = reachNpc.npc
                 val key = "${hb.hitGroup}:${npc.instanceId}"
                 val count = st.groupCounts[hb.hitGroup] ?: 0
                 if (key in st.hits || (hb.maxTargets > 0 && count >= hb.maxTargets)) continue
-                if (!ActionCombatRules.inShape(hb, cx, cy, st.fx, st.fy, npc.tileX * ts + ts / 2.0, npc.tileY * ts + ts / 2.0, targetRadius)) continue
+                if (!ActionCombatRules.inShape(shape, ox, oy, st.fx, st.fy, npc.bodyX(ts) + reachNpc.shiftTilesX * ts + ts / 2.0, npc.bodyY(ts) + reachNpc.shiftTilesY * ts + ts / 2.0, targetRadius)) continue
                 st = st.copy(hits = st.hits + key, groupCounts = st.groupCounts + (hb.hitGroup to count + 1), hit = true)
-                hitNpc(sim, sim.players[player.id] ?: player, npc, hb.hit, st, out)
+                val attacker = sim.players[player.id] ?: player
+                // Pulls and pushes work in the monster's own map, so the attacker is shown to them where they would stand on it.
+                val geometry = if (reachNpc.shiftTilesX == 0 && reachNpc.shiftTilesY == 0) attacker
+                    else attacker.copy(position = shiftPosition(attacker.position, -reachNpc.shiftTilesX, -reachNpc.shiftTilesY, ts))
+                val result = hitNpc(sim, attacker, npc, hb.hit, st, out, geometry)
+                if (result.crit) st = armOnCrit(sim, player, st, out)
+                if (result.crit && hb.hit.critElectrifies && !st.electrified) {
+                    // A critical hit electrifies the rest of the skill: a flash crackles over the area it is hitting.
+                    st = st.copy(electrified = true)
+                    out.add(WorldSimulationEvent.SkillEffect(player.position.mapId, player.position.tileX, player.position.tileY, "electrify", ox.toFloat(), oy.toFloat(), ox.toFloat(), oy.toFloat(), hb.radiusPixels.toFloat(), 0, 12))
+                }
                 bestStop = maxOf(bestStop, hb.hit.hitStopTicks)
             }
             if (sim.game.definition.worldObjects != null) {
                 val structures = sim.worldObjectsOn(player.position.mapId).filter {
-                    StrictMath.abs(it.tileX - player.position.tileX) <= reach && StrictMath.abs(it.tileY - player.position.tileY) <= reach &&
+                    StrictMath.abs(it.tileX - originTileX) <= reach && StrictMath.abs(it.tileY - originTileY) <= reach &&
                         sim.game.definition.worldObjects?.kind(it.kind)?.attackable == true
                 }.sortedBy { it.id }
                 for (obj in structures) {
                     val key = "${hb.hitGroup}:${obj.id}"
                     val count = st.groupCounts[hb.hitGroup] ?: 0
                     if (key in st.hits || (hb.maxTargets > 0 && count >= hb.maxTargets)) continue
-                    if (!ActionCombatRules.inShape(hb, cx, cy, st.fx, st.fy, obj.tileX * ts + ts / 2.0, obj.tileY * ts + ts / 2.0, targetRadius)) continue
+                    if (!ActionCombatRules.inShape(shape, ox, oy, st.fx, st.fy, obj.tileX * ts + ts / 2.0, obj.tileY * ts + ts / 2.0, targetRadius)) continue
                     st = st.copy(hits = st.hits + key, groupCounts = st.groupCounts + (hb.hitGroup to count + 1), hit = true)
                     val (damage, _) = damageOf(sim, sim.players[player.id] ?: player, null, hb.hit)
                     com.morgana.domain.systems.WorldStateSystem.strike(sim, sim.players[player.id] ?: player, obj, damage, out)
@@ -290,11 +477,13 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         return (player.equipment.weaponBaseDamage(weapon, sim.items, broken) + player.equipment.rolledAttackDamage(sim.items, broken) + com.morgana.domain.game.BuildBonuses.attackDamageBonus(player, sim.game.definition)).toLong()
     }
 
-    private fun damageOf(sim: WorldSimulation, player: CharacterState, npc: MapNpcInstance?, hit: SkillHit): Pair<Int, Boolean> {
+    private fun damageOf(sim: WorldSimulation, player: CharacterState, npc: MapNpcInstance?, hit: SkillHit, skillId: Int = 0): Pair<Int, Boolean> {
         if (hit.damagePercent <= 0) return 0 to false
         val attrs = player.effectiveAttributes(sim.game, sim.items)
         val defender = defenderAttributes(sim, npc)
-        val critBp = (sim.game.critChanceBp(attrs).toInt() + player.equipment.totalCritBonusBp(sim.items, sim.game.definition.gearRules) + com.morgana.domain.game.BuildBonuses.critChanceBpBonus(player, sim.game.definition)).coerceIn(0, 10_000)
+        // Each skill has its own chance: the agility-based one scaled by the skill, plus its flat bonus, plus gear and build.
+        val critBp = (sim.game.critChanceBp(attrs).toInt() * hit.critScalePercent / 100 + player.equipment.totalCritBonusBp(sim.items, sim.game.definition.gearRules) +
+            com.morgana.domain.game.BuildBonuses.critChanceBpBonus(player, sim.game.definition) + hit.critBonusBp).coerceIn(0, 10_000)
         val crit = sim.rng.rollBasisPoints(critBp)
         val weapon = weaponDamage(sim, player)
         val raw = when (hit.damageKind) {
@@ -302,7 +491,10 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
             SkillDamageKind.RANGED -> sim.game.rangedDamage(attrs, defender, weapon, 0L, 0L, crit)
             SkillDamageKind.SPELL -> sim.game.spellOutput(attrs, defender, weapon, true, false)
         }
-        return (raw * hit.damagePercent / 100L).toInt().coerceAtLeast(1) to crit
+        val weaponType = player.equipment.getActive(EquipmentSlot.WEAPON, sim.game.definition.gearRules)?.let { sim.items[it.itemId]?.weaponType }.orEmpty()
+        val profMult = sim.weaponProficiencyDamageMultiplierPercent(player, weaponType)
+        val skillMult = sim.skillMasteryDamageMultiplierPercent(player, skillId)
+        return (raw * hit.damagePercent / 100L * profMult / 100L * skillMult / 100L).toInt().coerceAtLeast(1) to crit
     }
 
     private fun defenderAttributes(sim: WorldSimulation, npc: MapNpcInstance?): Map<String, Int> {
@@ -310,9 +502,54 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         return sim.game.definition.attributes.associate { a -> a.id to (def?.attributes?.get(a.id) ?: a.base) }
     }
 
-    private fun hitNpc(sim: WorldSimulation, player: CharacterState, npc: MapNpcInstance, hit: SkillHit, st: ActionState, out: MutableList<WorldSimulationEvent>) {
-        val (damage, crit) = damageOf(sim, player, npc, hit)
-        if (damage > 0) sim.applyDamageToNpc(player, npc, damage, crit, out)
+    /**
+     * A critical hit by a character whose weapon set transforms a skill on crits arms the transformation (when it is not already
+     * armed, and not while the transformed skill itself is the one being used, so it cannot re-arm itself).
+     */
+    private fun armOnCrit(sim: WorldSimulation, player: CharacterState, st: ActionState, out: MutableList<WorldSimulationEvent>): ActionState {
+        val set = sim.weaponSets[st.setId] ?: return st
+        val now = sim.currentTick
+        if (!set.empowerOnCrit || set.empowerSkillId == 0 || set.empoweredSkillId == 0 || st.empoweredUntil > now || st.skillId == set.empoweredSkillId) return st
+        val baseReq = sim.actionSkills[set.empowerSkillId]?.levelReq ?: 1
+        val upgReq = sim.actionSkills[set.empoweredSkillId]?.levelReq ?: 1
+        if (player.level < baseReq || player.level < upgReq) return st
+        // One roll per use of a skill, and none while the last transformation is still cooling off.
+        if (now < st.armReadyAt || st.armRolledFor == st.start) return st
+        val rolled = st.copy(armRolledFor = st.start)
+        if (set.empowerChancePercent < 100 && sim.rng.nextInt(100) >= set.empowerChancePercent) return rolled
+        val ts = sim.maps[player.position.mapId]?.tileSize ?: 32
+        val cx = (player.position.pixelX + ts / 2.0).toFloat()
+        val cy = (player.position.pixelY + ts / 2.0).toFloat()
+        out.add(WorldSimulationEvent.SkillEffect(player.position.mapId, player.position.tileX, player.position.tileY, "empower_burst", cx, cy, cx, cy, 70f, 0, 10, player.id))
+        val name = sim.actionSkills[set.empoweredSkillId]?.name ?: "Upgrade"
+        out.add(WorldSimulationEvent.FloatingTextEmitted(player.position.mapId, player.position.tileX, player.position.tileY, "$name ready!", "SPELL", "#FBBF24"))
+        out.add(WorldSimulationEvent.MomentumChanged(player.id, 0, set.empowerTicks))
+        return rolled.copy(empoweredUntil = now + set.empowerTicks)
+    }
+
+    /** A crit by a free-flight arrow (resolved outside the character's own tick) arms the transformation the same way. */
+    fun projectileCrit(sim: WorldSimulation, player: CharacterState, out: MutableList<WorldSimulationEvent>) {
+        val st = sim.actionStates[player.id] ?: return
+        val armed = armOnCrit(sim, player, st, out)
+        if (armed !== st) sim.actionStates[player.id] = armed
+    }
+
+    /** What landing one hit did: whether it was a critical hit and whether it was electrical. */
+    private data class HitResult(val crit: Boolean, val electric: Boolean)
+
+    private fun hitNpc(
+        sim: WorldSimulation, player: CharacterState, npc: MapNpcInstance, hit: SkillHit, st: ActionState, out: MutableList<WorldSimulationEvent>,
+        /** The attacker with their position in the monster's own map coordinates (differs only across a map border); used for pulls and pushes. */
+        geometry: CharacterState = player
+    ): HitResult {
+        val (damage, crit) = damageOf(sim, player, npc, hit, st.skillId)
+        val electric = hit.electric || (hit.critElectrifies && (crit || st.electrified))
+        val result = HitResult(crit, electric)
+        if (damage > 0) {
+            sim.applyDamageToNpc(player, npc, damage, crit, out)
+            sim.onActionCombatHitLanded(player.id, st.skillId, out)
+        }
+        if (damage > 0 && hit.chainTargets > 0 && hit.chainRadiusPixels > 0) chainLightning(sim, player, npc, damage * hit.chainDamagePercent / 100, hit, out)
         // Dual-wielding works under action combat as it does under realtime: each landed melee hit may be followed by a second
         // strike from the off-hand weapon. No random number is drawn unless a usable off-hand weapon is worn.
         if (damage > 0 && hit.damageKind == SkillDamageKind.MELEE) {
@@ -323,12 +560,20 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
                 }
             }
         }
-        val list = sim.mapNpcs[npc.mapId] ?: return
+        val list = sim.mapNpcs[npc.mapId] ?: return result
         val idx = list.indexOfFirst { it.instanceId == npc.instanceId }
-        if (idx < 0) return
+        if (idx < 0) return result
         var live = list[idx]
-        if (!live.isAlive) return
+        if (!live.isAlive) return result
         val effects = ArrayList<ActiveStatusEffect>()
+        if (electric) {
+            // An electrical hit stuns, with its own bright hit effect on the monster.
+            effects += ActiveStatusEffect("action-shock", StatusEffectType.STUN, player.id, 0, emptyMap(), hit.stunTicks.coerceAtLeast(1))
+            val ts = sim.maps[npc.mapId]?.tileSize ?: 32
+            val sx = (live.bodyX(ts) + ts / 2.0).toFloat()
+            val sy = (live.bodyY(ts) + ts / 2.0).toFloat()
+            out.add(WorldSimulationEvent.SkillEffect(npc.mapId, live.tileX, live.tileY, "shock", sx, sy, sx, sy, 0f, 0, hit.stunTicks.coerceAtLeast(1)))
+        }
         if (hit.reaction != HitReaction.NONE && hit.reactionTicks > 0) {
             effects += ActiveStatusEffect("action-react", StatusEffectType.STUN, player.id, 0, emptyMap(), hit.reactionTicks)
         }
@@ -337,17 +582,83 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
             effects += ActiveStatusEffect("action-status-${status.name}", status, player.id, hit.statusMagnitude, emptyMap(), hit.statusDurationTicks)
         }
         if (effects.isNotEmpty()) live = live.copy(statusEffects = live.statusEffects.filterNot { e -> effects.any { it.id == e.id } } + effects)
-        if (hit.knockbackPixels > 0) live = knockedBack(sim, live, st, hit.knockbackPixels)
+        val npcCanMove = (sim.npcs[live.npcId]?.moveSpeedTicks ?: 1) > 0
+        if (npcCanMove && hit.knockbackPixels > 0) live = knockedBack(sim, live, st, hit.knockbackPixels, if (hit.knockbackRadial) geometry else null)
+        if (npcCanMove && hit.pullPixels > 0) live = pulledToward(sim, live, geometry, hit.pullPixels)
         if (live != list[idx]) {
             list[idx] = live
             out.add(WorldSimulationEvent.NpcUpdated(live))
         }
+        return result
+    }
+
+    /** Chain lightning: strikes the nearest other hostile monsters around [from], each for [damage], and flashes a yellow notice on each. */
+    private fun chainLightning(sim: WorldSimulation, player: CharacterState, from: MapNpcInstance, damage: Int, hit: SkillHit, out: MutableList<WorldSimulationEvent>) {
+        val map = sim.maps[from.mapId] ?: return
+        val ts = map.tileSize
+        val fx = from.bodyX(ts) + ts / 2.0
+        val fy = from.bodyY(ts) + ts / 2.0
+        val reach = hit.chainRadiusPixels.toDouble()
+        val others = (sim.mapNpcs[from.mapId] ?: emptyList<MapNpcInstance>())
+            .filter { it.instanceId != from.instanceId && it.isAlive && sim.isHostileNpc(it) }
+            .map { it to StrictMath.hypot(it.bodyX(ts) + ts / 2.0 - fx, it.bodyY(ts) + ts / 2.0 - fy) }
+            .filter { it.second <= reach }
+            .sortedWith(compareBy({ it.second }, { it.first.instanceId }))
+            .take(hit.chainTargets)
+        for ((other, _) in others) {
+            val live = sim.mapNpcs[from.mapId]?.firstOrNull { it.instanceId == other.instanceId && it.isAlive } ?: continue
+            sim.applyDamageToNpc(sim.players[player.id] ?: player, live, damage.coerceAtLeast(1), false, out)
+            // The bolt stuns whoever it strikes.
+            val victims = sim.mapNpcs[from.mapId]
+            val vi = victims?.indexOfFirst { it.instanceId == live.instanceId } ?: -1
+            if (victims != null && vi >= 0 && victims[vi].isAlive) {
+                val v = victims[vi]
+                val stunned = v.copy(statusEffects = v.statusEffects.filterNot { it.id == "action-shock" } +
+                    ActiveStatusEffect("action-shock", StatusEffectType.STUN, player.id, 0, emptyMap(), hit.stunTicks.coerceAtLeast(1)))
+                victims[vi] = stunned
+                out.add(WorldSimulationEvent.NpcUpdated(stunned))
+                val vx = (v.bodyX(ts) + ts / 2.0).toFloat()
+                val vy = (v.bodyY(ts) + ts / 2.0).toFloat()
+                out.add(WorldSimulationEvent.SkillEffect(from.mapId, v.tileX, v.tileY, "shock", vx, vy, vx, vy, 0f, 0, hit.stunTicks.coerceAtLeast(1)))
+            }
+            out.add(WorldSimulationEvent.FloatingTextEmitted(mapId = from.mapId, tileX = live.tileX, tileY = live.tileY, text = "Shock!", category = "SPELL", colorHex = "#FACC15"))
+            out.add(
+                WorldSimulationEvent.SkillEffect(
+                    from.mapId, from.tileX, from.tileY, "bolt", fx.toFloat(), fy.toFloat(),
+                    (live.bodyX(ts) + ts / 2.0).toFloat(), (live.bodyY(ts) + ts / 2.0).toFloat(), 0f, 0, 6
+                )
+            )
+        }
+    }
+
+    /** Drags a monster up to [pixels] towards [attacker], a tile at a time, stopping beside them (never onto their tile or another body). */
+    private fun pulledToward(sim: WorldSimulation, npc: MapNpcInstance, attacker: CharacterState, pixels: Int): MapNpcInstance {
+        val map = sim.maps[npc.mapId] ?: return npc
+        val ts = map.tileSize
+        var moved = npc
+        repeat(maxOf(1, pixels / ts)) {
+            val dx = attacker.position.tileX - moved.tileX
+            val dy = attacker.position.tileY - moved.tileY
+            if (StrictMath.abs(dx) <= 1 && StrictMath.abs(dy) <= 1) return moved
+            val dir = ActionCombatRules.nearestDirection(dx.toDouble(), dy.toDouble())
+            val to = com.morgana.domain.spatial.TileCoord(moved.tileX + dir.dx, moved.tileY + dir.dy)
+            val occupied = (sim.mapNpcs[npc.mapId] ?: emptyList<MapNpcInstance>()).any { it.isAlive && it.instanceId != moved.instanceId && it.tileX == to.x && it.tileY == to.y } ||
+                sim.players.values.any { it.position.mapId == npc.mapId && it.position.tileX == to.x && it.position.tileY == to.y }
+            if (!occupied && map.isInBounds(to) && map.canTraverse(com.morgana.domain.spatial.TileCoord(moved.tileX, moved.tileY), to, dir, isNpc = true)) {
+                moved = moved.copy(tileX = to.x, tileY = to.y)
+            } else return moved
+        }
+        return moved
     }
 
     /** Pushes a monster away along the skill's aim, one tile per 32 px (at least one), stopping at a wall or another body. */
-    private fun knockedBack(sim: WorldSimulation, npc: MapNpcInstance, st: ActionState, pixels: Int): MapNpcInstance {
+    private fun knockedBack(sim: WorldSimulation, npc: MapNpcInstance, st: ActionState, pixels: Int, awayFrom: CharacterState? = null): MapNpcInstance {
         val map = sim.maps[npc.mapId] ?: return npc
-        val dir = ActionCombatRules.nearestDirection(st.fx, st.fy)
+        val ts = map.tileSize
+        // Radial: straight away from the attacker; otherwise along the skill's aim.
+        val dir = if (awayFrom != null) {
+            ActionCombatRules.nearestDirection(npc.bodyX(ts) - awayFrom.position.pixelX.toDouble(), npc.bodyY(ts) - awayFrom.position.pixelY.toDouble())
+        } else ActionCombatRules.nearestDirection(st.fx, st.fy)
         var moved = npc
         repeat(maxOf(1, pixels / map.tileSize)) {
             val to = com.morgana.domain.spatial.TileCoord(moved.tileX + dir.dx, moved.tileY + dir.dy)
@@ -364,8 +675,32 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         if (!sim.modules.isEnabled(OptionalModule.PROJECTILES)) return
         val p = hb.projectile ?: return
         val dir = ActionCombatRules.nearestDirection(st.fx, st.fy)
-        val (damage, _) = damageOf(sim, player, null, hb.hit)
+        val (damage, projectileCrit) = damageOf(sim, player, null, hb.hit, st.skillId)
         val tiles = maxOf(2, p.rangePixels / 32)
+        if (p.freeAngle) {
+            // Flies along the exact aim: a position in pixels that moves every tick, so it hits what it passes at any angle.
+            val ts = sim.maps[player.position.mapId]?.tileSize ?: 32
+            val speed = maxOf(1, p.speedPixelsPerTick).toDouble()
+            // A fan: turn the aim by the projectile's offset, so one skill can fire arrows at several angles.
+            val rad = Math.toRadians(p.angleOffsetDegrees.toDouble())
+            val dirX = st.fx * StrictMath.cos(rad) - st.fy * StrictMath.sin(rad)
+            val dirY = st.fx * StrictMath.sin(rad) + st.fy * StrictMath.cos(rad)
+            val startX = player.position.pixelX + ts / 2.0 + dirX * 14.0
+            val startY = player.position.pixelY + ts / 2.0 + dirY * 14.0
+            val free = MapProjectile(
+                projectileId = sim.nextId("aproj"), sourceEntityId = player.id, isFromPlayer = true, mapId = player.position.mapId,
+                currentTileX = (startX / ts).toInt(), currentTileY = (startY / ts).toInt(), direction = dir, remainingTiles = tiles,
+                spriteId = maxOf(1, p.spriteId), damage = maxOf(1, damage), ticksPerTile = 1,
+                nextStepTick = sim.currentTick + 1L, pierce = p.pierce,
+                free = true, px = startX.toFloat(), py = startY.toFloat(),
+                vx = (dirX * speed).toFloat(), vy = (dirY * speed).toFloat(), remainingPixels = p.rangePixels.toFloat(), crit = projectileCrit,
+                actionSkillId = st.skillId
+            )
+            val freeList = sim.mapProjectiles.getOrPut(player.position.mapId) { mutableListOf() }
+            freeList.add(free)
+            out.add(WorldSimulationEvent.ProjectilesChanged(player.position.mapId, freeList.toList()))
+            return
+        }
         val proj = MapProjectile(
             projectileId = sim.nextId("aproj"), sourceEntityId = player.id, isFromPlayer = true, mapId = player.position.mapId,
             currentTileX = player.position.tileX, currentTileY = player.position.tileY, direction = dir, remainingTiles = tiles,
@@ -384,12 +719,21 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         if (skill.moves.isEmpty()) return
         var dx = 0.0
         var dy = 0.0
+        val mover = sim.players[charId]
+        val moverTile = sim.maps[mover?.position?.mapId ?: 0]?.tileSize ?: 32
         for (m in skill.moves) {
             val from = maxOf(m.fromTick, st.movedTo + 1)
             val to = minOf(m.toTick, last)
             if (to < from) continue
             val span = (m.toTick - m.fromTick + 1).toDouble()
             val ticks = (to - from + 1).toDouble()
+            if (m.toAim && st.leapSet && mover != null) {
+                // A leap closes the remaining distance to its landing point in the ticks left, so it arrives exactly on time.
+                val frac = ticks / (m.toTick - from + 1).toDouble()
+                dx += (st.leapX - (mover.position.pixelX + moverTile / 2.0)) * frac
+                dy += (st.leapY - (mover.position.pixelY + moverTile / 2.0)) * frac
+                continue
+            }
             val forward = m.forwardPixels * ticks / span
             val side = m.sidePixels * ticks / span
             dx += st.fx * forward + (-st.fy) * side
@@ -397,21 +741,32 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         }
         if (dx == 0.0 && dy == 0.0) return
         val player = sim.players[charId] ?: return
+        if (player.statusEffects.any { it.type == StatusEffectType.ROOT }) return
         val map = sim.maps[player.position.mapId] ?: return
         val half = map.tileSize / 2.0
-        val newX = player.position.pixelX + dx.toFloat()
-        val newY = player.position.pixelY + dy.toFloat()
-        val toTile = com.morgana.domain.spatial.TileCoord(((newX + half) / map.tileSize).toInt().coerceAtLeast(0), ((newY + half) / map.tileSize).toInt().coerceAtLeast(0))
-        val from = player.position.tileCoord
-        if (toTile != from) {
-            val dir = ActionCombatRules.nearestDirection(dx, dy)
-            val blockedByBody = (sim.mapNpcs[player.position.mapId] ?: emptyList<MapNpcInstance>()).any { it.isAlive && it.tileX == toTile.x && it.tileY == toTile.y }
-            if (blockedByBody || !map.isInBounds(toTile) || !map.canTraverse(from, toTile, dir, isNpc = false)) return
+        // A fast move (a rush or a leap) goes in short sub-steps, each checked, so it can neither skip a thin wall nor pass through a body.
+        val steps = maxOf(1, StrictMath.ceil(StrictMath.sqrt(dx * dx + dy * dy) / 20.0).toInt())
+        val dir = ActionCombatRules.nearestDirection(dx, dy)
+        var cur = player
+        for (k in 1..steps) {
+            val newX = cur.position.pixelX + (dx / steps).toFloat()
+            val newY = cur.position.pixelY + (dy / steps).toFloat()
+            // In a seamless world a tile beyond the edge is a real tile of the map next door (the player is handed over at the end of the tick).
+            val seamless = sim.layout.isPlaced(map.id)
+            val toTile = if (seamless) com.morgana.domain.spatial.TileCoord(StrictMath.floor((newX + half) / map.tileSize).toInt(), StrictMath.floor((newY + half) / map.tileSize).toInt())
+                else com.morgana.domain.spatial.TileCoord(((newX + half) / map.tileSize).toInt().coerceAtLeast(0), ((newY + half) / map.tileSize).toInt().coerceAtLeast(0))
+            val from = cur.position.tileCoord
+            if (toTile != from) {
+                // A leap goes over bodies (it lands among the monsters it spins at); walls still stop it.
+                val blockedByBody = skill.moves.none { it.toAim } && sim.bodyAtTileThrough(map, toTile.x, toTile.y, includePlayers = false)
+                if (blockedByBody || !sim.walkableThrough(map, from, toTile, dir, isNpc = false)) break
+            }
+            cur = cur.copy(position = cur.position.withPixels(newX, newY, map.tileSize))
         }
-        val moved = player.copy(position = player.position.withPixels(newX, newY, map.tileSize))
-        sim.players[charId] = moved
-        out.add(WorldSimulationEvent.PlayerMoved(moved, map.id, map.id))
-        out.add(WorldSimulationEvent.CharacterUpdated(moved))
+        if (cur === player) return
+        sim.players[charId] = cur
+        out.add(WorldSimulationEvent.PlayerMoved(cur, map.id, map.id))
+        out.add(WorldSimulationEvent.CharacterUpdated(cur))
     }
 
     // ---- defence (called by the engine when a monster or a boss zone damages a player) ----
@@ -426,6 +781,7 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         val t = (sim.currentTick - st.start).toInt()
         if (ActionCombatRules.hasArmor(skill, t, SkillArmorType.INVULNERABLE)) {
             out.add(WorldSimulationEvent.FloatingTextEmitted(player.position.mapId, player.position.tileX, player.position.tileY, "Dodge!", "MISS_DODGE", "#38BDF8"))
+            chargeMomentum(sim, player, st, out)
             return 0
         }
         val guard = skill.guard ?: return damage
@@ -454,6 +810,34 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
         return (damage.toLong() * (100 - guard.damageReductionPercent) / 100).toInt()
     }
 
+    /**
+     * A dodge that took a blow feeds the momentum meter (once per dodge, however many blows it dodged). A full meter empowers the
+     * character: the upgraded skill replaces its plain skill until the time is up, and a burst and a banner announce it.
+     */
+    private fun chargeMomentum(sim: WorldSimulation, player: CharacterState, st: ActionState, out: MutableList<WorldSimulationEvent>) {
+        val set = sim.weaponSets[st.setId] ?: return
+        val now = sim.currentTick
+        if (set.empowerSkillId == 0 || set.empoweredSkillId == 0 || st.empoweredUntil > now || st.momentumFrom == st.start) return
+        val baseReq = sim.actionSkills[set.empowerSkillId]?.levelReq ?: 1
+        val upgReq = sim.actionSkills[set.empoweredSkillId]?.levelReq ?: 1
+        if (player.level < baseReq || player.level < upgReq) return
+        val ts = sim.maps[player.position.mapId]?.tileSize ?: 32
+        val cx = (player.position.pixelX + ts / 2.0).toFloat()
+        val cy = (player.position.pixelY + ts / 2.0).toFloat()
+        var meter = st.momentum + set.momentumPerDodge
+        var until = 0L
+        if (meter >= 100) {
+            meter = 0
+            until = now + set.empowerTicks
+            out.add(WorldSimulationEvent.SkillEffect(player.position.mapId, player.position.tileX, player.position.tileY, "empower_burst", cx, cy, cx, cy, 90f, 0, 14))
+            out.add(WorldSimulationEvent.FloatingTextEmitted(player.position.mapId, player.position.tileX, player.position.tileY, "EMPOWERED!", "SPELL", "#FBBF24"))
+        } else {
+            out.add(WorldSimulationEvent.SkillEffect(player.position.mapId, player.position.tileX, player.position.tileY, "empower_pulse", cx, cy, cx, cy, 36f, 0, 6))
+        }
+        sim.actionStates[player.id] = st.copy(momentum = meter, momentumExpires = now + 240L, momentumFrom = st.start, empoweredUntil = until)
+        out.add(WorldSimulationEvent.MomentumChanged(player.id, meter, if (until > 0L) set.empowerTicks else 0))
+    }
+
     private fun notice(player: CharacterState, text: String) =
         WorldSimulationEvent.FloatingTextEmitted(player.position.mapId, player.position.tileX, player.position.tileY, text, "MISS_DODGE", "#94A3B8")
 
@@ -466,5 +850,9 @@ class ActionCombatModule(private val base: CombatModule = RealtimeCombatModule()
  * The damage a player takes from a monster, a boss zone or a monster's projectile after action-combat defence: an `INVULNERABLE`
  * window takes none, a guard takes less. Other combat modules leave [damage] alone.
  */
+internal fun WorldSimulation.actionCrit(player: CharacterState, out: MutableList<WorldSimulationEvent>) {
+    (combat as? ActionCombatModule)?.projectileCrit(this, player, out)
+}
+
 internal fun WorldSimulation.actionDefence(player: CharacterState, sourceTileX: Int, sourceTileY: Int, damage: Int, out: MutableList<WorldSimulationEvent>): Int =
     (combat as? ActionCombatModule)?.incomingDamage(this, player, sourceTileX, sourceTileY, damage, out) ?: damage

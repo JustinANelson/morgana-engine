@@ -105,7 +105,11 @@ class MorganaServerRuntime private constructor(
             /** Folder of plugin jars to load (see [PluginManager]); null loads none. Only the dedicated server passes one. */
             pluginsDir: Path? = null,
             /** A built browser client to serve on [webSocketPort] (see [com.morgana.server.web.WebClientHttpHandler]); null serves none. */
-            webClientDir: Path? = null
+            webClientDir: Path? = null,
+            /** Accept one-time login tickets minted by the `dev-ticket` tool (for automation); off by default, see [DevTickets]. */
+            devLogin: Boolean = DevTickets.enabledByEnvironment(),
+            /** Turns the admin API on at this port (loopback) even when `server.json` does not; see [AdminHttpServer]. */
+            adminPort: Int? = null
         ): MorganaServerRuntime {
             val effectiveGameDir = gameDir ?: resolveDefaultGameDir(dataDir)
             // Resolve TLS first: a broken certificate setup must stop startup, never fall back to plain text.
@@ -113,6 +117,10 @@ class MorganaServerRuntime private constructor(
             val serverConfig = ServerConfig.load(dataDir)
             val dataStore = MorganaDataStore(rootDir = dataDir, gameDir = effectiveGameDir)
             val coordinator = MorganaWorldCoordinator(dataStore)
+            if (devLogin) {
+                coordinator.devTickets = DevTickets(dataDir)
+                org.slf4j.LoggerFactory.getLogger("Security").warn("Dev login is ON: one-time tickets from '{}' are accepted in place of a password. Do not leave this on for a public server.", dataDir.resolve(DevTickets.DIR))
+            }
             val gate = ConnectionGate(ConnectionGateSettings.from(serverConfig.connections), banFile = dataDir.resolve("ip-bans.json"))
             coordinator.connectionGate = gate
             gate.onBan = { key -> coordinator.disconnectBanned(key) }
@@ -120,7 +128,8 @@ class MorganaServerRuntime private constructor(
             val plugins = pluginsDir?.let { PluginManager(it, coordinator.hookRegistry, flags = { coordinator.simulation.modules }, messenger = coordinator::messagePlayer, ui = coordinator.pluginUi) }
             coordinator.plugins = plugins
             plugins?.loadAll()
-            val admin = serverConfig.admin?.takeIf { it.enabled }?.let { a ->
+            val adminConfig = serverConfig.admin?.takeIf { it.enabled } ?: adminPort?.let { com.morgana.persistence.AdminConfig(enabled = true, port = it) }
+            val admin = adminConfig?.let { a ->
                 AdminHttpServer(AdminApi(CoordinatorAdminBackend(coordinator), AdminToken.loadOrCreate(dataDir)), a.bindAddress, a.port).also { it.start() }
             }
             val server = MorganaNettyServer(

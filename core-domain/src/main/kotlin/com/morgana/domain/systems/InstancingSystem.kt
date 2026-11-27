@@ -150,11 +150,12 @@ private fun WorldSimulation.openGeneratedFloor(template: MapDefinition, id: Int,
                 repeat(pile.amount) {
                     val rolled = ItemRoller.roll(def, itemLevel, loot, lootRng)
                     val maxSockets = game.definition.gearUpgrade?.takeIf { it.enabled }?.maxSockets ?: 0
-                    val stack = ItemStack(pile.itemId, 1, rolls = rolled, sockets = ItemRoller.rollDropSockets(rolled, loot, maxSockets, lootRng))
+                    val rolledSockets = ItemRoller.rollDropSockets(rolled, loot, maxSockets, lootRng)
+                    val stack = ItemStack(pile.itemId, 1, rolls = rolled, sockets = def.freshSockets().ifEmpty { rolledSockets })
                     ground += MapGroundItem(instanceId = nextId("loot"), mapId = id, tileX = pile.x, tileY = pile.y, stack = stack)
                 }
             } else {
-                ground += MapGroundItem(instanceId = nextId("loot"), mapId = id, tileX = pile.x, tileY = pile.y, stack = ItemStack(pile.itemId, pile.amount))
+                ground += MapGroundItem(instanceId = nextId("loot"), mapId = id, tileX = pile.x, tileY = pile.y, stack = ItemStack(pile.itemId, pile.amount, sockets = if (pile.amount == 1) def.freshSockets() else emptyList()))
             }
         }
     }

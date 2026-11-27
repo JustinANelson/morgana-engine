@@ -85,6 +85,8 @@ data class EntityVisualSmoothing(
     var direction: Direction = Direction.DOWN,
     var walkCycleTimer: Float = 0f,
     var isMoving: Boolean = false,
+    /** Short grace window so continuous movement does not flicker to IDLE between step ticks. */
+    var moveGraceTimer: Float = 0f,
     var actionState: SpriteState? = null,
     var actionTimer: Float = 0f,
     var actionDuration: Float = 0f,
@@ -93,11 +95,26 @@ data class EntityVisualSmoothing(
     var leapDuration: Float = 0f,
     var leapStartX: Float = 0f,
     var leapStartY: Float = 0f,
-    var leapPeakPixels: Float = 0f
+    var leapPeakPixels: Float = 0f,
+    /** A hop in place of the position easing (a skill's leap, whose position the server moves): a sine arc of [hopPeak] over [hopDuration]. */
+    var hopTimer: Float = 0f,
+    var hopDuration: Float = 0f,
+    var hopPeak: Float = 0f,
+    /** A spin of the sprite (a skill's whirl): [spinTimer] counts up from a negative wait to [spinDuration], turning two full circles. */
+    var spinTimer: Float = 0f,
+    var spinDuration: Float = 0f
 ) {
-    /** Height of the jump hop in pixels: a sine arc over the leap, 0 when not leaping. */
+    /** How far the sprite is turned, in degrees: two full turns over the spin, 0 before it starts and after it ends. */
+    val spinDegrees: Float
+        get() = if (spinDuration <= 0f || spinTimer < 0f) 0f else 720f * (spinTimer / spinDuration).coerceIn(0f, 1f)
+
+    /** Height of the jump hop in pixels: a sine arc over the leap or the skill hop, 0 when neither. */
     val hopHeight: Float
-        get() = if (leapDuration <= 0f) 0f else kotlin.math.sin(Math.PI * (leapTimer / leapDuration).coerceIn(0f, 1f)).toFloat() * leapPeakPixels
+        get() {
+            val leap = if (leapDuration <= 0f) 0f else kotlin.math.sin(Math.PI * (leapTimer / leapDuration).coerceIn(0f, 1f)).toFloat() * leapPeakPixels
+            val skillHop = if (hopDuration <= 0f) 0f else kotlin.math.sin(Math.PI * (hopTimer / hopDuration).coerceIn(0f, 1f)).toFloat() * hopPeak
+            return maxOf(leap, skillHop)
+        }
 
     val walkFrame: Int
         get() = if (!isMoving) 0 else if (((walkCycleTimer * 8f).toInt() % 2) == 0) 1 else 2
@@ -162,6 +179,9 @@ private const val PIXEL_STEP = 8f
 /** Unacknowledged steps kept for replay (about 3 s of free movement); older ones are assumed handled. */
 private const val MAX_UNACKED_MOVES = 64
 
+/** Grace window (seconds) keeping walk state active between discrete step ticks so movement animations never stutter. */
+private const val MOVE_GRACE_SECONDS = 0.095f
+
 /** Largest same-map position change (pixels) that is animated as a leap rather than snapped; jumps stay well within it. */
 private const val MAX_LEAP_PIXELS = 640.0
 
@@ -189,6 +209,12 @@ class ClientWorldState {
 
     var activeMap: MapDefinition? = null
     var neighborMaps: Map<Int, MapDefinition> = emptyMap()
+
+    /**
+     * In a seamless world: where each neighbouring map's top left tile sits from the active map's, in tiles (see
+     * `MapStateSnapshot.neighborOffsets`). Empty for the older fixed N/S/E/W neighbours.
+     */
+    var neighborOffsets: Map<Int, com.morgana.domain.map.TileOffset> = emptyMap()
 
     /**
      * Every map this connection has received, by id (the client half of the send-once map cache). A snapshot may name a map
@@ -228,6 +254,9 @@ class ClientWorldState {
     val npcsOnMap: MutableMap<String, MapNpcInstance> = linkedMapOf()
     val groundItemsOnMap: MutableList<MapGroundItem> = mutableListOf()
     val projectilesOnMap: MutableList<MapProjectile> = mutableListOf()
+
+    /** When each shot in [projectilesOnMap] last arrived (by id): the server does not resend a free-flight shot that only moved, so it is flown on from here. */
+    val projectileStampMs: MutableMap<String, Long> = HashMap()
     val resourcesOnMap: MutableMap<TileCoord, MapResourceState> = linkedMapOf()
 
     /** The walls, chests and totems placed on the active map, by object id (see the `world_objects` capability). */
@@ -266,6 +295,12 @@ class ClientWorldState {
     /** Quickbar cooldown sweeps; display only, the server enforces the real cooldown. */
     val spellCooldowns = SpellCooldowns()
 
+    /** Authoritative action-skill cooldowns keyed by `ActionSkillDefinition.id` (set from `ServerPacket.ActionSkillCooldown`). */
+    val actionSkillCooldowns = SpellCooldowns()
+
+    /** Login offline-training summary report queued for the HUD modal, cleared once shown. */
+    var pendingOfflineTrainingReport: ServerPacket.OfflineTrainingReport? = null
+
     /** True when floating XP essence orbs are enabled by the game and not suppressed by reduced motion. */
     fun xpOrbsEnabled(): Boolean =
         gameDefinition?.ui?.xpOrbs == true && !com.morgana.client.access.Accessibility.reduceMotion
@@ -287,6 +322,81 @@ class ClientWorldState {
         selectedGhostId = ghost.characterId
         toasts.add("Revive target: ${ghost.name}", com.morgana.client.ui.ToastKind.INFO, com.morgana.client.ui.ToastClock.now())
         return ghost
+    }
+
+    /** The enemy the player has locked on to (tap, click or the target button), or null. Attacks and skills aim at it while it is in reach. */
+    var lockedNpcId: String? = null
+
+    /** When each action input ("RMB", "SPACE", ...) last started its skill, in wall-clock ms, for the cooldown shown on its button. */
+    val skillUsedAtMs: MutableMap<String, Long> = HashMap()
+
+    /** Where a skill the player is aiming by dragging would go, in map pixels (y down), for the aim line; null when not aiming. */
+    var aimPreview: Pair<Float, Float>? = null
+
+    /** Radius (map pixels) of the area the aimed skill will hit around [aimPreview], or 0 for a skill with no area (just the line). */
+    var aimRadius: Float = 0f
+
+    /** The local player's centre in map pixels (y down), or null before they are on a map. */
+    fun playerCentre(): Pair<Float, Float>? {
+        val ch = localCharacter ?: return null
+        val ts = activeMap?.tileSize ?: return null
+        return (ch.position.pixelX + ts / 2f) to (ch.position.pixelY + ts / 2f)
+    }
+
+    /** The enemies that can be targeted: living monsters on this map (not pets or townsfolk), as map-pixel positions with what makes them worth hitting. */
+    fun targetCandidates(): List<com.morgana.client.input.TargetCandidate> {
+        val ts = activeMap?.tileSize ?: return emptyList()
+        val me = localCharacter?.id
+        val out = ArrayList<com.morgana.client.input.TargetCandidate>()
+        // The monsters on this map and, in a seamless world, those just across its borders (placed by their map's offset).
+        val everyone = ArrayList<Triple<com.morgana.domain.entity.MapNpcInstance, EntityVisualSmoothing?, Pair<Float, Float>>>()
+        for (npc in npcsOnMap.values) everyone += Triple(npc, npcVisuals[npc.instanceId], 0f to 0f)
+        for (m in seamMaps) {
+            val offset = seamOffsetOf(m.mapId) ?: continue
+            for (npc in m.npcs) everyone += Triple(npc, seamNpcVisuals["${m.mapId}:${npc.instanceId}"], offset)
+        }
+        for ((npc, vis, shift) in everyone) {
+            if (!npc.isAlive || npc.ownerId != null) continue
+            val def = catalog.npcs.firstOrNull { it.id == npc.npcId } ?: continue
+            val monster = (def.behavior == com.morgana.domain.content.NpcBehavior.ATTACK_ON_SIGHT || def.behavior == com.morgana.domain.content.NpcBehavior.PASSIVE) &&
+                def.eventId == 0 && def.shopId == 0
+            if (!monster) continue
+            val x = if (vis != null) vis.renderPixelX + ts / 2f else npc.bodyX(ts) + shift.first + ts / 2f
+            val y = if (vis != null) vis.renderPixelY + ts / 2f else npc.bodyY(ts) + shift.second + ts / 2f
+            val hp = npc.vitals["hp"] ?: npc.vitals.values.firstOrNull()
+            val frac = if (hp == null || hp.max <= 0) 1f else hp.cur.toFloat() / hp.max
+            out += com.morgana.client.input.TargetCandidate(
+                id = npc.instanceId, x = x, y = y, boss = def.encounter != null, hpFraction = frac,
+                targetsMe = me != null && npc.targetEntityId == me
+            )
+        }
+        return out
+    }
+
+    /** The monster with [id] on this map or, in a seamless world, across one of its borders. */
+    fun npcOrSeamNpc(id: String): com.morgana.domain.entity.MapNpcInstance? =
+        npcsOnMap[id] ?: seamMaps.asSequence().flatMap { it.npcs.asSequence() }.firstOrNull { it.instanceId == id }
+
+    /**
+     * The loot on this map plus, in a seamless world, the loot just across its borders as if it lay on this map (tiles shifted by the
+     * neighbour's offset): what can be picked up, labelled and offered, wherever it lies.
+     */
+    fun groundItemsInView(): List<MapGroundItem> {
+        val active = activeMap ?: return groundItemsOnMap
+        if (seamMaps.isEmpty()) return groundItemsOnMap
+        val out = ArrayList<MapGroundItem>(groundItemsOnMap)
+        for (m in seamMaps) {
+            val offset = neighborOffsets[m.mapId] ?: continue
+            for (it in m.groundItems) out += it.copy(mapId = active.id, tileX = it.tileX + offset.x, tileY = it.tileY + offset.y)
+        }
+        return out
+    }
+
+    /** Drops the lock when its enemy is gone or dead. */
+    fun refreshLock() {
+        val id = lockedNpcId ?: return
+        val npc = npcOrSeamNpc(id)
+        if (npc == null || !npc.isAlive) lockedNpcId = null
     }
 
     /**
@@ -383,6 +493,38 @@ class ClientWorldState {
     val activeAnimations: MutableList<ActiveSpriteAnimation> = mutableListOf()
     /** Arrows and bolts in flight for ranged spells (anyone's); visual only. */
     val spellShots: MutableList<SpellShot> = mutableListOf()
+
+    /** The momentum meter (0..99) filled by successful dodges, and when the current empowerment ends (wall-clock ms; 0 = not empowered). */
+    var momentum: Int = 0
+    var empoweredUntilMs: Long = 0L
+
+    fun isEmpowered(nowMs: Long = System.currentTimeMillis()): Boolean = com.morgana.client.render.ClientDebug.empower == "on" || empoweredUntilMs > nowMs
+
+    /** Health orbs lying on the active map (see `tuning.healthOrbChancePercent`). */
+    var healthOrbs: List<com.morgana.domain.entity.HealthOrb> = emptyList()
+
+    /** Screen shake: the current amplitude in pixels (decays by itself) and a counter to vary the offset each frame. */
+    var shake: Float = 0f
+    private var shakeTick = 0
+
+    fun addShake(amount: Float) {
+        if (com.morgana.client.access.Accessibility.reduceMotion) return
+        shake = (shake + amount).coerceAtMost(9f)
+    }
+
+    /** The camera's offset this frame for the shake, in world pixels (0, 0 when still). */
+    fun shakeOffset(): Pair<Float, Float> {
+        if (shake < 0.3f) return 0f to 0f
+        shakeTick++
+        val a = shakeTick * 2.399f
+        return kotlin.math.cos(a) * shake to kotlin.math.sin(a * 1.7f) * shake
+    }
+
+    /** Seconds left of the brief red flash on a monster that was just struck, by instance id. */
+    val npcHitFlash: MutableMap<String, Float> = HashMap()
+
+    /** Built-in skill visuals (arrow rain, dodge dust, spin whirl) in progress; see [SkillFx]. */
+    val skillFx: MutableList<SkillFx> = mutableListOf()
     val playerCastProgress: MutableMap<String, Float> = linkedMapOf()
 
     /** Windows the server's plugins have opened (by window id); the HUD draws them and removes ones the server closed. */
@@ -501,9 +643,11 @@ class ClientWorldState {
             ?: gameDefinition?.vitals?.firstOrNull()?.id
             ?: "hp"
 
-    /** Effective UI profile for the connected realm, falling back to all-enabled defaults. */
+    /** Effective UI profile for the connected realm, defaulting to the ring layout for Online RPG and dungeon crawler tags when `ui` is omitted. */
     val uiProfile: UiProfile
-        get() = gameDefinition?.ui ?: UiProfile()
+        get() = gameDefinition?.ui ?: UiProfile(
+            layout = com.morgana.domain.game.UiLayout.defaultForTags(gameDefinition?.tags.orEmpty())
+        )
 
     /** True when the realm enables combat UI and its combat module is not `noop`. */
     fun showCombatUi(): Boolean =
@@ -770,8 +914,15 @@ class ClientWorldState {
         runTracker.reset()
         pendingRunSummary = null
         spellCooldowns.clear()
+        actionSkillCooldowns.clear()
+        skillUsedAtMs.clear()
         activeAnimations.clear()
         spellShots.clear()
+        skillFx.clear()
+        healthOrbs = emptyList()
+        npcHitFlash.clear()
+        momentum = 0
+        empoweredUntilMs = 0L
         playerCastProgress.clear()
         activeTrade = null
         activeParty = null
@@ -788,6 +939,14 @@ class ClientWorldState {
         shopBuybackShopId = 0
         mapEditorActive = false
         hotbarSlots.fill(null)
+    }
+
+    private fun replaceProjectiles(list: List<MapProjectile>) {
+        projectilesOnMap.clear()
+        projectilesOnMap.addAll(list)
+        projectileStampMs.clear()
+        val now = System.currentTimeMillis()
+        for (p in list) projectileStampMs[p.projectileId] = now
     }
 
     fun applyServerPacket(packet: ServerPacket, onUiWindowRequested: (ServerPacket.OpenUiWindow) -> Unit = {}) {
@@ -849,25 +1008,36 @@ class ClientWorldState {
                         shiftVisuals(seamPlayerVisuals, dx, dy)
                         shiftVisuals(npcVisuals, dx, dy)
                         shiftVisuals(seamNpcVisuals, dx, dy)
-                        // Everything that was on the old map (except us) is now across the border.
+                        // Everything that was on the old map (except us) is now across the border: preserve it in seamMaps
+                        // immediately so chasing enemies and nearby players never blink out while waiting for the next SeamView.
                         val localId = localCharacter?.id
+                        val prevNpcs = npcsOnMap.values.filter { it.isAlive }
+                        val prevPlayers = playersOnMap.values.filter { it.characterId != localId }
+                        val prevItems = groundItemsOnMap.toList()
+                        val keptSeams = seamMaps.filter { it.mapId != snapshotMap.id && it.mapId != previousMap!!.id && it.mapId in snapshotNeighbors }
+                        seamMaps = if (prevNpcs.isNotEmpty() || prevPlayers.isNotEmpty() || prevItems.isNotEmpty()) {
+                            keptSeams + com.morgana.protocol.NeighborMapEntities(previousMap!!.id, prevNpcs, prevPlayers, prevItems)
+                        } else {
+                            keptSeams
+                        }
                         for ((id, v) in playerVisuals) if (id != localId) seamPlayerVisuals[id] = v
                         playerVisuals.keys.retainAll { it == localId }
                         for ((id, v) in npcVisuals) seamNpcVisuals["${previousMap!!.id}:$id"] = v
                         npcVisuals.clear()
                     } else {
+                        seamMaps = emptyList()
                         playerVisuals.clear()
                         npcVisuals.clear()
                         seamPlayerVisuals.clear()
                         seamNpcVisuals.clear()
                     }
                 }
-                seamMaps = emptyList() // the server resends the view across the borders right after this snapshot
                 activeMap = snapshotMap
                 if (workingMapDraft == null || mapChanged) {
                     workingMapDraft = snapshotMap
                 }
                 neighborMaps = snapshotNeighbors
+                neighborOffsets = packet.neighborOffsets
                 playersOnMap.clear()
                 packet.players.forEach { snap ->
                     // On the same map our own entry is a round trip old; keep the predicted position (see PlayerUpdated).
@@ -892,8 +1062,8 @@ class ClientWorldState {
                     }
                     syncNpcVisualTarget(
                         id = n.instanceId,
-                        px = n.tileX * ts,
-                        py = n.tileY * ts,
+                        px = n.bodyX(snapshotMap.tileSize),
+                        py = n.bodyY(snapshotMap.tileSize),
                         dir = n.direction,
                         snapImmediately = n.instanceId !in npcVisuals
                     )
@@ -917,7 +1087,7 @@ class ClientWorldState {
                     )?.let { summary ->
                         pendingRunSummary = summary
                     }
-                    if (previousMap != null) {
+                    if (previousMap != null && (shift == null || snapshotMap.generator != null)) {
                         val notice = com.morgana.client.ui.DungeonHudModel.floorEntryToast(
                             mapName = snapshotMap.name,
                             hasGenerator = snapshotMap.generator != null,
@@ -929,8 +1099,7 @@ class ClientWorldState {
                 }
                 groundItemsOnMap.clear()
                 groundItemsOnMap.addAll(packet.groundItems)
-                projectilesOnMap.clear()
-                projectilesOnMap.addAll(packet.projectiles)
+                replaceProjectiles(packet.projectiles)
                 resourcesOnMap.clear()
                 packet.resources.forEach { resourcesOnMap[TileCoord(it.tileX, it.tileY)] = it }
                 worldObjectsOnMap.clear()
@@ -966,6 +1135,10 @@ class ClientWorldState {
                 }
             }
             is ServerPacket.PlayerUpdated -> {
+                if (activeMap != null && packet.player.position.mapId != activeMap?.id) {
+                    applySeamPlayer(packet.player)
+                    return
+                }
                 // Our own position comes from CharacterSync, which says which of our steps it includes. This public copy
                 // is a round trip old and would pull the predicted player back, so the predicted position is kept.
                 val own = localCharacter?.takeIf { it.id == packet.player.characterId && it.position.mapId == packet.player.position.mapId }
@@ -979,12 +1152,43 @@ class ClientWorldState {
                     snapImmediately = p.characterId !in playerVisuals
                 )
             }
+            is ServerPacket.EntityMoves -> {
+                packet.npcs.forEach { applyServerPacket(it) }
+                packet.players.forEach { applyServerPacket(it) }
+            }
+            is ServerPacket.PlayerMoved -> {
+                if (packet.mapId != 0 && packet.mapId != activeMap?.id) {
+                    applySeamPlayerMove(packet)
+                    return
+                }
+                playersOnMap[packet.characterId]?.let { applyServerPacket(ServerPacket.PlayerUpdated(it.copy(position = packet.position))) }
+            }
+            is ServerPacket.NpcMoved -> {
+                if (packet.mapId != 0 && packet.mapId != activeMap?.id) {
+                    applySeamNpcMove(packet)
+                    return
+                }
+                npcsOnMap[packet.instanceId]?.let {
+                    applyServerPacket(
+                        ServerPacket.NpcUpdated(
+                            it.copy(
+                                tileX = packet.tileX, tileY = packet.tileY, direction = packet.direction,
+                                subPixel = packet.subPixel, pixelX = packet.pixelX, pixelY = packet.pixelY, wanderX = packet.wanderX, wanderY = packet.wanderY
+                            )
+                        )
+                    )
+                }
+            }
             is ServerPacket.PlayerLeftMap -> {
                 playersOnMap.remove(packet.characterId)
                 playerVisuals.remove(packet.characterId)
             }
             is ServerPacket.NpcUpdated -> {
                 val n = packet.npc
+                if (activeMap != null && n.mapId != activeMap?.id) {
+                    applySeamNpc(n)
+                    return
+                }
                 val wasAlive = npcsOnMap[n.instanceId]?.isAlive == true
                 npcsOnMap[n.instanceId] = n
                 if (wasAlive && !n.isAlive) {
@@ -1014,12 +1218,13 @@ class ClientWorldState {
                         xpOrbTracker.onNpcKilled(n.mapId, n.tileX * ts + ts * 0.5f, n.tileY * ts + ts - spriteH * 0.5f)
                     }
                 }
+                val respawned = !wasAlive && n.isAlive
                 syncNpcVisualTarget(
                     id = n.instanceId,
-                    px = n.tileX * ts,
-                    py = n.tileY * ts,
+                    px = n.bodyX(ts.toInt()),
+                    py = n.bodyY(ts.toInt()),
                     dir = n.direction,
-                    snapImmediately = n.instanceId !in npcVisuals || !n.isAlive
+                    snapImmediately = n.instanceId !in npcVisuals || !n.isAlive || respawned
                 )
             }
             is ServerPacket.GroundItemsUpdated -> {
@@ -1029,9 +1234,15 @@ class ClientWorldState {
                 }
             }
             is ServerPacket.ProjectilesUpdated -> {
+                if (activeMap?.id == packet.mapId) replaceProjectiles(packet.projectiles)
+            }
+            is ServerPacket.ProjectilesDelta -> {
                 if (activeMap?.id == packet.mapId) {
-                    projectilesOnMap.clear()
-                    projectilesOnMap.addAll(packet.projectiles)
+                    val gone = packet.removedIds.toHashSet() + packet.upserted.map { it.projectileId }
+                    projectilesOnMap.removeAll { it.projectileId in gone }
+                    gone.forEach { projectileStampMs.remove(it) }
+                    val now = System.currentTimeMillis()
+                    for (p in packet.upserted) { projectilesOnMap.add(p); projectileStampMs[p.projectileId] = now }
                 }
             }
             is ServerPacket.WorldObjectsUpdated -> {
@@ -1079,11 +1290,25 @@ class ClientWorldState {
                 serverReportsCooldowns = true
                 spellCooldowns.set(packet.spellId, packet.durationTicks / SpellCooldowns.TICKS_PER_SECOND, com.morgana.client.ui.ToastClock.now())
             }
+            is ServerPacket.ActionSkillCooldown -> {
+                actionSkillCooldowns.set(packet.skillId, packet.durationTicks / SpellCooldowns.TICKS_PER_SECOND, com.morgana.client.ui.ToastClock.now())
+            }
+            is ServerPacket.OfflineTrainingReport -> {
+                pendingOfflineTrainingReport = packet
+            }
             is ServerPacket.FloatingText -> {
+                val active = activeMap
+                val across = if (active != null && active.id != packet.mapId) neighborOffsets[packet.mapId] else null
+                if (across != null) {
+                    // Damage text from a fight across a map border (seamless world): shown where it happened, in this map's coordinates.
+                    applyServerPacket(packet.copy(mapId = active!!.id, tileX = packet.tileX + across.x, tileY = packet.tileY + across.y))
+                    return
+                }
                 if (activeMap?.id == packet.mapId) {
                     if (packet.category == com.morgana.protocol.FloatingTextCategory.DAMAGE ||
                         packet.category == com.morgana.protocol.FloatingTextCategory.CRIT_DAMAGE
                     ) flinchAt(packet.tileX, packet.tileY)
+                    if (packet.category == com.morgana.protocol.FloatingTextCategory.CRIT_DAMAGE) addShake(2.2f)
                     val tileSize = activeMap?.tileSize ?: 32
                     val profile = gameDefinition?.sprites
                     // Text rises above whoever stands on the tile: their visible height, with any draw scale.
@@ -1109,6 +1334,63 @@ class ClientWorldState {
                                 crit = packet.category == com.morgana.protocol.FloatingTextCategory.CRIT_DAMAGE
                             )
                         )
+                    }
+                }
+            }
+            is ServerPacket.HealthOrbsUpdated -> {
+                if (activeMap?.id == packet.mapId) healthOrbs = packet.orbs
+            }
+            is ServerPacket.Momentum -> {
+                momentum = packet.momentum
+                empoweredUntilMs = if (packet.empoweredTicks > 0) System.currentTimeMillis() + packet.empoweredTicks * 50L else 0L
+            }
+            is ServerPacket.SkillEffect -> {
+                val active = activeMap
+                val across = if (active != null && active.id != packet.mapId) neighborOffsets[packet.mapId] else null
+                if (across != null) {
+                    val sx = across.x * active!!.tileSize.toFloat()
+                    val sy = across.y * active.tileSize.toFloat()
+                    applyServerPacket(packet.copy(mapId = active.id, fromX = packet.fromX + sx, fromY = packet.fromY + sy, toX = packet.toX + sx, toY = packet.toY + sy))
+                    return
+                }
+                if (activeMap?.id == packet.mapId && packet.effect == SkillFx.TELEGRAPH_CANCEL) {
+                    skillFx.removeAll { it.isTelegraph && it.sourceId == packet.sourceId }
+                } else if (activeMap?.id == packet.mapId) {
+                    if (packet.sourceId.isNotEmpty() && packet.sourceId == localCharacter?.id) {
+                        // A big skill of the local player shakes the screen a little.
+                        when (packet.effect) {
+                            SkillFx.BASH, SkillFx.SHOCKWAVE -> addShake(5f)
+                            SkillFx.SPIN -> addShake(3.5f)
+                            SkillFx.PULL -> addShake(3f)
+                        }
+                    }
+                    if (packet.effect == SkillFx.ELECTRIFY) addShake(2f)
+                    skillFx.add(
+                        SkillFx(
+                            effect = packet.effect, fromX = packet.fromX, fromY = packet.fromY, toX = packet.toX, toY = packet.toY, radius = packet.radius,
+                            delaySeconds = packet.delayTicks * SkillFx.TICK_SECONDS, spanSeconds = packet.spanTicks * SkillFx.TICK_SECONDS,
+                            sourceId = packet.sourceId
+                        )
+                    )
+                    while (skillFx.size > 40) skillFx.removeAt(0)
+                    // A leaping skill (the spin) makes its character hop through the air while the server carries them to the spot.
+                    if (packet.effect == SkillFx.SPIN && packet.sourceId.isNotEmpty()) {
+                        playerVisuals[packet.sourceId]?.let { v ->
+                            v.hopTimer = 0f
+                            v.hopDuration = maxOf(0.12f, (packet.delayTicks - 1) * SkillFx.TICK_SECONDS)
+                            v.hopPeak = 38f
+                            // Then the sprite spins through the whirl.
+                            v.spinTimer = -(packet.delayTicks - 1) * SkillFx.TICK_SECONDS
+                            v.spinDuration = packet.spanTicks * SkillFx.TICK_SECONDS + 0.15f
+                        }
+                    }
+                    // A rush or a dash moves the character in a few ticks: let the sprite keep up with the server instead of crawling.
+                    if ((packet.effect == SkillFx.BASH || packet.effect == SkillFx.DODGE) && packet.sourceId.isNotEmpty()) {
+                        playerVisuals[packet.sourceId]?.let { v ->
+                            v.hopTimer = 0f
+                            v.hopDuration = if (packet.effect == SkillFx.BASH) 0.2f else 0.45f
+                            v.hopPeak = 0f
+                        }
                     }
                 }
             }
@@ -1184,6 +1466,8 @@ class ClientWorldState {
      */
     private fun crossingShift(old: MapDefinition, new: MapDefinition): Pair<Float, Float>? {
         val ts = old.tileSize.toFloat()
+        // A seamless world says exactly where the new map lies from the old one.
+        neighborOffsets[new.id]?.let { return -it.x * ts to -it.y * ts }
         val n = old.neighbors
         return when (new.id) {
             n.eastMapId -> -old.width * ts to 0f
@@ -1207,6 +1491,7 @@ class ClientWorldState {
     private fun seamOffset(active: MapDefinition, mapId: Int): Pair<Float, Float>? {
         if (mapId <= 0) return null
         val ts = active.tileSize.toFloat()
+        neighborOffsets[mapId]?.let { return it.x * ts to it.y * ts }
         val n = active.neighbors
         return when (mapId) {
             n.eastMapId -> active.width * ts to 0f
@@ -1216,6 +1501,9 @@ class ClientWorldState {
             else -> null
         }
     }
+
+    /** True when [from] and [to] are adjacent in the seamless world (a border crossing, not a warp). */
+    fun isSeamlessNeighbor(from: MapDefinition, to: MapDefinition): Boolean = crossingShift(from, to) != null
 
     /** Where neighbouring map [mapId]'s pixel (0,0) sits in the active map's pixel space, for drawing its seam entities. */
     fun seamOffsetOf(mapId: Int): Pair<Float, Float>? = activeMap?.let { seamOffset(it, mapId) }
@@ -1237,7 +1525,7 @@ class ClientWorldState {
             for (n in m.npcs) {
                 val key = "${m.mapId}:${n.instanceId}"
                 liveNpcs.add(key)
-                syncSeamVisual(seamNpcVisuals, key, n.tileX * ts + ox, n.tileY * ts + oy, n.direction)
+                syncSeamVisual(seamNpcVisuals, key, n.bodyX(active.tileSize) + ox, n.bodyY(active.tileSize) + oy, n.direction)
             }
             for (p in m.players) {
                 livePlayers.add(p.characterId)
@@ -1248,9 +1536,53 @@ class ClientWorldState {
         seamPlayerVisuals.keys.retainAll(livePlayers)
     }
 
-    private fun syncSeamVisual(visuals: MutableMap<String, EntityVisualSmoothing>, key: String, px: Float, py: Float, dir: Direction) {
+    /** A monster on a map across a border changed (a seamless world): replaces it in what is shown across that border, or removes it when it died. */
+    private fun applySeamNpc(n: com.morgana.domain.entity.MapNpcInstance) {
+        val active = activeMap ?: return
+        if (!isModuleEnabled("softSeams")) return
+        val offset = seamOffset(active, n.mapId) ?: return
+        val key = "${n.mapId}:${n.instanceId}"
+        val existing = seamMaps.firstOrNull { it.mapId == n.mapId }
+        val others = seamMaps.filter { it.mapId != n.mapId }
+        val wasAlive = existing?.npcs?.firstOrNull { it.instanceId == n.instanceId }?.isAlive == true
+        val npcs = (existing?.npcs.orEmpty().filter { it.instanceId != n.instanceId }) + (if (n.isAlive) listOf(n) else emptyList())
+        seamMaps = if (npcs.isEmpty() && existing?.players.isNullOrEmpty() && existing?.groundItems.isNullOrEmpty()) others
+            else others + com.morgana.protocol.NeighborMapEntities(n.mapId, npcs, existing?.players.orEmpty(), existing?.groundItems.orEmpty())
+        if (n.isAlive) syncSeamVisual(seamNpcVisuals, key, n.bodyX(active.tileSize) + offset.first, n.bodyY(active.tileSize) + offset.second, n.direction, snapImmediately = !wasAlive)
+        else seamNpcVisuals.remove(key)
+    }
+
+    /** A player on a map across a border changed (a seamless world): replaces them in what is shown across that border. */
+    private fun applySeamPlayer(p: com.morgana.protocol.PublicPlayerSnapshot) {
+        val active = activeMap ?: return
+        if (!isModuleEnabled("softSeams") || p.characterId == localCharacter?.id) return
+        val offset = seamOffset(active, p.position.mapId) ?: return
+        val mapId = p.position.mapId
+        val existing = seamMaps.firstOrNull { it.mapId == mapId }
+        val others = seamMaps.filter { it.mapId != mapId }
+        val players = existing?.players.orEmpty().filter { it.characterId != p.characterId } + p
+        seamMaps = others + com.morgana.protocol.NeighborMapEntities(mapId, existing?.npcs.orEmpty(), players, existing?.groundItems.orEmpty())
+        syncSeamVisual(seamPlayerVisuals, p.characterId, p.position.pixelX + offset.first, p.position.pixelY + offset.second, p.position.direction)
+    }
+
+    private fun applySeamPlayerMove(m: ServerPacket.PlayerMoved) {
+        val current = seamMaps.firstOrNull { it.mapId == m.mapId }?.players?.firstOrNull { it.characterId == m.characterId } ?: return
+        applySeamPlayer(current.copy(position = m.position))
+    }
+
+    /** A monster across a border only moved: updates what is shown of it and where it is drawn. */
+    private fun applySeamNpcMove(m: ServerPacket.NpcMoved) {
+        val current = seamMaps.firstOrNull { it.mapId == m.mapId }?.npcs?.firstOrNull { it.instanceId == m.instanceId } ?: return
+        applySeamNpc(
+            current.copy(
+                tileX = m.tileX, tileY = m.tileY, direction = m.direction, subPixel = m.subPixel, pixelX = m.pixelX, pixelY = m.pixelY, wanderX = m.wanderX, wanderY = m.wanderY
+            )
+        )
+    }
+
+    private fun syncSeamVisual(visuals: MutableMap<String, EntityVisualSmoothing>, key: String, px: Float, py: Float, dir: Direction, snapImmediately: Boolean = false) {
         val existing = visuals[key]
-        if (existing == null || hypot((existing.renderPixelX - px).toDouble(), (existing.renderPixelY - py).toDouble()) > 96.0) {
+        if (existing == null || snapImmediately || hypot((existing.renderPixelX - px).toDouble(), (existing.renderPixelY - py).toDouble()) > 96.0) {
             visuals[key] = EntityVisualSmoothing(px, py, px, py, dir, isMoving = false)
         } else {
             existing.targetPixelX = px
@@ -1381,6 +1713,7 @@ class ClientWorldState {
             )
             playerVisuals[ch.id]?.let { vis ->
                 vis.isMoving = true
+                vis.moveGraceTimer = MOVE_GRACE_SECONDS
                 vis.walkCycleTimer += 0.12f
             }
         }
@@ -1397,6 +1730,21 @@ class ClientWorldState {
     }
 
     /** Where one [step] from [from] lands on [map] under the server's rules (a blocked step only turns the player). */
+    /**
+     * In a seamless world a step past the edge of the active map is predicted too, onto the neighbouring map that lies there, so the
+     * hero keeps walking across the border instead of stopping until the server answers. True when tile [tile] (in the active map's
+     * coordinates, possibly outside it) is a walkable tile of the active map or of a neighbour.
+     */
+    private fun openAcrossBorder(active: MapDefinition, tile: TileCoord): Boolean {
+        if (active.isInBounds(tile)) return active.getCell(tile)?.attribute !is TileAttribute.Blocked
+        for ((id, offset) in neighborOffsets) {
+            val other = neighborMaps[id] ?: continue
+            val cell = other.getCell(tile.x - offset.x, tile.y - offset.y) ?: continue
+            return cell.attribute !is TileAttribute.Blocked
+        }
+        return false
+    }
+
     private fun predictStep(from: WorldPosition, step: ClientPacket.MoveInput, map: MapDefinition): WorldPosition {
         val ts = map.tileSize
         val direction = step.direction
@@ -1412,9 +1760,12 @@ class ClientWorldState {
                 val candTy = kotlin.math.floor((candPy + ts * 0.5f) / ts).toInt()
                 val candCoord = TileCoord(candTx, candTy)
                 val npcBlocked = npcsOnMap.values.any { it.isAlive && it.tileX == candTx && it.tileY == candTy }
-                val ok = map.isInBounds(candCoord) &&
-                    (candCoord == from.tileCoord ||
-                        (map.canTraverse(from.tileCoord, candCoord, dir, isNpc = false, depletedResources = depleted) && !npcBlocked))
+                val ok = if (map.isInBounds(candCoord) && map.isInBounds(from.tileCoord)) {
+                    candCoord == from.tileCoord ||
+                        (map.canTraverse(from.tileCoord, candCoord, dir, isNpc = false, depletedResources = depleted) && !npcBlocked)
+                } else {
+                    candCoord == from.tileCoord || openAcrossBorder(map, candCoord)
+                }
                 return if (ok) from.copy(tileX = candTx, tileY = candTy, pixelX = candPx, pixelY = candPy, direction = direction) else null
             }
             // Same rule as the server: a blocked diagonal slides along whichever single axis is open.
@@ -1427,9 +1778,9 @@ class ClientWorldState {
         } else {
             val targetCoord = from.tileCoord.step(direction)
             val npcBlocked = npcsOnMap.values.any { it.isAlive && it.tileX == targetCoord.x && it.tileY == targetCoord.y }
-            if (map.isInBounds(targetCoord) &&
-                map.canTraverse(from.tileCoord, targetCoord, direction, isNpc = false, depletedResources = depleted) &&
-                !npcBlocked
+            if ((if (map.isInBounds(targetCoord) && map.isInBounds(from.tileCoord)) {
+                    map.canTraverse(from.tileCoord, targetCoord, direction, isNpc = false, depletedResources = depleted) && !npcBlocked
+                } else openAcrossBorder(map, targetCoord))
             ) {
                 from.withTile(targetCoord.x, targetCoord.y, ts, direction)
             } else {
@@ -1466,8 +1817,12 @@ class ClientWorldState {
         for (n in npcsOnMap.values) {
             if (n.tileX == tileX && n.tileY == tileY) {
                 npcVisuals[n.instanceId]?.takeIf { it.actionState == null }?.triggerAction(SpriteState.HURT, HURT_DURATION)
+                npcHitFlash[n.instanceId] = 0.11f
             }
         }
+        // The local player being struck jolts the screen.
+        val me = localCharacter
+        if (me != null && me.position.tileX == tileX && me.position.tileY == tileY) addShake(4.5f)
     }
 
     /** Plays a short client-side visual action pose ([SpriteState.ATTACK], [SpriteState.HARVEST], [SpriteState.CAST]) on the local hero. */
@@ -1503,11 +1858,15 @@ class ClientWorldState {
     fun triggerLocalPickup(): Boolean {
         val ch = localCharacter ?: return false
         val vis = playerVisuals[ch.id] ?: return false
-        if (vis.actionState != null) return false
-        // Only games whose sprite sheets have a harvest column: without one the pose would fall back to a walk cycle.
-        if ((gameDefinition?.sprites?.stateFrames?.get(SpriteState.HARVEST) ?: 0) <= 0) return false
-        if (!AutoLootModel.lootInReach(groundItemsOnMap, ch.id, ch.position.mapId, ch.position.tileX, ch.position.tileY, gameDefinition?.gameplayTuning?.pickupRangeTiles ?: com.morgana.domain.sim.GROUND_PICKUP_RANGE_TILES)) return false
-        vis.triggerAction(SpriteState.HARVEST, PICKUP_POSE_SECONDS)
+        if (vis.actionState == SpriteState.PICKUP) return false
+        val frames = gameDefinition?.sprites?.stateFrames
+        val pickupState = when {
+            (frames?.get(SpriteState.PICKUP) ?: 0) > 0 -> SpriteState.PICKUP
+            (frames?.get(SpriteState.HARVEST) ?: 0) > 0 -> SpriteState.HARVEST
+            else -> return false
+        }
+        if (!AutoLootModel.lootInReach(groundItemsInView(), ch.id, ch.position.mapId, ch.position.tileX, ch.position.tileY, gameDefinition?.gameplayTuning?.pickupRangeTiles ?: com.morgana.domain.sim.GROUND_PICKUP_RANGE_TILES)) return false
+        vis.triggerAction(pickupState, PICKUP_POSE_SECONDS)
         return true
     }
 
@@ -1589,6 +1948,23 @@ class ClientWorldState {
             if (cb.remainingSeconds <= 0f) cbIter.remove()
         }
 
+        val fxIter = skillFx.iterator()
+        while (fxIter.hasNext()) {
+            val fx = fxIter.next()
+            fx.elapsed += deltaSeconds
+            // A warning ends with the monster that made it (it died, left or was stunned and the cancel was missed).
+            if (fx.finished || (fx.isTelegraph && fx.sourceId.isNotEmpty() && npcsOnMap[fx.sourceId]?.isAlive != true)) fxIter.remove()
+        }
+        if (npcHitFlash.isNotEmpty()) {
+            val flashIter = npcHitFlash.entries.iterator()
+            while (flashIter.hasNext()) {
+                val e = flashIter.next()
+                e.setValue(e.value - deltaSeconds)
+                if (e.value <= 0f) flashIter.remove()
+            }
+        }
+        if (shake > 0f) shake = (shake - deltaSeconds * 26f).coerceAtLeast(0f)
+
         val shotIter = spellShots.iterator()
         while (shotIter.hasNext()) {
             val shot = shotIter.next()
@@ -1627,6 +2003,14 @@ class ClientWorldState {
                 vis.actionDuration = 0f
             }
         }
+        if (vis.spinDuration > 0f) {
+            vis.spinTimer += deltaSeconds
+            if (vis.spinTimer >= vis.spinDuration) { vis.spinDuration = 0f; vis.spinTimer = 0f }
+        }
+        if (vis.hopDuration > 0f) {
+            vis.hopTimer += deltaSeconds
+            if (vis.hopTimer >= vis.hopDuration) { vis.hopDuration = 0f; vis.hopTimer = 0f; vis.hopPeak = 0f }
+        }
         if (vis.leapDuration > 0f) {
             vis.leapTimer += deltaSeconds
             val t = (vis.leapTimer / vis.leapDuration).coerceIn(0f, 1f)
@@ -1648,16 +2032,35 @@ class ClientWorldState {
         if (dist <= 0.5f) {
             vis.renderPixelX = vis.targetPixelX
             vis.renderPixelY = vis.targetPixelY
-            vis.isMoving = false
+            if (vis.moveGraceTimer > 0f) {
+                vis.moveGraceTimer = (vis.moveGraceTimer - deltaSeconds).coerceAtLeast(0f)
+                if (vis.moveGraceTimer > 0f) {
+                    vis.walkCycleTimer += deltaSeconds
+                } else {
+                    vis.isMoving = false
+                }
+            } else {
+                vis.isMoving = false
+            }
         } else {
             vis.isMoving = true
+            vis.moveGraceTimer = MOVE_GRACE_SECONDS
             vis.walkCycleTimer += deltaSeconds
-            if (dist <= maxStep) {
+            // While a skill's leap hop is in the air the sprite keeps up with the server (which carries the character across in a few
+            // ticks) instead of crawling at walking speed, so it arrives with the jump rather than rushing in after it.
+            // A long gap is a dash, pull or knockback the server carried out in a tick or two: close it fast (about a fifth of a second)
+            // instead of crawling at walking speed, which looked like the monster blinking across the field.
+            val step = when {
+                vis.hopDuration > 0f -> maxOf(maxStep, dist * (deltaSeconds * 28f).coerceAtMost(1f))
+                dist > 40f -> maxOf(maxStep, dist * (deltaSeconds * 14f).coerceAtMost(1f))
+                else -> maxStep
+            }
+            if (dist <= step) {
                 vis.renderPixelX = vis.targetPixelX
                 vis.renderPixelY = vis.targetPixelY
             } else {
-                vis.renderPixelX += (dx / dist) * maxStep
-                vis.renderPixelY += (dy / dist) * maxStep
+                vis.renderPixelX += (dx / dist) * step
+                vis.renderPixelY += (dy / dist) * step
             }
         }
     }

@@ -111,6 +111,24 @@
                         }
                     ]
                 },
+                "telegraphTicks": {
+                    "type": "integer"
+                },
+                "telegraphKind": {
+                    "type": "string"
+                },
+                "telegraphRadiusPixels": {
+                    "type": "integer"
+                },
+                "telegraphLengthPixels": {
+                    "type": "integer"
+                },
+                "telegraphRangeTiles": {
+                    "type": "integer"
+                },
+                "telegraphDamagePercent": {
+                    "type": "integer"
+                },
                 "schemaVersion": {
                     "type": "integer"
                 }

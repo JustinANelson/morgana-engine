@@ -47,6 +47,10 @@ data class GameDefinition(
     val townGate: TownGateDefinition? = null,
     /** Optional per-weapon-type proficiency progression; null or `enabled = false` disables proficiencies. */
     val weaponProficiency: WeaponProficiencyConfig? = null,
+    /** Optional per-action-skill mastery progression; null or `enabled = false` disables skill mastery. */
+    val skillMastery: SkillMasteryConfig? = null,
+    /** Optional food-fueled offline training & daily-capped online AFK training; null or `enabled = false` disables it. */
+    val training: TrainingConfig? = null,
     /** Optional donation-ranked nobility; null disables it. See [NobilityDefinition]. */
     val nobility: NobilityDefinition? = null,
     /** Optional Battle Power summary number; null disables it. See [BattlePowerDefinition]. */
@@ -102,7 +106,9 @@ data class GameDefinition(
     /** A SAFE / PvE / PvP stance each character chooses, over the PK mode. See [CombatStanceDefinition]. */
     val combatStance: CombatStanceDefinition? = null,
     /** How much a map keeps supplied (monster respawns, resource regrowth) by how many players are on it. See [PopulationScalingDefinition]. */
-    val populationScaling: PopulationScalingDefinition? = null
+    val populationScaling: PopulationScalingDefinition? = null,
+    /** One continuous world: maps that name a `worldX`/`worldY` meet at any edge or corner with no warp or reload. See [com.morgana.domain.map.WorldLayoutDefinition]. */
+    val worldLayout: com.morgana.domain.map.WorldLayoutDefinition? = null
 ) {
     /** The passive of class [classId], or none. */
     fun passiveOf(classId: Int): ClassPassive = classPassives[classId] ?: ClassPassive.NONE
@@ -445,8 +451,38 @@ data class UiProfile(
     /** Party button and window (`P`). */
     val party: Boolean = true,
     /** Floating essence/spirit orbs fly from slain enemies to the player and visually accrue XP on arrival. */
-    val xpOrbs: Boolean = false
+    val xpOrbs: Boolean = false,
+    /**
+     * Where the action buttons go: `classic` (the bottom hotbar on a keyboard, a button grid on touch) or `ring` (a large
+     * Attack button with four round skill buttons in an arc, a potion and a Dodge button, the same on every platform).
+     */
+    val layout: String = UiLayout.CLASSIC
 )
+
+/** The values of [UiProfile.layout]. */
+object UiLayout {
+    const val CLASSIC = "classic"
+    const val RING = "ring"
+    val ALL = listOf(CLASSIC, RING)
+
+    /** Genres whose default HUD and mobile controls use the ring layout (`ActionRing` + circular frames + floating joystick). */
+    val RING_GENRES: Set<String> = setOf(
+        com.morgana.domain.sim.SystemTags.RPG,
+        com.morgana.domain.sim.SystemTags.ROGUELIKE
+    )
+
+    /** Game tags that imply the ring layout when a `game.json` omits its `ui` section. */
+    val RING_DEFAULT_TAGS: Set<String> = setOf(
+        "rpg", "orpg", "mmorpg", "roguelike", "dungeon-crawler", "dungeon_crawler", "dungeon"
+    )
+
+    /** Default HUD layout for a genre tag ([com.morgana.domain.sim.SystemTags]). */
+    fun defaultForGenre(genre: String?): String = if (genre in RING_GENRES) RING else CLASSIC
+
+    /** Default HUD layout inferred from a game's `tags` when `ui` is omitted. */
+    fun defaultForTags(tags: Iterable<String>): String =
+        if (tags.any { it.lowercase() in RING_DEFAULT_TAGS }) RING else CLASSIC
+}
 
 /** Logical animation states supported by multi-state character and NPC sprite sheets. */
 @Serializable
@@ -472,7 +508,15 @@ enum class SpriteState {
 
     /** A short flinch when the character takes damage. 0 frames falls back to idle. */
     @SerialName("hurt")
-    HURT
+    HURT,
+
+    /** Reaching down to pick up ground loot. 0 frames falls back to walk/harvest. */
+    @SerialName("pickup")
+    PICKUP,
+
+    /** Mounted riding pose (frame 0 = seated idle, full range = riding gait). 0 frames falls back to walk. */
+    @SerialName("ride")
+    RIDE
 }
 
 /** Where a sprite cell attaches to the map tile an entity occupies. */

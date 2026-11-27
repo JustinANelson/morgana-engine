@@ -36,6 +36,8 @@ class MapPropertiesPanel(stage: Stage, private val theme: EditorTheme, private v
     private val lightField = VisTextField()
     private val borderFields = linkedMapOf("North" to VisTextField(), "South" to VisTextField(), "East" to VisTextField(), "West" to VisTextField())
     private val borderNames = linkedMapOf<String, VisLabel>()
+    private val worldXField = VisTextField()
+    private val worldYField = VisTextField()
     private val widthField = VisTextField()
     private val heightField = VisTextField()
 
@@ -88,6 +90,17 @@ class MapPropertiesPanel(stage: Stage, private val theme: EditorTheme, private v
             root.add(row).growX().row()
         }
 
+        root.add(theme.heading("World position")).growX().padTop(6f).row()
+        val worldNote = theme.muted("Seamless worlds: the tile this map's top left corner holds in the shared world grid. Leave blank for a map that is not part of it.")
+        worldNote.setWrap(true)
+        root.add(worldNote).growX().minWidth(0f).row()
+        val worldRow = VisTable()
+        worldRow.add(theme.text("X")).padRight(4f)
+        worldRow.add(worldXField).width(64f)
+        worldRow.add(theme.text("Y")).padLeft(10f).padRight(4f)
+        worldRow.add(worldYField).width(64f)
+        root.add(worldRow).left().fill(false, false).row()
+
         root.add(theme.heading("Size")).growX().padTop(8f).row()
         val sizeRow = VisTable()
         sizeRow.add(theme.text("W")).padRight(4f)
@@ -117,7 +130,7 @@ class MapPropertiesPanel(stage: Stage, private val theme: EditorTheme, private v
         val refresh = object : ChangeListener() {
             override fun changed(event: ChangeEvent?, actor: Actor?) { refreshHints() }
         }
-        (listOf(nameField, bgmField, lightField, widthField, heightField) + borderFields.values).forEach { it.addListener(refresh) }
+        (listOf(nameField, bgmField, lightField, widthField, heightField, worldXField, worldYField) + borderFields.values).forEach { it.addListener(refresh) }
         moralBox.addListener(refresh)
         zoneBox.addListener(refresh)
         interiorCheck.addListener(refresh)
@@ -158,6 +171,8 @@ class MapPropertiesPanel(stage: Stage, private val theme: EditorTheme, private v
         borderFields.getValue("South").text = v.south
         borderFields.getValue("East").text = v.east
         borderFields.getValue("West").text = v.west
+        worldXField.text = v.worldX
+        worldYField.text = v.worldY
         widthField.text = size.first.toString()
         heightField.text = size.second.toString()
         refreshHints()
@@ -174,7 +189,9 @@ class MapPropertiesPanel(stage: Stage, private val theme: EditorTheme, private v
         north = borderFields.getValue("North").text,
         south = borderFields.getValue("South").text,
         east = borderFields.getValue("East").text,
-        west = borderFields.getValue("West").text
+        west = borderFields.getValue("West").text,
+        worldX = worldXField.text,
+        worldY = worldYField.text
     )
 
     private fun knownIds(): Set<Int> = worldState.catalog.maps.map { it.id }.toSet()

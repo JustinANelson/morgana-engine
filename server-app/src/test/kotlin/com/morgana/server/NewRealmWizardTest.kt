@@ -217,4 +217,12 @@ class NewRealmWizardTest {
         assertEquals("cozy-island", realmInfo.gameId)
         assertEquals(listOf("Adventurer"), realmInfo.classes.map { it.name })
     }
+
+    @Test
+    fun `creating a realm with uiLayout ring writes ring layout into game json`(@TempDir tmp: Path) {
+        val library = lib(tmp)
+        val info = library.create(RealmBlueprint("Dungeon Realm", RealmTemplate.BLANK, uiLayout = com.morgana.domain.game.UiLayout.RING))
+        val c = boot(info.dataDir)
+        assertEquals(com.morgana.domain.game.UiLayout.RING, c.simulation.game.definition.ui?.layout)
+    }
 }

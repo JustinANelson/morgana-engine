@@ -39,8 +39,14 @@ class GameTheme private constructor(initial: EditorPalette) : Disposable {
     /** Small toggle for filter chips: tight padding, muted until chosen. */
     val chipStyle = VisTextButton.VisTextButtonStyle()
 
-    /** High-emphasis primary action button (Enter Realm, Next, Create Realm). */
+    /** High-emphasis primary action button (Enter Realm, Next, Create Realm, Equip, Buy, Craft). */
     val primaryButtonStyle = VisTextButton.VisTextButtonStyle()
+
+    /** Compact bronze-beveled title-bar chrome button ('-' minimize and 'X' close). */
+    val titleButtonStyle = VisTextButton.VisTextButtonStyle()
+
+    /** Destructive action button (confirm Drop, Delete, Leave). */
+    val dangerButtonStyle = VisTextButton.VisTextButtonStyle()
     val labelStyle = Label.LabelStyle()
     val mutedLabelStyle = Label.LabelStyle()
     val accentLabelStyle = Label.LabelStyle()
@@ -53,25 +59,63 @@ class GameTheme private constructor(initial: EditorPalette) : Disposable {
     fun dynamic(build: (EditorTheme, EditorPalette) -> Drawable): Drawable =
         SwappableDrawable(build).also { it.refresh(base, palette); dynamics += it }
 
-    val cardBackground: Drawable = dynamic { t, p -> t.bordered(p.panelRaised, p.border, padX = 10f, padY = 8f) }
+    val cardBackground: Drawable = dynamic { t, p ->
+        val rim = Color(
+            (p.border.r * 0.65f + p.accent.r * 0.35f).coerceIn(0f, 1f),
+            (p.border.g * 0.65f + p.accent.g * 0.35f).coerceIn(0f, 1f),
+            (p.border.b * 0.65f + p.accent.b * 0.35f).coerceIn(0f, 1f),
+            1f
+        )
+        t.beveledPanel(p.panelRaised, highlight = rim, padX = 8f, padY = 6f)
+    }
+
+    /** Recessed dark well for item grids, equipment rows, and stat groups. */
+    val insetWellBackground: Drawable = dynamic { t, p ->
+        t.recessedSlot(p.background, p.border, padX = 5f, padY = 5f)
+    }
 
     /** Card background for a selected list entry (realm, world, character). */
-    val selectedCardBackground: Drawable = dynamic { t, p -> t.bordered(p.accentDim, p.accent, padX = 10f, padY = 8f) }
+    val selectedCardBackground: Drawable = dynamic { t, p ->
+        t.beveledPanel(p.accentDim, highlight = p.accent, cornerAccent = p.strong, padX = 10f, padY = 8f)
+    }
 
     init {
         fill(base, palette)
     }
 
+    private fun titleHeight(): Int = if (HudWindow.touchMode) 40 else 28
+
+    private fun titleColor(p: EditorPalette): Color = Color(
+        (p.text.r * 0.62f + p.accent.r * 0.38f).coerceIn(0f, 1f),
+        (p.text.g * 0.62f + p.accent.g * 0.38f).coerceIn(0f, 1f),
+        (p.text.b * 0.62f + p.accent.b * 0.38f).coerceIn(0f, 1f),
+        1f
+    )
+
+    private fun bronzeRim(p: EditorPalette): Color = Color(
+        (p.border.r * 0.55f + p.accent.r * 0.45f).coerceIn(0f, 1f),
+        (p.border.g * 0.55f + p.accent.g * 0.45f).coerceIn(0f, 1f),
+        (p.border.b * 0.55f + p.accent.b * 0.45f).coerceIn(0f, 1f),
+        1f
+    )
+
     private fun fill(t: EditorTheme, p: EditorPalette) {
+        val rim = bronzeRim(p)
+        val th = titleHeight()
+        val titleCol = titleColor(p)
         copy(t.windowStyle, windowStyle)
-        windowStyle.background = t.withTitleBar(t.beveledPanel(p.panel, highlight = p.border, padX = 6f, padY = 6f))
+        windowStyle.titleFontColor = titleCol
+        windowStyle.background = t.windowFrame(fill = p.panel, highlight = rim, titleHeight = th, padX = 8f, padY = 8f)
         modalWindowStyle.titleFont = t.font
-        modalWindowStyle.titleFontColor = p.text
-        modalWindowStyle.background = t.withTitleBar(t.beveledPanel(p.panel, highlight = p.accent, padX = 8f, padY = 8f))
+        modalWindowStyle.titleFontColor = titleCol
+        modalWindowStyle.background = t.windowFrame(fill = p.panel, highlight = p.accent, cornerAccent = p.strong, titleHeight = th, padX = 10f, padY = 10f)
         copy(t.buttonStyle, buttonStyle)
-        buttonStyle.up = t.beveledPanel(p.panelRaised, highlight = p.border, padX = 10f, padY = 4f)
-        buttonStyle.over = t.beveledPanel(p.hover, highlight = p.accent, padX = 10f, padY = 4f)
+        buttonStyle.up = t.beveledPanel(p.panelRaised, highlight = rim, padX = 10f, padY = 4f)
+        buttonStyle.over = t.beveledPanel(p.hover, highlight = p.accent, cornerAccent = p.strong, padX = 10f, padY = 4f)
         buttonStyle.down = t.beveledPanel(p.pressed, highlight = p.border, padX = 10f, padY = 4f)
+        buttonStyle.checked = t.beveledPanel(p.accentDim, highlight = p.accent, cornerAccent = p.strong, padX = 10f, padY = 4f)
+        buttonStyle.checkedOver = t.beveledPanel(p.accentDim, highlight = p.strong, cornerAccent = p.strong, padX = 10f, padY = 4f)
+        buttonStyle.disabled = t.beveledPanel(p.panel, highlight = p.border, padX = 10f, padY = 4f)
         copy(t.tabStyle, tabStyle)
         chipStyle.apply {
             font = t.font
@@ -80,11 +124,13 @@ class GameTheme private constructor(initial: EditorPalette) : Disposable {
             downFontColor = p.text
             checkedFontColor = p.strong
             checkedOverFontColor = p.strong
-            up = t.bordered(p.panelRaised, p.border, padX = 6f, padY = 1f)
-            over = t.bordered(p.hover, p.accent, padX = 6f, padY = 1f)
-            down = t.bordered(p.pressed, p.border, padX = 6f, padY = 1f)
-            checked = t.bordered(p.accentDim, p.accent, padX = 6f, padY = 1f)
-            checkedOver = t.bordered(p.accentDim, p.accent, padX = 6f, padY = 1f)
+            disabledFontColor = p.textDisabled
+            up = t.beveledPanel(p.panelRaised, highlight = p.border, padX = 8f, padY = 2f)
+            over = t.beveledPanel(p.hover, highlight = rim, padX = 8f, padY = 2f)
+            down = t.beveledPanel(p.pressed, highlight = p.border, padX = 8f, padY = 2f)
+            checked = t.beveledPanel(p.accentDim, highlight = p.accent, cornerAccent = p.strong, padX = 8f, padY = 2f)
+            checkedOver = t.beveledPanel(p.accentDim, highlight = p.accent, cornerAccent = p.strong, padX = 8f, padY = 2f)
+            disabled = t.beveledPanel(p.panel, highlight = p.border, padX = 8f, padY = 2f)
         }
         primaryButtonStyle.apply {
             font = t.font
@@ -97,12 +143,35 @@ class GameTheme private constructor(initial: EditorPalette) : Disposable {
             down = t.beveledPanel(p.pressed, highlight = p.accent, padX = 12f, padY = 5f)
             disabled = t.beveledPanel(p.panel, highlight = p.border, padX = 12f, padY = 5f)
         }
+        titleButtonStyle.apply {
+            font = t.font
+            fontColor = titleCol
+            overFontColor = p.strong
+            downFontColor = p.strong
+            disabledFontColor = p.textDisabled
+            up = t.beveledPanel(p.panelRaised, highlight = rim, padX = 4f, padY = 1f)
+            over = t.beveledPanel(p.hover, highlight = p.accent, cornerAccent = p.strong, padX = 4f, padY = 1f)
+            down = t.beveledPanel(p.pressed, highlight = p.border, padX = 4f, padY = 1f)
+        }
+        val dangerFill = Color((p.danger.r * 0.36f).coerceIn(0f, 1f), (p.danger.g * 0.22f).coerceIn(0f, 1f), (p.danger.b * 0.22f).coerceIn(0f, 1f), 1f)
+        val dangerHover = Color((p.danger.r * 0.55f).coerceIn(0f, 1f), (p.danger.g * 0.28f).coerceIn(0f, 1f), (p.danger.b * 0.28f).coerceIn(0f, 1f), 1f)
+        dangerButtonStyle.apply {
+            font = t.font
+            fontColor = p.strong
+            overFontColor = p.strong
+            downFontColor = p.strong
+            disabledFontColor = p.textDisabled
+            up = t.beveledPanel(dangerFill, highlight = p.danger, cornerAccent = p.strong, padX = 10f, padY = 4f)
+            over = t.beveledPanel(dangerHover, highlight = p.strong, cornerAccent = p.strong, padX = 10f, padY = 4f)
+            down = t.beveledPanel(p.pressed, highlight = p.danger, padX = 10f, padY = 4f)
+            disabled = t.beveledPanel(p.panel, highlight = p.border, padX = 10f, padY = 4f)
+        }
         labelStyle.font = t.font; labelStyle.fontColor = p.text
         mutedLabelStyle.font = t.font; mutedLabelStyle.fontColor = p.textMuted
         accentLabelStyle.font = t.font; accentLabelStyle.fontColor = p.accent
-        separatorStyle.background = t.separatorStyle.background
-        tooltipStyle.background = t.tooltipStyle.background
-        separatorStyle.thickness = t.separatorStyle.thickness
+        separatorStyle.background = t.solid(rim)
+        tooltipStyle.background = t.beveledPanel(p.panelRaised, highlight = p.accent, padX = 8f, padY = 6f)
+        separatorStyle.thickness = 1
     }
 
     private fun copy(from: Window.WindowStyle, to: Window.WindowStyle) {

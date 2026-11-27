@@ -151,6 +151,26 @@
                         }
                     ]
                 },
+                "skillMastery": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.game.SkillMasteryConfig"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "training": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.game.TrainingConfig"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
                 "nobility": {
                     "anyOf": [
                         {
@@ -416,6 +436,16 @@
                     "anyOf": [
                         {
                             "$ref": "#/$defs/com.morgana.domain.game.PopulationScalingDefinition"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "worldLayout": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.map.WorldLayoutDefinition"
                         },
                         {
                             "type": "null"
@@ -867,6 +897,9 @@
                 },
                 "xpOrbs": {
                     "type": "boolean"
+                },
+                "layout": {
+                    "type": "string"
                 }
             },
             "required": [],
@@ -1182,6 +1215,47 @@
                 "id",
                 "name"
             ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.SkillMasteryConfig": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "maxLevel": {
+                    "type": "integer"
+                },
+                "usesPerLevel": {
+                    "type": "integer"
+                },
+                "damagePercentPerLevel": {
+                    "type": "integer"
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.TrainingConfig": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "offlineHitsPerMinute": {
+                    "type": "integer"
+                },
+                "onlineAfkDailyLimitMinutes": {
+                    "type": "integer"
+                },
+                "onlineAfkHitsPerMinute": {
+                    "type": "integer"
+                },
+                "onlineAfkIntervalTicks": {
+                    "type": "integer"
+                }
+            },
+            "required": [],
             "additionalProperties": false
         },
         "com.morgana.domain.game.NobilityDefinition": {
@@ -2151,6 +2225,15 @@
                 },
                 "actionTargetRadiusPixels": {
                     "type": "integer"
+                },
+                "healthOrbChancePercent": {
+                    "type": "integer"
+                },
+                "healthOrbHealPercent": {
+                    "type": "integer"
+                },
+                "healthOrbLifeTicks": {
+                    "type": "integer"
                 }
             },
             "required": [],
@@ -2392,6 +2475,25 @@
                     "items": {
                         "type": "integer"
                     }
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.map.WorldLayoutDefinition": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "neighborMarginTiles": {
+                    "type": "integer"
+                },
+                "seamViewTiles": {
+                    "type": "integer"
+                },
+                "borderWarnings": {
+                    "type": "boolean"
                 }
             },
             "required": [],

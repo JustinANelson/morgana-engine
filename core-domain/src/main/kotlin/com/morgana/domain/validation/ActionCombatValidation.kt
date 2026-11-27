@@ -226,7 +226,16 @@ internal class ActionCombatValidation(
 
         // Every skill must be reachable from neutral.
         val reached = HashSet<Int>()
-        val queue = ArrayDeque(w.entries.map { it.skillId }.filter { it in nodes })
+        // The skill an empowered character uses in place of a plain one is reached through the momentum meter, not an entry.
+        if (w.empowerSkillId != 0 && w.empoweredSkillId != 0) {
+            if (w.entries.none { it.skillId == w.empowerSkillId }) {
+                error(col, id, "/empowerSkillId", "unknown_reference", "empowerSkillId ${w.empowerSkillId} is not the skill of any entry")
+            }
+            if (w.empoweredSkillId !in cat.actionSkills) {
+                error(col, id, "/empoweredSkillId", "missing_reference", "empoweredSkillId ${w.empoweredSkillId} is not an action skill")
+            }
+        }
+        val queue = ArrayDeque((w.entries.map { it.skillId } + listOf(w.empoweredSkillId).filter { w.empowerSkillId != 0 }).filter { it in nodes })
         while (queue.isNotEmpty()) {
             val skillId = queue.removeFirst()
             if (!reached.add(skillId)) continue

@@ -53,7 +53,8 @@ data class RealmSpec(
     val disabledModuleKeys: Set<String> = emptySet(),
     val noCombat: Boolean = false,
     val modernSprites: Boolean = false,
-    val enabledModuleKeys: Set<String> = emptySet()
+    val enabledModuleKeys: Set<String> = emptySet(),
+    val uiLayout: String? = null
 )
 
 /**

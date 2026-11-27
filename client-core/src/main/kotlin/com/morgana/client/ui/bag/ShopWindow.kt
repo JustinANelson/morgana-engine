@@ -71,7 +71,8 @@ class ShopWindow(
             quantity = 1
             refresh()
         }
-        add(tabBar).growX().row()
+        add(tabBar).growX().padBottom(2f).row()
+        add(com.morgana.client.ui.GameTheme.shared.divider()).growX().padBottom(3f).row()
         add(body).grow().row()
         rebuildTabs()
         rebuildBody()
@@ -129,11 +130,20 @@ class ShopWindow(
 
     private fun rebuildBody() {
         body.clearChildren()
-        val gridW = winW * 0.5f
-        val detailW = winW - gridW - 36f
-        val bodyH = winH - 96f
-        body.add(BagUi.scroll(grid, stage)).width(gridW).height(bodyH).top()
-        body.add(BagUi.scroll(detail, stage)).width(detailW).height(bodyH).top().padLeft(6f).row()
+        val theme = com.morgana.client.ui.GameTheme.shared
+        val gridW = ((winW - 32f) * 0.52f).coerceAtLeast(170f)
+        val detailW = (winW - 32f - gridW - 6f).coerceAtLeast(150f)
+        grid.columns = ((gridW - 22f) / cell).toInt().coerceIn(3, 9)
+        val gridWell = VisTable().apply {
+            background = theme.insetWellBackground
+            add(BagUi.scroll(grid, this@ShopWindow.stage)).grow().top()
+        }
+        val detailCard = VisTable().apply {
+            background = theme.cardBackground
+            add(BagUi.scroll(detail, this@ShopWindow.stage)).grow().top()
+        }
+        body.add(gridWell).width(gridW).growY().top()
+        body.add(detailCard).width(detailW).growY().top().padLeft(6f).row()
     }
 
     private fun currencyName(itemMap: Map<Int, ItemDefinition>, id: Int = shop.currencyItemId): String = itemMap[id]?.name ?: "gold"
@@ -199,7 +209,7 @@ class ShopWindow(
         when {
             !affordable -> detail.add(BagUi.wrapped("You cannot afford this.", Tone.BAD)).width(textW).left().padLeft(4f).padTop(4f).row()
             !room -> detail.add(BagUi.wrapped("Your bag is full.", Tone.BAD)).width(textW).left().padLeft(4f).padTop(4f).row()
-            else -> detail.add(BagUi.button("Buy back") {
+            else -> detail.add(BagUi.primaryButton("Buy back") {
                 netClient.send(ClientPacket.ShopBuyback(shop.id, index))
             }).height(BagUi.buttonHeight).left().padLeft(4f).padTop(4f).row()
         }
@@ -253,7 +263,7 @@ class ShopWindow(
             addQuantityRow(TradeMath.quantityChoices(max), "Max")
             val total = price * quantity
             detail.add(BagUi.label("Total $total ${currencyName(itemMap, currencyId)}", Tone.NEUTRAL)).left().padLeft(4f).padTop(4f).row()
-            detail.add(BagUi.button("Buy ${if (quantity > 1) "$quantity" else ""}".trim()) {
+            detail.add(BagUi.primaryButton("Buy ${if (quantity > 1) "$quantity" else ""}".trim()) {
                 netClient.send(ClientPacket.ShopBuy(shop.id, index, quantity))
             }).height(BagUi.buttonHeight).left().padLeft(4f).padTop(4f).row()
         } else {
@@ -314,7 +324,7 @@ class ShopWindow(
         detail.add(BagUi.label("Shop pays $each ${currencyName(itemMap)}" + if (stack.amount > 1) " each" else "", Tone.NEUTRAL)).left().padLeft(4f).padTop(4f).row()
         addQuantityRow(TradeMath.sellChoices(stack.amount), "All")
         detail.add(BagUi.label("You get ${each * quantity} ${currencyName(itemMap)}", Tone.GOOD)).left().padLeft(4f).padTop(4f).row()
-        detail.add(BagUi.button("Sell ${if (quantity > 1) "$quantity" else ""}".trim()) {
+        detail.add(BagUi.primaryButton("Sell ${if (quantity > 1) "$quantity" else ""}".trim()) {
             netClient.send(ClientPacket.ShopSell(shop.id, slot, quantity))
         }).height(BagUi.buttonHeight).left().padLeft(4f).padTop(4f).row()
         addBulkSellButtons(ch, itemMap)

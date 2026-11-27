@@ -53,7 +53,6 @@ class InventoryPanel(
     private val grid = ItemGrid(assets, BagUi.font, cell)
     private val detail = VisTable()
     private val body = VisTable()
-    private val tabBar = VisTable()
     private val goldCell = VisTable()
     private val capacityHolder = VisTable()
     /** Holds the buttons for the selected item under its stats, so they stay in view however long the stats run. */
@@ -61,13 +60,11 @@ class InventoryPanel(
     private var lastSignature: List<Any?>? = null
 
     init {
-        defaults().pad(3f)
-        grid.columns = (((winW * 0.5f) - 28f) / cell).toInt().coerceIn(4, 10)
+        defaults().pad(2f)
+        grid.columns = (((winW * 0.54f) - 36f) / cell).toInt().coerceIn(4, 10)
         grid.onTap = ::onCellTapped
 
-        add(tabBar).growX().row()
         add(body).grow().row()
-        rebuildTabs()
         rebuildBody()
         refresh()
     }
@@ -120,15 +117,9 @@ class InventoryPanel(
 
     // ---- structure ----
 
-    private fun rebuildTabs() {
-        tabBar.clearChildren()
-        tabBar.add().growX()
-        tabBar.add(goldCell).right().padRight(4f)
-    }
-
     private fun rebuildBody() {
         body.clearChildren()
-        // Toolbar: filter chips and Sort, above the grid only so the item details can use the full height on the right.
+        // Full-width toolbar: filter chips, Sort, Compact, and right-aligned Gold so nothing overflows narrow panes.
         val toolbar = VisTable()
         val group = ButtonGroup<com.kotcrab.vis.ui.widget.VisTextButton>().also { it.setMinCheckCount(1); it.setMaxCheckCount(1) }
         for (f in BagFilter.entries) {
@@ -139,37 +130,43 @@ class InventoryPanel(
         toolbar.add(BagUi.button("Sort") { netClient.send(ClientPacket.SortInventory); movingFrom = null })
             .height(BagUi.buttonHeight).padLeft(4f)
         toolbar.add(BagUi.chip("Compact", compactMode) { compactMode = !compactMode; rebuildBody(); refresh() })
-            .height(BagUi.buttonHeight).padLeft(4f)
+            .height(BagUi.buttonHeight).padLeft(3f)
         toolbar.add().growX()
+        toolbar.add(goldCell).right().padLeft(6f).padRight(2f)
 
-        val bodyH = winH - 168f
-        val toolbarH = BagUi.buttonHeight + 4f
+        val gridWell = VisTable().apply {
+            background = theme.insetWellBackground
+            add(BagUi.scroll(grid, uiStage)).grow().top()
+        }
+
         if (compactMode) {
-            grid.columns = ((winW - 36f) / cell).toInt().coerceIn(6, 12)
-            val fullW = winW - 24f
-            val col = VisTable()
-            col.add(toolbar).growX().height(toolbarH).top().padBottom(4f).row()
-            col.add(BagUi.scroll(grid, uiStage)).width(fullW).height(bodyH - 54f).top().row()
-            col.add(capacityHolder).left().padTop(4f).row()
-            col.add(actionsHolder).left().padTop(4f).row()
-            body.add(col).width(fullW).height(bodyH + toolbarH).top().row()
+            grid.columns = ((winW - 44f) / cell).toInt().coerceIn(5, 12)
+            body.add(toolbar).growX().padBottom(4f).row()
+            body.add(gridWell).grow().padBottom(4f).row()
+            val footer = VisTable().apply {
+                add(capacityHolder).left().growX()
+                add(actionsHolder).right()
+            }
+            body.add(footer).growX().row()
         } else {
-            grid.columns = (((winW * 0.5f) - 28f) / cell).toInt().coerceIn(4, 10)
-            val gridW = winW * 0.5f
-            val detailW = winW - gridW - 36f
-            // Room taken by the Character window's title bar and tab bar, this panel's gold row and the toolbar. If the
-            // content is taller than the window, the layout overflows upward and the tab bar slides under the title bar.
+            val gridW = ((winW - 32f) * 0.54f).coerceAtLeast(180f)
+            val detailW = (winW - 32f - gridW - 6f).coerceAtLeast(150f)
+            grid.columns = ((gridW - 22f) / cell).toInt().coerceIn(4, 10)
+
+            body.add(toolbar).growX().colspan(2).padBottom(4f).row()
+
             val leftCol = VisTable()
-            leftCol.add(toolbar).growX().height(toolbarH).top().padBottom(4f).row()
-            leftCol.add(BagUi.scroll(grid, uiStage)).width(gridW).height(bodyH - 24f).top().row()
-            leftCol.add(capacityHolder).left().padTop(4f).row()
+            leftCol.add(gridWell).grow().row()
+            leftCol.add(capacityHolder).left().growX().padTop(4f).row()
+
             val detailCard = VisTable().apply {
                 background = theme.cardBackground
                 add(BagUi.scroll(detail, uiStage)).grow().top().row()
-                add(actionsHolder).left().pad(2f, 4f, 4f, 4f)
+                add(theme.divider()).growX().padTop(3f).padBottom(3f).row()
+                add(actionsHolder).growX().left().pad(2f, 2f, 2f, 2f)
             }
-            body.add(leftCol).width(gridW).height(bodyH + toolbarH).top()
-            body.add(detailCard).width(detailW).height(bodyH + toolbarH).top().padLeft(6f).row()
+            body.add(leftCol).width(gridW).growY().top()
+            body.add(detailCard).width(detailW).growY().top().padLeft(6f).row()
         }
     }
 
@@ -259,10 +256,12 @@ class InventoryPanel(
         detail.top().left()
         val slot = selectedSlot
         val stack = slot?.let { ch.inventory.getSlot(it) }
-        val textW = winW - winW * 0.5f - 70f
+        val gridW = ((winW - 32f) * 0.54f).coerceAtLeast(180f)
+        val detailW = (winW - 32f - gridW - 6f).coerceAtLeast(150f)
+        val textW = (detailW - 32f).coerceAtLeast(110f)
         if (slot == null || stack == null) {
-            detail.add(BagUi.wrapped(emptyHint ?: "Tap an item to see what it does.", Tone.MUTED)).width(textW).pad(6f).left().row()
-            detail.add(BagUi.wrapped("Sort tidies the bag. Use the tabs to show only gear, things to use, or materials.", Tone.MUTED)).width(textW).pad(6f).left().row()
+            detail.add(BagUi.wrapped(emptyHint ?: "Tap an item to inspect its stats and actions.", Tone.MUTED)).width(textW).pad(6f).left().row()
+            detail.add(BagUi.wrapped("Use the filter tabs to sort gear, consumables, or materials.", Tone.MUTED)).width(textW).pad(6f).left().row()
             return
         }
         val def = itemMap[stack.itemId]
@@ -273,12 +272,17 @@ class InventoryPanel(
 
         val loot = worldState.gameDefinition?.loot
         val header = VisTable()
-        header.add(BagUi.icon(assets, def.iconId, 40f)).size(40f).padRight(8f)
+        val iconSocket = VisTable().apply {
+            background = theme.insetWellBackground
+            add(BagUi.icon(assets, def.iconId, 36f)).size(36f)
+        }
+        header.add(iconSocket).size(46f).padRight(8f)
         val title = VisTable()
-        title.add(BagUi.rarityTitle(ItemRollText.displayName(def, stack.rolls, loot, stack.plus), ItemRollText.color(stack.rolls, loot))).width(textW - 56f).left().row()
+        title.add(BagUi.rarityTitle(ItemRollText.displayName(def, stack.rolls, loot, stack.plus), ItemRollText.color(stack.rolls, loot))).width((textW - 58f).coerceAtLeast(60f)).left().row()
         title.add(BagUi.label(ItemInfo.rolledKind(def, stack.rolls, loot) + if (stack.amount > 1) "  x${stack.amount}" else "", Tone.MUTED)).left()
         header.add(title).left()
         detail.add(header).left().pad(4f).row()
+        detail.add(theme.divider()).width(textW).padLeft(4f).padBottom(4f).left().row()
 
         if (def.description.isNotBlank()) detail.add(BagUi.wrapped(def.description, Tone.MUTED)).width(textW).left().padLeft(4f).padBottom(4f).row()
 
@@ -291,47 +295,57 @@ class InventoryPanel(
         for (line in ItemInfo.describe(def, worn, itemMap, names(), me, stack.rolls, stack.plus, spellMap, worldState.gameDefinition?.gearRules ?: com.morgana.domain.item.GearRules.DEFAULT) + compare + extraLines) {
             detail.add(BagUi.wrapped(line.text, line.tone)).width(textW).left().padLeft(4f).row()
         }
-        detail.add(BagUi.label("Value ${ItemRollText.price(def.price, stack.rolls, loot, stack.plus)}" + if (stack.amount > 1) " each" else "", Tone.MUTED)).left().padLeft(4f).padTop(2f).row()
+        detail.add(BagUi.label("Value: ${ItemRollText.price(def.price, stack.rolls, loot, stack.plus)}" + if (stack.amount > 1) " each" else "", Tone.MUTED)).left().padLeft(4f).padTop(4f).row()
 
-        // Actions.
-        val actions = VisTable()
+        // Actions organized into two tidy rows so buttons never overflow the detail card.
+        val row1 = VisTable()
         val usable = equippedSlot != null || def.type == ItemType.CONSUMABLE || def.type == ItemType.SPELL_SCROLL
         if (usable) {
             val label = if (equippedSlot != null) "Equip" else "Use"
-            actions.add(BagUi.button(label, enabled = !ItemInfo.unmet(def, me, spellMap)) { netClient.send(ClientPacket.UseInventorySlot(slot)) })
-                .height(BagUi.buttonHeight).padRight(4f).padBottom(4f)
+            row1.add(BagUi.primaryButton(label, enabled = !ItemInfo.unmet(def, me, spellMap)) { netClient.send(ClientPacket.UseInventorySlot(slot)) })
+                .height(BagUi.buttonHeight).padRight(4f)
         }
         if (equippedSlot != null && equippedSlot != EquipmentSlot.AMMO && !def.isEffectivelyStackable && stack.plus < ItemStack.MAX_PLUS) {
-            actions.add(BagUi.button(if (mergingFrom == slot) "Cancel merge" else "Merge") {
+            row1.add(BagUi.button(if (mergingFrom == slot) "Cancel" else "Merge") {
                 mergingFrom = if (mergingFrom == slot) null else slot
                 movingFrom = null
                 refresh()
-            }).height(BagUi.buttonHeight).padRight(4f).padBottom(4f)
+            }).height(BagUi.buttonHeight).padRight(4f)
         }
         if (def.type == ItemType.CONSUMABLE || def.type == ItemType.SPELL_SCROLL) {
-            actions.add(BagUi.button("Quickbar") { onAssignHotbar(HotbarSlotAction.UseItem(def.id, def.name, def.iconId)) })
-                .height(BagUi.buttonHeight).padRight(4f).padBottom(4f)
+            row1.add(BagUi.button("Quickbar") { onAssignHotbar(HotbarSlotAction.UseItem(def.id, def.name, def.iconId)) })
+                .height(BagUi.buttonHeight).padRight(4f)
         }
+
+        val row2 = VisTable()
         val canMove = filter == BagFilter.ALL && query.isBlank()
-        actions.add(BagUi.button(if (movingFrom == slot) "Cancel move" else "Move", enabled = canMove) {
+        row2.add(BagUi.button(if (movingFrom == slot) "Cancel" else "Move", enabled = canMove) {
             movingFrom = if (movingFrom == slot) null else slot
             mergingFrom = null
             refresh()
-        }).height(BagUi.buttonHeight).padRight(4f).padBottom(4f)
-        actions.row()
+        }).height(BagUi.buttonHeight).padRight(4f)
         if (stack.amount > 1) {
-            actions.add(BagUi.button("Drop 1") { netClient.send(ClientPacket.DropInventorySlot(slot, 1)) }).height(BagUi.buttonHeight).padRight(4f)
+            row2.add(BagUi.button("Drop 1") { netClient.send(ClientPacket.DropInventorySlot(slot, 1)) })
+                .height(BagUi.buttonHeight).padRight(4f)
         }
         val confirming = confirmDropSlot == slot
-        actions.add(BagUi.button(if (confirming) "Really drop?" else if (stack.amount > 1) "Drop all" else "Drop") {
-            if (confirmDropSlot == slot) {
+        val dropText = if (confirming) "Confirm Drop?" else if (stack.amount > 1) "Drop All" else "Drop"
+        val dropBtn = if (confirming) {
+            BagUi.dangerButton(dropText) {
                 netClient.send(ClientPacket.DropInventorySlot(slot, stack.amount))
                 confirmDropSlot = null
-            } else {
+            }
+        } else {
+            BagUi.button(dropText) {
                 confirmDropSlot = slot
                 refresh()
             }
-        }).height(BagUi.buttonHeight)
+        }
+        row2.add(dropBtn).height(BagUi.buttonHeight)
+
+        val actions = VisTable()
+        if (row1.children.size > 0) actions.add(row1).left().padBottom(4f).row()
+        actions.add(row2).left()
         actionsHolder.add(actions).left()
     }
 }

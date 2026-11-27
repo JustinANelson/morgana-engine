@@ -182,16 +182,47 @@ object CastleKit {
     }
 
     private fun squareTower(c: Cv, w: Int, h: Int) {
-        val base = h - 6
-        c.shadow(w / 2, h - 4, w / 2 - 6, 4)
-        CitadelProps.masonry(c, 14, w - 14, 44, base)
-        c.rect(8, 34, w - 8, 46, tone(stone, 3)); c.rect(8, 46, w - 8, 47, tone(stone, 1)); c.rect(8, 34, w - 8, 34, tone(stone, 4))
-        for (x in 12..w - 14 step 8) c.rect(x, 40, x + 3, 46, tone(dark, 2))
-        CitadelProps.merlons(c, 8, w - 8, 34)
-        for (sy in intArrayOf(60, 96)) c.rect(w / 2 - 1, sy, w / 2, sy + 14, tone(dark, 1))
-        CitadelProps.lancet(c, w / 2, 104, 120, 4, glassWarm)
-        c.rect(14, 118, 22, base, tone(stone, 4)); c.rect(w - 22, 118, w - 14, base, tone(stone, 1))
-        finial(c, w - 14, 28)
+        val base = h - 2
+        val cx = w / 2
+        val x0 = 6
+        val x1 = w - 7
+        val plinthTop = base - 16
+        CitadelProps.masonry(c, x0, x1, 44, plinthTop)
+        for (by in intArrayOf(76, 108)) {
+            for (x in x0..x1) {
+                c.px(x, by, tone(stone, if (x < cx - 8) 4 else 3))
+                c.px(x, by + 1, tone(stone, 1))
+            }
+        }
+        // Battered plinth.
+        for (y in plinthTop..base) {
+            val flare = ((y - plinthTop) / 5).coerceAtMost(3)
+            val px0 = (x0 - flare).coerceAtLeast(2)
+            val px1 = (x1 + flare).coerceAtMost(w - 3)
+            for (x in px0..px1) {
+                val t = (x - cx).toFloat() / (w / 2f)
+                val course = (y - plinthTop) / 5
+                val joint = (y - plinthTop) % 5 == 0 || (x + course * 7) % 14 == 0
+                val i = if (t < -0.25f) 3 else if (t < 0.35f) 2 else 1
+                c.px(x, y, if (x == px0 || x == px1 || y == base) tone(stone, 0) else if (joint) tone(stone, maxOf(0, i - 2)) else tone(stone, i))
+            }
+        }
+        c.rect(x0 - 2, plinthTop - 2, x1 + 2, plinthTop - 1, tone(stone, 4))
+        c.rect(x0 - 2, plinthTop, x1 + 2, plinthTop, tone(stone, 1))
+        // Corbelled parapet and crenellation.
+        c.rect(3, 34, w - 4, 46, tone(stone, 3))
+        c.rect(3, 34, w - 4, 35, tone(stone, 4))
+        c.rect(3, 46, w - 4, 47, tone(stone, 1))
+        for (x in 8..w - 12 step 10) c.rect(x, 40, x + 4, 45, tone(dark, 1))
+        CitadelProps.merlons(c, 3, w - 4, 34)
+        c.rect(cx - 20, 58, cx - 19, 72, tone(dark, 1))
+        c.rect(cx + 19, 58, cx + 20, 72, tone(dark, 1))
+        CitadelProps.lancet(c, cx, 88, 108, 5, glassWarm)
+        c.rect(cx - 1, 118, cx, 132, tone(dark, 1))
+        // Centered banner on pole.
+        c.rect(cx, 6, cx, 24, tone(wood, 1))
+        for (k in 0..8) c.rect(cx + 1, 7 + k, cx + 14 - k / 2, 7 + k, tone(banner, if (k == 0) 4 else 3))
+        c.rect(cx + 1, 7, cx + 14, 7, tone(banner, 0))
     }
 
     private fun greatGate(c: Cv, w: Int, h: Int) {

@@ -73,6 +73,17 @@ class TipServiceTest {
     }
 
     @Test
+    fun `an account signed in with a dev ticket gets no tips and keeps its history`(@TempDir dir: Path) {
+        val r = Rig(dir)
+        r.hero("c1")
+        r.service.quietAccount("acct")
+        r.service.onLogin("c1")
+        r.service.onDeath("c1")
+        assertTrue(r.sent.isEmpty(), "automation is not shown tip windows")
+        assertTrue(r.store.accounts.findById("acct")!!.tipsSeen.isEmpty(), "nothing was marked as seen, so a normal login still shows them")
+    }
+
+    @Test
     fun `what an account has seen survives a restart`(@TempDir dir: Path) {
         val r = Rig(dir)
         r.hero("c1")

@@ -71,7 +71,10 @@ class AreaOfInterestTest {
         return s
     }
 
-    private fun Fake.updatesAbout(id: String) = sent.filterIsInstance<ServerPacket.PlayerUpdated>().count { it.player.characterId == id }
+    /** Times this client was told about player [id]: a whole snapshot, or a compact move inside a batch. */
+    private fun Fake.updatesAbout(id: String) =
+        sent.filterIsInstance<ServerPacket.PlayerUpdated>().count { it.player.characterId == id } +
+            sent.filterIsInstance<ServerPacket.EntityMoves>().sumOf { m -> m.players.count { it.characterId == id } }
 
     @Test
     fun `players hear about changes only near them, and learn the far side when their area moves`(@TempDir tmp: Path) {
@@ -87,9 +90,11 @@ class AreaOfInterestTest {
         place(idFar, 75, 10)
 
         c.handleClientPacket(a, ClientPacket.FaceDirection(Direction.LEFT)) // settles where the player was last announced
+        repeat(2) { c.stepServerTick() } // moves reach viewers in a batch every second tick
         val nearBefore = near.updatesAbout(ida)
         val farBefore = far.updatesAbout(ida)
         c.handleClientPacket(a, ClientPacket.FaceDirection(Direction.UP))
+        repeat(2) { c.stepServerTick() }
         assertEquals(nearBefore + 1, near.updatesAbout(ida), "a neighbour hears that the player turned")
         assertEquals(farBefore, far.updatesAbout(ida), "someone two cells away does not")
 

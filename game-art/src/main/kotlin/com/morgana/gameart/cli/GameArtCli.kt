@@ -1,6 +1,7 @@
 package com.morgana.gameart.cli
 
 import com.morgana.gameart.export.RoguelikeGameExporter
+import com.morgana.gameart.export.LpcRpgArtExporter
 import com.morgana.gameart.sprite.RpgEnemyKind
 import com.morgana.gameart.sprite.RpgNpcKind
 import com.morgana.gameart.sprite.RpgSpriteGenerator
@@ -153,6 +154,13 @@ object GameArtCli {
                     }
                     0
                 }
+                "lpc-rpg" -> {
+                    val gameDir = Paths.get(flags["game"] ?: throw IllegalArgumentException("--game <dir> is required"))
+                    val seed = flags["seed"]?.toLong() ?: 1337L
+                    val written = LpcRpgArtExporter.exportAll(gameDir, seed)
+                    out.println("Exported ${written.size} LPC RPG sprite/paperdoll/icon assets to $gameDir/assets")
+                    0
+                }
                 else -> {
                     err.println("Unknown command: $cmd")
                     printUsage(err)
@@ -223,6 +231,7 @@ object GameArtCli {
             Usage:
               whiteriver <players|enemies|items|skills|all> [--size 16] [--frames 2] [--directions] [--style classic_rpg] [--seed 1337] [--out <dir>] [--split]
               roguelike export --game <game folder> [--only tilesets,bodies,gear,npcs,enemies,icons] [--seed 4040]
+              lpc-rpg --game <game folder> [--seed 1337]
               sprites <npcs|enemies|all> [--size 32] [--height 48] [--actions <list>] [--out <dir>] [--split]
             """.trimIndent()
         )

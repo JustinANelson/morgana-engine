@@ -3,6 +3,7 @@ package com.morgana.domain.sim
 import com.morgana.domain.combat.actionDefence
 import com.morgana.domain.content.NpcBehavior
 import com.morgana.domain.content.SpellTargetType
+import com.morgana.domain.entity.MapNpcInstance
 import com.morgana.domain.entity.MapProjectile
 import com.morgana.domain.game.VitalRole
 import com.morgana.domain.map.MapDefinition
@@ -38,7 +39,17 @@ internal fun WorldSimulation.slotIsSupplied(map: com.morgana.domain.map.MapDefin
 }
 
 internal fun WorldSimulation.tickNpcs(out: MutableList<WorldSimulationEvent>) {
+    val firstEvent = out.size
+    tickNpcsInner(out)
+    // Monsters work with ghosts of players across a border (see CrossBorder.kt): leave the world with only real positions in it.
+    restoreBorderGhosts()
+    fixBorderGhostEvents(out, firstEvent)
+    borderGhosts.clear()
+}
+
+private fun WorldSimulation.tickNpcsInner(out: MutableList<WorldSimulationEvent>) {
     val npcRules = game.definition.combat.npcs
+    val freeNpcMovement = modules.isEnabled(com.morgana.domain.sim.OptionalModule.SUB_TILE_MOVEMENT)
     // How many live monsters already hunt each player (for combat.npcs.maxAttackersPerTarget).
     val hunters = HashMap<String, Int>()
     if (npcRules.maxAttackersPerTarget > 0) {
@@ -51,6 +62,7 @@ internal fun WorldSimulation.tickNpcs(out: MutableList<WorldSimulationEvent>) {
         val map = maps[mapId] ?: continue
         beforeMonstersOf(mapId, npcList, out)
         for (idx in npcList.indices) {
+            restoreBorderGhosts() // the previous monster may have written back a ghost it fought
             var npc = npcList[idx]
             val npcDef = npcs[npc.npcId] ?: continue
             // A pet is moved by PetSystem, not by the monster AI.
@@ -136,7 +148,13 @@ internal fun WorldSimulation.tickNpcs(out: MutableList<WorldSimulationEvent>) {
             }
 
             if (npc.statusEffects.any { it.preventsActions }) {
-                // Stunned or frozen: a spell being wound up is interrupted.
+                // Stunned or frozen: a telegraphed strike is cancelled, and so is a spell being wound up.
+                if (npc.windUpUntil > 0L) {
+                    npc = npc.copy(windUpUntil = 0L)
+                    out.add(WorldSimulationEvent.SkillEffect(mapId, npc.tileX, npc.tileY, "telegraph_cancel", 0f, 0f, 0f, 0f, 0f, 0, 1, npc.instanceId))
+                    out.add(WorldSimulationEvent.NpcUpdated(npc))
+                }
+                // (a spell being wound up is interrupted below)
                 if (npc.castingSpellId != null) npc = npc.copy(castingSpellId = null, castFinishTick = 0L)
                 npcList[idx] = npc
                 continue
@@ -146,20 +164,28 @@ internal fun WorldSimulation.tickNpcs(out: MutableList<WorldSimulationEvent>) {
             val effectiveBehavior = if (variant?.forceAggro == true) NpcBehavior.ATTACK_ON_SIGHT else npcDef.behavior
             // A SLOW status stretches both walking and striking by its magnitude in percent (the strongest one counts).
             val slowPercent = npc.statusEffects.filter { it.type == StatusEffectType.SLOW }.maxOfOrNull { it.magnitude.coerceIn(0, 300) } ?: 0
-            val effectiveMoveSpeedTicks = ((npcDef.moveSpeedTicks * (variant?.moveSpeedPercent ?: 100) / 100) * (100 + slowPercent) / 100).coerceAtLeast(4)
+            val canMove = npcDef.moveSpeedTicks > 0
+            val canAttack = npcDef.attackDamage > 0
+            val effectiveMoveSpeedTicks = if (canMove) {
+                ((npcDef.moveSpeedTicks * (variant?.moveSpeedPercent ?: 100) / 100) * (100 + slowPercent) / 100).coerceAtLeast(4)
+            } else {
+                0
+            }
             val effectiveAttackSpeedTicks = npcDef.attackSpeedTicks * (100 + slowPercent) / 100
-            val effectiveAttackDamage = ((npcDef.attackDamage * (variant?.attackPercent ?: 100)) / 100).coerceAtLeast(1)
+            val effectiveAttackDamage = if (canAttack) {
+                ((npcDef.attackDamage * (variant?.attackPercent ?: 100)) / 100).coerceAtLeast(1)
+            } else {
+                0
+            }
 
             // Acquire target if ATTACK_ON_SIGHT or GUARD
-            var targetPlayer = npc.targetEntityId?.let { players[it] }?.takeIf {
-                it.isAlive(game.lifeVitalId) && it.position.mapId == mapId
-            }
+            var targetPlayer = npc.targetEntityId?.let { playerOnOrNear(mapId, it) }?.takeIf { it.isAlive(game.lifeVitalId) }
             if (targetPlayer == null && (effectiveBehavior == NpcBehavior.ATTACK_ON_SIGHT || effectiveBehavior == NpcBehavior.GUARD)) {
                 val huntCap = npcRules.maxAttackersPerTarget
-                targetPlayer = players.values.firstOrNull { p ->
+                // The players on this map and, in a seamless world, those just across its borders (as ghosts in this map's coordinates).
+                targetPlayer = playersOnOrNear(mapId).firstOrNull { p ->
                     p.isAlive(game.lifeVitalId) &&
                         (huntCap <= 0 || (hunters[p.id] ?: 0) < huntCap) &&
-                        p.position.mapId == mapId &&
                         (
                             effectiveBehavior == NpcBehavior.ATTACK_ON_SIGHT ||
                                 p.isRoguePk ||
@@ -205,8 +231,9 @@ internal fun WorldSimulation.tickNpcs(out: MutableList<WorldSimulationEvent>) {
                 npcList[idx] = npc
             }
 
-            // Leash check
-            if (npc.tileCoord.manhattanDistanceTo(TileCoord(npc.homeX, npc.homeY)) > npcDef.leashRangeTiles) {
+            // Leash check (Chebyshev distance so diagonal kiting gets full leash range)
+            val distFromHome = maxOf(kotlin.math.abs(npc.tileX - npc.homeX), kotlin.math.abs(npc.tileY - npc.homeY))
+            if (distFromHome > npcDef.leashRangeTiles) {
                 npc = npc.copy(
                     tileX = npc.homeX,
                     tileY = npc.homeY,
@@ -409,8 +436,20 @@ internal fun WorldSimulation.tickNpcs(out: MutableList<WorldSimulationEvent>) {
                 }
 
                 if (!castSpellThisTick) {
-                    if (dist == 1) {
-                        if (currentTick - npc.lastAttackTick >= effectiveAttackSpeedTicks && currentTick >= npc.strikeReadyTick && !targetPlayer.isFlying) {
+                    val strikeReady = canAttack && currentTick - npc.lastAttackTick >= effectiveAttackSpeedTicks && currentTick >= npc.strikeReadyTick && !targetPlayer.isFlying
+                    if (npc.windUpUntil > 0L) {
+                        // Winding up a telegraphed strike: stand and wait, then hit whoever is in the zone.
+                        if (currentTick >= npc.windUpUntil) {
+                            npc = resolveTelegraph(npc, npcDef, map, (effectiveAttackDamage * npcDef.telegraphDamagePercent / 100).coerceAtLeast(1), out)
+                            npcList[idx] = npc
+                            out.add(WorldSimulationEvent.NpcUpdated(npc))
+                        }
+                    } else if (npcDef.telegraphTicks > 0 && dist <= maxOf(1, npcDef.telegraphRangeTiles) && strikeReady) {
+                        npc = beginTelegraph(npc, npcDef, targetPlayer, map.tileSize, out)
+                        npcList[idx] = npc
+                        out.add(WorldSimulationEvent.NpcUpdated(npc))
+                    } else if (dist == 1) {
+                        if (strikeReady) {
                             val dir = Direction.fromDelta(
                                 targetPlayer.position.tileX - npc.tileX,
                                 targetPlayer.position.tileY - npc.tileY
@@ -418,49 +457,24 @@ internal fun WorldSimulation.tickNpcs(out: MutableList<WorldSimulationEvent>) {
                             npc = npc.copy(direction = dir, lastAttackTick = currentTick)
                             npcList[idx] = npc
 
-                            val playerAttrs = targetPlayer.effectiveAttributes(game, items)
-                            val playerArmor = armorOf(targetPlayer)
-                            val npcAttrs = game.definition.attributes.associate { a ->
-                                a.id to (npcDef.attributes[a.id] ?: a.base)
-                            }
-                            val dmg = actionDefence(targetPlayer, npc.tileX, npc.tileY, game.meleeDamage(
-                                attacker = npcAttrs,
-                                defender = playerAttrs,
-                                weapon = effectiveAttackDamage.toLong(),
-                                armor = playerArmor.toLong(),
-                                crit = false
-                            ).toInt().coerceAtLeast(1), out)
-                            val lifeId = game.lifeVitalId
-                            val curLife = targetPlayer.vitals[lifeId]?.cur ?: 0
-                            val newLife = (curLife - dmg).coerceAtLeast(0)
-                            var updatedTarget = targetPlayer.copy(
-                                vitals = targetPlayer.vitals + (lifeId to (targetPlayer.vitals[lifeId]?.copy(cur = newLife) ?: VitalState(newLife, newLife)))
-                            )
-                            out.add(
-                                WorldSimulationEvent.FloatingTextEmitted(
-                                    mapId = mapId,
-                                    tileX = updatedTarget.position.tileX,
-                                    tileY = updatedTarget.position.tileY,
-                                    text = "-$dmg",
-                                    category = "DAMAGE",
-                                    colorHex = "#EF4444"
-                                )
-                            )
-                            updatedTarget = afterStruck(updatedTarget, out)
-                            if (!updatedTarget.isAlive(lifeId)) {
-                                updatedTarget = handlePlayerDeath(updatedTarget, map, out)
-                                npc = npc.copy(targetEntityId = null)
-                                npcList[idx] = npc
-                            } else if (updatedTarget.reflectPercent > 0) {
-                                npc = reflectOntoNpc(npc, npcDef, updatedTarget, dmg, out)
-                                npcList[idx] = npc
-                            }
-                            players[updatedTarget.id] = updatedTarget
-                            out.add(WorldSimulationEvent.CharacterUpdated(updatedTarget))
+                            npc = npcStrike(npc, npcDef, targetPlayer, effectiveAttackDamage, map, out)
+                            npcList[idx] = npc
                         }
                     } else if (npcRules.casterKeepsDistance && npcAttackSpell != null && dist <= npcAttackSpell.rangeTiles) {
                         // A caster in spell range holds its ground while the spell recharges instead of closing to melee.
-                    } else if (currentTick - npc.lastMoveTick >= effectiveMoveSpeedTicks && !npc.statusEffects.any { it.preventsMovement }) {
+                    } else if (canMove && freeNpcMovement && !npc.statusEffects.any { it.preventsMovement }) {
+                        // Free pixel movement: walk straight at the target every tick instead of hopping tile by tile.
+                        val ts = map.tileSize
+                        val moved = stepNpcPixels(
+                            npc, map, targetPlayer.position.pixelX + ts / 2f, targetPlayer.position.pixelY + ts / 2f,
+                            ts.toFloat() / effectiveMoveSpeedTicks
+                        )
+                        if (moved !== npc) {
+                            npc = moved.copy(lastMoveTick = currentTick)
+                            npcList[idx] = npc
+                            out.add(WorldSimulationEvent.NpcUpdated(npc))
+                        }
+                    } else if (canMove && !freeNpcMovement && currentTick - npc.lastMoveTick >= effectiveMoveSpeedTicks && !npc.statusEffects.any { it.preventsMovement }) {
                         val dx = (targetPlayer.position.tileX - npc.tileX).coerceIn(-1, 1)
                         val dy = (targetPlayer.position.tileY - npc.tileY).coerceIn(-1, 1)
                         val stepDir = if (abs(targetPlayer.position.tileX - npc.tileX) >= abs(targetPlayer.position.tileY - npc.tileY)) {
@@ -481,7 +495,30 @@ internal fun WorldSimulation.tickNpcs(out: MutableList<WorldSimulationEvent>) {
                         }
                     }
                 }
+            } else if (canMove && freeNpcMovement && effectiveBehavior in setOf(NpcBehavior.PASSIVE, NpcBehavior.ATTACK_ON_SIGHT, NpcBehavior.FRIENDLY_ROAM)) {
+                // Idle with free movement: amble towards a spot near home, then stand a while before picking the next.
+                val ts = map.tileSize
+                if (npc.wanderX >= 0) {
+                    val goalX = npc.wanderX * ts + ts / 2f
+                    val goalY = npc.wanderY * ts + ts / 2f
+                    val moved = stepNpcPixels(npc, map, goalX, goalY, ts.toFloat() / effectiveMoveSpeedTicks * 0.6f)
+                    val arrived = moved === npc || kotlin.math.hypot((moved.bodyX(ts) + ts / 2f - goalX).toDouble(), (moved.bodyY(ts) + ts / 2f - goalY).toDouble()) < 2.0
+                    val next = (if (moved !== npc) moved.copy(lastMoveTick = currentTick) else npc).let { if (arrived) it.copy(wanderX = -1, wanderY = -1) else it }
+                    if (next != npc) {
+                        npc = next
+                        npcList[idx] = npc
+                        out.add(WorldSimulationEvent.NpcUpdated(npc))
+                    }
+                } else if (currentTick - npc.lastMoveTick >= effectiveMoveSpeedTicks * 3L && rng.rollBasisPoints(2000)) {
+                    val dir = Direction.CARDINALS[rng.nextInt(Direction.CARDINALS.size)]
+                    val nextTile = npc.tileCoord.step(dir)
+                    if (nextTile.manhattanDistanceTo(TileCoord(npc.homeX, npc.homeY)) <= 4 && canNpcStepTo(map, npc.tileCoord, nextTile, dir)) {
+                        npc = npc.copy(wanderX = nextTile.x, wanderY = nextTile.y, lastMoveTick = currentTick)
+                        npcList[idx] = npc
+                    }
+                }
             } else if (
+                canMove &&
                 effectiveBehavior in setOf(NpcBehavior.PASSIVE, NpcBehavior.ATTACK_ON_SIGHT, NpcBehavior.FRIENDLY_ROAM) &&
                 currentTick - npc.lastMoveTick >= effectiveMoveSpeedTicks * 3L &&
                 rng.rollBasisPoints(2000)
@@ -506,7 +543,141 @@ internal fun WorldSimulation.tickNpcs(out: MutableList<WorldSimulationEvent>) {
     }
 }
 
+/** Half the width of a monster's body in pixels: how close two bodies may come when monsters move freely. */
+private const val NPC_BODY_RADIUS = 11f
+
+/**
+ * One free-movement step of [npc] towards the point ([goalX], [goalY]) (a body centre, map pixels), [speed] pixels long. A step that
+ * would enter a blocked tile, or a tile another body holds, or crowd another monster or a player, is dropped; a blocked diagonal slides
+ * along whichever axis is open, so monsters walk round corners instead of sticking. Returns [npc] itself when it did not move.
+ */
+internal fun WorldSimulation.stepNpcPixels(npc: MapNpcInstance, map: MapDefinition, goalX: Float, goalY: Float, speed: Float): MapNpcInstance {
+    val ts = map.tileSize
+    val px = npc.bodyX(ts)
+    val py = npc.bodyY(ts)
+    val dx = goalX - (px + ts / 2f)
+    val dy = goalY - (py + ts / 2f)
+    val dist = kotlin.math.sqrt(dx * dx + dy * dy)
+    if (dist < 1f) return npc
+    val step = minOf(speed, dist)
+    val vx = dx / dist * step
+    val vy = dy / dist * step
+    val gap = NPC_BODY_RADIUS * 2f
+    val npcs = mapNpcs[map.id].orEmpty()
+
+    fun attempt(mx: Float, my: Float): MapNpcInstance? {
+        if (mx == 0f && my == 0f) return null
+        val nx = px + mx
+        val ny = py + my
+        val seamless = layout.isPlaced(map.id)
+        if (!seamless && (nx + ts / 2f < 0f || ny + ts / 2f < 0f)) return null
+        val tile = TileCoord(kotlin.math.floor((nx + ts / 2f) / ts).toInt(), kotlin.math.floor((ny + ts / 2f) / ts).toInt())
+        if (tile != npc.tileCoord) {
+            if (!seamless && !map.isInBounds(tile)) return null
+            val dir = Direction.fromDelta((tile.x - npc.tileX).coerceIn(-1, 1), (tile.y - npc.tileY).coerceIn(-1, 1)) ?: return null
+            if (!canNpcStepTo(map, npc.tileCoord, tile, dir)) return null
+        }
+        val ncx = nx + ts / 2f
+        val ncy = ny + ts / 2f
+        // Bodies keep their distance: a step is refused only if it brings it closer than the gap and closer than it already was.
+        fun crowds(ox: Float, oy: Float): Boolean {
+            val before = kotlin.math.hypot((ox - (px + ts / 2f)).toDouble(), (oy - (py + ts / 2f)).toDouble())
+            val after = kotlin.math.hypot((ox - ncx).toDouble(), (oy - ncy).toDouble())
+            return after < gap && after < before
+        }
+        if (npcs.any { it.instanceId != npc.instanceId && it.isAlive && crowds(it.bodyX(ts) + ts / 2f, it.bodyY(ts) + ts / 2f) }) return null
+        if (playersOnOrNear(map.id).any { it.isAlive(game.lifeVitalId) && crowds(it.position.pixelX + ts / 2f, it.position.pixelY + ts / 2f) }) return null
+        val dir = if (kotlin.math.abs(mx) >= kotlin.math.abs(my)) (if (mx >= 0f) Direction.RIGHT else Direction.LEFT) else (if (my >= 0f) Direction.DOWN else Direction.UP)
+        return npc.copy(subPixel = true, pixelX = nx, pixelY = ny, tileX = tile.x, tileY = tile.y, direction = dir)
+    }
+    return attempt(vx, vy) ?: attempt(vx, 0f) ?: attempt(0f, vy) ?: npc
+}
+
+/** One melee strike of [npc] on [target] for [attackDamage] (before the target's defence): damage, armour, defence, death and reflection. Returns the monster afterwards. */
+private fun WorldSimulation.npcStrike(npc: MapNpcInstance, npcDef: com.morgana.domain.content.NpcDefinition, target: com.morgana.domain.entity.CharacterState, attackDamage: Int, map: MapDefinition, out: MutableList<WorldSimulationEvent>): MapNpcInstance {
+    var cur = npc
+    val playerAttrs = target.effectiveAttributes(game, items)
+    val playerArmor = armorOf(target)
+    val npcAttrs = game.definition.attributes.associate { a -> a.id to (npcDef.attributes[a.id] ?: a.base) }
+    val dmg = actionDefence(target, cur.tileX, cur.tileY, game.meleeDamage(
+        attacker = npcAttrs, defender = playerAttrs, weapon = attackDamage.toLong(), armor = playerArmor.toLong(), crit = false
+    ).toInt().coerceAtLeast(1), out)
+    val lifeId = game.lifeVitalId
+    val curLife = target.vitals[lifeId]?.cur ?: 0
+    val newLife = (curLife - dmg).coerceAtLeast(0)
+    var updatedTarget = target.copy(vitals = target.vitals + (lifeId to (target.vitals[lifeId]?.copy(cur = newLife) ?: VitalState(newLife, newLife))))
+    out.add(WorldSimulationEvent.FloatingTextEmitted(mapId = map.id, tileX = updatedTarget.position.tileX, tileY = updatedTarget.position.tileY, text = "-$dmg", category = "DAMAGE", colorHex = "#EF4444"))
+    updatedTarget = afterStruck(updatedTarget, out)
+    if (!updatedTarget.isAlive(lifeId)) {
+        updatedTarget = handlePlayerDeath(updatedTarget, map, out)
+        cur = cur.copy(targetEntityId = null)
+    } else if (updatedTarget.reflectPercent > 0) {
+        cur = reflectOntoNpc(cur, npcDef, updatedTarget, dmg, out)
+    }
+    players[updatedTarget.id] = updatedTarget
+    out.add(WorldSimulationEvent.CharacterUpdated(updatedTarget))
+    return cur
+}
+
+/** Starts a telegraphed strike: the monster stops, its zone is fixed now, and the client is told to draw the warning for the wind-up. */
+private fun WorldSimulation.beginTelegraph(npc: MapNpcInstance, def: com.morgana.domain.content.NpcDefinition, target: com.morgana.domain.entity.CharacterState, ts: Int, out: MutableList<WorldSimulationEvent>): MapNpcInstance {
+    val cx = npc.bodyX(ts) + ts / 2f
+    val cy = npc.bodyY(ts) + ts / 2f
+    val tx = target.position.pixelX + ts / 2f
+    val ty = target.position.pixelY + ts / 2f
+    var ex = tx
+    var ey = ty
+    when (def.telegraphKind) {
+        "lunge" -> {
+            val d = kotlin.math.hypot((tx - cx).toDouble(), (ty - cy).toDouble()).toFloat().coerceAtLeast(1f)
+            val len = def.telegraphLengthPixels.coerceAtLeast(ts).toFloat()
+            ex = cx + (tx - cx) / d * len
+            ey = cy + (ty - cy) / d * len
+        }
+        "slam" -> { ex = cx; ey = cy }
+    }
+    val effect = if (def.telegraphKind == "lunge") "telegraph_line" else "telegraph_circle"
+    out.add(WorldSimulationEvent.SkillEffect(npc.mapId, npc.tileX, npc.tileY, effect, cx, cy, ex, ey, def.telegraphRadiusPixels.toFloat(), 0, def.telegraphTicks, npc.instanceId))
+    val dir = if (kotlin.math.abs(tx - cx) >= kotlin.math.abs(ty - cy)) (if (tx >= cx) Direction.RIGHT else Direction.LEFT) else (if (ty >= cy) Direction.DOWN else Direction.UP)
+    return npc.copy(direction = dir, windUpUntil = currentTick + def.telegraphTicks, windUpX = ex, windUpY = ey)
+}
+
+/** The wind-up is over: a lunge dashes along its line, then every player inside the zone is struck. */
+private fun WorldSimulation.resolveTelegraph(npc: MapNpcInstance, def: com.morgana.domain.content.NpcDefinition, map: MapDefinition, attackDamage: Int, out: MutableList<WorldSimulationEvent>): MapNpcInstance {
+    val ts = map.tileSize
+    val sx = npc.bodyX(ts) + ts / 2f
+    val sy = npc.bodyY(ts) + ts / 2f
+    var cur = npc
+    if (def.telegraphKind == "lunge") {
+        for (i in 0 until 10) {
+            val moved = stepNpcPixels(cur, map, npc.windUpX, npc.windUpY, 18f)
+            if (moved === cur) break
+            cur = moved
+        }
+    }
+    val ex = cur.bodyX(ts) + ts / 2f
+    val ey = cur.bodyY(ts) + ts / 2f
+    val reach = def.telegraphRadiusPixels + 12f
+    val victims = playersOnOrNear(map.id).filter { p ->
+        if (!p.isAlive(game.lifeVitalId) || p.isFlying) false else {
+            val px = p.position.pixelX + ts / 2f
+            val py = p.position.pixelY + ts / 2f
+            when (def.telegraphKind) {
+                "lunge" -> segmentDistance2(sx, sy, ex, ey, px, py) <= reach * reach
+                "slam" -> kotlin.math.hypot((px - ex).toDouble(), (py - ey).toDouble()) <= reach
+                else -> kotlin.math.hypot((px - npc.windUpX).toDouble(), (py - npc.windUpY).toDouble()) <= reach
+            }
+        }
+    }
+    for (v in victims) cur = npcStrike(cur, def, v, attackDamage, map, out)
+    return cur.copy(windUpUntil = 0L, lastAttackTick = currentTick)
+}
+
 internal fun WorldSimulation.canNpcStepTo(map: MapDefinition, from: TileCoord, to: TileCoord, dir: Direction): Boolean {
+    if (!map.isInBounds(to) || !map.isInBounds(from)) {
+        // A step over a border in a seamless world: walkable if the tile on the other side is, and nothing stands on it.
+        return walkableThrough(map, from, to, dir, isNpc = true) && !bodyAtTileThrough(map, to.x, to.y)
+    }
     val unlocked = unlockedDoors[map.id]?.keys ?: emptySet()
     val depleted = mapResources[map.id]?.filterValues { it.depleted }?.keys ?: emptySet()
     if (!map.canTraverse(from, to, dir, isNpc = true, unlockedDoors = unlocked, depletedResources = depleted)) {

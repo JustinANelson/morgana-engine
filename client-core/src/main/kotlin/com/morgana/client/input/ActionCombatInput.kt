@@ -63,6 +63,38 @@ object ActionCombatInput {
         })
 
     fun release(): ClientPacket.CustomAction = ClientPacket.CustomAction("release")
+
+    /**
+     * The action-combat inputs a player can send, shared by the keyboard and the touch buttons so both offer the same set.
+     * [token] is the key part of the input token; a [holdToRelease] button (the guard) is held while its key or button is down
+     * and ends with [release].
+     */
+    enum class Button(val token: String, val label: String, val holdToRelease: Boolean = false) {
+        ATTACK("LMB", "Atk"),
+        HEAVY("RMB", "Alt"),
+        DODGE("SPACE", "Dodge"),
+        GUARD("Q", "Guard", holdToRelease = true),
+        SPECIAL("TAB", "Spc"),
+        /** The free `F` token; the key sends it only when jump is off, so touch shows it only then too. */
+        FREE("F", "F")
+    }
+
+    /**
+     * What a keyboard key does in action combat, or null when it is not an action-combat key: Ctrl attacks, Space dodges, Q
+     * guards, Tab is the special, and F is the free token only when jump is off (otherwise F jumps). The right mouse button
+     * ([Button.HEAVY]) is the one input with no key.
+     */
+    fun buttonForKey(keycode: Int, jumpEnabled: Boolean): Button? = when (keycode) {
+        com.badlogic.gdx.Input.Keys.CONTROL_LEFT, com.badlogic.gdx.Input.Keys.CONTROL_RIGHT -> Button.ATTACK
+        com.badlogic.gdx.Input.Keys.SPACE -> Button.DODGE
+        com.badlogic.gdx.Input.Keys.Q -> Button.GUARD
+        com.badlogic.gdx.Input.Keys.TAB -> Button.SPECIAL
+        com.badlogic.gdx.Input.Keys.F -> if (jumpEnabled) null else Button.FREE
+        else -> null
+    }
+
+    /** A joystick direction as movement axes (-1, 0 or 1; screen y down), the form [token] takes. */
+    fun moveAxes(direction: Direction?): Pair<Int, Int> = if (direction == null) 0 to 0 else direction.dx to direction.dy
 }
 
 /**

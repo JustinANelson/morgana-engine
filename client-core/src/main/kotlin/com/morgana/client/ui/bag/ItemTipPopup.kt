@@ -22,7 +22,7 @@ internal class ItemTipPopup {
         val theme = GameTheme.shared
         val t = VisTable()
         t.touchable = Touchable.disabled
-        t.background = theme.dynamic { b, p -> b.bordered(p.panelRaised, p.accent, padX = 8f, padY = 6f) }
+        t.background = theme.dynamic { b, p -> b.beveledPanel(p.panelRaised, highlight = p.accent, cornerAccent = p.strong, padX = 10f, padY = 8f) }
         t.add(VisLabel(tip.title, theme.accentLabelStyle).also { l -> BagUi.hexColor(tip.titleColor)?.let { l.color = it } }).left().row()
         t.add(BagUi.label(tip.kind, Tone.MUTED)).left().padBottom(3f).row()
         if (tip.description.isNotBlank()) {

@@ -82,7 +82,9 @@ object GameRulesForm {
         FormField("ui.minimap", "Minimap", FormFieldType.BOOL, "true"),
         FormField("ui.chat", "Chat", FormFieldType.BOOL, "true"),
         FormField("ui.party", "Party button and window", FormFieldType.BOOL, "true"),
-        FormField("ui.xpOrbs", "XP orbs fly from slain enemies", FormFieldType.BOOL, "false")
+        FormField("ui.xpOrbs", "XP orbs fly from slain enemies", FormFieldType.BOOL, "false"),
+        FormField("ui.layout", "Action button layout", FormFieldType.CHOICE, "classic", com.morgana.domain.game.UiLayout.ALL,
+            hint = "ring: a large Attack button with four skills, a potion and Dodge around it, on desktop and phones alike.")
     )
 
     private val SYSTEMS = listOf(
@@ -186,7 +188,7 @@ object GameRulesForm {
             "partyXp" to c.partyXpBonusPercent.toString(), "levelScaling" to c.levelOffsetXpScaling.toString(),
             "variants" to c.enemyVariants.joinToString("\n") { v -> cols(v.id, v.label, v.spawnBasisPoints, if (v.forceAggro) "yes" else "no", v.hpPercent, v.attackPercent, v.moveSpeedPercent, v.xpPercent, v.dropRatePercent, v.bonusDropRolls, v.levelBonus, "#" + v.colorHex) },
             "ui.combat" to ui.combat.toString(), "ui.spells" to ui.spells.toString(), "ui.hotbar" to ui.hotbar.toString(),
-            "ui.minimap" to ui.minimap.toString(), "ui.chat" to ui.chat.toString(), "ui.party" to ui.party.toString(), "ui.xpOrbs" to ui.xpOrbs.toString(),
+            "ui.minimap" to ui.minimap.toString(), "ui.chat" to ui.chat.toString(), "ui.party" to ui.party.toString(), "ui.xpOrbs" to ui.xpOrbs.toString(), "ui.layout" to ui.layout,
             "sprint.on" to on(d.sprint?.enabled), "sprint.speed" to sp.speedPercent.toString(), "sprint.vital" to sp.staminaVitalId, "sprint.steps" to sp.stepsPerStamina.toString(),
             "jump.on" to on(d.jump?.enabled), "jump.range" to ju.maxRangeTiles.toString(), "jump.cost" to ju.staminaCost.toString(),
             "jump.vital" to ju.staminaVitalId, "jump.cooldown" to ju.cooldownTicks.toString(),
@@ -274,7 +276,7 @@ object GameRulesForm {
                 enemyVariants = v["variants"]?.let { parseVariants(it, problems) } ?: b.enemyVariants
             ),
             ui = UiProfile(bool("ui.combat", u.combat), bool("ui.spells", u.spells), bool("ui.hotbar", u.hotbar), bool("ui.minimap", u.minimap),
-                bool("ui.chat", u.chat), bool("ui.party", u.party), bool("ui.xpOrbs", u.xpOrbs)).takeUnless { it == UiProfile() && base.ui == null } ?: base.ui,
+                bool("ui.chat", u.chat), bool("ui.party", u.party), bool("ui.xpOrbs", u.xpOrbs), v["ui.layout"] ?: u.layout).takeUnless { it == UiProfile() && base.ui == null } ?: base.ui,
             sprint = if (on("sprint.on")) sp.copy(enabled = true, speedPercent = int("sprint.speed", sp.speedPercent), staminaVitalId = text("sprint.vital", sp.staminaVitalId), stepsPerStamina = int("sprint.steps", sp.stepsPerStamina)) else base.sprint?.takeIf { !it.enabled },
             jump = if (on("jump.on")) ju.copy(enabled = true, maxRangeTiles = int("jump.range", ju.maxRangeTiles), staminaCost = int("jump.cost", ju.staminaCost), staminaVitalId = text("jump.vital", ju.staminaVitalId), cooldownTicks = int("jump.cooldown", ju.cooldownTicks)) else base.jump?.takeIf { !it.enabled },
             ghost = if (on("ghost.on")) gh.copy(enabled = true, autoReleaseTicks = int("ghost.release", gh.autoReleaseTicks), selfReviveAfterTicks = int("ghost.selfAfter", gh.selfReviveAfterTicks), selfRevivePercent = int("ghost.selfPercent", gh.selfRevivePercent), deathWearPoints = int("ghost.wear", gh.deathWearPoints), wipeEndsRun = bool("ghost.wipe", gh.wipeEndsRun)) else base.ghost?.takeIf { !it.enabled },

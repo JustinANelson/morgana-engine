@@ -47,10 +47,13 @@ class BroadcastEfficiencyTest {
         walker.sent.clear()
 
         c.handleClientPacket(walker, ClientPacket.MoveInput(Direction.RIGHT, seq = 1))
-        c.stepServerTick()
+        repeat(2) { c.stepServerTick() } // moves reach watchers in a batch every second tick
 
-        val updates = watcher.sent.filterIsInstance<ServerPacket.PlayerUpdated>().filter { it.player.characterId == walkerId }
-        assertEquals(1, updates.size, "sent: ${watcher.sent.map { it::class.simpleName }}")
+        // A walker who only moved is a compact move, not the whole snapshot, and it is sent once.
+        val moves = watcher.sent.filterIsInstance<ServerPacket.EntityMoves>().flatMap { it.players }.filter { it.characterId == walkerId }
+        val full = watcher.sent.filterIsInstance<ServerPacket.PlayerUpdated>().filter { it.player.characterId == walkerId }
+        assertEquals(1, moves.size + full.size, "sent: ${watcher.sent.map { it::class.simpleName }}")
+        assertEquals(0, full.size, "a plain step does not resend the whole snapshot")
         // The walker still hears about their own step (the acknowledgement the client waits for).
         assertEquals(1, walker.sent.filterIsInstance<ServerPacket.CharacterSync>().size)
     }
@@ -64,7 +67,10 @@ class BroadcastEfficiencyTest {
         a.encodedTexts.clear()
         b.encodedTexts.clear()
 
-        c.handleClientPacket(a, ClientPacket.MoveInput(Direction.RIGHT, seq = 1))
+        // Something every viewer can see changes (a level), so the whole snapshot is broadcast to the map.
+        val id = c.simulation.players.values.first { it.name == "Alice" }.id
+        c.simulation.spawnOrUpdatePlayer(c.simulation.players.getValue(id).copy(level = 7))
+        c.handleClientPacket(a, ClientPacket.FaceDirection(Direction.UP))
         c.stepServerTick()
 
         assertNotNull(a.encodedTexts.firstOrNull(), "A got: ${a.sent.map { it::class.simpleName }}, B got: ${b.sent.map { it::class.simpleName }}")

@@ -25,6 +25,7 @@ class SeamViews(
         val y = player.position.tileY
         val result = ArrayList<NeighborMapEntities>(2)
         val n = map.neighbors
+        if (simulation.layout.isPlaced(map.id)) return computeInWorld(player, map)
 
         fun add(neighborId: Int, inRange: (tileX: Int, tileY: Int, neighborWidth: Int, neighborHeight: Int) -> Boolean) {
             if (neighborId <= 0 || result.any { it.mapId == neighborId }) return
@@ -48,6 +49,27 @@ class SeamViews(
         if (x < SEAM_TILES) add(n.westMapId) { tx, _, w, _ -> tx >= w - SEAM_TILES }
         if (y < SEAM_TILES) add(n.northMapId) { _, ty, _, h -> ty >= h - SEAM_TILES }
         if (map.height - 1 - y < SEAM_TILES) add(n.southMapId) { _, ty, _, _ -> ty < SEAM_TILES }
+        return result
+    }
+
+    /**
+     * The seamless world: every placed map within [WorldLayoutDefinition.seamViewTiles] of the player shows its monsters, players and loot
+     * that are within that distance of them (in world tiles), however the maps touch, corners included.
+     */
+    private fun computeInWorld(player: CharacterState, map: com.morgana.domain.map.MapDefinition): List<NeighborMapEntities> {
+        val layout = simulation.layout
+        val view = simulation.game.definition.worldLayout?.seamViewTiles ?: com.morgana.domain.map.WorldLayoutDefinition.DEFAULT_SEAM_VIEW
+        val here = layout.toWorld(map.id, player.position.tileX, player.position.tileY) ?: return emptyList()
+        val result = ArrayList<NeighborMapEntities>(4)
+        for ((other, offset) in layout.around(map.id, view)) {
+            val origin = layout.toWorld(other.id, 0, 0) ?: continue
+            fun near(tx: Int, ty: Int) = kotlin.math.abs(origin.x + tx - here.x) <= view && kotlin.math.abs(origin.y + ty - here.y) <= view
+            val npcs = simulation.mapNpcs[other.id].orEmpty().filter { it.isAlive && near(it.tileX, it.tileY) }.sortedBy { it.instanceId }
+            val players = simulation.players.values.filter { it.position.mapId == other.id && near(it.position.tileX, it.position.tileY) }
+                .sortedBy { it.id }.map(toPublic)
+            val items = simulation.mapGroundItems[other.id].orEmpty().filter { near(it.tileX, it.tileY) }.sortedBy { it.instanceId }
+            if (npcs.isNotEmpty() || players.isNotEmpty() || items.isNotEmpty()) result.add(NeighborMapEntities(other.id, npcs, players, items))
+        }
         return result
     }
 

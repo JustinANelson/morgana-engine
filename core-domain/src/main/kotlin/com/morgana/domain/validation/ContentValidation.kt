@@ -24,6 +24,7 @@ import com.morgana.domain.event.QuestObjectiveType
 import com.morgana.domain.game.GameDefinition
 import com.morgana.domain.game.VitalRole
 import com.morgana.domain.item.ItemDefinition
+import com.morgana.domain.item.ItemStack
 import com.morgana.domain.map.TileAnimation
 import com.morgana.domain.map.FloorGeneration
 import com.morgana.domain.map.MapDefinition
@@ -154,6 +155,9 @@ object ContentValidator {
     private class Collector(val cat: ContentCatalog, val game: GameDefinition) {
         val issues = mutableListOf<ContentIssue>()
 
+        /** The placed maps as one world, built once (only maps that name a position take part). */
+        val worldLayout: com.morgana.domain.map.WorldLayout by lazy { com.morgana.domain.map.WorldLayout(cat.maps.values) }
+
         fun error(col: ContentCollection, id: Int, pointer: String, code: String, msg: String) {
             issues += ContentIssue(IssueSeverity.ERROR, col, id, pointer, code, msg)
         }
@@ -208,8 +212,25 @@ object ContentValidator {
                 Triple("eastMapId", m.neighbors.eastMapId, Direction.RIGHT),
                 Triple("westMapId", m.neighbors.westMapId, Direction.LEFT)
             )
+            if ((m.worldX == null) != (m.worldY == null)) {
+                error(col, m.id, "/worldX", "world_position_incomplete", "worldX and worldY go together: set both or neither")
+            }
+            val seamless = game.worldLayout?.enabled == true && m.worldX != null && m.worldY != null && !m.instanced
+            if (seamless) {
+                // In a seamless world the links are worked out from where maps sit, so the hand-written ones are not checked; instead the
+                // placement is: no two maps may overlap, and where two maps meet the border should be open on both sides or neither.
+                val layout = worldLayout
+                for ((a, b) in layout.overlaps()) if (a == m.id) error(col, m.id, "/worldX", "world_overlap", "Map $a overlaps map $b in the world grid")
+                if (game.worldLayout?.borderWarnings != false) for ((other, offset) in layout.around(m.id, 0)) {
+                    if (other.id < m.id) continue
+                    val bad = layout.mismatchedBorderTiles(m, other)
+                    if (bad.isNotEmpty()) {
+                        warn(col, m.id, "/worldX", "world_border_mismatch", "The border with map ${other.id} is open on one side and blocked on the other at ${bad.size} tile(s), first at world (${bad.first().x}, ${bad.first().y})")
+                    }
+                }
+            }
             for ((field, target, dir) in links) {
-                if (target == 0) continue
+                if (target == 0 || seamless) continue
                 val other = cat.maps[target]
                 if (other == null) {
                     mapLink(col, m.id, "/neighbors/$field", target, "Neighbor link")
@@ -365,6 +386,15 @@ object ContentValidator {
                     next.id == d.id -> error(col, d.id, "/nextTierItemId", "self_reference", "an item cannot be its own next tier")
                 }
             }
+            d.upgradeCost?.let { cost ->
+                if (d.nextTierItemId <= 0) warn(col, d.id, "/upgradeCost", "upgrade_cost_without_next", "an upgrade cost needs nextTierItemId")
+                if (cost.gold < 0) error(col, d.id, "/upgradeCost/gold", "out_of_range", "gold must be 0 or more")
+                cost.materials.forEach { (id, amount) ->
+                    itemRef(col, d.id, "/upgradeCost/materials/$id", id, optional = false)
+                    if (amount < 1) error(col, d.id, "/upgradeCost/materials/$id", "out_of_range", "amount must be 1 or more")
+                }
+            }
+            if (d.sockets !in 0..ItemStack.MAX_SOCKETS) error(col, d.id, "/sockets", "out_of_range", "sockets must be 0 to ${ItemStack.MAX_SOCKETS}")
             d.gem?.let { gem ->
                 gem.attributeBonuses.keys.forEach { attrId ->
                     if (game.attributes.none { it.id == attrId }) error(col, d.id, "/gem/attributeBonuses/$attrId", "unknown_attribute", "Unknown attribute '$attrId'")
@@ -612,7 +642,7 @@ object ContentValidator {
                     is EventCommand.UpgradeGear -> {
                         if (cmd.amount < 1) error(col, id, "$p/amount", "out_of_range", "upgrade_gear needs an amount of at least 1")
                         if (cmd.successPercent !in 1..100) error(col, id, "$p/successPercent", "out_of_range", "successPercent must be 1 to 100")
-                        itemRef(col, id, "$p/materialItemId", cmd.materialItemId, optional = cmd.materialItemId == 0 && (cmd.kind == GearUpgradeKind.SOCKET_GEM || cmd.kind == GearUpgradeKind.ENHANCE))
+                        itemRef(col, id, "$p/materialItemId", cmd.materialItemId, optional = cmd.materialItemId == 0 && (cmd.kind == GearUpgradeKind.SOCKET_GEM || cmd.kind == GearUpgradeKind.ENHANCE || cmd.kind == GearUpgradeKind.UPGRADE_LEVEL))
                     }
                     is EventCommand.Rebirth ->
                         if (cmd.classId != 0) ref(col, id, "$p/classId", ContentCollection.CLASSES, cmd.classId, cmd.classId in cat.classes, optional = false)

@@ -125,6 +125,9 @@ private val MODERATION_COMMANDS = setOf("kick", "mute", "unmute", "mutes", "ban"
 /** Population and tick-time samples kept for the admin panel: one a minute, so three hours. */
 private const val MAX_METRIC_SAMPLES = 180
 
+/** Entity moves are sent to each viewer in one packet every this many ticks. */
+private const val MOVE_BATCH_TICKS = 2L
+
 private val MODERATION_USAGE = mapOf(
     "kick" to "/kick <player> [reason]",
     "mute" to "/mute <player> <30m|12h|7d|perm> [reason]",
@@ -261,6 +264,10 @@ class MorganaWorldCoordinator(
     @Volatile
     var assetBaseUrl: String? = null
 
+    /** One-time login tickets for automation (see [DevTickets]); null unless the server was started with `--dev-login`. */
+    @Volatile
+    var devTickets: DevTickets? = null
+
     /** Tokens that let a dropped client resume its character without the password (see [ResumeTokens]). */
     val resumeTokens: ResumeTokens = ResumeTokens(graceMs = sessionConfig.graceMinutes * 60_000L)
 
@@ -387,6 +394,7 @@ class MorganaWorldCoordinator(
         questGuideKeys.remove(charId)
         viewerAreas.remove(charId)
         lastEntityTile.remove("p:$charId")
+        lastPlayerSent.remove(charId)
         tips.forget(charId)
         pluginWindows.remove(charId)
         val player = simulation.players[charId]
@@ -456,6 +464,7 @@ class MorganaWorldCoordinator(
         saveChangedWorldObjects(everyTicks = 200L)
         if (simulation.currentTick % 1200L == 0L) expireMarketListings()
         if (simulation.currentTick % 10L == 0L) updateExploration()
+        flushMoves()
         recordTick(startedNanos)
     }
 
@@ -883,6 +892,24 @@ class MorganaWorldCoordinator(
             session.send(ServerPacket.AuthResult(false, "Already logged in on this connection."))
             return
         }
+        val tickets = devTickets
+        if (tickets != null && packet.token.startsWith(DevTickets.PREFIX)) {
+            // A one-time dev ticket stands in for the password; it is never accepted unless the operator started the server with --dev-login.
+            val ticketAccount = tickets.redeem(packet.token)?.let { dataStore.accounts.findByUsername(it) }
+            if (ticketAccount == null) {
+                rejectLogin(session, "That login ticket is invalid, expired or already used.")
+                return
+            }
+            banMessage(ticketAccount)?.let { why ->
+                session.send(ServerPacket.AuthResult(false, why))
+                return
+            }
+            org.slf4j.LoggerFactory.getLogger("Security").warn("Dev ticket login for account '{}' from {}", ticketAccount.username, session.sessionId)
+            // Automation and developers get no tip windows (they only cover the screen).
+            tips.quietAccount(ticketAccount.id)
+            completeLogin(session, ticketAccount, null)
+            return
+        }
         if (!sessionConfig.resume) {
             rejectLogin(session, "Session resume is disabled on this server. Please log in again.")
             return
@@ -1062,6 +1089,10 @@ class MorganaWorldCoordinator(
                     return
                 }
             }
+        }
+        TrainingPacketHandlers.handle(simulation, charId, packet)?.let { events ->
+            dispatchEvents(events)
+            return
         }
         when (packet) {
             is ClientPacket.MoveInput -> {
@@ -1678,6 +1709,186 @@ class MorganaWorldCoordinator(
         val result = reloadContent()
         moderation.audit(actor, "reload", "", result.summary.take(200))
         return AdminResult(result.applied, result.summary)
+    }
+
+    // ---- Admin API: accounts, characters, tickets, live player changes and content (see AdminApi) ----
+
+    private fun accountByName(name: String): AccountDocument? = dataStore.accounts.findByUsername(name.trim())
+
+    @Synchronized
+    fun adminAccounts(): List<com.morgana.server.admin.AdminAccount> = dataStore.accounts.findAll().sortedBy { it.username.lowercase() }
+        .map { com.morgana.server.admin.AdminAccount(it.id, it.username, it.accessLevel.name, it.characterIds.size, it.banned) }
+
+    /**
+     * Creates an account without anyone typing a password. With a blank [password] a random one nobody knows is set, so the account
+     * can only be entered with a dev ticket (or a password an operator sets later). An account named in the owner list starts as Owner.
+     */
+    @Synchronized
+    fun adminCreateAccount(username: String, password: String, actor: String): AdminResult {
+        val name = username.trim()
+        if (name.length !in 2..20) return AdminResult(false, "Username must be 2-20 characters.")
+        if (accountByName(name) != null) return AdminResult(false, "An account named $name already exists.")
+        val secret = password.ifBlank { com.morgana.server.admin.AdminToken.generate() }
+        val access = if (ownerPolicy.isConfiguredOwner(name)) AccessLevel.OWNER else AccessLevel.PLAYER
+        dataStore.accounts.save(
+            AccountDocument(
+                id = "acc-${UUID.randomUUID().toString().take(8)}",
+                username = name,
+                passwordHash = AccountRepository.hashPassword(secret),
+                accessLevel = access
+            )
+        )
+        moderation.audit(actor, "create_account", name, access.name)
+        val how = if (password.isBlank()) " with no usable password: enter it with a dev ticket" else ""
+        return AdminResult(true, "Created account $name ($access)$how.")
+    }
+
+    /** Sets an account's access level. Owner is never granted here (that is the owner list's job) and an Owner is never changed. */
+    @Synchronized
+    fun adminSetAccess(username: String, access: String, actor: String): AdminResult {
+        val account = accountByName(username) ?: return AdminResult(false, "No account named $username.")
+        val level = AccessLevel.values().firstOrNull { it.name.equals(access, ignoreCase = true) }
+            ?: return AdminResult(false, "access must be one of: ${AccessLevel.values().filter { it != AccessLevel.OWNER }.joinToString { it.name }}.")
+        if (level == AccessLevel.OWNER) return AdminResult(false, "Owner is granted only through the owner list (owners.txt or MORGANA_OWNERS).")
+        if (account.accessLevel == AccessLevel.OWNER) return AdminResult(false, "${account.username} is an Owner; edit the owner list instead.")
+        if (account.characterIds.any { sessionByCharacterId.containsKey(it) }) return AdminResult(false, "${account.username} is online; kick them first so the change applies cleanly.")
+        dataStore.inTransaction {
+            dataStore.accounts.save(account.copy(accessLevel = level))
+            account.characterIds.mapNotNull { dataStore.characters.findById(it) }.forEach { dataStore.characters.save(it.copy(accessLevel = level)) }
+        }
+        moderation.audit(actor, "set_access", account.username, level.name)
+        return AdminResult(true, "${account.username} is now ${level.name}.")
+    }
+
+    @Synchronized
+    fun adminCharacters(account: String?): List<com.morgana.server.admin.AdminCharacter> {
+        val owner = account?.let { accountByName(it) ?: dataStore.accounts.findById(it) ?: return emptyList() }
+        val chars = if (owner == null) dataStore.characters.findAll() else owner.characterIds.mapNotNull { dataStore.characters.findById(it) }
+        return chars.sortedBy { it.name.lowercase() }.map {
+            val live = simulation.players[it.id] ?: it
+            com.morgana.server.admin.AdminCharacter(
+                it.id, it.name, it.accountId, it.classId, live.level, live.position.mapId, live.position.tileX, live.position.tileY,
+                online = sessionByCharacterId.containsKey(it.id)
+            )
+        }
+    }
+
+    /** Makes a character on an existing account, by the same rules as the character screen (name, class, character limit). */
+    @Synchronized
+    fun adminCreateCharacter(account: String, name: String, classId: Int, spriteId: Int, actor: String): AdminResult {
+        val acc = accountByName(account) ?: return AdminResult(false, "No account named $account.")
+        val clean = com.morgana.protocol.CharacterNames.clean(name)
+        val classDef = simulation.classes[if (classId > 0) classId else simulation.classes.keys.minOrNull() ?: 0]
+        val problem = com.morgana.protocol.CharacterNames.problem(clean) ?: when {
+            acc.characterIds.size >= sessionConfig.maxCharacters -> "${acc.username} already has the most characters this realm allows (${sessionConfig.maxCharacters})."
+            dataStore.characters.findByName(clean) != null || dataStore.accounts.findByUsername(clean)?.let { it.id != acc.id } == true -> "That name is taken."
+            classDef == null -> "No such class. Known classes: ${simulation.classes.keys.sorted().joinToString()}."
+            else -> null
+        }
+        if (problem != null || classDef == null) return AdminResult(false, problem ?: "No such class.")
+        val newId = "char-${UUID.randomUUID().toString().take(8)}"
+        val character = buildNewCharacter(newId, acc.id, clean, classDef, spriteId, acc.accessLevel)
+        dataStore.inTransaction {
+            dataStore.characters.save(character)
+            dataStore.accounts.save(acc.copy(characterIds = acc.characterIds + newId))
+        }
+        moderation.audit(actor, "create_character", acc.username, "$clean (class ${classDef.id})")
+        return AdminResult(true, "Created $clean (class ${classDef.id}) on ${acc.username}.")
+    }
+
+    /** A one-time login ticket for an existing account, or null when dev login is off or the account does not exist. */
+    @Synchronized
+    fun adminMintTicket(username: String, ttlSeconds: Long, actor: String): com.morgana.server.admin.AdminTicket? {
+        val tickets = devTickets ?: return null
+        val account = accountByName(username) ?: return null
+        val ticket = tickets.mint(account.username, ttlSeconds)
+        moderation.audit(actor, "mint_ticket", account.username, "${ttlSeconds}s")
+        return com.morgana.server.admin.AdminTicket(ticket, account.username, ttlSeconds)
+    }
+
+    private fun onlinePlayerByName(name: String) = simulation.players.values
+        .firstOrNull { it.name.equals(name.trim(), ignoreCase = true) && sessionByCharacterId.containsKey(it.id) }
+
+    @Synchronized
+    fun adminWarp(name: String, mapId: Int, x: Int, y: Int, actor: String): AdminResult {
+        val player = onlinePlayerByName(name) ?: return AdminResult(false, "$name is not online.")
+        val map = simulation.maps[mapId] ?: return AdminResult(false, "No map $mapId.")
+        if (x !in 0 until map.width || y !in 0 until map.height) return AdminResult(false, "($x, $y) is outside map $mapId (${map.width} x ${map.height}).")
+        recorder?.markGap("admin warp")
+        dispatchEvents(simulation.applyScriptEffect(com.morgana.domain.script.ScriptEffect.WarpPlayer(player.id, mapId, x, y)))
+        moderation.audit(actor, "warp", player.name, "map $mapId ($x, $y)")
+        return AdminResult(true, "Warped ${player.name} to map $mapId ($x, $y).")
+    }
+
+    @Synchronized
+    fun adminGive(name: String, itemId: Int, amount: Int, actor: String): AdminResult {
+        val player = onlinePlayerByName(name) ?: return AdminResult(false, "$name is not online.")
+        val item = simulation.items[itemId] ?: return AdminResult(false, "No item $itemId.")
+        recorder?.markGap("admin give")
+        dispatchEvents(simulation.applyScriptEffect(com.morgana.domain.script.ScriptEffect.GiveItem(player.id, itemId, amount)))
+        moderation.audit(actor, "give", player.name, "$amount x item $itemId")
+        return AdminResult(true, "Gave ${player.name} $amount x ${item.name}.")
+    }
+
+    private fun collectionNamed(name: String?): ContentCollection? = ContentCollection.values().firstOrNull { it.directoryName == name }
+
+    private fun contentFile(collection: ContentCollection, id: Int): java.nio.file.Path {
+        val root = dataStore.contentDir.toAbsolutePath().normalize()
+        val file = root.resolve(collection.directoryName).resolve(collection.fileStem(id) + ".json").normalize()
+        check(file.startsWith(root)) { "path escapes the content folder" }
+        return file
+    }
+
+    @Synchronized
+    fun adminContentList(collection: String?): List<com.morgana.server.admin.AdminContentEntry> {
+        val wanted = if (collection == null) ContentCollection.values().toList() else listOfNotNull(collectionNamed(collection))
+        val out = mutableListOf<com.morgana.server.admin.AdminContentEntry>()
+        for (col in wanted) {
+            val dir = dataStore.contentDir.resolve(col.directoryName)
+            if (!java.nio.file.Files.isDirectory(dir)) continue
+            java.nio.file.Files.list(dir).use { files ->
+                files.map { it.fileName.toString() }
+                    .filter { it.startsWith(col.filePrefix + "_") && it.endsWith(".json") }
+                    .forEach { f -> f.removePrefix(col.filePrefix + "_").removeSuffix(".json").toIntOrNull()?.let { out += com.morgana.server.admin.AdminContentEntry(col.directoryName, it, "${col.directoryName}/$f") } }
+            }
+        }
+        return out.sortedWith(compareBy({ it.collection }, { it.id }))
+    }
+
+    @Synchronized
+    fun adminContentGet(collection: String, id: Int): String? {
+        val col = collectionNamed(collection) ?: return null
+        val file = contentFile(col, id)
+        return if (java.nio.file.Files.isRegularFile(file)) java.nio.file.Files.readString(file) else null
+    }
+
+    /**
+     * Writes one content document through the same pipeline as a hand edit or the F1 editor: the file is saved, the whole set is
+     * validated and hot-swapped, and if that refuses the document the previous file is put back (or the new one removed) and the
+     * world is reloaded from it again, so a bad edit never stays on disk.
+     */
+    @Synchronized
+    fun adminContentPut(collection: String, id: Int, json: String, actor: String): AdminResult {
+        val col = collectionNamed(collection) ?: return AdminResult(false, "Unknown collection '$collection'. Known: ${ContentCollection.values().joinToString { it.directoryName }}.")
+        val parsed = try { kotlinx.serialization.json.Json.parseToJsonElement(json) } catch (e: Exception) { return AdminResult(false, "Not valid JSON: ${e.message?.take(120)}") }
+        val obj = parsed as? kotlinx.serialization.json.JsonObject ?: return AdminResult(false, "A document must be a JSON object.")
+        val declaredId = (obj["id"] as? kotlinx.serialization.json.JsonPrimitive)?.content?.toIntOrNull()
+        if (declaredId != null && declaredId != id) return AdminResult(false, "The document's id ($declaredId) does not match the address ($id).")
+        val file = contentFile(col, id)
+        val previous = if (java.nio.file.Files.isRegularFile(file)) java.nio.file.Files.readAllBytes(file) else null
+        java.nio.file.Files.createDirectories(file.parent)
+        java.nio.file.Files.writeString(file, json)
+        val result = reloadContent()
+        val errors = result.report.forDocument(col, id).errors
+        if (!result.applied || errors.isNotEmpty()) {
+            if (previous != null) java.nio.file.Files.write(file, previous) else java.nio.file.Files.deleteIfExists(file)
+            reloadContent()
+            val why = errors.take(5).joinToString("; ") { "${it.pointer} [${it.code}] ${it.message}" }.ifBlank { result.summary }
+            moderation.audit(actor, "content_put_rejected", "${col.directoryName}/$id", why.take(200))
+            return AdminResult(false, "Rejected, nothing changed: $why")
+        }
+        moderation.audit(actor, "content_put", "${col.directoryName}/$id", result.summary.take(200))
+        return AdminResult(true, "Saved ${col.directoryName}/${col.fileStem(id)}.json. ${result.summary}")
     }
 
     /** Finds a player by character name, online or not. */
@@ -2685,12 +2896,20 @@ class MorganaWorldCoordinator(
             val mapId = player.position.mapId
             if (MapInstances.isInstanceId(mapId)) continue
             val map = simulation.maps[mapId] ?: continue
-            val doc = exploration[player.id] ?: continue
-            val revealed = Exploration.reveal(doc.maps[mapId], map.width, map.height, player.position.tileX, player.position.tileY) ?: continue
-            val next = doc.copy(maps = doc.maps + (mapId to revealed))
-            exploration[player.id] = next
-            persistenceWriter.enqueueExploration(next)
-            session.send(ServerPacket.ExplorationUpdate(exploredInfo(map, revealed)))
+            var doc = exploration[player.id] ?: continue
+            // What the player sees: their own map and, in a seamless world, the maps around it (their position in each one's coordinates).
+            val seen = ArrayList<Triple<com.morgana.domain.map.MapDefinition, Int, Int>>()
+            seen += Triple(map, player.position.tileX, player.position.tileY)
+            if (simulation.layout.isPlaced(mapId)) {
+                for ((other, offset) in simulation.layout.around(mapId, Exploration.VISION_RADIUS)) seen += Triple(other, player.position.tileX - offset.x, player.position.tileY - offset.y)
+            }
+            for ((m, tx, ty) in seen) {
+                val revealed = Exploration.reveal(doc.maps[m.id], m.width, m.height, tx, ty) ?: continue
+                doc = doc.copy(maps = doc.maps + (m.id to revealed))
+                exploration[player.id] = doc
+                persistenceWriter.enqueueExploration(doc)
+                session.send(ServerPacket.ExplorationUpdate(exploredInfo(m, revealed)))
+            }
         }
     }
 
@@ -2848,6 +3067,39 @@ class MorganaWorldCoordinator(
     /** Where each broadcast entity (`p:<character id>`, `n:<npc instance id>`) was when it was last announced, so a move out of view still reaches the viewers who saw it leave. */
     private val lastEntityTile = HashMap<String, Pair<Int, Int>>()
 
+    /** What was last broadcast in full for each monster and player, so a move that changes nothing else goes out as a compact packet. */
+    private val lastNpcSent = HashMap<String, com.morgana.domain.entity.MapNpcInstance>()
+    private val lastPlayerSent = HashMap<String, PublicPlayerSnapshot>()
+
+    /** Compact moves waiting for the end of the tick, per viewing character, so each viewer gets one packet for everything that moved. */
+    private val pendingMoves = HashMap<String, LinkedHashMap<String, ServerPacket>>()
+
+    /** Remembers [compact] for [viewerId]; a later move of the same entity before the flush replaces it (only where it ended up matters). */
+    private fun queueMove(viewerId: String, compact: ServerPacket) {
+        val key = when (compact) {
+            is ServerPacket.NpcMoved -> "n:" + compact.instanceId
+            is ServerPacket.PlayerMoved -> "p:" + compact.characterId
+            else -> { sessionByCharacterId[viewerId]?.send(compact); return }
+        }
+        pendingMoves.getOrPut(viewerId) { LinkedHashMap() }[key] = compact
+    }
+
+    /**
+     * Sends every viewer the latest place of what moved near them, one packet each, every [MOVE_BATCH_TICKS] ticks (10 times a second):
+     * the clients smooth between positions, and it halves what a crowded fight costs in bandwidth.
+     */
+    private fun flushMoves() {
+        if (pendingMoves.isEmpty() || simulation.currentTick % MOVE_BATCH_TICKS != 0L) return
+        for ((viewerId, moves) in pendingMoves) {
+            val session = sessionByCharacterId[viewerId] ?: continue
+            session.send(ServerPacket.EntityMoves(moves.values.filterIsInstance<ServerPacket.NpcMoved>(), moves.values.filterIsInstance<ServerPacket.PlayerMoved>()))
+        }
+        pendingMoves.clear()
+    }
+
+    /** The projectile list last broadcast per map: a tick that only moved free-flight shots is not sent again, the clients fly them on. */
+    private val lastProjectilesSent = HashMap<Int, List<com.morgana.domain.entity.MapProjectile>>()
+
     /** Each online player's map and tile when their area of interest was last brought up to date. */
     private val viewerAreas = HashMap<String, Triple<Int, Int, Int>>()
 
@@ -2883,6 +3135,7 @@ class MorganaWorldCoordinator(
                     if (ev.previousMapId != ev.currentMapId) {
                         broadcastToMap(ev.previousMapId, ServerPacket.PlayerLeftMap(ev.character.id, ev.previousMapId))
                         lastEntityTile.remove("p:${ev.character.id}")
+                        lastPlayerSent.remove(ev.character.id)
                         sessionByCharacterId[ev.character.id]?.let { sendFullMapSnapshotTo(it, ev.currentMapId) }
                         viewerAreas[ev.character.id] = Triple(ev.currentMapId, ev.character.position.tileX, ev.character.position.tileY)
                     }
@@ -2905,8 +3158,24 @@ class MorganaWorldCoordinator(
                 is WorldSimulationEvent.GroundItemsChanged -> {
                     broadcastToMap(ev.mapId, ServerPacket.GroundItemsUpdated(ev.mapId, ev.items))
                 }
+                is WorldSimulationEvent.OrbsChanged -> {
+                    broadcastToMap(ev.mapId, ServerPacket.HealthOrbsUpdated(ev.mapId, ev.orbs))
+                }
                 is WorldSimulationEvent.ProjectilesChanged -> {
-                    broadcastToMap(ev.mapId, ServerPacket.ProjectilesUpdated(ev.mapId, ev.projectiles))
+                    val prev = lastProjectilesSent[ev.mapId]
+                    if (prev == null) {
+                        lastProjectilesSent[ev.mapId] = ev.projectiles
+                        broadcastToMap(ev.mapId, ServerPacket.ProjectilesUpdated(ev.mapId, ev.projectiles))
+                    } else {
+                        val prevById = prev.associateBy { it.projectileId }
+                        val nowIds = ev.projectiles.mapTo(HashSet()) { it.projectileId }
+                        val removed = prev.filter { it.projectileId !in nowIds }.map { it.projectileId }
+                        val upserted = ev.projectiles.filter { b -> prevById[b.projectileId].let { a -> a == null || (a != b && !freeFlightAdvanced(a, b)) } }
+                        if (removed.isNotEmpty() || upserted.isNotEmpty()) {
+                            lastProjectilesSent[ev.mapId] = ev.projectiles
+                            broadcastToMap(ev.mapId, ServerPacket.ProjectilesDelta(ev.mapId, upserted, removed))
+                        }
+                    }
                 }
                 is WorldSimulationEvent.ResourceNodeChanged -> {
                     broadcastNear(ev.resource.mapId, ev.resource.tileX, ev.resource.tileY, ServerPacket.ResourceNodeUpdated(ev.resource))
@@ -2919,7 +3188,16 @@ class MorganaWorldCoordinator(
                         sessionByCharacterId[targetId]?.send(pkt)
                     } else {
                         broadcastNear(ev.mapId, ev.tileX, ev.tileY, pkt)
+                        crossBorderSend(ev.mapId, ev.tileX, ev.tileY, pkt)
                     }
+                }
+                is WorldSimulationEvent.MomentumChanged -> {
+                    sessionByCharacterId[ev.characterId]?.send(ServerPacket.Momentum(ev.momentum, ev.empoweredTicks))
+                }
+                is WorldSimulationEvent.SkillEffect -> {
+                    val fx = ServerPacket.SkillEffect(ev.mapId, ev.effect, ev.fromX, ev.fromY, ev.toX, ev.toY, ev.radius, ev.delayTicks, ev.spanTicks, ev.sourceId)
+                    broadcastNear(ev.mapId, ev.tileX, ev.tileY, fx)
+                    crossBorderSend(ev.mapId, ev.tileX, ev.tileY, fx)
                 }
                 is WorldSimulationEvent.AnimationTriggered -> {
                     broadcastNear(
@@ -2957,6 +3235,10 @@ class MorganaWorldCoordinator(
                         broadcastToAll(pkt)
                     } else {
                         broadcastToMap(ev.mapId, pkt)
+                        // Map chat is heard just across a border too (in a seamless world), by those near the speaker.
+                        if (ch == ChatChannel.MAP) simulation.players[ev.senderId]?.takeIf { it.position.mapId == ev.mapId }?.let { speaker ->
+                            crossBorderSend(ev.mapId, speaker.position.tileX, speaker.position.tileY, pkt)
+                        }
                     }
                 }
                 is WorldSimulationEvent.GuildBankChanged -> simulation.guilds[ev.guildId]?.let { guild ->
@@ -3049,6 +3331,12 @@ class MorganaWorldCoordinator(
                 is WorldSimulationEvent.SpellCooldownStarted -> {
                     sessionByCharacterId[ev.characterId]?.send(ServerPacket.SpellCooldown(ev.spellId, ev.durationTicks))
                 }
+                is WorldSimulationEvent.ActionSkillCooldownStarted -> {
+                    sessionByCharacterId[ev.characterId]?.send(ServerPacket.ActionSkillCooldown(ev.skillId, ev.durationTicks))
+                }
+                is WorldSimulationEvent.OfflineTrainingCompleted -> {
+                    sessionByCharacterId[ev.characterId]?.send(TrainingPacketHandlers.toPacket(ev))
+                }
                 is WorldSimulationEvent.SpellCastStarted -> {
                     // Casting state is already broadcast via CharacterUpdated
                 }
@@ -3128,13 +3416,23 @@ class MorganaWorldCoordinator(
     internal fun sendFullMapSnapshotTo(session: ClientSession, mapId: Int) {
         val map = simulation.maps[mapId] ?: return
         val neighborMaps = mutableMapOf<Int, MapDefinition>()
-        listOf(
-            map.neighbors.northMapId,
-            map.neighbors.southMapId,
-            map.neighbors.eastMapId,
-            map.neighbors.westMapId
-        ).filter { it > 0 }.forEach { nId ->
-            simulation.maps[nId]?.let { neighborMaps[nId] = it }
+        val neighborOffsets = mutableMapOf<Int, com.morgana.domain.map.TileOffset>()
+        if (simulation.layout.isPlaced(mapId)) {
+            // A seamless world: every placed map near this one, wherever it touches (edges, corners, different sizes).
+            val margin = simulation.game.definition.worldLayout?.neighborMarginTiles ?: com.morgana.domain.map.WorldLayoutDefinition.DEFAULT_MARGIN
+            for ((other, offset) in simulation.layout.around(mapId, margin)) {
+                neighborMaps[other.id] = other
+                neighborOffsets[other.id] = offset
+            }
+        } else {
+            listOf(
+                map.neighbors.northMapId,
+                map.neighbors.southMapId,
+                map.neighbors.eastMapId,
+                map.neighbors.westMapId
+            ).filter { it > 0 }.forEach { nId ->
+                simulation.maps[nId]?.let { neighborMaps[nId] = it }
+            }
         }
 
         val playersOnMap = simulation.players.values
@@ -3164,6 +3462,7 @@ class MorganaWorldCoordinator(
                 activeMap = activeToSend,
                 neighborMaps = neighborsToSend,
                 mapRefs = mapRefs,
+                neighborOffsets = neighborOffsets,
                 players = playersOnMap,
                 npcs = npcsOnMap,
                 groundItems = groundOnMap,
@@ -3276,17 +3575,118 @@ class MorganaWorldCoordinator(
     }
 
     private fun broadcastPlayerUpdate(character: CharacterState) {
-        val pkt = ServerPacket.PlayerUpdated(toPublicSnapshot(character))
+        val snapshot = toPublicSnapshot(character)
+        val pkt = ServerPacket.PlayerUpdated(snapshot)
         val x = character.position.tileX
         val y = character.position.tileY
         val before = lastEntityTile.put("p:${character.id}", x to y) ?: (x to y)
-        broadcastNear(character.position.mapId, x, y, pkt, before.first, before.second, alwaysTo = character.id)
+        val prev = lastPlayerSent[character.id]
+        if (prev != null && prev.position.mapId == snapshot.position.mapId && lookOf(prev) == lookOf(snapshot)) {
+            // Nothing others can see changed except perhaps where the player stands.
+            if (prev.position == snapshot.position) return
+            lastPlayerSent[character.id] = snapshot
+            broadcastNearDelta(character.position.mapId, x, y, before.first, before.second, pkt, ServerPacket.PlayerMoved(character.id, snapshot.position), alwaysTo = character.id)
+            val across = crossBorderViewers(character.position.mapId, x, y)
+            if (across.isNotEmpty()) {
+                val movedAcross = ServerPacket.PlayerMoved(character.id, snapshot.position, character.position.mapId)
+                for (viewer in across) if (viewer != character.id) queueMove(viewer, movedAcross)
+            }
+        } else {
+            lastPlayerSent[character.id] = snapshot
+            broadcastNear(character.position.mapId, x, y, pkt, before.first, before.second, alwaysTo = character.id)
+            for (viewer in crossBorderViewers(character.position.mapId, x, y)) if (viewer != character.id) sessionByCharacterId[viewer]?.send(pkt)
+        }
     }
+
+    /** A player's public snapshot without where they stand and without the bars other players never see (only life is shown over their head). */
+    private fun lookOf(s: PublicPlayerSnapshot): PublicPlayerSnapshot =
+        s.copy(position = com.morgana.domain.spatial.WorldPosition(0, 0, 0), vitals = s.vitals.filterKeys { it == "hp" })
 
     private fun broadcastNpcUpdate(npc: com.morgana.domain.entity.MapNpcInstance) {
         val before = lastEntityTile.put("n:${npc.instanceId}", npc.tileX to npc.tileY) ?: (npc.tileX to npc.tileY)
-        broadcastNear(npc.mapId, npc.tileX, npc.tileY, ServerPacket.NpcUpdated(npc), before.first, before.second)
+        val prev = lastNpcSent[npc.instanceId]
+        val full = ServerPacket.NpcUpdated(npc)
+        val onlyMoved = prev != null && prev.mapId == npc.mapId && npcLook(prev) == npcLook(npc)
+        if (onlyMoved) {
+            if (prev!!.tileX == npc.tileX && prev.tileY == npc.tileY && prev.direction == npc.direction && prev.subPixel == npc.subPixel &&
+                prev.pixelX == npc.pixelX && prev.pixelY == npc.pixelY && prev.wanderX == npc.wanderX && prev.wanderY == npc.wanderY
+            ) return // only cooldown clocks and threat changed: no client reads them
+            lastNpcSent[npc.instanceId] = npc
+            val moved = ServerPacket.NpcMoved(npc.instanceId, npc.tileX, npc.tileY, npc.direction, 0L, npc.subPixel, npc.pixelX, npc.pixelY, npc.wanderX, npc.wanderY)
+            broadcastNearDelta(npc.mapId, npc.tileX, npc.tileY, before.first, before.second, full, moved)
+            val across = crossBorderViewers(npc.mapId, npc.tileX, npc.tileY)
+            if (across.isNotEmpty()) {
+                val movedAcross = moved.copy(mapId = npc.mapId)
+                for (viewer in across) queueMove(viewer, movedAcross)
+            }
+        } else {
+            lastNpcSent[npc.instanceId] = npc
+            broadcastNear(npc.mapId, npc.tileX, npc.tileY, full, before.first, before.second)
+            crossBorderSend(npc.mapId, npc.tileX, npc.tileY, full)
+        }
     }
+
+    /**
+     * In a seamless world, the players on the maps around [mapId] who are within the seam view distance of its tile ([tileX], [tileY]):
+     * they see a fight across the border, so what happens there (a monster's changes, damage text, skill effects) is sent to them too
+     * (the packet keeps its own map id and the client places it by that map's offset). Only for clients that support soft seams.
+     */
+    private fun crossBorderViewers(mapId: Int, tileX: Int, tileY: Int): List<String> {
+        val layout = simulation.layout
+        if (!layout.isPlaced(mapId) || !simulation.modules.isEnabled(OptionalModule.SOFT_SEAMS)) return emptyList()
+        val view = simulation.game.definition.worldLayout?.seamViewTiles ?: com.morgana.domain.map.WorldLayoutDefinition.DEFAULT_SEAM_VIEW
+        var out: ArrayList<String>? = null
+        for (p in simulation.players.values) {
+            if (p.position.mapId == mapId) continue
+            val offset = layout.offsetBetween(mapId, p.position.mapId) ?: continue
+            if (kotlin.math.abs(p.position.tileX + offset.x - tileX) > view || kotlin.math.abs(p.position.tileY + offset.y - tileY) > view) continue
+            val session = sessionByCharacterId[p.id] ?: continue
+            val caps = clientCapabilitiesBySession[session.sessionId]
+            if (caps != null && ProtocolCapabilities.SOFT_SEAMS !in caps) continue
+            (out ?: ArrayList<String>().also { out = it }).add(p.id)
+        }
+        return out ?: emptyList()
+    }
+
+    private fun crossBorderSend(mapId: Int, tileX: Int, tileY: Int, packet: ServerPacket) {
+        for (viewer in crossBorderViewers(mapId, tileX, tileY)) sessionByCharacterId[viewer]?.send(packet)
+    }
+
+    /** A monster without where it stands and without the server-only clocks (attack and spell cooldowns, threat, wind-up) that no client reads. */
+    private fun npcLook(n: com.morgana.domain.entity.MapNpcInstance): com.morgana.domain.entity.MapNpcInstance = n.copy(
+        tileX = 0, tileY = 0, direction = Direction.DOWN, lastMoveTick = 0L, subPixel = false, pixelX = 0f, pixelY = 0f, wanderX = -1, wanderY = -1,
+        lastAttackTick = 0L, lastSpellCastTick = 0L, strikeReadyTick = 0L, threat = emptyMap(), abilityReadyTicks = emptyMap(),
+        windUpUntil = 0L, windUpX = 0f, windUpY = 0f
+    )
+
+    /**
+     * Like [broadcastNear] for an entity that only moved: a viewer who could already see both its old and new place has the entity and
+     * gets the small [compact] packet; anyone else who can see it now gets the [full] one.
+     */
+    private fun broadcastNearDelta(
+        mapId: Int, tileX: Int, tileY: Int, alsoX: Int, alsoY: Int, full: ServerPacket, compact: ServerPacket, alwaysTo: String? = null
+    ) {
+        val aoi = areaOfInterest
+        val fullText = lazy(LazyThreadSafetyMode.NONE) { PacketCodec.encodeServerJson(full) }
+        for (p in simulation.players.values) {
+            if (p.position.mapId != mapId) continue
+            val session = sessionByCharacterId[p.id] ?: continue
+            if (aoi == null) { queueMove(p.id, compact); continue }
+            val seesNew = aoi.sees(p.position.tileX, p.position.tileY, tileX, tileY)
+            val seesOld = aoi.sees(p.position.tileX, p.position.tileY, alsoX, alsoY)
+            when {
+                seesNew && seesOld -> queueMove(p.id, compact)
+                seesNew || seesOld || p.id == alwaysTo -> session.sendEncoded(full) { fullText.value }
+            }
+        }
+    }
+
+    /** True when free-flight shot [b] is [a] a little further along its path (nothing else about it changed), so clients can fly it on themselves. */
+    private fun freeFlightAdvanced(a: com.morgana.domain.entity.MapProjectile, b: com.morgana.domain.entity.MapProjectile): Boolean =
+        b.free && a.copy(
+            px = b.px, py = b.py, remainingPixels = b.remainingPixels, currentTileX = b.currentTileX, currentTileY = b.currentTileY,
+            remainingTiles = b.remainingTiles, nextStepTick = b.nextStepTick, hitEntityIds = b.hitEntityIds
+        ) == b
 
     /**
      * When a player's area of interest moves to new cells, tells them the current state of everything in the cells it now

@@ -184,7 +184,7 @@ object LuakSandbox {
             }
         })
 
-        // world.place_object(kind, map_id, x, y, [owner_id], [data]), remove_object(id, [reason]), damage_object(id, amount), set_object_data(id, table)
+        // world.place_object(kind, map_id, x, y, [owner_id], [data]), remove_object(id, [reason]), damage_object(id, amount), heal_object(id, amount), set_object_data(id, table)
         world.set("place_object", object : VarArgFunction() {
             override fun invoke(args: Varargs): Varargs {
                 val owner = args.arg(5)?.takeIf { it.isstring() }?.tojstring()
@@ -202,6 +202,12 @@ object LuakSandbox {
         world.set("damage_object", object : VarArgFunction() {
             override fun invoke(args: Varargs): Varargs {
                 effectsOut.add(ScriptEffect.DamageObject(args.checkjstring(1), args.checkint(2)))
+                return LuaValue.NIL
+            }
+        })
+        world.set("heal_object", object : VarArgFunction() {
+            override fun invoke(args: Varargs): Varargs {
+                effectsOut.add(ScriptEffect.HealObject(args.checkjstring(1), args.checkint(2)))
                 return LuaValue.NIL
             }
         })

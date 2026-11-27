@@ -31,7 +31,14 @@ data class GameplayTuning(
     /** Most members a party may have; 0 means no limit. */
     val maxPartySize: Int = 0,
     /** How close, in pixels, a body must be to an action-combat hitbox to be struck (a body is a disc this wide). */
-    val actionTargetRadiusPixels: Int = DEFAULT_ACTION_TARGET_RADIUS_PIXELS
+    val actionTargetRadiusPixels: Int = DEFAULT_ACTION_TARGET_RADIUS_PIXELS,
+    /**
+     * Health orbs: a slain monster drops one with this chance in percent (rare and special variants always drop three); walking near one
+     * while hurt heals [healthOrbHealPercent] of life, and an orb fades after [healthOrbLifeTicks]. 0 chance turns orbs off.
+     */
+    val healthOrbChancePercent: Int = 0,
+    val healthOrbHealPercent: Int = 12,
+    val healthOrbLifeTicks: Int = 600
 ) {
     companion object {
         const val DEFAULT_HARVEST_COOLDOWN_TICKS = 10

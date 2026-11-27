@@ -4,6 +4,7 @@ import com.morgana.domain.content.ActionSkillDefinition
 import com.morgana.domain.content.ComboEdge
 import com.morgana.domain.content.ComboEntry
 import com.morgana.domain.content.HitboxShape
+import com.morgana.domain.content.InputTokens
 import com.morgana.domain.content.SkillHitbox
 import com.morgana.domain.content.WeaponSetDefinition
 import com.morgana.domain.content.WeaponSetSlot
@@ -34,12 +35,34 @@ data class ActionState(
     val fy: Double = 1.0,
     val bufferedToken: String? = null,
     val bufferedAt: Long = 0L,
+    val bufferedAimX: Double = 0.0,
+    val bufferedAimY: Double = 0.0,
+    val bufferedAimSet: Boolean = false,
     /** First tick each skill may start again. */
     val cooldowns: Map<Int, Long> = emptyMap(),
     /** A guard skill holds its timeline until this tick unless released. */
     val holdUntil: Long = 0L,
     /** The last skill tick whose movement has been applied. */
-    val movedTo: Int = -1
+    val movedTo: Int = -1,
+    /** The point the skill was aimed at (world pixels), when the press carried one; used by ground-targeted hitboxes. */
+    val aimX: Double = 0.0,
+    val aimY: Double = 0.0,
+    val aimSet: Boolean = false,
+    /** Where a leap (`SkillMove.toAim`) lands, in world pixels (the character's centre), set when the skill starts. */
+    val leapX: Double = 0.0,
+    val leapY: Double = 0.0,
+    val leapSet: Boolean = false,
+    /** The momentum meter (0..99) filled by successful dodges, when it empties by expiring, and the dodge (by its start tick) that last filled it. */
+    val momentum: Int = 0,
+    val momentumExpires: Long = 0L,
+    val momentumFrom: Long = -1L,
+    /** The tick until which the character is empowered (an upgraded skill is in effect); 0 when not. */
+    val empoweredUntil: Long = 0L,
+    /** True once a critical hit has electrified the skill in progress (see `SkillHit.critElectrifies`). */
+    val electrified: Boolean = false,
+    /** The skill use (by its start tick) that has already rolled for a crit-armed transformation, and when a new one may be armed. */
+    val armRolledFor: Long = -1L,
+    val armReadyAt: Long = 0L
 ) {
     val idle: Boolean get() = skillId == 0
 }
@@ -58,10 +81,26 @@ object ActionCombatRules {
         sets.values.sortedBy { it.id }.firstOrNull { it.slot == WeaponSetSlot.MAIN && it.levelReq <= level && (it.classIds.isEmpty() || classId in it.classIds) }
 
     /**
-     * The edge out of [from] for [token]. With [hit] null any edge counts (to decide whether to buffer an early press); otherwise
-     * an edge that needs a hit is taken only when the skill connected, and is preferred when it did.
+     * The tokens to try for a press, most specific first: the token as sent ("BACK+LMB"), then without the direction ("LMB"... keeping
+     * any SHIFT or CTRL), then the key alone. A weapon set that defines only plain keys therefore still answers a press made while
+     * moving, and one that defines a directional move (a back-step on BACK+SPACE) still wins when the press matches it.
      */
-    fun findEdge(set: WeaponSetDefinition, from: Int, token: String, hit: Boolean?): ComboEdge? {
+    fun tokenFallbacks(token: String): List<String> {
+        val parts = token.split('+')
+        val key = parts.last()
+        val noDirection = parts.filter { it !in InputTokens.DIRECTIONS }.joinToString("+")
+        return listOf(token, noDirection, key).distinct()
+    }
+
+    /**
+     * The edge out of [from] for [token] (or its plainer fallbacks, see [tokenFallbacks]). With [hit] null any edge counts (to decide
+     * whether to buffer an early press); otherwise an edge that needs a hit is taken only when the skill connected, and is preferred
+     * when it did.
+     */
+    fun findEdge(set: WeaponSetDefinition, from: Int, token: String, hit: Boolean?): ComboEdge? =
+        tokenFallbacks(token).firstNotNullOfOrNull { findEdgeExact(set, from, it, hit) }
+
+    private fun findEdgeExact(set: WeaponSetDefinition, from: Int, token: String, hit: Boolean?): ComboEdge? {
         var plain: ComboEdge? = null
         for (e in set.edges) {
             if (e.fromSkillId == from && e.input == token) {
@@ -73,7 +112,8 @@ object ActionCombatRules {
         return plain
     }
 
-    fun findEntry(set: WeaponSetDefinition, token: String): ComboEntry? = set.entries.firstOrNull { it.input == token }
+    fun findEntry(set: WeaponSetDefinition, token: String): ComboEntry? =
+        tokenFallbacks(token).firstNotNullOfOrNull { t -> set.entries.firstOrNull { it.input == t } }
 
     fun skillLength(skill: ActionSkillDefinition): Int = skill.startupTicks + skill.activeTicks + skill.recoveryTicks
 
@@ -121,7 +161,11 @@ object ActionCombatRules {
         if (d2 > reach * reach) return false
         if (hb.shape == HitboxShape.CIRCLE || hb.arcDegrees >= 360 || d2 == 0.0) return true
         val dist = StrictMath.sqrt(d2)
-        return dx * fx + dy * fy >= dist * StrictMath.cos(StrictMath.toRadians(hb.arcDegrees / 2.0))
+        // The body is not a point: widen the slice by the angle the body's radius covers from here, so a target that is close
+        // (where a small sidestep is a big angle) is still hit when any part of it is inside the cone.
+        val half = StrictMath.toRadians(hb.arcDegrees / 2.0) + StrictMath.atan2(targetRadius.toDouble(), dist)
+        if (half >= StrictMath.PI) return true
+        return dx * fx + dy * fy >= dist * StrictMath.cos(half)
     }
 
     /** How many tiles around the character a hitbox can reach, for picking candidates. */

@@ -52,6 +52,32 @@ sealed interface WorldSimulationEvent {
         val targetCharacterId: String? = null
     ) : WorldSimulationEvent
 
+    /**
+     * A built-in skill visual (see `ActionSkillDefinition.effect`) from ([fromX], [fromY]) to ([toX], [toY]) in world pixels, around the
+     * tile ([tileX], [tileY]) for who should see it; [radius] is the area it shows; it starts [delayTicks] in and runs [spanTicks].
+     */
+    data class SkillEffect(
+        val mapId: Int,
+        val tileX: Int,
+        val tileY: Int,
+        val effect: String,
+        val fromX: Float,
+        val fromY: Float,
+        val toX: Float,
+        val toY: Float,
+        val radius: Float,
+        val delayTicks: Int,
+        val spanTicks: Int,
+        /** Who started it (a character id), "" when not a character's: lets the client make that character hop for a leap. */
+        val sourceId: String = ""
+    ) : WorldSimulationEvent
+
+    /** The momentum meter of one character changed: its fill (0..99) and the ticks of empowerment left (0 when not empowered). */
+    data class MomentumChanged(val characterId: String, val momentum: Int, val empoweredTicks: Int) : WorldSimulationEvent
+
+    /** The health orbs on [mapId] changed (dropped, drifting to a player, picked up or faded); [orbs] is the whole list now. */
+    data class OrbsChanged(val mapId: Int, val orbs: List<com.morgana.domain.entity.HealthOrb>) : WorldSimulationEvent
+
     data class AnimationTriggered(
         val mapId: Int,
         val tileX: Int,
@@ -153,6 +179,19 @@ sealed interface WorldSimulationEvent {
     /** A Guild War ended and these guilds changed hands (the new holder and the old one); the server saves them. */
     data class GuildWarResult(val guilds: List<GuildDocument>) : WorldSimulationEvent
 
+    /** Offline food-fueled mastery training resolved when [characterId] logged in; the server sends `s_offline_training_report`. */
+    data class OfflineTrainingCompleted(
+        val characterId: String,
+        val minutesTrained: Int,
+        val focusKind: String,
+        val focusId: String,
+        val focusName: String,
+        val hitsAwarded: Int,
+        val startLevel: Int,
+        val endLevel: Int,
+        val remainingFuelSeconds: Int
+    ) : WorldSimulationEvent
+
     data class GuildUpdated(
         val memberIds: List<String>,
         val guild: GuildDocument?
@@ -180,6 +219,9 @@ sealed interface WorldSimulationEvent {
 
     /** A player's [spellId] is now cooling down for [durationTicks] (the client draws the quickbar sweep from this). */
     data class SpellCooldownStarted(val characterId: String, val spellId: Int, val durationTicks: Int) : WorldSimulationEvent
+
+    /** A player's action skill [skillId] is now cooling down for [durationTicks] (authoritative client ring sweep). */
+    data class ActionSkillCooldownStarted(val characterId: String, val skillId: Int, val durationTicks: Int) : WorldSimulationEvent
 
     /** A player began channeling / casting a spell with a non-zero castTimeTicks. */
     data class SpellCastStarted(val characterId: String, val spellId: Int, val mapId: Int, val castTimeTicks: Int) : WorldSimulationEvent

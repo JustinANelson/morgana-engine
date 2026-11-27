@@ -98,7 +98,9 @@ class MorganaGame(
     /** Phone conveniences the platform may offer: a buzz for hits, keeping the screen awake, a last-resort error screen. */
     private val device: com.morgana.client.net.DeviceFeatures = com.morgana.client.net.DeviceFeatures.NONE,
     /** The interface size the "Auto" setting stands for on this platform; desktop picks one from the monitor (see [com.morgana.client.access.UiScales.auto]). */
-    private val autoUiScale: () -> Float = { 1f }
+    private val autoUiScale: () -> Float = { 1f },
+    /** A one-time login ticket to redeem at launch instead of showing the password screen (see [com.morgana.client.net.DirectConnect]). */
+    private val directLogin: ResumeInfo? = null
 ) : KtxApplicationAdapter {
 
     /** Accessibility settings (keys, colours, motion, interface size): loaded in [create], saved on every change. */
@@ -244,15 +246,17 @@ class MorganaGame(
         )
     }
 
+    private var postFx: com.morgana.client.render.WorldPostProcessor? = null
+
     override fun create() {
         if (!VisUI.isLoaded()) {
             VisUI.load()
         }
+        HudWindow.touchMode = touchDevice
         com.morgana.client.ui.SkinThemer.apply()
         batch = SpriteBatch()
         font = BitmapFont()
         camera = OrthographicCamera(Gdx.graphics.width.toFloat(), Gdx.graphics.height.toFloat())
-        HudWindow.touchMode = touchDevice
         stage = Stage(ScreenViewport())
         accessibility.load()
         applyUiScaleToViewport(accessibility.current.uiScale)
@@ -260,6 +264,7 @@ class MorganaGame(
 
         assets = ProceduralRetroAssets().also { it.loadAll() }
         worldRenderer = MorganaWorldRenderer(assets, font)
+        postFx = com.morgana.client.render.WorldPostProcessor()
         adminPanel = F1LiveAdminPanel(stage, worldState, netClient, assets, onStepWorldZoom = ::stepWorldZoom, onPickPngFile = pickPngFile,
             worldZoomLabel = { WorldZoom.percentLabel(effectiveWorldScale()) })
         hud = PlayerHudAndWindows(
@@ -277,7 +282,12 @@ class MorganaGame(
             onLogout = { logout() },
             uiScaleLabel = { "Zoom: ${uiScaleText()}" },
             uiScaleText = ::uiScaleText,
-            accessibility = accessibility
+            accessibility = accessibility,
+            onCombatInput = { button ->
+                if (button == com.morgana.client.input.ActionCombatInput.Button.ATTACK) holdAttackRepeat.markFired()
+                sendActionInput(button.token, null)
+            },
+            onCombatRelease = { netClient.send(com.morgana.client.input.ActionCombatInput.release()) }
         )
         accessibility.onChanged = { change ->
             if (change == com.morgana.client.access.AccessibilityController.Change.SCALE) {
@@ -323,6 +333,19 @@ class MorganaGame(
                 if (accessibility.isCapturing) {
                     accessibility.captureKey(keycode)?.let { hud.accessibilityMessage(it) }
                     return true
+                }
+                if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) || Gdx.input.isKeyPressed(Input.Keys.CONTROL_RIGHT)) {
+                    val fx = com.morgana.client.render.VisualFx
+                    val note: String? = when (keycode) {
+                        Input.Keys.F6 -> { fx.lighting = !fx.lighting; "Lighting and mist: " + if (fx.lighting) "on" else "off" }
+                        Input.Keys.F7 -> { fx.shadows = !fx.shadows; "Cast shadows: " + if (fx.shadows) "on" else "off" }
+                        Input.Keys.F8 -> { fx.hd2d = !fx.hd2d; "HD-2D look: " + if (fx.hd2d) "on" else "off" }
+                        else -> null
+                    }
+                    if (note != null) {
+                        worldState.toasts.add(note, com.morgana.client.ui.ToastKind.INFO, com.morgana.client.ui.ToastClock.now())
+                        return true
+                    }
                 }
                 if (keycode == Input.Keys.F1) {
                     // The editor edits the world you are standing in, so it needs a login first.
@@ -382,6 +405,10 @@ class MorganaGame(
                         com.morgana.client.access.GameAction.PICK_UP -> if (worldState.actionReady("pickup", System.currentTimeMillis(), 250L)) {
                             sendPickup()
                         }
+                        com.morgana.client.access.GameAction.STANCE -> hud.cycleStance()
+                        com.morgana.client.access.GameAction.MORE_ACTIONS -> hud.toggleActionList()
+                        com.morgana.client.access.GameAction.TARGET_NEXT -> hud.cycleTarget()
+                        com.morgana.client.access.GameAction.HEALTH_POTION -> hud.useHealthPotion()
                         com.morgana.client.access.GameAction.CONTROLS -> hud.toggleControlsWindow()
                         else -> {
                             // Quickbar slots; the movement keys are read every frame (see render), not as key events.
@@ -396,7 +423,7 @@ class MorganaGame(
 
             override fun keyUp(keycode: Int): Boolean {
                 // A guard is held for as long as its key is down.
-                if (keycode == Input.Keys.Q && actionCombatActive()) {
+                if (actionCombatActive() && com.morgana.client.input.ActionCombatInput.buttonForKey(keycode, jumpEnabled = true)?.holdToRelease == true) {
                     netClient.send(com.morgana.client.input.ActionCombatInput.release())
                     return true
                 }
@@ -454,7 +481,7 @@ class MorganaGame(
                             tileX = at.x,
                             tileY = at.y,
                             labels = worldState.lastGroundLootLabels,
-                            groundItems = worldState.groundItemsOnMap
+                            groundItems = worldState.groundItemsInView()
                         )
                         if (clickedLoot != null) {
                             val ch = worldState.localCharacter
@@ -483,6 +510,10 @@ class MorganaGame(
                     if (button == Input.Buttons.LEFT) {
                         lmbHeldOnWorld = true
                         holdAttackRepeat.markFired()
+                    }
+                    // Clicking or tapping an enemy locks on to it.
+                    cursorAim(screenX, screenY)?.let { a ->
+                        com.morgana.client.input.CombatTargeting.nearestTo(a.first, a.second, worldState.targetCandidates())?.let { worldState.lockedNpcId = it.id }
                     }
                     sendActionInput(if (button == Input.Buttons.LEFT) "LMB" else "RMB", cursorAim(screenX, screenY))
                     return true
@@ -599,26 +630,98 @@ class MorganaGame(
     private fun sendActionInput(key: String, aim: Pair<Float, Float>?) {
         val keys = com.morgana.client.access.Accessibility.keys
         fun held(action: com.morgana.client.access.GameAction) = keys.isDown(action) { Gdx.input.isKeyPressed(it) }
-        val moveX = (if (held(com.morgana.client.access.GameAction.MOVE_RIGHT)) 1 else 0) - (if (held(com.morgana.client.access.GameAction.MOVE_LEFT)) 1 else 0)
-        val moveY = (if (held(com.morgana.client.access.GameAction.MOVE_DOWN)) 1 else 0) - (if (held(com.morgana.client.access.GameAction.MOVE_UP)) 1 else 0)
-        val shift = Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT) || Gdx.input.isKeyPressed(Input.Keys.SHIFT_RIGHT)
+        var moveX = (if (held(com.morgana.client.access.GameAction.MOVE_RIGHT)) 1 else 0) - (if (held(com.morgana.client.access.GameAction.MOVE_LEFT)) 1 else 0)
+        var moveY = (if (held(com.morgana.client.access.GameAction.MOVE_DOWN)) 1 else 0) - (if (held(com.morgana.client.access.GameAction.MOVE_UP)) 1 else 0)
+        if (moveX == 0 && moveY == 0) {
+            // No movement key held: the touch joystick gives the direction, as the keys would.
+            val (tx, ty) = com.morgana.client.input.ActionCombatInput.moveAxes(hud.heldTouchDirection())
+            moveX = tx
+            moveY = ty
+        }
+        val shift = Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT) || Gdx.input.isKeyPressed(Input.Keys.SHIFT_RIGHT) || hud.touchShift
         val facing = worldState.localCharacter?.position?.direction ?: com.morgana.domain.spatial.Direction.DOWN
         val token = com.morgana.client.input.ActionCombatInput.token(key, shift, moveX, moveY, facing)
-        netClient.send(com.morgana.client.input.ActionCombatInput.packet(token, aim))
-        audio.play(RetroSoundEngine.Sfx.SWING)
+        netClient.send(com.morgana.client.input.ActionCombatInput.packet(token, resolveAim(key, aim, moveX, moveY)))
+        if (swingAudible(key)) {
+            audio.play(RetroSoundEngine.Sfx.SWING)
+            val skill = hud.skillForToken(key)
+            val animState = when {
+                key == "SPACE" -> com.morgana.domain.game.SpriteState.JUMP
+                skill != null && skill.costs.containsKey("mp") -> com.morgana.domain.game.SpriteState.CAST
+                else -> com.morgana.domain.game.SpriteState.ATTACK
+            }
+            val duration = if (skill != null) {
+                ((skill.startupTicks + skill.activeTicks + skill.recoveryTicks) * 0.05f).coerceIn(0.28f, 0.55f)
+            } else {
+                0.36f
+            }
+            worldState.triggerLocalAction(animState, duration)
+        }
     }
 
-    /** The action-combat keys: Ctrl attacks, Space dodges, Q guards (held), F and Tab are free tokens. Returns true when [keycode] was one. */
-    private fun actionCombatKey(keycode: Int): Boolean {
-        val aim = cursorAim(Gdx.input.x, Gdx.input.y)
-        return when (keycode) {
-            Input.Keys.CONTROL_LEFT, Input.Keys.CONTROL_RIGHT -> { holdAttackRepeat.markFired(); sendActionInput("LMB", aim); true }
-            Input.Keys.SPACE -> { sendActionInput("SPACE", aim); true }
-            Input.Keys.Q -> { sendActionInput("Q", aim); true }
-            Input.Keys.TAB -> { sendActionInput("TAB", aim); true }
-            Input.Keys.F -> if (worldState.gameDefinition?.jump?.enabled == true) false else { sendActionInput("F", aim); true }
-            else -> false
+    /**
+     * Whether pressing the action input [key] should make its swing sound: not while the skill is still cooling down or in its
+     * swing, and not when the character cannot pay its cost, so a mashed or refused button stays silent. The press is still sent
+     * (the server decides, and buffers early presses); only the sound is held back. Inputs with no skill keep the old behaviour.
+     */
+    private fun swingAudible(key: String): Boolean {
+        val skill = hud.skillForToken(key) ?: return true
+        val ch = worldState.localCharacter
+        if (ch != null) for ((vital, cost) in skill.costs) if ((ch.vitals[vital]?.cur ?: 0) < cost) return false
+        if (worldState.actionSkillCooldowns.remaining(skill.id, com.morgana.client.ui.ToastClock.now()) > 0f) return false
+        val now = System.currentTimeMillis()
+        val gapMs = (skill.startupTicks + skill.activeTicks) * 50L
+        val last = worldState.skillUsedAtMs[key]
+        if (last != null && now - last < gapMs) return false
+        worldState.skillUsedAtMs[key] = now
+        return true
+    }
+
+    /**
+     * Where an attack or skill aims, the same on a phone and a keyboard: a dodge goes the way the player is moving; a skill the player
+     * is dragging goes along the drag; a cursor aim (a mouse click or key) is kept; otherwise the locked target, else the most
+     * valuable enemy in reach ([com.morgana.client.input.CombatTargeting]); with none the character's facing is used.
+     */
+    private fun resolveAim(key: String, cursor: Pair<Float, Float>?, moveX: Int, moveY: Int): Pair<Float, Float>? {
+        val centre = worldState.playerCentre()
+        if (key == "SPACE") {
+            if (centre != null) {
+                // A dodge backs away from the enemy being fought (the locked one, else the nearest in reach), whichever way the stick points.
+                // A back-step skill already moves opposite its aim, so it aims at the enemy instead.
+                val candidates = worldState.targetCandidates()
+                val locked = worldState.lockedNpcId?.let { id -> candidates.firstOrNull { it.id == id } }
+                val threat = locked ?: candidates.filter { com.morgana.client.input.CombatTargeting.distance(centre.first, centre.second, it) <= com.morgana.client.input.CombatTargeting.AUTO_RANGE }
+                    .minByOrNull { com.morgana.client.input.CombatTargeting.distance(centre.first, centre.second, it) }
+                if (threat != null) {
+                    val sign = if ((hud.skillForToken("SPACE")?.moves?.sumOf { it.forwardPixels } ?: 1) < 0) -1f else 1f
+                    var ax = (centre.first - threat.x) * sign
+                    var ay = (centre.second - threat.y) * sign
+                    val len = kotlin.math.hypot(ax, ay)
+                    if (len > 1f) return (centre.first + ax / len * 100f) to (centre.second + ay / len * 100f)
+                }
+            }
+            return if (centre != null && (moveX != 0 || moveY != 0)) (centre.first + moveX * 100f) to (centre.second + moveY * 100f) else null
         }
+        hud.manualAim()?.let { return it }
+        if (cursor != null) return cursor
+        if (centre == null || hud.skillForToken(key)?.guard != null) return null
+        // An area skill with no aim goes over the nearest cluster of enemies (it does not lock one).
+        hud.areaSkillInfo(key)?.let { (range, radius) ->
+            val reach = if (range > 0) range.toFloat() else com.morgana.client.input.CombatTargeting.AUTO_RANGE
+            return com.morgana.client.input.CombatTargeting.clusterCenter(centre.first, centre.second, worldState.targetCandidates(), reach, radius.toFloat())
+        }
+        val t = com.morgana.client.input.CombatTargeting.pickAuto(centre.first, centre.second, worldState.targetCandidates(), worldState.lockedNpcId) ?: return null
+        // Using a skill with enemies near locks on to the one it picked, so the next skills keep going at it until it falls.
+        if (worldState.lockedNpcId == null) worldState.lockedNpcId = t.id
+        return t.x to t.y
+    }
+
+    /** The action-combat keys (see [com.morgana.client.input.ActionCombatInput.buttonForKey]). Returns true when [keycode] was one. */
+    private fun actionCombatKey(keycode: Int): Boolean {
+        val button = com.morgana.client.input.ActionCombatInput.buttonForKey(keycode, jumpEnabled = worldState.gameDefinition?.jump?.enabled == true) ?: return false
+        if (button == com.morgana.client.input.ActionCombatInput.Button.ATTACK) holdAttackRepeat.markFired()
+        sendActionInput(button.token, cursorAim(Gdx.input.x, Gdx.input.y))
+        return true
     }
 
     /**
@@ -648,7 +751,7 @@ class MorganaGame(
 
     /** If an earlier run left a resume token, try to return to that character straight away. */
     private fun resumeSavedSession() {
-        val info = resumeStore.load() ?: return
+        val info = directLogin ?: resumeStore.load() ?: return
         val plan = ConnectionPlanner.plan(info.host, info.port.toString(), info.tls, knownHosts, defaultPort)
         if (plan.error != null) {
             resumeStore.clear()
@@ -768,7 +871,7 @@ class MorganaGame(
             mapId = ch?.position?.mapId ?: 0,
             tileX = ch?.position?.tileX ?: 0,
             tileY = ch?.position?.tileY ?: 0,
-            ground = worldState.groundItemsOnMap,
+            ground = worldState.groundItemsInView(),
             inventory = ch?.inventory,
             items = worldState.catalog.items.associateBy { it.id },
             nowMs = nowMs,
@@ -1078,13 +1181,17 @@ class MorganaGame(
                 // With the map cache the snapshot may name its map only by reference; null means it could not be rebuilt
                 // (the world state then asks the server to resend), so there is nothing to announce yet.
                 val snapshotMap = worldState.activeMapOf(packet)
-                if (snapshotMap != null && worldState.activeMap?.id != snapshotMap.id) {
-                    worldState.pendingGroundSpellId = null
-                    pendingLootTile = null
-                    if (worldState.activeMap != null) {
-                        hud.closeMapWindows()
+                val prevMap = worldState.activeMap
+                if (snapshotMap != null && prevMap?.id != snapshotMap.id) {
+                    val seamlessCrossing = prevMap != null && worldState.isModuleEnabled("softSeams") && worldState.isSeamlessNeighbor(prevMap, snapshotMap)
+                    if (!seamlessCrossing) {
+                        worldState.pendingGroundSpellId = null
+                        pendingLootTile = null
+                        if (prevMap != null) {
+                            hud.closeMapWindows()
+                        }
+                        audio.play(RetroSoundEngine.Sfx.WARP)
                     }
-                    audio.play(RetroSoundEngine.Sfx.WARP)
                 }
                 if (snapshotMap != null) {
                     val bgmTrack = snapshotMap.bgmTrackId
@@ -1185,15 +1292,18 @@ class MorganaGame(
             lmbHeldOnWorld = false
         }
         if (actionCombatActive() && !isTypingInTextField() && !adminPanel.isPanelFinderOpen()) {
-            val heldAttack = lmbHeldOnWorld || Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) || Gdx.input.isKeyPressed(Input.Keys.CONTROL_RIGHT)
+            val heldAttack = lmbHeldOnWorld || hud.touchAttackHeld || Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) || Gdx.input.isKeyPressed(Input.Keys.CONTROL_RIGHT)
             if (holdAttackRepeat.update(heldAttack, delta)) {
-                sendActionInput("LMB", cursorAim(Gdx.input.x, Gdx.input.y))
+                // The cursor aims a repeat only while the mouse is held on the world (or with Ctrl); a held ring button has the finger
+                // or pointer on the button, not on the map, so it auto-targets like its first press did.
+                val aimAtCursor = !hud.touchAttackHeld && (lmbHeldOnWorld || Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) || Gdx.input.isKeyPressed(Input.Keys.CONTROL_RIGHT))
+                sendActionInput("LMB", if (aimAtCursor) cursorAim(Gdx.input.x, Gdx.input.y) else null)
             }
         } else {
             holdAttackRepeat.reset()
             if (worldState.authenticated && !worldState.mapEditorActive && !isTypingInTextField() && !adminPanel.isPanelFinderOpen()) {
                 val attackHeld = com.morgana.client.access.Accessibility.keys.isDown(com.morgana.client.access.GameAction.ATTACK) { Gdx.input.isKeyPressed(it) }
-                if (attackHeld && worldState.swingReady(nowMs)) {
+                if ((attackHeld || hud.touchAttackHeld) && worldState.swingReady(nowMs)) {
                     netClient.send(ClientPacket.Attack)
                     worldState.triggerLocalAttackOrHarvest()
                     audio.play(RetroSoundEngine.Sfx.SWING)
@@ -1280,7 +1390,7 @@ class MorganaGame(
                     // Too many steps are still on the wire: wait for the server to catch up instead of queueing more.
                     moveRepeatTimer = 0.05f
                 } else if (moveDir != null) {
-                    val movePkt = worldState.predictAndCreateMovePacket(moveDir, sprint = held(com.morgana.client.access.GameAction.SPRINT))
+                    val movePkt = worldState.predictAndCreateMovePacket(moveDir, sprint = held(com.morgana.client.access.GameAction.SPRINT) || hud.touchSprint)
                     netClient.send(movePkt)
                     // Free movement sends one step per server tick (50 ms) on average: the leftover time carries over, so the
                     // frame rate cannot push the client above the server's one-step-per-tick limit (or below it). After a
@@ -1309,7 +1419,23 @@ class MorganaGame(
             val ky = Gdx.graphics.height / stage.height
             com.morgana.client.editor.dock.ViewInsets(covered.left * kx, covered.right * kx, covered.top * ky, covered.bottom * ky)
         }
-        if (!artLoading) worldRenderer.renderWorld(batch, camera, worldState, delta)
+        if (!artLoading) {
+            val fxMap = worldState.activeMap
+            val clockDef = worldState.gameDefinition?.clock
+            val clock = worldState.dayNightClock()
+            com.morgana.client.render.VisualFx.sky =
+                if (clock != null && clockDef != null && fxMap != null && !fxMap.isIndoors) {
+                    com.morgana.client.render.VisualSky.at(clockDef, clock.timeOfDayPermille)
+                } else null
+            val fx = postFx
+            if (fx != null && fxMap != null && com.morgana.client.render.VisualFx.postProcessing) {
+                fx.render(batch, camera, fxMap, com.morgana.client.render.VisualFx.sky, delta) {
+                    worldRenderer.renderWorld(batch, camera, worldState, delta)
+                }
+            } else {
+                worldRenderer.renderWorld(batch, camera, worldState, delta)
+            }
+        }
 
         hud.refreshHud()
         stage.act(delta)
@@ -1348,6 +1474,7 @@ class MorganaGame(
         netClient.close()
         if (::hud.isInitialized) hud.dispose()
         audio.dispose()
+        postFx?.dispose()
         assets.dispose()
         batch.dispose()
         font.dispose()

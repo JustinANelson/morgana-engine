@@ -316,4 +316,23 @@ class WorldStateTest {
         s.playerInteractFacing("p")
         assertEquals(1, used)
     }
+
+    @Test
+    fun `healing a damaged object restores hp up to its kind maxHp and notifies observers`() {
+        val s = sim()
+        val placed = (s.placeWorldObject("wall", 1, 3, 2) as WorldObjectResult.Placed).obj
+        val maxHp = placed.hp
+        assertTrue(s.damageWorldObject(placed.id, maxHp - 10))
+        assertEquals(10, s.worldObject(placed.id)!!.hp)
+
+        val events = mutableListOf<WorldSimulationEvent>()
+        assertTrue(s.healWorldObject(placed.id, 15, events))
+        assertEquals(25.coerceAtMost(maxHp), s.worldObject(placed.id)!!.hp)
+        assertTrue(events.any { it is WorldSimulationEvent.WorldObjectsChanged })
+
+        assertTrue(s.healWorldObject(placed.id, maxHp * 5, events))
+        assertEquals(maxHp, s.worldObject(placed.id)!!.hp)
+        assertFalse(s.healWorldObject(placed.id, 0))
+        assertFalse(s.healWorldObject("missing-id", 10))
+    }
 }

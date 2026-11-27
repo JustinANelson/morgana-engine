@@ -53,6 +53,27 @@
                         "$ref": "#/$defs/com.morgana.domain.content.ComboEdge"
                     }
                 },
+                "empowerSkillId": {
+                    "type": "integer"
+                },
+                "empoweredSkillId": {
+                    "type": "integer"
+                },
+                "momentumPerDodge": {
+                    "type": "integer"
+                },
+                "empowerTicks": {
+                    "type": "integer"
+                },
+                "empowerOnCrit": {
+                    "type": "boolean"
+                },
+                "empowerChancePercent": {
+                    "type": "integer"
+                },
+                "empowerCooldownTicks": {
+                    "type": "integer"
+                },
                 "schemaVersion": {
                     "type": "integer"
                 }

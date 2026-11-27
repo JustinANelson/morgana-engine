@@ -763,6 +763,26 @@ sealed interface ClientPacket {
     @Serializable
     @SerialName("c_delete_character")
     data class DeleteCharacter(val characterId: String, val confirmName: String) : ClientPacket
+
+    /** Sets the character's active mastery training focus (`WEAPON` + weaponTypeId or `SKILL` + actionSkillId). */
+    @Serializable
+    @SerialName("c_training_focus")
+    data class SetTrainingFocus(val focusKind: String, val focusId: String) : ClientPacket
+
+    /** Loads food from [slotIndex] into the single-tier offline training ration bar. */
+    @Serializable
+    @SerialName("c_training_fuel")
+    data class FuelOfflineTraining(val slotIndex: Int, val amount: Int = 1) : ClientPacket
+
+    /** Clears loaded offline training rations and unlocks the food tier. */
+    @Serializable
+    @SerialName("c_training_clear")
+    data object ClearOfflineTrainingFuel : ClientPacket
+
+    /** Toggles daily-capped online AFK training mode (does not consume offline food). */
+    @Serializable
+    @SerialName("c_training_afk")
+    data class ToggleAfkTraining(val active: Boolean) : ClientPacket
 }
 
 /**
@@ -835,6 +855,12 @@ sealed interface ServerPacket {
          * and then its neighbours, so the client can rebuild them from maps it already holds. Empty for other clients.
          */
         val mapRefs: List<MapRef> = emptyList(),
+        /**
+         * In a seamless world (`worldLayout`): where each neighbouring map's top left tile sits from the active map's top left tile, in
+         * tiles. The client draws the neighbours there and places what the server shows across a border; empty for the older N/S/E/W
+         * neighbour links, which keep their fixed arrangement.
+         */
+        val neighborOffsets: Map<Int, com.morgana.domain.map.TileOffset> = emptyMap(),
         val players: List<PublicPlayerSnapshot> = emptyList(),
         val npcs: List<MapNpcInstance> = emptyList(),
         val groundItems: List<MapGroundItem> = emptyList(),
@@ -875,9 +901,58 @@ sealed interface ServerPacket {
     @SerialName("s_npc_sync")
     data class NpcUpdated(val npc: MapNpcInstance) : ServerPacket
 
+    /**
+     * A monster that only moved since its last [NpcUpdated]: the client copies these fields onto the monster it already has (and ignores the
+     * packet for one it does not know; the server sends the whole monster to anyone who has not seen it). About a third of the size.
+     */
+    @Serializable
+    @SerialName("s_npc_pos")
+    data class NpcMoved(
+        @SerialName("i") val instanceId: String,
+        @SerialName("x") val tileX: Int,
+        @SerialName("y") val tileY: Int,
+        @SerialName("d") val direction: Direction,
+        @SerialName("t") val lastMoveTick: Long = 0L,
+        @SerialName("s") val subPixel: Boolean = false,
+        @SerialName("px") val pixelX: Float = 0f,
+        @SerialName("py") val pixelY: Float = 0f,
+        @SerialName("wx") val wanderX: Int = -1,
+        @SerialName("wy") val wanderY: Int = -1,
+        /** 0 for a monster on the viewer's own map; otherwise the map it is on (a monster across a border in a seamless world). */
+        @SerialName("m") val mapId: Int = 0
+    ) : ServerPacket
+
+    /** A player who only moved since their last [PlayerUpdated]: the client sets [position] on the player it already has. */
+    @Serializable
+    @SerialName("s_player_pos")
+    data class PlayerMoved(
+        @SerialName("c") val characterId: String,
+        @SerialName("p") val position: com.morgana.domain.spatial.WorldPosition,
+        /** 0 for a player on the viewer's own map; otherwise the map they are on (a player across a border in a seamless world). */
+        @SerialName("m") val mapId: Int = 0
+    ) : ServerPacket
+
+    /** Every [NpcMoved] and [PlayerMoved] one tick produced for what this player can see, in a single packet. */
+    @Serializable
+    @SerialName("s_moves")
+    data class EntityMoves(@SerialName("n") val npcs: List<NpcMoved> = emptyList(), @SerialName("p") val players: List<PlayerMoved> = emptyList()) : ServerPacket
+
     @Serializable
     @SerialName("s_ground_items")
     data class GroundItemsUpdated(val mapId: Int, val items: List<MapGroundItem>) : ServerPacket
+
+    /** The health orbs on [mapId] (the whole list; an empty list clears them). */
+    @Serializable
+    @SerialName("s_orbs")
+    data class HealthOrbsUpdated(val mapId: Int, val orbs: List<com.morgana.domain.entity.HealthOrb>) : ServerPacket
+
+    /**
+     * What changed in the projectiles on [mapId] since the last [ProjectilesUpdated] or this packet: [upserted] shots are new or changed (replace by
+     * `projectileId`), [removedIds] are gone. A free-flight shot that merely flew on is not listed; the client flies it on from its last position.
+     */
+    @Serializable
+    @SerialName("s_proj_delta")
+    data class ProjectilesDelta(val mapId: Int, val upserted: List<com.morgana.domain.entity.MapProjectile> = emptyList(), val removedIds: List<String> = emptyList()) : ServerPacket
 
     @Serializable
     @SerialName("s_projectiles")
@@ -926,6 +1001,27 @@ sealed interface ServerPacket {
         val text: String,
         val category: FloatingTextCategory = FloatingTextCategory.DAMAGE,
         val colorHex: String = category.defaultColorHex
+    ) : ServerPacket
+
+    /** The local player's momentum meter (0..99) and the ticks of empowerment left (0 when not empowered). */
+    @Serializable
+    @SerialName("s_momentum")
+    data class Momentum(val momentum: Int, val empoweredTicks: Int) : ServerPacket
+
+    /** A built-in skill visual (arrow rain, dodge dust, spin whirl) the client draws with no art; positions are world pixels. */
+    @Serializable
+    @SerialName("s_skill_fx")
+    data class SkillEffect(
+        val mapId: Int,
+        val effect: String,
+        val fromX: Float,
+        val fromY: Float,
+        val toX: Float,
+        val toY: Float,
+        val radius: Float = 0f,
+        val delayTicks: Int = 0,
+        val spanTicks: Int = 1,
+        val sourceId: String = ""
     ) : ServerPacket
 
     @Serializable
@@ -1003,6 +1099,29 @@ sealed interface ServerPacket {
     @Serializable
     @SerialName("s_spell_cooldown")
     data class SpellCooldown(val spellId: Int, val durationTicks: Int) : ServerPacket
+
+    /**
+     * An action skill the receiving player just executed (or attempted while cooling down) is cooling down for
+     * [durationTicks] (20 per second) from now, keyed by [skillId] rather than input token so empowered upgrades
+     * never corrupt the base skill's timer.
+     */
+    @Serializable
+    @SerialName("s_skill_cooldown")
+    data class ActionSkillCooldown(val skillId: Int, val durationTicks: Int) : ServerPacket
+
+    /** Sent on login when offline food-fueled mastery training resolved progress while the player was away. */
+    @Serializable
+    @SerialName("s_offline_training_report")
+    data class OfflineTrainingReport(
+        val minutesTrained: Int,
+        val focusKind: String,
+        val focusId: String,
+        val focusName: String,
+        val hitsAwarded: Int,
+        val startLevel: Int,
+        val endLevel: Int,
+        val remainingFuelSeconds: Int
+    ) : ServerPacket
 
     @Serializable
     @SerialName("s_show_picture")

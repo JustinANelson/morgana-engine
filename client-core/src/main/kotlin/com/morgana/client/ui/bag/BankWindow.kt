@@ -86,7 +86,8 @@ class BankWindow(
             }
         })
 
-        add(tabBar).growX().row()
+        add(tabBar).growX().padBottom(2f).row()
+        add(GameTheme.shared.divider()).growX().padBottom(3f).row()
         add(body).grow().row()
         rebuildTabs()
         rebuildBody()
@@ -223,18 +224,22 @@ class BankWindow(
         toolbar.add().growX()
         body.add(toolbar).growX().colspan(2).padBottom(4f).row()
 
-        val gridW = winW * 0.56f
-        val detailW = winW - gridW - 36f
-        val bodyH = winH - 132f
+        val gridW = ((winW - 32f) * 0.56f).coerceAtLeast(180f)
+        val detailW = (winW - 32f - gridW - 6f).coerceAtLeast(150f)
+        grid.columns = ((gridW - 22f) / cell).toInt().coerceIn(4, 10)
+        val gridWell = VisTable().apply {
+            background = GameTheme.shared.insetWellBackground
+            add(BagUi.scroll(grid, this@BankWindow.stage)).grow().top()
+        }
         val leftCol = VisTable()
-        leftCol.add(BagUi.scroll(grid, stage)).width(gridW).height(bodyH - 24f).top().row()
-        leftCol.add(capacityHolder).left().padTop(4f).row()
+        leftCol.add(gridWell).grow().row()
+        leftCol.add(capacityHolder).left().growX().padTop(4f).row()
         val detailCard = VisTable().apply {
             background = GameTheme.shared.cardBackground
             add(BagUi.scroll(detail, this@BankWindow.stage)).grow().top()
         }
-        body.add(leftCol).width(gridW).height(bodyH).top()
-        body.add(detailCard).width(detailW).height(bodyH).top().padLeft(6f).row()
+        body.add(leftCol).width(gridW).growY().top()
+        body.add(detailCard).width(detailW).growY().top().padLeft(6f).row()
     }
 
     private fun refresh() {
@@ -377,7 +382,7 @@ class BankWindow(
         val room = targetContainer(ch).roomFor(def)
         val actionLabel = if (tab == Tab.WITHDRAW) "Withdraw" else "Deposit"
         val canTransfer = room > 0
-        val btn = BagUi.button(if (maxTransfer > 1) "$actionLabel x$quantity" else actionLabel, enabled = canTransfer) {
+        val btn = BagUi.primaryButton(if (maxTransfer > 1) "$actionLabel x$quantity" else actionLabel, enabled = canTransfer) {
             if (tab == Tab.WITHDRAW) {
                 netClient.send(if (guildVault) ClientPacket.GuildBankWithdraw(slot, quantity) else ClientPacket.BankWithdraw(slot, quantity))
             } else {

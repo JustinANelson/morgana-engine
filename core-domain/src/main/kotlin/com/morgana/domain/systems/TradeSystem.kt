@@ -1,5 +1,6 @@
 package com.morgana.domain.systems
 
+import com.morgana.domain.sim.tileDistanceAcross
 import com.morgana.domain.sim.PlayerActivity
 import com.morgana.domain.sim.WorldSimulation
 import com.morgana.domain.sim.WorldSimulationEvent
@@ -18,7 +19,8 @@ import com.morgana.domain.entity.TradeSessionState
 internal fun WorldSimulation.initiateTradeImpl(initiatorId: String, partnerId: String): List<WorldSimulationEvent> {
     val p1 = players[initiatorId] ?: return emptyList()
     val p2 = players[partnerId] ?: return emptyList()
-    if (p1.position.mapId != p2.position.mapId) return emptyList()
+    // Across a map border in a seamless world they only have to be near each other.
+    if (p1.position.mapId != p2.position.mapId && tileDistanceAcross(p1, p2) == null) return emptyList()
     if (p1.isGhost || p2.isGhost || actionBlocked(initiatorId, PlayerActivity.TRADE) || actionBlocked(partnerId, PlayerActivity.TRADE)) return emptyList()
 
     val session = TradeSessionState(

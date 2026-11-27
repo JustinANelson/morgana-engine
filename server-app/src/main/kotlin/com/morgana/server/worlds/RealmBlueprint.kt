@@ -46,7 +46,9 @@ data class RealmBlueprint(
     val noCombat: Boolean = false,
     val modernSprites: Boolean = false,
     /** Systems the template switches off that the creator wants on after all (a template's own switches are the starting point). */
-    val enabledModules: Set<OptionalModule> = emptySet()
+    val enabledModules: Set<OptionalModule> = emptySet(),
+    /** Optional HUD layout override (`classic` or `ring`, see [com.morgana.domain.game.UiLayout]). */
+    val uiLayout: String? = null
 ) {
     /** Problems that stop the realm being created, empty when it is fine. Cheap and I/O free, so a UI can call it per keystroke. */
     fun problems(): List<String> = buildList {

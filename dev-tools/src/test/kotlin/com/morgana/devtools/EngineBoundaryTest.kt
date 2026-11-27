@@ -18,14 +18,14 @@ class EngineBoundaryTest {
     private val repoRoot: Path = Paths.get("..").toAbsolutePath().normalize()
 
     private val engineModules = listOf(
-        "core-domain", "shared-protocol", "server-persistence", "server-app", "tilegen", "client-core",
+        "core-domain", "shared-protocol", "server-persistence", "server-app", "tilegen", "map-builder", "client-core",
         "client-net-netty", "script-luak", "client-web", "client-desktop", "client-android", "plugin-example"
     )
 
     /** Names of games and of game-specific content: an engine source file mentioning one is coupled to that game. */
     private val gameNames = listOf(
         "Lanternfall", "Hearthvale", "MorganaClassic", "morgana-classic", "Conquer", "Emberdeep", "White River", "WhiteRiver", "white-river",
-        "Trevana", "tutorial-village", "Tutorial Village"
+        "Trevana", "Trevena", "trevena", "tail4e16", "morgana-realms", "tutorial-village", "Tutorial Village"
     )
 
     /** Files that may name a game today. Empty means the engine is clean. */

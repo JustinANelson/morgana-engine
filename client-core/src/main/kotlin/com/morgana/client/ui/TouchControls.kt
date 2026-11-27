@@ -48,6 +48,89 @@ fun joystickDirection(dx: Float, dy: Float, deadZone: Float, allowDiagonals: Boo
     }
 }
 
+/** How a [GameAction] is reached without a keyboard. */
+enum class TouchRoute {
+    /** The floating joystick. */
+    JOYSTICK,
+    /** One of the round action buttons. */
+    ACTION_BUTTON,
+    /** The latching Run button or the held modifier button. */
+    TOGGLE_BUTTON,
+    /** A hotkey on the right edge. */
+    HOTKEY,
+    /** The Menu launcher, which lists every window with its key. */
+    MENU,
+    /** The More button's list of other actions (a stance, items on quickbar slots 5-0). */
+    ACTION_LIST
+}
+
+/**
+ * The touch route for every key action. The `when` has no `else`, so adding a [GameAction] without deciding how a phone player
+ * reaches it does not compile: keyboard and touch cannot drift apart.
+ */
+fun touchRoute(action: com.morgana.client.access.GameAction): TouchRoute = when (action) {
+    com.morgana.client.access.GameAction.MOVE_UP,
+    com.morgana.client.access.GameAction.MOVE_DOWN,
+    com.morgana.client.access.GameAction.MOVE_LEFT,
+    com.morgana.client.access.GameAction.MOVE_RIGHT -> TouchRoute.JOYSTICK
+    com.morgana.client.access.GameAction.ATTACK,
+    com.morgana.client.access.GameAction.JUMP,
+    com.morgana.client.access.GameAction.INTERACT,
+    com.morgana.client.access.GameAction.PICK_UP,
+    com.morgana.client.access.GameAction.MORE_ACTIONS,
+    com.morgana.client.access.GameAction.TARGET_NEXT,
+    com.morgana.client.access.GameAction.HEALTH_POTION -> TouchRoute.ACTION_BUTTON
+    com.morgana.client.access.GameAction.STANCE -> TouchRoute.ACTION_LIST
+    com.morgana.client.access.GameAction.SPRINT -> TouchRoute.TOGGLE_BUTTON
+    com.morgana.client.access.GameAction.HOTBAR_1,
+    com.morgana.client.access.GameAction.HOTBAR_2,
+    com.morgana.client.access.GameAction.HOTBAR_3,
+    com.morgana.client.access.GameAction.HOTBAR_4,
+    com.morgana.client.access.GameAction.HOTBAR_5,
+    com.morgana.client.access.GameAction.HOTBAR_6,
+    com.morgana.client.access.GameAction.HOTBAR_7,
+    com.morgana.client.access.GameAction.HOTBAR_8,
+    com.morgana.client.access.GameAction.HOTBAR_9,
+    com.morgana.client.access.GameAction.HOTBAR_10 -> TouchRoute.HOTKEY
+    com.morgana.client.access.GameAction.CHARACTER,
+    com.morgana.client.access.GameAction.INVENTORY,
+    com.morgana.client.access.GameAction.SPELLBOOK,
+    com.morgana.client.access.GameAction.QUESTS,
+    com.morgana.client.access.GameAction.CRAFTING,
+    com.morgana.client.access.GameAction.PARTY,
+    com.morgana.client.access.GameAction.MINIMAP,
+    com.morgana.client.access.GameAction.WORLD_MAP,
+    com.morgana.client.access.GameAction.CONTROLS -> TouchRoute.MENU
+}
+
+/** One round button's centre and diameter, in stage units. */
+class TouchSlot(val cx: Float, val cy: Float, val diameter: Float) {
+    val left get() = cx - diameter / 2
+    val right get() = cx + diameter / 2
+    val bottom get() = cy - diameter / 2
+    val top get() = cy + diameter / 2
+}
+
+/**
+ * Where the action buttons go. Slot 0 is the large primary button in the bottom-right corner (its right edge at [rightEdge]);
+ * the other [count] - 1 are small buttons in a grid of [perRow] to its left, filling the bottom row from the primary outwards and
+ * then the rows above, so the buttons used most (listed first) sit nearest the thumb. [d] is the base button size. Pure so the
+ * layout is unit-tested on phone-sized screens.
+ */
+fun touchClusterSlots(count: Int, rightEdge: Float, bottom: Float, d: Float, perRow: Int = 3, gap: Float = 6f): List<TouchSlot> {
+    if (count <= 0) return emptyList()
+    val big = d * 1.2f
+    val small = (d * 0.74f).coerceIn(40f, 56f)
+    val slots = ArrayList<TouchSlot>(count)
+    slots += TouchSlot(rightEdge - big / 2, bottom + big / 2, big)
+    for (i in 0 until count - 1) {
+        val row = i / perRow
+        val col = i % perRow
+        slots += TouchSlot(rightEdge - big - gap - small / 2 - col * (small + gap), bottom + small / 2 + row * (small + gap), small)
+    }
+    return slots
+}
+
 /** One on-screen side hotkey: a caption (e.g. the hotbar slot's action) and what it does. */
 class TouchHotkey(
     val caption: () -> String,
@@ -74,7 +157,13 @@ class TouchControls(
     /** Space left clear at the top-right corner for the compact HUD's Menu button. */
     private val topRightInset: Float = DEFAULT_TOP_RIGHT_INSET,
     /** Whether the joystick outputs 8-way diagonal directions (true for sub-tile movement). */
-    private val allowDiagonals: () -> Boolean = { true }
+    private val allowDiagonals: () -> Boolean = { true },
+    /** A modifier held with the left thumb while the right thumb presses an action button (the keyboard's Shift). Sits at the left edge. */
+    private val modifierButton: TouchFaceButton? = null,
+    /** Space kept clear at the bottom-left for the minimized chat bar. */
+    private val bottomLeftInset: Float = DEFAULT_BOTTOM_LEFT_INSET,
+    /** True when the action ring replaces the button cluster and the hotkey column: only the joystick (and the modifier) remain. */
+    private val clusterHidden: () -> Boolean = { false }
 ) : Group() {
 
     /** The direction currently held on the joystick, or null. Polled each frame by the game loop. */
@@ -84,7 +173,10 @@ class TouchControls(
     private var circle: Texture? = null
     private val zone = JoystickZone()
     private val faceActors = faceButtons.map {
-        CircleButton(it.glyph, { it.color }, big = true, onPress = it.onPress, highlighted = it.highlighted)
+        CircleButton(it.glyph, { it.color }, big = true, onPress = it.onPress, onRelease = { it.onRelease?.invoke() }, highlighted = it.highlighted)
+    }
+    private val modifierActor = modifierButton?.let {
+        CircleButton(it.glyph, { it.color }, big = false, onPress = it.onPress, onRelease = { it.onRelease?.invoke() }, highlighted = it.highlighted)
     }
     private val hotkeyActors = hotkeys.map { hk ->
         CircleButton({ "" }, { GameTheme.shared.palette.textMuted }, big = false, onPress = hk.onPress, caption = hk.caption, cooldownFraction = hk.cooldownFraction, dimmed = hk.dimmed)
@@ -94,8 +186,12 @@ class TouchControls(
         touchable = Touchable.childrenOnly
         addActor(zone)
         faceActors.forEach { addActor(it) }
+        modifierActor?.let { addActor(it) }
         hotkeyActors.forEach { addActor(it) }
     }
+
+    /** How much of the top of the left half the joystick may not start in (the player frame sits there and takes taps). */
+    var joystickTopInset: Float = 0f
 
     /** Positions everything for the current stage size. Called every frame (cheap) so resizes and zoom just work. */
     internal fun layoutFor(w: Float, h: Float) {
@@ -104,7 +200,7 @@ class TouchControls(
         val topMargin = topRightInset.coerceAtLeast(margin)
         val d = (min(w, h) * 0.17f).coerceIn(54f, 92f)
 
-        hotkeyActors.forEachIndexed { idx, a -> a.isVisible = hotkeys[idx].visible() }
+        hotkeyActors.forEachIndexed { idx, a -> a.isVisible = hotkeys[idx].visible() && !clusterHidden() }
         val visibleHotkeys = hotkeyActors.filter { it.isVisible }
         val n = visibleHotkeys.size.coerceAtLeast(1)
         val availH = (h - topMargin - margin).coerceAtLeast(56f)
@@ -126,23 +222,24 @@ class TouchControls(
             )
         }
         val hotkeyColumnsWidth = cols * sd + (cols - 1) * sd * (gapFactor - 1f)
-        // Face buttons: diamond to the left of the hotkey columns.
-        val cx = w - margin - hotkeyColumnsWidth - 12f - d * 1.2f
-        val cy = margin + d * 1.2f
-        val off = d * 0.72f
-        val spots = listOf(
-            0f to -off, // A (bottom)
-            off to 0f,  // B (right)
-            -off to 0f, // X (left)
-            0f to off   // Y (top)
-        )
-        faceActors.forEachIndexed { i, a ->
-            a.isVisible = faceButtons[i].visible()
-            val (ox, oy) = spots.getOrElse(i) { 0f to 0f }
-            a.setSize(d, d)
-            a.setPosition(cx + ox - d / 2, cy + oy - d / 2)
+        // Action buttons: one large primary in the corner and a grid of small ones to its left, left of the hotkey columns.
+        faceActors.forEachIndexed { i, a -> a.isVisible = faceButtons[i].visible() && !clusterHidden() }
+        val shown = faceActors.indices.filter { faceActors[it].isVisible }
+        val primaryIndex = shown.firstOrNull { faceButtons[it].primary } ?: shown.firstOrNull()
+        val ordered = listOfNotNull(primaryIndex) + shown.filter { it != primaryIndex }
+        val slots = touchClusterSlots(ordered.size, w - margin - hotkeyColumnsWidth - 12f, margin, d)
+        ordered.forEachIndexed { n, idx ->
+            val slot = slots[n]
+            faceActors[idx].setSize(slot.diameter, slot.diameter)
+            faceActors[idx].setPosition(slot.left, slot.bottom)
         }
-        zone.setSize(w * 0.5f, h)
+        modifierActor?.let { m ->
+            m.isVisible = modifierButton!!.visible()
+            val md = (d * 0.74f).coerceIn(40f, 56f)
+            m.setSize(md, md)
+            m.setPosition(margin, bottomLeftInset)
+        }
+        zone.setSize(w * 0.5f, (h - joystickTopInset).coerceAtLeast(0f))
         zone.setPosition(0f, 0f)
         zone.baseRadius = d * 0.95f
     }
@@ -163,7 +260,7 @@ class TouchControls(
     /** Releases everything (used when the overlay is hidden mid-press, so the hero does not keep walking). */
     fun releaseAll() {
         zone.release()
-        faceActors.forEach { it.pressedPointer = -2 }
+        (faceActors + listOfNotNull(modifierActor)).forEach { it.release() }
         hotkeyActors.forEach { it.pressedPointer = -2 }
         heldDirection = null
     }
@@ -228,7 +325,17 @@ class TouchControls(
         }
 
         override fun draw(batch: Batch, parentAlpha: Float) {
-            if (pointer == -2) return
+            if (pointer == -2) {
+                // At rest the stick is a faint pad where a thumb naturally lands; it moves under the finger once pressed.
+                val gx = x + baseRadius * 1.25f + 14f
+                val gy = y + bottomLeftInset + baseRadius * 0.9f
+                val palette = GameTheme.shared.palette
+                drawCircle(batch, gx, gy, baseRadius, palette.background, 0.28f * parentAlpha)
+                drawCircle(batch, gx, gy, baseRadius * 0.9f, palette.text, 0.05f * parentAlpha)
+                drawCircle(batch, gx, gy, baseRadius * 0.38f, palette.text, 0.16f * parentAlpha)
+                batch.setColor(Color.WHITE)
+                return
+            }
             val dark = GameTheme.shared.palette.background
             val light = GameTheme.shared.palette.text
             drawCircle(batch, x + baseX, y + baseY, baseRadius, dark, 0.45f * parentAlpha)
@@ -244,6 +351,7 @@ class TouchControls(
         private val tint: () -> Color,
         private val big: Boolean,
         private val onPress: () -> Unit,
+        private val onRelease: () -> Unit = {},
         private val caption: (() -> String)? = null,
         private val cooldownFraction: () -> Float = { 0f },
         private val dimmed: () -> Boolean = { false },
@@ -263,9 +371,16 @@ class TouchControls(
                 }
 
                 override fun touchUp(event: InputEvent, x: Float, y: Float, p: Int, button: Int) {
-                    if (p == pressedPointer) pressedPointer = -2
+                    if (p == pressedPointer) release()
                 }
             })
+        }
+
+        /** Lets go of the button and runs its release action (once) if it was held. */
+        fun release() {
+            if (pressedPointer == -2) return
+            pressedPointer = -2
+            onRelease()
         }
 
         override fun hit(x: Float, y: Float, touchable: Boolean): Actor? {
@@ -299,8 +414,9 @@ class TouchControls(
             val f = font()
             val text = if (caption != null) caption.invoke() else glyph()
             f.color = Color(1f, 1f, 1f, (if (isDimmed) 0.55f else 1f) * parentAlpha)
-            layout.setText(f, text, f.color, r * 1.6f, com.badlogic.gdx.utils.Align.center, true)
-            val boxW = r * 1.6f
+            // Wide enough that a five-letter caption such as "Guard" or "Dodge" stays on one line in a small button.
+            val boxW = r * 2.3f
+            layout.setText(f, text, f.color, boxW, com.badlogic.gdx.utils.Align.center, true)
             f.draw(batch, layout, cx - boxW / 2, cy + layout.height / 2)
             f.color = Color.WHITE
         }
@@ -309,6 +425,9 @@ class TouchControls(
     companion object {
         /** Leaves room for the 42px Menu button + 8px top margin + 8px gap. */
         const val DEFAULT_TOP_RIGHT_INSET = 58f
+
+        /** Leaves room above the minimized chat bar (12px margin + a ~36px title bar + a gap). */
+        const val DEFAULT_BOTTOM_LEFT_INSET = 62f
 
         /** A soft white disc; tinted and scaled at draw time. */
         private fun makeCircleTexture(): Texture {
@@ -326,7 +445,11 @@ class TouchControls(
     }
 }
 
-/** Definition of one of the four face buttons. */
+/**
+ * Definition of one round action button. [onRelease] runs when the finger lifts (for held inputs such as a guard), [primary] makes
+ * it the large button of the cluster (the first visible button is the primary when none is marked), and [highlighted] shows a
+ * latched or active state.
+ */
 class TouchFaceButton(
     val glyph: () -> String,
     val color: Color,
@@ -334,6 +457,13 @@ class TouchFaceButton(
     val highlighted: () -> Boolean = { false },
     val onPress: () -> Unit
 ) {
+    /** Runs when the finger lifts or the overlay hides mid-press. */
+    var onRelease: (() -> Unit)? = null
+    var primary: Boolean = false
+
+    fun withRelease(action: () -> Unit): TouchFaceButton = apply { onRelease = action }
+    fun asPrimary(): TouchFaceButton = apply { primary = true }
+
     constructor(glyph: () -> String, color: Color, onPress: () -> Unit) : this(glyph, color, { true }, { false }, onPress)
     constructor(glyph: () -> String, color: Color, visible: () -> Boolean, onPress: () -> Unit) : this(glyph, color, visible, { false }, onPress)
     constructor(glyph: String, color: Color, visible: () -> Boolean, onPress: () -> Unit) : this({ glyph }, color, visible, onPress)

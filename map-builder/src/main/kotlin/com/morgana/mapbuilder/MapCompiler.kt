@@ -20,7 +20,7 @@ class RecipeException(message: String) : IllegalArgumentException(message)
  */
 object MapCompiler {
 
-    private class Cell(var terrain: Int) {
+    internal class Cell(var terrain: Int) {
         val layers = LinkedHashMap<MapLayer, TilePlacement>()
         var groundOverride: TilePlacement? = null
         var blocked = false
@@ -29,7 +29,14 @@ object MapCompiler {
         var attribute: TileAttribute? = null
     }
 
-    fun compile(recipe: MapRecipe, index: TileIndex): MapDefinition {
+    fun compile(recipe: MapRecipe, index: TileIndex): MapDefinition = build(recipe, index).map
+
+    /** The compiled map together with what the compiler knew while making it, for tools that read a map (see [MapAnalysis]). */
+    fun build(recipe: MapRecipe, index: TileIndex): Built = buildInternal(recipe, index)
+
+    class Built(val map: MapDefinition, val analysis: MapAnalysis)
+
+    private fun buildInternal(recipe: MapRecipe, index: TileIndex): Built {
         val w = recipe.width
         val h = recipe.height
         if (w !in 5..256 || h !in 5..256) throw RecipeException("Map ${recipe.id}: size ${w}x$h is outside 5..256")
@@ -41,6 +48,8 @@ object MapCompiler {
         fun inb(x: Int, y: Int) = x in 0 until w && y in 0 until h
         val spawns = ArrayList<MapNpcSpawnSlot>()
         val campSlots = HashSet<Int>()
+        val fields = HashMap<String, FloatArray>()
+        var lastWorldGen: WorldGenOp? = null
 
         fun paint(t: Int, x: Int, y: Int) {
             if (inb(x, y)) at(x, y).terrain = t
@@ -48,6 +57,8 @@ object MapCompiler {
 
         fun placeProp(name: String, px: Int, py: Int, passable: List<Int>, walkable: Boolean) {
             val p = index.props[name] ?: throw RecipeException("Map ${recipe.id}: unknown prop '$name'")
+            val isWalkable = walkable || p.walkable
+            val openCols = if (p.passableCols.isEmpty()) passable else passable + p.passableCols
             for (r in 0 until p.h) for (c in 0 until p.w) {
                 val x = px + c
                 val y = py + r
@@ -56,8 +67,8 @@ object MapCompiler {
                 val bottom = r == p.h - 1
                 cell.layers[if (bottom) MapLayer.MASK_1 else MapLayer.FRINGE_1] = TilePlacement(p.tilesetId, p.x + c, p.y + r)
                 cell.occupied = true
-                if (bottom && !walkable) {
-                    if (c in passable) cell.open = true else cell.blocked = true
+                if (bottom && !isWalkable) {
+                    if (c in openCols) cell.open = true else cell.blocked = true
                 }
             }
         }
@@ -75,7 +86,8 @@ object MapCompiler {
                     if (nx * nx + ny * ny <= 1f) paint(t, x, y)
                 }
             }
-            is PathOp -> {
+            is PathOp -> if (op.meander <= 0f) {
+                // The straight path: integer steps along the longer axis, exactly as before (existing maps compile to the same tiles).
                 val t = terrain(op.terrain)
                 val r = op.width / 2f
                 for (i in 0 until op.points.size - 1) {
@@ -92,6 +104,104 @@ object MapCompiler {
                             if (hypot(dx.toFloat(), dy.toFloat()) <= r + 0.25f) paint(t, cx + dx, cy + dy)
                         }
                     }
+                }
+            } else {
+                val t = terrain(op.terrain)
+                val r = op.width / 2f
+                // Walk the polyline a tile at a time; a meandering path pushes each sample sideways by smooth noise, fading to nothing
+                // at both ends so the road still starts and ends where it was told to.
+                val samples = ArrayList<Pair<Float, Float>>()
+                var travelled = 0f
+                var total = 0f
+                for (i in 0 until op.points.size - 1) total += hypot((op.points[i + 1][0] - op.points[i][0]).toFloat(), (op.points[i + 1][1] - op.points[i][1]).toFloat())
+                val wave = op.wavelength.coerceAtLeast(1f)
+                for (i in 0 until op.points.size - 1) {
+                    val x0 = op.points[i][0].toFloat()
+                    val y0 = op.points[i][1].toFloat()
+                    val x1 = op.points[i + 1][0].toFloat()
+                    val y1 = op.points[i + 1][1].toFloat()
+                    val len = hypot(x1 - x0, y1 - y0).coerceAtLeast(1f)
+                    val nx = -(y1 - y0) / len
+                    val ny = (x1 - x0) / len
+                    val steps = len.toInt().coerceAtLeast(1)
+                    for (st in 0..steps) {
+                        val f = st.toFloat() / steps
+                        var cx = x0 + (x1 - x0) * f
+                        var cy = y0 + (y1 - y0) * f
+                        if (op.meander > 0f) {
+                            val along = travelled + len * f
+                            val taper = minOf(1f, minOf(along, total - along) / wave).coerceAtLeast(0f)
+                            val off = (NoiseField.gradient(along / wave, 0.5f, recipe.seed + op.salt) * 1.6f).coerceIn(-1f, 1f) * op.meander * taper
+                            cx += nx * off
+                            cy += ny * off
+                        }
+                        samples += cx to cy
+                    }
+                    travelled += len
+                }
+                val ri = r.toInt() + 1
+                for ((cx, cy) in samples) {
+                    val icx = Math.round(cx)
+                    val icy = Math.round(cy)
+                    for (dy in -ri..ri) for (dx in -ri..ri) {
+                        if (hypot(dx.toFloat(), dy.toFloat()) <= r + 0.25f) paint(t, icx + dx, icy + dy)
+                    }
+                }
+            }
+            is NoiseOp -> {
+                val region = op.region ?: listOf(0, 0, w, h)
+                val f = NoiseField.smooth(NoiseField.field(w, h, recipe.seed + op.salt * 131L, op.scale, op.octaves, op.persistence, op.warp), w, h, op.smooth)
+                if (op.tiltX != 0f || op.tiltY != 0f) for (y in maxOf(0, region[1]) until minOf(region[1] + region[3], h)) for (x in maxOf(0, region[0]) until minOf(region[0] + region[2], w)) {
+                    f[y * w + x] += op.tiltX * ((x - region[0]).toFloat() / region[2].coerceAtLeast(1) - 0.5f) + op.tiltY * ((y - region[1]).toFloat() / region[3].coerceAtLeast(1) - 0.5f)
+                }
+                if (op.edge > 0f) NoiseField.applyEdge(f, w, h, op.edge, op.edgeBias)
+                op.store?.let { fields[it] = f }
+                val before = IntArray(w * h) { grid[it].terrain }
+                val bands = op.bands.map { terrain(it.terrain) to it.below }
+                val only = op.onlyOn.map { terrain(it) }.toSet()
+                if (bands.isNotEmpty()) for (y in maxOf(0, region[1]) until minOf(region[1] + region[3], h)) for (x in maxOf(0, region[0]) until minOf(region[0] + region[2], w)) {
+                    val cell = at(x, y)
+                    if (only.isNotEmpty() && cell.terrain !in only) continue
+                    val v = f[y * w + x]
+                    bands.firstOrNull { v < it.second }?.let { cell.terrain = it.first }
+                }
+                if (op.minArea > 0) {
+                    // Undo painted patches of one terrain smaller than minArea (4-connected), restoring what was there before.
+                    val seen = BooleanArray(w * h)
+                    for (start in 0 until w * h) {
+                        val tt = grid[start].terrain
+                        if (seen[start] || tt == before[start]) continue
+                        val comp = ArrayList<Int>()
+                        val stack = ArrayDeque<Int>()
+                        stack.add(start); seen[start] = true
+                        while (stack.isNotEmpty()) {
+                            val i = stack.removeLast(); comp += i
+                            val x = i % w; val y = i / w
+                            for ((dx, dy) in listOf(1 to 0, -1 to 0, 0 to 1, 0 to -1)) {
+                                val nx = x + dx; val ny = y + dy
+                                if (nx !in 0 until w || ny !in 0 until h) continue
+                                val j = ny * w + nx
+                                if (!seen[j] && grid[j].terrain == tt && tt != before[j]) { seen[j] = true; stack.add(j) }
+                            }
+                        }
+                        if (comp.size < op.minArea) for (i in comp) grid[i].terrain = before[i]
+                    }
+                }
+            }
+            is TerraceOp -> terrace(recipe, op, index, w, h, fields, ::terrain, ::at)
+            is WorldTerraceOp -> worldTerrace(recipe, op, lastWorldGen, index, w, h, names, ::at)
+            is WorldGenOp -> {
+                lastWorldGen = op
+                val region = op.region ?: listOf(0, 0, w, h)
+                val rules = op.rules.map { r -> terrain(r.terrain) to r.ranges }
+                val ox = recipe.worldX ?: 0
+                val oy = recipe.worldY ?: 0
+                for (y in maxOf(0, region[1]) until minOf(region[1] + region[3], h)) for (x in maxOf(0, region[0]) until minOf(region[0] + region[2], w)) {
+                    val values = WorldNoise.sample(op, ox + x, oy + y)
+                    val hit = rules.firstOrNull { (_, ranges) ->
+                        ranges.all { (field, r) -> (values[field] ?: return@all false).let { v -> v >= r[0] && (v < r[1] || r[1] >= 1f) } }
+                    }
+                    if (hit != null) at(x, y).terrain = hit.first
                 }
             }
             is BlobOp -> {
@@ -165,7 +275,123 @@ object MapCompiler {
                         val c = at(xx, yy)
                         if (c.occupied || (inside && (c.terrain != t || c.blocked))) { ok = false; break@scan }
                     }
-                    if (ok) placeProp(name, px, py, emptyList(), op.walkable)
+                    if (ok) placeProp(name, px, py, op.passableCols, op.walkable)
+                }
+            }
+            is CrossingsOp -> {
+                val wt = terrain(op.waterTerrain)
+                val ford = op.fordTerrain?.let(::terrain)
+                val bridgePlace = op.bridgeTile?.let { bt ->
+                    val t = index.tiles[bt] ?: throw RecipeException("Map ${recipe.id}: unknown bridge tile '$bt'")
+                    TilePlacement(t.tilesetId, t.x, t.y)
+                }
+                val region = op.region ?: listOf(2, 2, w - 4, h - 4)
+                val rx0 = maxOf(2, region[0])
+                val ry0 = maxOf(2, region[1])
+                val rx1 = minOf(w - 2, region[0] + region[2])
+                val ry1 = minOf(h - 2, region[1] + region[3])
+                fun isWalkableBank(x: Int, y: Int): Boolean {
+                    if (!inb(x, y)) return false
+                    val c = at(x, y)
+                    val def = recipe.terrains.getValue(names[c.terrain])
+                    return !def.blocked && !c.blocked && !c.occupied
+                }
+                val placedCenters = ArrayList<Pair<Int, Int>>()
+                val bw = op.bridgeWidth.coerceAtLeast(1)
+                fun tryPlaceBridge(cells: List<Pair<Int, Int>>, cx: Int, cy: Int): Boolean {
+                    if (placedCenters.any { hypot((it.first - cx).toDouble(), (it.second - cy).toDouble()) < op.spacing }) return false
+                    for ((bx, by) in cells) {
+                        val c = at(bx, by)
+                        if (ford != null) c.terrain = ford
+                        if (bridgePlace != null) c.layers[MapLayer.MASK_1] = bridgePlace
+                        c.open = true
+                        c.blocked = false
+                        c.occupied = true
+                    }
+                    placedCenters += cx to cy
+                    return true
+                }
+                // Scan horizontal crossings across N-S rivers
+                for (y in ry0 until ry1 - bw) {
+                    var x = rx0
+                    while (x < rx1) {
+                        if (at(x, y).terrain != wt) { x++; continue }
+                        var end = x
+                        while (end + 1 < rx1 && at(end + 1, y).terrain == wt) end++
+                        val span = end - x + 1
+                        if (span in 1..op.maxWidth) {
+                            var ok = true
+                            val bridgeCells = ArrayList<Pair<Int, Int>>()
+                            for (dy in 0 until bw) {
+                                if (!isWalkableBank(x - 1, y + dy) || !isWalkableBank(end + 1, y + dy)) { ok = false; break }
+                                for (cx in x..end) {
+                                    val c = at(cx, y + dy)
+                                    if (c.terrain != wt || c.occupied) { ok = false; break }
+                                    bridgeCells += cx to (y + dy)
+                                }
+                                if (!ok) break
+                            }
+                            if (ok) tryPlaceBridge(bridgeCells, (x + end) / 2, y + bw / 2)
+                        }
+                        x = end + 1
+                    }
+                }
+                // Scan vertical crossings across E-W rivers
+                for (x in rx0 until rx1 - bw) {
+                    var y = ry0
+                    while (y < ry1) {
+                        if (at(x, y).terrain != wt) { y++; continue }
+                        var end = y
+                        while (end + 1 < ry1 && at(x, end + 1).terrain == wt) end++
+                        val span = end - y + 1
+                        if (span in 1..op.maxWidth) {
+                            var ok = true
+                            val bridgeCells = ArrayList<Pair<Int, Int>>()
+                            for (dx in 0 until bw) {
+                                if (!isWalkableBank(x + dx, y - 1) || !isWalkableBank(x + dx, end + 1)) { ok = false; break }
+                                for (cy in y..end) {
+                                    val c = at(x + dx, cy)
+                                    if (c.terrain != wt || c.occupied) { ok = false; break }
+                                    bridgeCells += (x + dx) to cy
+                                }
+                                if (!ok) break
+                            }
+                            if (ok) tryPlaceBridge(bridgeCells, x + bw / 2, (y + end) / 2)
+                        }
+                        y = end + 1
+                    }
+                }
+            }
+            is NodesOp -> {
+                require(op.props.isNotEmpty()) { "nodes needs at least one prop" }
+                val allowed = op.terrains.map { terrain(it) }.toSet()
+                val rnd = Random(recipe.seed * 41 + op.salt)
+                val region = op.region ?: listOf(0, 0, w, h)
+                val pool = ArrayList<Pair<Int, Int>>()
+                for (y in region[1] until minOf(region[1] + region[3], h)) for (x in region[0] until minOf(region[0] + region[2], w)) {
+                    val c = at(x, y)
+                    if (c.terrain in allowed && !c.occupied && !c.blocked && c.attribute == null) pool += x to y
+                }
+                val wanted = op.count ?: (pool.size / op.perTiles.coerceAtLeast(1))
+                pool.shuffle(rnd)
+                val placed = ArrayList<Pair<Int, Int>>()
+                for ((x, y) in pool) {
+                    if (placed.size >= wanted) break
+                    if (placed.any { abs(it.first - x) < op.spacing && abs(it.second - y) < op.spacing }) continue
+                    val name = op.props[rnd.nextInt(op.props.size)]
+                    val p = index.props[name] ?: throw RecipeException("Map ${recipe.id}: unknown prop '$name'")
+                    val px = x - p.w / 2
+                    val py = y - p.h + 1
+                    var ok = true
+                    scan@ for (yy in py until py + p.h) for (xx in px until px + p.w) {
+                        if (!inb(xx, yy)) { ok = false; break@scan }
+                        val c = at(xx, yy)
+                        if (c.occupied || c.blocked || c.terrain !in allowed || c.attribute != null) { ok = false; break@scan }
+                    }
+                    if (!ok) continue
+                    placeProp(name, px, py, emptyList(), false)
+                    at(px + p.w / 2, py + p.h - 1).attribute = TileAttribute.ResourceNode(op.resourceId)
+                    placed += x to y
                 }
             }
             is TileOp -> {
@@ -192,13 +418,31 @@ object MapCompiler {
         }
 
         val terrainIds = grid.map { it.terrain }
+        val baseId = terrain(recipe.base)
         val cells = ArrayList<MapCell>(w * h)
         for (y in 0 until h) for (x in 0 until w) {
             val c = at(x, y)
             val def = recipe.terrains.getValue(names[c.terrain])
             val layers = LinkedHashMap<MapLayer, TilePlacement>()
-            layers[MapLayer.GROUND] = c.groundOverride ?: ground(recipe, index, def, names, terrainIds, w, h, x, y)
-            layers.putAll(c.layers)
+            var alphaOverlay: TilePlacement? = null
+            if (c.groundOverride != null) {
+                layers[MapLayer.GROUND] = c.groundOverride!!
+            } else if (def.alphaAutotile && def.autotile != null) {
+                val (gTile, oTile) = groundWithAlpha(recipe, index, def, names, terrainIds, baseId, w, h, x, y)
+                layers[MapLayer.GROUND] = gTile
+                alphaOverlay = oTile
+            } else {
+                layers[MapLayer.GROUND] = ground(recipe, index, def, names, terrainIds, w, h, x, y)
+            }
+            if (alphaOverlay != null) {
+                layers[MapLayer.MASK_1] = alphaOverlay
+                for ((layer, placement) in c.layers) {
+                    if (layer == MapLayer.MASK_1) layers[MapLayer.MASK_2] = placement
+                    else layers[layer] = placement
+                }
+            } else {
+                layers.putAll(c.layers)
+            }
             val blocked = (def.blocked && !c.open && c.groundOverride == null) || c.blocked
             val attr = c.attribute ?: if (blocked) TileAttribute.Blocked else TileAttribute.None
             cells += MapCell(layers, attr)
@@ -230,11 +474,355 @@ object MapCompiler {
             finalSpawns = spawns.filterIndexed { i, sp -> i !in campSlots || seen[sp.spawnY * w + sp.spawnX] }
                 .mapIndexed { n, sp -> sp.copy(slotIndex = n) }
         }
-        return MapDefinition(
+        val map = MapDefinition(
             id = recipe.id, name = recipe.name, width = w, height = h, moral = recipe.moral, bgmTrackId = recipe.bgm,
             isIndoors = recipe.indoors, zoneId = recipe.zoneId, instanced = recipe.instanced, instanceOwner = recipe.instanceOwner,
-            neighbors = recipe.neighbors, cells = cells, npcSpawns = finalSpawns
+            neighbors = recipe.neighbors, cells = cells, npcSpawns = finalSpawns, worldX = recipe.worldX, worldY = recipe.worldY
         )
+        val symbols = "abcdefghijklmnopqrstuvwxyz"
+        val legend = names.withIndex().associate { (i, n) -> symbols[i % symbols.length].toString() to n }
+        val terrainRows = (0 until h).map { y -> (0 until w).joinToString("") { x -> symbols[at(x, y).terrain % symbols.length].toString() } }
+        val blockedRows = (0 until h).map { y -> (0 until w).joinToString("") { x -> if (cells[y * w + x].attribute == TileAttribute.Blocked) "#" else "." } }
+        // 'o' marks a cell something sits on (a prop, a cliff face, a ramp, a reserved landing): no camp or prop was allowed there.
+        val occupiedRows = (0 until h).map { y -> (0 until w).joinToString("") { x -> if (at(x, y).occupied) "o" else "." } }
+        return Built(map, MapAnalysis(recipe.id, recipe.name, w, h, legend, terrainRows, blockedRows, occupiedRows, finalSpawns.map { listOf(it.npcId, it.spawnX, it.spawnY) }))
+    }
+
+
+    /** The [TerraceOp] work: levels from a stored field, plateau ground, south-facing cliff faces, and ramps through them. */
+    private fun terrace(
+        recipe: MapRecipe, op: TerraceOp, index: TileIndex, w: Int, h: Int, fields: Map<String, FloatArray>,
+        terrain: (String) -> Int, at: (Int, Int) -> Cell
+    ) {
+        val f = fields[op.field] ?: throw RecipeException("Map ${recipe.id}: terrace needs a noise op with store \"${op.field}\" before it")
+        if (op.terrains.size != op.thresholds.size) throw RecipeException("Map ${recipe.id}: terrace needs one terrain per threshold")
+        fun tile(part: String) = index.tiles["${op.set}_$part"] ?: throw RecipeException("Map ${recipe.id}: unknown wall tile '${op.set}_$part'")
+        val names = recipe.terrains.keys.toList()
+        fun blockedTerrain(c: Cell) = recipe.terrains.getValue(names[c.terrain]).blocked
+        val region = op.region ?: listOf(0, 0, w, h)
+        fun inRegion(x: Int, y: Int) = x in region[0] until region[0] + region[2] && y in region[1] until region[1] + region[3]
+        val level = IntArray(w * h)
+        // Sampling the field in bands of rowStep rows puts every plateau's south edge on one of a few rows, so cliff faces run
+        // horizontally in long stretches (like stepped terraces) instead of breaking into one-tile stairs along a diagonal.
+        val step = op.rowStep.coerceAtLeast(1)
+        for (y in 0 until h) for (x in 0 until w) if (inRegion(x, y)) {
+            val v = f[minOf(h - 1, (y / step) * step + step / 2) * w + x]
+            level[y * w + x] = op.thresholds.count { v >= it }
+        }
+        fun lv(x: Int, y: Int) = if (x in 0 until w && y in 0 until h) level[y * w + x] else 0
+        // Level off slivers: a run of plateau narrower than minWidth or shallower than minDepth drops a level, so every cliff
+        // face has two rows of plateau to be drawn on and a plateau is wide enough to walk.
+        for (pass in 0 until 4) {
+            var changed = false
+            for (y in 0 until h) for (x in 0 until w) {
+                val l = lv(x, y)
+                if (l == 0) continue
+                var left = x
+                while (lv(left - 1, y) >= l) left--
+                var right = x
+                while (lv(right + 1, y) >= l) right++
+                var up = y
+                while (lv(x, up - 1) >= l) up--
+                var down = y
+                while (lv(x, down + 1) >= l) down++
+                if (right - left + 1 < op.minWidth || down - up + 1 < op.minDepth) { level[y * w + x] = l - 1; changed = true }
+            }
+            if (!changed) break
+        }
+        for (y in 0 until h) for (x in 0 until w) if (lv(x, y) > 0) at(x, y).terrain = terrain(op.terrains[lv(x, y) - 1])
+        // Cliff faces: the plateau cell whose southern neighbour is lower is the plinth (bot), the one above it the cornice (top).
+        val face = HashMap<Int, String>()
+        for (y in 0 until h - 1) for (x in 0 until w) {
+            val l = lv(x, y)
+            if (l > 0 && lv(x, y + 1) < l) {
+                face[y * w + x] = "bot"
+                if (lv(x, y - 1) >= l) face[(y - 1) * w + x] = "top"
+            }
+        }
+        // Ramps: along each run of faces, open a gap every rampEvery tiles (position fixed by a hash, so it is stable).
+        val ramp = HashSet<Int>()
+        if (op.ramps) {
+            for (y in 0 until h - 1) {
+                var x = 0
+                while (x < w) {
+                    if (face[y * w + x] != "bot") { x++; continue }
+                    var end = x
+                    while (end + 1 < w && face[y * w + end + 1] == "bot" && lv(end + 1, y) == lv(x, y)) end++
+                    val run = end - x + 1
+                    if (run >= op.rampWidth + 2) {
+                        val slots = maxOf(1, run / op.rampEvery)
+                        for (k in 0 until slots) {
+                            val span = run - op.rampWidth - 1
+                            val start = x + 1 + (if (span <= 0) 0 else (hash(x + k * 31, y, recipe.seed + op.salt) % (span + 1)))
+                            // Only where the ground below can be walked on.
+                            if ((start until start + op.rampWidth).all { cx -> !blockedTerrain(at(cx, y + 1)) }) {
+                                for (cx in start until start + op.rampWidth) { ramp += y * w + cx; ramp += (y - 1) * w + cx }
+                            }
+                        }
+                    }
+                    x = end + 1
+                }
+            }
+        }
+        val rampTerrain = op.rampTerrain?.let(terrain)
+        for ((i, kind) in face) {
+            val x = i % w
+            val y = i / w
+            val cell = at(x, y)
+            cell.occupied = true
+            if (i in ramp) {
+                cell.terrain = rampTerrain ?: at(x, y + 1).terrain
+                continue
+            }
+            val l = lv(x, y)
+            fun same(nx: Int) = nx in 0 until w && face[y * w + nx] == kind && (y * w + nx) !in ramp && lv(nx, y) == l
+            val side = when {
+                !same(x - 1) && !same(x + 1) -> "center"
+                !same(x - 1) -> "left"
+                !same(x + 1) -> "right"
+                else -> "center"
+            }
+            val t = tile("${kind}_$side")
+            cell.groundOverride = TilePlacement(t.tilesetId, t.x, t.y)
+            cell.blocked = true
+        }
+        for (i in ramp) at(i % w, i / w).occupied = true
+    }
+
+    /** Seamless world-space terracing driven by a prior [WorldGenOp]'s noise field. */
+    private fun worldTerrace(
+        recipe: MapRecipe,
+        op: WorldTerraceOp,
+        wg: WorldGenOp?,
+        index: TileIndex,
+        w: Int,
+        h: Int,
+        names: List<String>,
+        at: (Int, Int) -> Cell
+    ) {
+        if (wg == null) throw RecipeException("Map ${recipe.id}: worldTerrace requires a worldgen op before it")
+        val ox = recipe.worldX ?: 0
+        val oy = recipe.worldY ?: 0
+        val pad = 8
+        val pw = w + pad * 2
+        val ph = h + pad * 2
+        val step = op.rowStep.coerceAtLeast(1)
+        val level = IntArray(pw * ph)
+        for (gy in 0 until ph) {
+            val wy = oy + gy - pad
+            val snappedWy = Math.floorDiv(wy, step) * step + step / 2
+            for (gx in 0 until pw) {
+                val wx = ox + gx - pad
+                val v = WorldNoise.sample(wg, wx, snappedWy)[op.field] ?: 0f
+                level[gy * pw + gx] = op.thresholds.count { v >= it }
+            }
+        }
+        fun lv(gx: Int, gy: Int) = if (gx in 0 until pw && gy in 0 until ph) level[gy * pw + gx] else 0
+        // Strip narrow/shallow slivers on the padded world grid so every border matches identically
+        for (pass in 0 until 4) {
+            var changed = false
+            for (gy in 1 until ph - 1) for (gx in 1 until pw - 1) {
+                val l = lv(gx, gy)
+                if (l == 0) continue
+                var left = gx; while (left > 0 && lv(left - 1, gy) >= l) left--
+                var right = gx; while (right < pw - 1 && lv(right + 1, gy) >= l) right++
+                var up = gy; while (up > 0 && lv(gx, up - 1) >= l) up--
+                var down = gy; while (down < ph - 1 && lv(gx, down + 1) >= l) down++
+                if (right - left + 1 < op.minWidth || down - up + 1 < op.minDepth) {
+                    level[gy * pw + gx] = l - 1
+                    changed = true
+                }
+            }
+            if (!changed) break
+        }
+        // Detect south-facing 2-row cliff faces
+        val face = HashMap<Int, String>()
+        for (gy in 1 until ph - 1) for (gx in 0 until pw) {
+            val l = lv(gx, gy)
+            if (l > 0 && lv(gx, gy + 1) < l) {
+                face[gy * pw + gx] = "bot"
+                if (lv(gx, gy - 1) >= l) face[(gy - 1) * pw + gx] = "top"
+            }
+        }
+        // Remove short isolated cliff runs (< 4 tiles) so diagonal slopes never leave 1-2 tile floating stubs
+        val minRun = maxOf(4, op.rampWidth + 1)
+        for (gy in 1 until ph - 1) {
+            var gx = 0
+            while (gx < pw) {
+                if (face[gy * pw + gx] != "bot") { gx++; continue }
+                var end = gx
+                while (end + 1 < pw && face[gy * pw + end + 1] == "bot" && lv(end + 1, gy) == lv(gx, gy)) end++
+                if (end - gx + 1 < minRun) {
+                    for (cx in gx..end) {
+                        face.remove(gy * pw + cx)
+                        if (face[(gy - 1) * pw + cx] == "top") face.remove((gy - 1) * pw + cx)
+                    }
+                }
+                gx = end + 1
+            }
+        }
+        // World-aligned staircase placement along each cliff run
+        val ramp = HashMap<Int, String>() // cell index -> "left" | "center" | "right"
+        if (op.ramps) {
+            val rw = op.rampWidth.coerceAtLeast(1)
+            for (gy in 1 until ph - 1) {
+                var gx = 0
+                while (gx < pw) {
+                    if (face[gy * pw + gx] != "bot") { gx++; continue }
+                    var end = gx
+                    while (end + 1 < pw && face[gy * pw + end + 1] == "bot" && lv(end + 1, gy) == lv(gx, gy)) end++
+                    val run = end - gx + 1
+                    if (run >= rw + 2) {
+                        val slots = maxOf(1, run / op.rampEvery.coerceAtLeast(rw + 2))
+                        for (k in 0 until slots) {
+                            val span = run - rw - 1
+                            val wy = oy + gy - pad
+                            val wxStart = ox + gx - pad
+                            val start = gx + 1 + (if (span <= 0) 0 else (hash(wxStart + k * 37, wy, wg.seed + op.salt) % (span + 1)))
+                            for (rc in 0 until rw) {
+                                val cx = start + rc
+                                val side = when {
+                                    rw == 1 -> "center"
+                                    rc == 0 -> "left"
+                                    rc == rw - 1 -> "right"
+                                    else -> "center"
+                                }
+                                ramp[gy * pw + cx] = side
+                                ramp[(gy - 1) * pw + cx] = side
+                            }
+                        }
+                    }
+                    gx = end + 1
+                }
+            }
+        }
+        val skipSet = op.skipTerrains.toSet()
+        fun tileOrNull(setName: String, part: String) = index.tiles["${setName}_$part"]
+        fun tile(setName: String, part: String) = tileOrNull(setName, part)
+            ?: tileOrNull(op.defaultSet, part)
+            ?: throw RecipeException("Map ${recipe.id}: unknown cliff tile '${setName}_$part'")
+
+        // Pick one consistent biome cliff set per contiguous horizontal cliff run so stairs/walls never split color mid-run
+        val runSet = HashMap<Int, String>()
+        for (gy in 1 until ph - 1) {
+            var gx = 0
+            while (gx < pw) {
+                if (face[gy * pw + gx] != "bot") { gx++; continue }
+                var end = gx
+                while (end + 1 < pw && face[gy * pw + end + 1] == "bot" && lv(end + 1, gy) == lv(gx, gy)) end++
+                val midX = ((gx + end) / 2 - pad).coerceIn(0, w - 1)
+                val midY = (gy - pad).coerceIn(0, h - 1)
+                val chosen = op.sets[names[at(midX, midY).terrain]] ?: op.defaultSet
+                for (cx in gx..end) {
+                    runSet[gy * pw + cx] = chosen
+                    runSet[(gy - 1) * pw + cx] = chosen
+                }
+                gx = end + 1
+            }
+        }
+
+        for (y in 0 until h) for (x in 0 until w) {
+            val gx = x + pad
+            val gy = y + pad
+            val kind = face[gy * pw + gx] ?: continue
+            val cell = at(x, y)
+            val tName = names[cell.terrain]
+            if (tName in skipSet || cell.occupied || cell.groundOverride != null) continue
+            val setName = runSet[gy * pw + gx] ?: op.sets[tName] ?: op.defaultSet
+            val stairSide = ramp[gy * pw + gx]
+            if (stairSide != null) {
+                val belowWalkable = y + 1 >= h || names[at(x, y + 1).terrain] !in skipSet
+                if (belowWalkable) {
+                    val st = tile(setName, "stair_${kind}_$stairSide")
+                    cell.groundOverride = TilePlacement(st.tilesetId, st.x, st.y)
+                    cell.open = true
+                    cell.blocked = false
+                    cell.occupied = true
+                    continue
+                }
+            }
+            val l = lv(gx, gy)
+            fun same(ngx: Int) = ngx in 0 until pw && face[gy * pw + ngx] == kind && (gy * pw + ngx) !in ramp && lv(ngx, gy) == l
+            val side = when {
+                !same(gx - 1) && !same(gx + 1) -> "center"
+                !same(gx - 1) -> "left"
+                !same(gx + 1) -> "right"
+                else -> "center"
+            }
+            val t = tile(setName, "${kind}_$side")
+            cell.groundOverride = TilePlacement(t.tilesetId, t.x, t.y)
+            cell.blocked = true
+            cell.occupied = true
+            // Place soft drop shadow on the walkable row directly south of the cliff base
+            if (kind == "bot" && y + 1 < h) {
+                val below = at(x, y + 1)
+                val belowName = names[below.terrain]
+                if (belowName !in skipSet && face[(gy + 1) * pw + gx] == null && below.groundOverride == null) {
+                    tileOrNull(setName, "shadow_$side")?.let { sh ->
+                        val placement = TilePlacement(sh.tilesetId, sh.x, sh.y)
+                        if (MapLayer.MASK_1 !in below.layers) below.layers[MapLayer.MASK_1] = placement
+                        else if (MapLayer.MASK_2 !in below.layers) below.layers[MapLayer.MASK_2] = placement
+                    }
+                }
+            }
+        }
+    }
+
+    private fun baseTile(recipe: MapRecipe, index: TileIndex, def: TerrainDef, x: Int, y: Int): TilePlacement {
+        if (def.animatedFrames > 1) animated(index, def)?.let { return it }
+        val variants = ArrayList<TileIndex.Place>()
+        index.tiles[def.tile]?.let { variants += it }
+        var v = 1
+        while (true) {
+            variants += index.tiles["${def.tile}_v$v"] ?: break
+            v++
+        }
+        if (variants.isEmpty()) throw RecipeException("Map ${recipe.id}: unknown tile '${def.tile}'")
+        val p = variants[hash(x, y, recipe.seed) % variants.size]
+        return TilePlacement(p.tilesetId, p.x, p.y)
+    }
+
+    private fun groundWithAlpha(
+        recipe: MapRecipe,
+        index: TileIndex,
+        def: TerrainDef,
+        names: List<String>,
+        terrains: List<Int>,
+        baseId: Int,
+        w: Int,
+        h: Int,
+        x: Int,
+        y: Int
+    ): Pair<TilePlacement, TilePlacement?> {
+        val self = terrains[y * w + x]
+        fun joined(nx: Int, ny: Int): Boolean {
+            if (nx !in 0 until w || ny !in 0 until h) return true
+            val t = terrains[ny * w + nx]
+            return t == self || names[t] in def.joins
+        }
+        val auto = index.autotiles[def.autotile!!] ?: throw RecipeException("Map ${recipe.id}: unknown autotile '${def.autotile}'")
+        val mask = AutotileBitmask.blobMask(
+            n = joined(x, y - 1), ne = joined(x + 1, y - 1), e = joined(x + 1, y), se = joined(x + 1, y + 1),
+            s = joined(x, y + 1), sw = joined(x - 1, y + 1), w = joined(x - 1, y), nw = joined(x - 1, y - 1)
+        )
+        if (mask == 255) return baseTile(recipe, index, def, x, y) to null
+        // Pick the most common non-joined neighbor terrain to show through the transparent edge
+        var bestId = baseId
+        val counts = HashMap<Int, Int>(4)
+        var bestCount = 0
+        for ((dx, dy) in listOf(0 to -1, 1 to 0, 0 to 1, -1 to 0, 1 to -1, 1 to 1, -1 to 1, -1 to -1)) {
+            val nx = x + dx; val ny = y + dy
+            if (nx !in 0 until w || ny !in 0 until h) continue
+            val nt = terrains[ny * w + nx]
+            if (nt == self || names[nt] in def.joins) continue
+            val weight = if (dx == 0 || dy == 0) 2 else 1
+            val c = (counts[nt] ?: 0) + weight
+            counts[nt] = c
+            if (c > bestCount) { bestCount = c; bestId = nt }
+        }
+        val underTile = baseTile(recipe, index, recipe.terrains.getValue(names[bestId]), x, y)
+        val cell = auto.cells[mask] ?: throw RecipeException("Map ${recipe.id}: autotile '${def.autotile}' has no cell for mask $mask")
+        return underTile to TilePlacement(auto.tilesetId, cell.first, cell.second)
     }
 
     private fun ground(

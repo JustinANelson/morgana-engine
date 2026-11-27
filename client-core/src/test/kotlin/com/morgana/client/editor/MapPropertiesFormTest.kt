@@ -125,4 +125,16 @@ class MapPropertiesFormTest {
         assertFalse(s.resize(4, 8))
         assertFalse(s.resize(10, 8))
     }
+
+    @Test
+    fun `a world position is set, cleared and checked as a pair`() {
+        val v = MapPropertiesForm.valuesOf(map)
+        val placed = MapPropertiesForm.apply(map, v.copy(worldX = "240", worldY = "-106"))
+        assertEquals(240, placed.worldX)
+        assertEquals(-106, placed.worldY)
+        assertEquals("240", MapPropertiesForm.valuesOf(placed).worldX)
+        assertNull(MapPropertiesForm.apply(placed, MapPropertiesForm.valuesOf(placed).copy(worldX = "", worldY = "")).worldX, "blank takes the map out of the world")
+        assertTrue(MapPropertiesForm.problems(map.id, v.copy(worldX = "5"), setOf(1, 2, 3)).any { it.contains("both x and y") })
+        assertTrue(MapPropertiesForm.problems(map.id, v.copy(worldX = "a", worldY = "1"), setOf(1, 2, 3)).any { it.contains("whole numbers") })
+    }
 }

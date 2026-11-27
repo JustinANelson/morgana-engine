@@ -4,6 +4,7 @@ import com.morgana.domain.validation.ContentCollection
 import com.morgana.domain.validation.IssueSeverity
 import com.morgana.script.luak.LuakScriptValidator
 import com.morgana.script.luak.ScriptValidationResult
+import com.morgana.server.DevTickets
 import com.morgana.server.OwnerPolicy
 import com.morgana.persistence.ContentLoader
 import com.morgana.persistence.ContentSchemaExporter
@@ -110,6 +111,7 @@ fun main(args: Array<String>) {
         "plugins" -> pluginsCommand(Paths.get(options["dir"] ?: "server-data").resolve("plugins"))
         "storage" -> storageCommand(Paths.get(options["dir"] ?: "server-data"), options["migrate"].orEmpty())
         "tls" -> tlsCommand(Paths.get(options["dir"] ?: "server-data"), options["host"].orEmpty(), options["port"]?.toIntOrNull() ?: 7001)
+        "dev-ticket" -> devTicket(Paths.get(options["dir"] ?: "server-data"), options["user"].orEmpty(), options["ttl"]?.toLongOrNull() ?: DevTickets.DEFAULT_TTL_SECONDS)
         "owner" -> grantOwner(Paths.get(options["dir"] ?: "server-data"), options["user"].orEmpty())
         "game" -> gameCommand(resolveGameDir(), "write" in options)
         "new-game" -> newGameCommand(options["name"].orEmpty(), options["dir"], options["id"])
@@ -126,7 +128,7 @@ fun main(args: Array<String>) {
             if (codes.any { it != 0 }) 1 else 0
         }
         else -> {
-            System.err.println("Usage: validate-art [--game <dir>] | validate [--game <dir> | --dir <world dir>] [--json] | schema [--out <dir>] | seed [--game <dir> | --dir <data dir>] | new-game --name <n> [--dir <dir>] [--id <id>] | pack-export --out <pack> --name <n> | pack-import --file <pack> [--mode new|merge|replace] | worlds | world-new --name <n> [--pack <pack>] | modules [--enable a,b] [--disable c] | plugins [--dir <data dir>] | storage [--migrate json|sqlite] | tls [--host <address>] | replay --file <log> [--dir <data dir>] | owner --user <name> [--dir <data dir>]")
+            System.err.println("Usage: validate-art [--game <dir>] | validate [--game <dir> | --dir <world dir>] [--json] | schema [--out <dir>] | seed [--game <dir> | --dir <data dir>] | new-game --name <n> [--dir <dir>] [--id <id>] | pack-export --out <pack> --name <n> | pack-import --file <pack> [--mode new|merge|replace] | worlds | world-new --name <n> [--pack <pack>] | modules [--enable a,b] [--disable c] | plugins [--dir <data dir>] | storage [--migrate json|sqlite] | tls [--host <address>] | replay --file <log> [--dir <data dir>] | owner --user <name> [--dir <data dir>] | dev-ticket --user <name> [--ttl <seconds>] [--dir <data dir>]")
             2
         }
     }
@@ -222,6 +224,28 @@ internal fun seed(dataDir: Path): Int {
     GameScaffolder.seedIfEmpty(store.world)
     println("Seeded the blank game's content into ${dataDir.resolve("world")}")
     return 0
+}
+
+/** Mints a one-time login ticket for an existing account (see [DevTickets]); prints only the ticket on stdout so scripts can capture it. */
+internal fun devTicket(dataDir: Path, username: String, ttlSeconds: Long): Int {
+    if (username.isBlank()) {
+        System.err.println("Missing --user <name>")
+        return 2
+    }
+    val store = MorganaDataStore(dataDir)
+    if (store.accounts.findByUsername(username.trim()) == null) {
+        System.err.println("No account named '$username' in $dataDir. Register it once in the client first.")
+        return 2
+    }
+    return try {
+        val ticket = DevTickets(dataDir).mint(username, ttlSeconds)
+        System.err.println("Ticket for '$username' (single use, expires in $ttlSeconds s; the server must run with --dev-login):")
+        println(ticket)
+        0
+    } catch (e: IllegalArgumentException) {
+        System.err.println(e.message)
+        2
+    }
 }
 
 internal fun grantOwner(dataDir: Path, username: String): Int {
@@ -340,8 +364,11 @@ internal fun newWorld(root: Path, name: String, pack: String?, template: String 
             return 2
         }
     }
+    val uiLayout = genre.trim().takeIf { it.isNotEmpty() }
+        ?.let { com.morgana.domain.game.UiLayout.defaultForGenre(it) }
+        ?.takeIf { it != com.morgana.domain.game.UiLayout.CLASSIC }
     return try {
-        val blueprint = RealmBlueprint(name, chosen, off, pack?.let { Paths.get(it) }, enabledModules = on)
+        val blueprint = RealmBlueprint(name, chosen, off, pack?.let { Paths.get(it) }, enabledModules = on, uiLayout = uiLayout)
         blueprint.problems().firstOrNull()?.let { System.err.println(it); return 2 }
         val w = lib.create(blueprint)
         println("Created world '${w.name}' (${w.origin}) at ${w.dataDir}")

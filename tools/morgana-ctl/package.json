@@ -1,0 +1,9 @@
+{
+  "name": "morgana-ctl",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "CLI and MCP server for driving a running Morgana server through its admin API. No dependencies; needs Node 18 or newer.",
+  "bin": { "morgana-ctl": "cli.mjs", "morgana-mcp": "mcp.mjs" },
+  "scripts": { "test": "node --test test/ctl.test.mjs" }
+}

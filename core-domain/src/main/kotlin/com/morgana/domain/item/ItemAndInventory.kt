@@ -49,6 +49,7 @@ value class EquipmentSlot(val id: String) {
         "GLOVES" -> PaperdollSlot.HANDS
         "BOOTS" -> PaperdollSlot.FEET
         "AMMO", "CLOAK" -> PaperdollSlot.BACK
+        "MOUNT" -> PaperdollSlot.MOUNT
         else -> PaperdollSlot.ACCESSORY
     }
 
@@ -90,7 +91,10 @@ enum class PaperdollSlot {
     ACCESSORY,
 
     /** Gloves and gauntlets: drawn over the body's skin hands and the torso's sleeves, under hair, headgear and held weapons. */
-    HANDS
+    HANDS,
+
+    /** Mounts (horses, etc.): drawn underneath the seated rider and all worn gear in every direction. */
+    MOUNT
 }
 
 /**
@@ -111,63 +115,67 @@ data class PaperdollLayer(
  */
 object PaperdollComposer {
 
-    // Facing the viewer (DOWN): capes, quivers and packs (BACK) hang behind the body; held gear is drawn over it.
+    // Facing the viewer (DOWN): mounts sit underneath everything; capes, quivers and packs (BACK) hang behind the body; held gear is drawn over it.
     private val DRAW_ORDER_DOWN: Map<PaperdollSlot, Int> = mapOf(
-        PaperdollSlot.BACK to 0,
-        PaperdollSlot.BODY to 1,
-        PaperdollSlot.FEET to 2,
-        PaperdollSlot.LEGS to 3,
-        PaperdollSlot.TORSO to 4,
-        PaperdollSlot.HANDS to 5,
-        PaperdollSlot.HAIR to 6,
-        PaperdollSlot.ACCESSORY to 7,
-        PaperdollSlot.HEAD to 8,
-        PaperdollSlot.OFF_HAND to 9,
-        PaperdollSlot.MAIN_HAND to 10
+        PaperdollSlot.MOUNT to 0,
+        PaperdollSlot.BACK to 1,
+        PaperdollSlot.BODY to 2,
+        PaperdollSlot.FEET to 3,
+        PaperdollSlot.LEGS to 4,
+        PaperdollSlot.TORSO to 5,
+        PaperdollSlot.HANDS to 6,
+        PaperdollSlot.HAIR to 7,
+        PaperdollSlot.ACCESSORY to 8,
+        PaperdollSlot.HEAD to 9,
+        PaperdollSlot.OFF_HAND to 10,
+        PaperdollSlot.MAIN_HAND to 11
     )
 
     // Facing LEFT the main hand is the far hand, so it sits behind the body; RIGHT mirrors it with the off-hand.
     private val DRAW_ORDER_LEFT: Map<PaperdollSlot, Int> = mapOf(
-        PaperdollSlot.BACK to 0,
-        PaperdollSlot.MAIN_HAND to 1,
-        PaperdollSlot.BODY to 2,
-        PaperdollSlot.FEET to 3,
-        PaperdollSlot.LEGS to 4,
-        PaperdollSlot.TORSO to 5,
-        PaperdollSlot.HANDS to 6,
-        PaperdollSlot.HAIR to 7,
-        PaperdollSlot.ACCESSORY to 8,
-        PaperdollSlot.HEAD to 9,
-        PaperdollSlot.OFF_HAND to 10
+        PaperdollSlot.MOUNT to 0,
+        PaperdollSlot.BACK to 1,
+        PaperdollSlot.MAIN_HAND to 2,
+        PaperdollSlot.BODY to 3,
+        PaperdollSlot.FEET to 4,
+        PaperdollSlot.LEGS to 5,
+        PaperdollSlot.TORSO to 6,
+        PaperdollSlot.HANDS to 7,
+        PaperdollSlot.HAIR to 8,
+        PaperdollSlot.ACCESSORY to 9,
+        PaperdollSlot.HEAD to 10,
+        PaperdollSlot.OFF_HAND to 11
     )
 
     private val DRAW_ORDER_RIGHT: Map<PaperdollSlot, Int> = mapOf(
-        PaperdollSlot.BACK to 0,
-        PaperdollSlot.OFF_HAND to 1,
-        PaperdollSlot.BODY to 2,
-        PaperdollSlot.FEET to 3,
-        PaperdollSlot.LEGS to 4,
-        PaperdollSlot.TORSO to 5,
-        PaperdollSlot.HANDS to 6,
-        PaperdollSlot.HAIR to 7,
-        PaperdollSlot.ACCESSORY to 8,
-        PaperdollSlot.HEAD to 9,
-        PaperdollSlot.MAIN_HAND to 10
+        PaperdollSlot.MOUNT to 0,
+        PaperdollSlot.BACK to 1,
+        PaperdollSlot.OFF_HAND to 2,
+        PaperdollSlot.BODY to 3,
+        PaperdollSlot.FEET to 4,
+        PaperdollSlot.LEGS to 5,
+        PaperdollSlot.TORSO to 6,
+        PaperdollSlot.HANDS to 7,
+        PaperdollSlot.HAIR to 8,
+        PaperdollSlot.ACCESSORY to 9,
+        PaperdollSlot.HEAD to 10,
+        PaperdollSlot.MAIN_HAND to 11
     )
 
     // When facing UP, held gear draws behind the body/torso while capes/quivers (BACK) draw over the back.
     private val DRAW_ORDER_UP: Map<PaperdollSlot, Int> = mapOf(
-        PaperdollSlot.MAIN_HAND to 0,
-        PaperdollSlot.OFF_HAND to 1,
-        PaperdollSlot.BODY to 2,
-        PaperdollSlot.FEET to 3,
-        PaperdollSlot.LEGS to 4,
-        PaperdollSlot.TORSO to 5,
-        PaperdollSlot.HANDS to 6,
-        PaperdollSlot.HAIR to 7,
-        PaperdollSlot.ACCESSORY to 8,
-        PaperdollSlot.HEAD to 9,
-        PaperdollSlot.BACK to 10
+        PaperdollSlot.MOUNT to 0,
+        PaperdollSlot.MAIN_HAND to 1,
+        PaperdollSlot.OFF_HAND to 2,
+        PaperdollSlot.BODY to 3,
+        PaperdollSlot.FEET to 4,
+        PaperdollSlot.LEGS to 5,
+        PaperdollSlot.TORSO to 6,
+        PaperdollSlot.HANDS to 7,
+        PaperdollSlot.HAIR to 8,
+        PaperdollSlot.ACCESSORY to 9,
+        PaperdollSlot.HEAD to 10,
+        PaperdollSlot.BACK to 11
     )
 
     /** Returns draw order rank (`0` drawn first / furthest back) for [slot] when facing [direction]. */
@@ -251,6 +259,16 @@ data class GemEffect(
 }
 
 /**
+ * What upgrading a piece of gear to its [ItemDefinition.nextTierItemId] costs: [materials] (item id to amount) and [gold] of the
+ * game's currency item. Taken together, and only when the player has all of it (see the `upgrade_gear` level upgrade).
+ */
+@Serializable
+data class UpgradeCost(
+    val materials: Map<Int, Int> = emptyMap(),
+    val gold: Int = 0
+)
+
+/**
  * Authoritative item definition editable live via the F1 Item Editor.
  */
 @Serializable
@@ -298,6 +316,12 @@ data class ItemDefinition(
     val placesObject: String = "",
     /** A mount: while this is worn, free-movement steps are this percent of a normal step (0 = not a mount, 101 to 200 = faster). */
     val mountSpeedPercent: Int = 0,
+    /** Offline training food tier (`0` = not training food; `1+` = single-tier lock group). */
+    val trainingTier: Int = 0,
+    /** Offline training minutes added per 1 unit loaded into the ration bar (`0` = not training food). */
+    val trainingMinutes: Int = 0,
+    /** Maximum offline training ration bar cap in minutes for this food's tier (`0` = not training food). */
+    val trainingCapMinutes: Int = 0,
     val statusEffectToApply: StatusEffectType? = null,
     val statusEffectMagnitude: Int = 0,
     val statusEffectDurationTicks: Int = 0,
@@ -336,6 +360,18 @@ data class ItemDefinition(
     val gem: GemEffect? = null,
     /** The next tier of this piece of gear (same slot) that a level upgrade turns it into; 0 = none. */
     val nextTierItemId: Int = 0,
+    /**
+     * How many empty sockets a new piece of this gear starts with (0 to [ItemStack.MAX_SOCKETS]). A game that gives all gear its
+     * maximum sockets from the start sets this on each piece and has no way to add more; 0 (the default) keeps sockets coming
+     * only from drops and upgrades.
+     */
+    val sockets: Int = 0,
+    /**
+     * The price of upgrading this piece to [nextTierItemId] at a smith: several materials plus gold. When set, an `upgrade_gear`
+     * level upgrade that names no material charges this instead of one material item, so each link of a chain can cost its own
+     * mix. Null keeps the single-material behaviour.
+     */
+    val upgradeCost: UpgradeCost? = null,
     /** On-disk document schema version; see [ContentSchema]. */
     val schemaVersion: Int = ContentSchema.CURRENT_VERSION
 ) {
@@ -366,6 +402,9 @@ data class ItemDefinition(
 
     val effectiveMaxStack: Int
         get() = if (isEffectivelyStackable) maxOf(maxStack, 999) else 1
+
+    /** The socket list of a brand new piece of this gear: [sockets] empty sockets (none for anything that stacks). */
+    fun freshSockets(): List<Int> = if (isEffectivelyStackable) emptyList() else List(sockets.coerceIn(0, ItemStack.MAX_SOCKETS)) { 0 }
 }
 
 /**
@@ -457,7 +496,7 @@ data class Inventory(
             if (remaining <= 0) break
             if (mutableSlots[i] == null) {
                 val toPlace = if (itemDef.isEffectivelyStackable) min(remaining, stackLimit) else 1
-                mutableSlots[i] = ItemStack(itemId = itemDef.id, amount = toPlace)
+                mutableSlots[i] = ItemStack(itemId = itemDef.id, amount = toPlace, sockets = itemDef.freshSockets())
                 remaining -= toPlace
             }
         }

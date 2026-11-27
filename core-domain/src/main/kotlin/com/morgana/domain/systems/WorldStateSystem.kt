@@ -115,6 +115,20 @@ object WorldStateSystem : ItemUseHandler, ChatCommandHandler, GameSystem {
         return true
     }
 
+    /** Restores up to [amount] hit points on an object, clamped to its kind's `maxHp`. */
+    internal fun heal(sim: WorldSimulation, id: String, amount: Int, out: MutableList<WorldSimulationEvent>): Boolean {
+        val obj = sim.worldObject(id) ?: return false
+        if (amount <= 0) return false
+        val maxHp = sim.game.definition.worldObjects?.kind(obj.kind)?.maxHp ?: obj.hp
+        val next = (obj.hp + amount).coerceAtMost(maxHp)
+        if (next == obj.hp) return true
+        val healed = obj.copy(hp = next)
+        sim.storeWorldObject(healed)
+        out.add(WorldSimulationEvent.WorldObjectsChanged(healed.mapId, listOf(healed), emptyList()))
+        sim.notifyWorldObject(healed, WorldObjectChange.CHANGED, "healed", out)
+        return true
+    }
+
     /**
      * A character's blow of [rawDamage] lands on [obj]: refused when the kind is not attackable or a [com.morgana.domain.sim.WorldObjectDamageGate]
      * says no, otherwise scaled by the kind's weapon or siege percentage (at least 1) and applied. Returns true when the object took the blow (or

@@ -33,7 +33,8 @@ class ToastQueueTest {
         q.add("You picked up Herb.", ToastKind.GOOD, 0f)
         q.add("You picked up Herb.", ToastKind.GOOD, 3f)
         assertEquals(1, q.visible.size)
-        assertTrue(!q.expire(5f)) // restarted at 3s, so still alive at 5s
+        assertTrue(!q.expire(4.5f)) // restarted at 3s, still alive at 4.5s
+        assertTrue(q.expire(5.0f)) // expired past 1.9s lifetime
         assertEquals(1, q.drainFresh().size)
         assertTrue(q.drainFresh().isEmpty())
     }
@@ -45,5 +46,31 @@ class ToastQueueTest {
         assertTrue(q.visible.isEmpty())
         q.offer("Inventory is full.", 0f)
         assertEquals(ToastKind.WARNING, q.visible.single().kind)
+    }
+
+    @Test
+    fun batchedToastsStaggerAndExpireOneAtATime() {
+        val q = ToastQueue(maxVisible = 5, lifetimeSeconds = 4f, staggerSeconds = 0.7f)
+        q.add("+Rawhide x3", ToastKind.GOOD, 10f)
+        q.add("+Copper Scrap x2", ToastKind.GOOD, 10f)
+        q.add("+Linen", ToastKind.GOOD, 10f)
+        assertEquals(listOf("+Rawhide x3", "+Copper Scrap x2", "+Linen"), q.visible.map { it.text })
+        assertTrue(q.expire(14.1f))
+        assertEquals(listOf("+Copper Scrap x2", "+Linen"), q.visible.map { it.text })
+        assertTrue(q.expire(14.8f))
+        assertEquals(listOf("+Linen"), q.visible.map { it.text })
+        assertTrue(q.expire(15.5f))
+        assertTrue(q.visible.isEmpty())
+    }
+
+    @Test
+    fun evictedToastsAreRemovedFromFreshQueue() {
+        val q = ToastQueue(maxVisible = 2, lifetimeSeconds = 2f, staggerSeconds = 0.35f)
+        q.add("+A", ToastKind.GOOD, 0f)
+        q.add("+B", ToastKind.GOOD, 0f)
+        q.add("+C", ToastKind.GOOD, 0f)
+        q.add("+A", ToastKind.GOOD, 0f)
+        assertEquals(listOf("+C", "+A"), q.visible.map { it.text })
+        assertEquals(listOf("+C", "+A"), q.drainFresh().map { it.text })
     }
 }

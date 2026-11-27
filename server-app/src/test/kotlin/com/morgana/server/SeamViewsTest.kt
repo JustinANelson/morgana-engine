@@ -77,4 +77,30 @@ class SeamViewsTest {
         repeat(10) { c.stepServerTick() }
         assertTrue(session.sent.none { it is ServerPacket.SeamView }, "no SeamView on ticks when softSeams is off")
     }
+
+    @Test
+    fun `in a seamless world a player sees what is near them on any map around, corners included, and nothing far away`() {
+        fun map(id: Int, w: Int, h: Int, x: Int, y: Int) = com.morgana.domain.map.MapDefinition(id = id, name = "M$id", width = w, height = h, worldX = x, worldY = y)
+        val def = com.morgana.domain.game.MorganaClassic.COMPILED.definition.copy(worldLayout = com.morgana.domain.map.WorldLayoutDefinition(seamViewTiles = 10))
+        val sim = com.morgana.domain.sim.WorldSimulation(com.morgana.domain.sim.SeededRandomSource(1L), game = com.morgana.domain.game.CompiledGame.compile(def))
+        sim.registerMap(map(1, 40, 40, 0, 0))
+        sim.registerMap(map(2, 40, 40, 40, 0))    // east
+        sim.registerMap(map(3, 40, 40, 40, 40))   // south-east, touching only at the corner
+        sim.registerMap(map(4, 40, 40, 200, 0))   // far away
+        fun npc(map: Int, id: String, x: Int, y: Int) = com.morgana.domain.entity.MapNpcInstance(
+            instanceId = id, spawnSlotIndex = 0, npcId = 1, mapId = map, tileX = x, tileY = y, homeX = x, homeY = y,
+            vitals = mapOf("hp" to com.morgana.domain.stats.VitalState(10, 10))
+        )
+        sim.mapNpcs[2] = mutableListOf(npc(2, "east-near", 3, 36), npc(2, "east-far", 30, 5))
+        sim.mapNpcs[3] = mutableListOf(npc(3, "corner", 2, 2))
+        sim.mapNpcs[4] = mutableListOf(npc(4, "far", 0, 0))
+        val player = com.morgana.domain.entity.CharacterState(
+            id = "p", accountId = "a", name = "P", position = com.morgana.domain.spatial.WorldPosition.fromTile(1, 37, 37)
+        )
+        sim.spawnOrUpdatePlayer(player)
+        val views = SeamViews(sim) { error("no players here") }.compute(player)
+        assertEquals(setOf(2, 3), views.map { it.mapId }.toSet(), "the east map and the corner map, not the far one")
+        assertEquals(listOf("east-near"), views.single { it.mapId == 2 }.npcs.map { it.instanceId }, "only what is within ten tiles of the player")
+        assertEquals(listOf("corner"), views.single { it.mapId == 3 }.npcs.map { it.instanceId })
+    }
 }

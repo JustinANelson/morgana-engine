@@ -296,7 +296,13 @@ data class MapDefinition(
      */
     val generator: FloorGenerator? = null,
     /** Makes the monsters of each copy of an [instanced] map tougher for bigger or higher-level parties; null for no scaling. */
-    val scaling: InstanceScaling? = null
+    val scaling: InstanceScaling? = null,
+    /**
+     * Where this map's top left tile sits in the shared world grid, when the game turns on a seamless world (`worldLayout`): both set
+     * or both null. Maps that touch along an edge are walked between without a warp (see [WorldLayout]).
+     */
+    val worldX: Int? = null,
+    val worldY: Int? = null
 ) {
     init {
         require(width in 5..256) { "Map width must be between 5 and 256 (got $width)" }

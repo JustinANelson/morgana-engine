@@ -232,20 +232,67 @@ object CitadelProps {
         spire(c, w / 2, 30, 74, 6)
     }
 
+    /**
+     * A flush 3-tile-wide (96 px) wall bastion tower designed to sit edge-to-edge on a 3-tile curtain wall
+     * with a full-width battered stone plinth, banded masonry shaft, corbelled machicolations, merlons,
+     * warm lancet window, and centered crimson banner.
+     */
     private fun keepTower(c: Cv, w: Int, h: Int) {
-        val base = h - 5
-        c.shadow(w / 2, h - 3, w / 2 - 6, 4)
-        masonry(c, 12, w - 12, 44, base)
-        // Machicolated crown and crenellation.
-        c.rect(8, 36, w - 8, 46, tone(stone, 3)); c.rect(8, 46, w - 8, 47, tone(stone, 1)); c.rect(8, 36, w - 8, 36, tone(stone, 4))
-        for (x in 12..w - 14 step 8) c.rect(x, 40, x + 3, 46, tone(dark, 2))
-        merlons(c, 8, w - 8, 36)
-        for (sy in intArrayOf(64, 100)) c.rect(w / 2 - 1, sy, w / 2, sy + 14, tone(dark, 1))
-        lancet(c, w / 2, 112, 128, 4, glassWarm)
-        // Banner on a pole.
-        c.rect(w / 2, 2, w / 2, 26, tone(wood, 1))
-        for (k in 0..8) c.rect(w / 2 + 1, 3 + k, w / 2 + 14 - k / 2, 3 + k, tone(banner, if (k == 0) 4 else 3))
-        c.rect(w / 2 + 1, 3, w / 2 + 14, 3, tone(banner, 0))
+        val base = h - 1
+        val cx = w / 2
+        val x0 = 2
+        val x1 = w - 3
+        val plinthTop = base - 16
+        // Main masonry shaft aligned cleanly inside the 3-tile wall width.
+        masonry(c, x0, x1, 44, plinthTop)
+        // Subtle horizontal stringcourses for depth.
+        for (by in intArrayOf(76, 108)) {
+            for (x in x0..x1) {
+                val lit = x < cx - 6
+                c.px(x, by, tone(stone, if (lit) 4 else 3))
+                c.px(x, by + 1, tone(stone, 1))
+            }
+        }
+        // Corner quoins along both vertical flanks so the tower reads solid against the curtain wall.
+        for (y in 48 until plinthTop step 10) {
+            c.rect(x0 + 1, y, x0 + 5, (y + 4).coerceAtMost(plinthTop - 1), tone(stone, 4))
+            c.rect(x1 - 5, y, x1 - 1, (y + 4).coerceAtMost(plinthTop - 1), tone(stone, 1))
+        }
+        // Full-width battered plinth (0..w-1) sitting flush on the 3-tile curtain wall.
+        for (y in plinthTop..base) {
+            val flare = ((y - plinthTop) / 7).coerceAtMost(2)
+            val px0 = (x0 - flare).coerceAtLeast(0)
+            val px1 = (x1 + flare).coerceAtMost(w - 1)
+            for (x in px0..px1) {
+                val t = (x - cx).toFloat() / (w / 2f)
+                val course = (y - plinthTop) / 5
+                val joint = (y - plinthTop) % 5 == 0 || (x + course * 7) % 14 == 0
+                val i = if (t < -0.25f) 3 else if (t < 0.35f) 2 else 1
+                c.px(x, y, if (x == px0 || x == px1 || y == base) tone(stone, 0) else if (joint) tone(stone, maxOf(0, i - 2)) else tone(stone, i))
+            }
+        }
+        c.rect(0, plinthTop - 2, w - 1, plinthTop - 1, tone(stone, 4))
+        c.rect(0, plinthTop, w - 1, plinthTop, tone(stone, 1))
+        // Full-width corbelled machicolation crown and crenellated parapet.
+        c.rect(0, 34, w - 1, 45, tone(stone, 3))
+        c.rect(0, 34, w - 1, 35, tone(stone, 4))
+        c.rect(0, 45, w - 1, 46, tone(stone, 1))
+        c.rect(0, 34, 0, 46, tone(stone, 0))
+        c.rect(w - 1, 34, w - 1, 46, tone(stone, 0))
+        for (x in 5..w - 9 step 10) {
+            c.rect(x, 39, x + 4, 44, tone(dark, 1))
+            c.rect(x, 47, x + 4, 49, tone(stone, 1))
+        }
+        merlons(c, 0, w - 1, 34)
+        // Paired upper arrow slits + warm central lancet window.
+        c.rect(cx - 17, 56, cx - 16, 70, tone(dark, 1))
+        c.rect(cx + 16, 56, cx + 17, 70, tone(dark, 1))
+        lancet(c, cx, 86, 106, 5, glassWarm)
+        c.rect(cx - 1, 118, cx, 132, tone(dark, 1))
+        // Centered banner on a pole.
+        c.rect(cx, 2, cx, 24, tone(wood, 1))
+        for (k in 0..8) c.rect(cx + 1, 3 + k, cx + 14 - k / 2, 3 + k, tone(banner, if (k == 0) 4 else 3))
+        c.rect(cx + 1, 3, cx + 14, 3, tone(banner, 0))
     }
 
 

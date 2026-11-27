@@ -63,6 +63,52 @@ val skinClasses = listOf(
     "com.kotcrab.vis.ui.widget.toast.Toast\$ToastStyle"
 )
 
+val webTitle = (findProperty("webTitle") as String?)?.takeIf { it.isNotBlank() } ?: "Morgana ORPG"
+val webArchiveName = (findProperty("webArchiveName") as String?)?.takeIf { it.isNotBlank() } ?: "morgana-web-client"
+val webFeaturedRealmHost = (findProperty("webFeaturedRealmHost") as String?)?.trim().orEmpty()
+val webFeaturedRealmPort = (findProperty("webFeaturedRealmPort") as String?)?.toIntOrNull() ?: 443
+val webFeaturedRealmTls = (findProperty("webFeaturedRealmTls") as String?)?.toBooleanStrictOrNull() ?: true
+val webFeaturedRealmName = (findProperty("webFeaturedRealmName") as String?)?.takeIf { it.isNotBlank() } ?: "Featured Realm"
+val webFeaturedRealmDescription = (findProperty("webFeaturedRealmDescription") as String?)?.trim().orEmpty()
+
+val generatedWebConfigDir = layout.buildDirectory.dir("generated/webConfig")
+val generateWebBuildConfig = tasks.register("generateWebBuildConfig") {
+    val outDir = generatedWebConfigDir
+    inputs.property("host", webFeaturedRealmHost)
+    inputs.property("port", webFeaturedRealmPort)
+    inputs.property("tls", webFeaturedRealmTls)
+    inputs.property("name", webFeaturedRealmName)
+    inputs.property("desc", webFeaturedRealmDescription)
+    outputs.dir(outDir)
+    doLast {
+        fun esc(s: String) = s.replace("\\", "\\\\").replace("\"", "\\\"")
+        val pkgDir = outDir.get().asFile.resolve("com/morgana/client/web")
+        pkgDir.mkdirs()
+        pkgDir.resolve("WebBuildConfig.kt").writeText(
+            """
+            package com.morgana.client.web
+
+            /** Build-time web client configuration supplied via Gradle properties (`-PwebFeaturedRealmHost=...`). */
+            internal object WebBuildConfig {
+                const val FEATURED_REALM_HOST: String = "${esc(webFeaturedRealmHost)}"
+                const val FEATURED_REALM_PORT: Int = $webFeaturedRealmPort
+                const val FEATURED_REALM_TLS: Boolean = $webFeaturedRealmTls
+                const val FEATURED_REALM_NAME: String = "${esc(webFeaturedRealmName)}"
+                const val FEATURED_REALM_DESCRIPTION: String = "${esc(webFeaturedRealmDescription)}"
+            }
+            """.trimIndent() + "\n"
+        )
+    }
+}
+
+sourceSets.named("main") {
+    kotlin.srcDir(generatedWebConfigDir)
+}
+
+tasks.named("compileKotlin") {
+    dependsOn(generateWebBuildConfig)
+}
+
 gdxTeaVM {
     assets("assets")
     // VisUI loads its skin from the classpath; the browser has no classpath, so ship it as files. Only the 1x skin: MorganaGame
@@ -71,7 +117,7 @@ gdxTeaVM {
 
     webDefaults {
         mainClass = "com.morgana.client.web.WebLauncherKt"
-        htmlTitle = "Morgana ORPG"
+        htmlTitle = webTitle
         htmlWidth = 1280
         htmlHeight = 768
         optimization = OptimizationLevel.BALANCED
@@ -103,12 +149,12 @@ tasks.matching { it.name == "gdx_teavm_web_js_release_build" }.configureEach { f
 
 tasks.register<Zip>("dist") {
     group = "distribution"
-    description = "Packages the minified release web client into client-web/build/dist/morgana-realms-client-html.zip for itch.io / static hosting."
+    description = "Packages the minified release web client into client-web/build/dist/<webArchiveName>.zip for itch.io / static hosting."
     dependsOn("gdx_teavm_web_js_release_build", copyPwaRelease)
     from(layout.buildDirectory.dir("dist/js/release/webapp")) {
         exclude("WEB-INF/**")
     }
-    archiveBaseName.set("morgana-realms-client-html")
+    archiveBaseName.set(webArchiveName)
     archiveVersion.set("")
     destinationDirectory.set(layout.buildDirectory.dir("dist"))
 }
