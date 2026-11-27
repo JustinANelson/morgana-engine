@@ -3499,6 +3499,7 @@ class MorganaWorldCoordinator(
             guildTag = guildTag,
             isRoguePk = player.isRoguePk,
             isGhost = player.isGhost,
+            isAfkTraining = player.trainingState.afkActive,
             stallTitle = simulation.stalls[player.id]?.takeIf { it.open }?.title.orEmpty(),
             pkPoints = player.pkPoints,
             vitals = player.vitals,

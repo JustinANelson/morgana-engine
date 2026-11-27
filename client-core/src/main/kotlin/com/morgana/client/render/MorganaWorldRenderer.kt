@@ -1939,6 +1939,12 @@ class MorganaWorldRenderer(
             }
             drawCenteredText(batch, label, cx, nameY, nameColor)
 
+            val isAfk = player.isAfkTraining || (worldState.localCharacter?.id == player.characterId && worldState.localCharacter?.trainingState?.afkActive == true)
+            if (isAfk) {
+                drawCenteredText(batch, "[AFK Training]", cx, nameY + 12f, Color.valueOf("FACC15"))
+                nameY += 12f
+            }
+
             worldState.chatBubbles[player.characterId]?.let { bubble ->
                 drawChatBubble(batch, bubble.text, cx, nameY + 16f)
             }

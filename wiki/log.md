@@ -2,6 +2,10 @@
 
 ## 2026-11-27
 
+* **Add** - **Overhead `[AFK Training]` indicator & interchangeable `RING2` equip** (`core-domain`, `shared-protocol`, `server-app`, `client-core`):
+  - `shared-protocol`, `server-app`, `client-core` (`Packets.kt`, `MorganaWorldCoordinator.kt`, `MorganaWorldRenderer.kt`): Added `isAfkTraining: Boolean = false` to `PublicPlayerSnapshot` and rendered a golden `[AFK Training]` overhead tag above characters while Online AFK Mastery Training is active.
+  - `core-domain` (`InventorySystem.kt`): Generic rings (with blank `equipSlot`) now automatically equip into `RING2` when `RING` is occupied and `RING2` is configured and empty.
+
 * **Add** - **Weapon & Skill Mastery, Single-Tier Food Offline Training, and Daily Online AFK Mode** (`core-domain`, `shared-protocol`, `server-app`, `client-core`):
   - `core-domain` (`MasteryAndTraining.kt`, `MasteryTrainingSystem.kt`, `GameDefinition.kt`, `EntityAndPlayerModels.kt`, `ItemAndInventory.kt`, `ActionCombatModule.kt`, `CombatSystem.kt`, `WorldSimulation.kt`, `WorldEvents.kt`): Added `SkillMasteryConfig`, `TrainingConfig`, `CharacterTrainingState`, and food training fields on `ItemDefinition` (`trainingTier`, `trainingMinutes`, `trainingCapMinutes`). Wired `ActionCombatModule` (melee + free-angle projectiles) into both Weapon Proficiency and Skill Mastery via shared post-hit hook `onActionCombatHitLanded` with flat linear per-level damage scaling. Added single-tier food-locked offline training (consumed offline only, resolved on login with `WorldSimulationEvent.OfflineTrainingCompleted`) and daily-capped online AFK training mode (no offline food consumed, resets at 00:00 UTC), backed by `MasteryAndTrainingTest.kt`.
   - `shared-protocol` & `server-app` (`Packets.kt`, `TrainingPacketHandlers.kt`, `MorganaWorldCoordinator.kt`): Added `c_training_focus`, `c_training_fuel`, `c_training_clear`, `c_training_afk`, and `s_offline_training_report` packets with dedicated `TrainingPacketHandlers`.

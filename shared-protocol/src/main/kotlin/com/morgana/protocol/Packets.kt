@@ -303,6 +303,8 @@ data class PublicPlayerSnapshot(
     val isRoguePk: Boolean = false,
     /** True while the player is a ghost (dead, walking until revived or released); drawn faded. */
     val isGhost: Boolean = false,
+    /** True while the player has online AFK mastery training active. */
+    val isAfkTraining: Boolean = false,
     /** The title of the player's open stall (see `StallDefinition`), shown by their name; blank when they have none. */
     val stallTitle: String = "",
     val pkPoints: Int = 0,

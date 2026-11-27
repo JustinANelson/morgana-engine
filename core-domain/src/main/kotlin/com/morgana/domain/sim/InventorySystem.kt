@@ -411,6 +411,14 @@ internal fun WorldSimulation.useInventorySlotImpl(characterId: String, slotIndex
     // Equip if equipment item
     var equipSlot = itemDef.equipmentSlotOrNull()
     if (equipSlot == EquipmentSlot.WEAPON && wantsOffHand(player, itemDef)) equipSlot = EquipmentSlot.SHIELD
+    val ring2 = EquipmentSlot("RING2")
+    if (equipSlot == EquipmentSlot.RING && itemDef.equipSlot.isBlank() &&
+        game.definition.hasSlot(ring2) &&
+        player.equipment.getEquipped(EquipmentSlot.RING) != null &&
+        player.equipment.getEquipped(ring2) == null
+    ) {
+        equipSlot = ring2
+    }
     if (equipSlot != null && !game.definition.hasSlot(equipSlot)) {
         return listOf(tellPlayer(player, "This game has no ${equipSlot.id.lowercase()} slot for ${itemDef.name}.", "WARN"))
     }
