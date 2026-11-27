@@ -251,6 +251,16 @@ data class GemEffect(
 }
 
 /**
+ * What upgrading a piece of gear to its [ItemDefinition.nextTierItemId] costs: [materials] (item id to amount) and [gold] of the
+ * game's currency item. Taken together, and only when the player has all of it (see the `upgrade_gear` level upgrade).
+ */
+@Serializable
+data class UpgradeCost(
+    val materials: Map<Int, Int> = emptyMap(),
+    val gold: Int = 0
+)
+
+/**
  * Authoritative item definition editable live via the F1 Item Editor.
  */
 @Serializable
@@ -342,6 +352,12 @@ data class ItemDefinition(
      * only from drops and upgrades.
      */
     val sockets: Int = 0,
+    /**
+     * The price of upgrading this piece to [nextTierItemId] at a smith: several materials plus gold. When set, an `upgrade_gear`
+     * level upgrade that names no material charges this instead of one material item, so each link of a chain can cost its own
+     * mix. Null keeps the single-material behaviour.
+     */
+    val upgradeCost: UpgradeCost? = null,
     /** On-disk document schema version; see [ContentSchema]. */
     val schemaVersion: Int = ContentSchema.CURRENT_VERSION
 ) {

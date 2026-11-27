@@ -291,6 +291,16 @@
                 "sockets": {
                     "type": "integer"
                 },
+                "upgradeCost": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.item.UpgradeCost"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
                 "schemaVersion": {
                     "type": "integer"
                 }
@@ -317,6 +327,22 @@
                     "type": "integer"
                 },
                 "xpPercent": {
+                    "type": "integer"
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.item.UpgradeCost": {
+            "type": "object",
+            "properties": {
+                "materials": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "gold": {
                     "type": "integer"
                 }
             },

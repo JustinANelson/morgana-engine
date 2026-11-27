@@ -48,6 +48,10 @@ internal fun WorldSimulation.upgradeGear(characterId: String, cmd: EventCommand.
     if (cmd.kind == GearUpgradeKind.ENHANCE) return enhanceGear(characterId, cmd, cfg, stack, name)
     if (cmd.kind == GearUpgradeKind.UPGRADE_QUALITY && cfg.quality != null) return raiseQuality(characterId, cmd, cfg, stack, name)
 
+    if (cmd.kind == GearUpgradeKind.UPGRADE_LEVEL && cmd.materialItemId <= 0 && def.upgradeCost != null) {
+        return upgradeAlongChain(characterId, cmd.slot, stack, def, name)
+    }
+
     var materialId = cmd.materialItemId
     if (cmd.kind == GearUpgradeKind.SOCKET_GEM && materialId <= 0) {
         materialId = player.inventory.slots.firstOrNull { s -> s != null && items[s.itemId]?.gem != null }?.itemId ?: 0
@@ -119,6 +123,51 @@ internal fun WorldSimulation.upgradeGear(characterId: String, cmd: EventCommand.
         .let { if (cmd.kind == GearUpgradeKind.UPGRADE_LEVEL || cmd.kind == GearUpgradeKind.SOCKET_GEM) it.recalculateVitals(game, items) else it }
     players[characterId] = updatedPlayer
     return listOf(tellPlayer(updatedPlayer, upgradedMessage, "GOOD"), WorldSimulationEvent.CharacterUpdated(updatedPlayer))
+}
+
+/**
+ * The level upgrade of a piece that names its own [ItemDefinition.upgradeCost]: the player must have reached the next item's level
+ * and carry every material and the gold; all of it is taken together, then the piece becomes the next item of its chain, keeping
+ * its `+` level, quality roll and gems (and gaining any sockets the new item starts with).
+ */
+private fun WorldSimulation.upgradeAlongChain(
+    characterId: String,
+    slot: EquipmentSlot,
+    stack: ItemStack,
+    def: com.morgana.domain.item.ItemDefinition,
+    name: String
+): List<WorldSimulationEvent> {
+    val player = players[characterId] ?: return emptyList()
+    fun warn(text: String) = listOf(tellPlayer(player, text, "WARNING"))
+    val cost = def.upgradeCost ?: return emptyList()
+    val next = items[def.nextTierItemId]?.takeIf { def.nextTierItemId > 0 } ?: return warn("$name cannot be upgraded to a higher level.")
+    if (player.level < next.levelReq) return warn("You need level ${next.levelReq} to wear ${next.name}.")
+    itemRefusal(player, next)?.let { return warn(it) }
+
+    val currency = items[1]?.takeIf { it.type == com.morgana.domain.item.ItemType.CURRENCY }
+        ?: items.values.filter { it.type == com.morgana.domain.item.ItemType.CURRENCY }.minByOrNull { it.id }
+    var inventory = player.inventory
+    val missing = mutableListOf<String>()
+    for ((id, amount) in cost.materials) if (!inventory.hasItem(id, amount)) missing += "$amount ${items[id]?.name ?: "item $id"}"
+    if (cost.gold > 0 && (currency == null || !inventory.hasItem(currency.id, cost.gold))) missing += "${cost.gold} ${currency?.name ?: "gold"}"
+    if (missing.isNotEmpty()) return warn("Upgrading $name to ${next.name} needs ${missing.joinToString(", ")}.")
+
+    for ((id, amount) in cost.materials) inventory = inventory.removeByItemId(id, amount)!!
+    if (cost.gold > 0 && currency != null) inventory = inventory.removeByItemId(currency.id, cost.gold)!!
+    val gained = next.freshSockets().size - stack.sockets.size
+    val upgraded = stack.copy(
+        itemId = next.id,
+        durability = 100,
+        sockets = if (gained > 0) stack.sockets + List(gained) { 0 } else stack.sockets,
+        rolls = stack.rolls?.let { it.copy(itemLevel = maxOf(it.itemLevel, next.levelReq)) }
+    )
+    val updated = player.copy(inventory = inventory, equipment = player.equipment.copy(equipped = player.equipment.equipped + (slot to upgraded)))
+        .recalculateVitals(game, items)
+    players[characterId] = updated
+    return listOf(
+        tellPlayer(updated, "$name is upgraded to ${ItemRollText.displayName(next, upgraded.rolls, game.definition.loot, upgraded.plus)}!", "GOOD"),
+        WorldSimulationEvent.CharacterUpdated(updated)
+    )
 }
 
 /** The rarity after [stack]'s current one in the game's loot rules, or null when it is already the best. */

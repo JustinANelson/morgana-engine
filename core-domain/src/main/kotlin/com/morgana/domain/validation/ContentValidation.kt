@@ -386,6 +386,14 @@ object ContentValidator {
                     next.id == d.id -> error(col, d.id, "/nextTierItemId", "self_reference", "an item cannot be its own next tier")
                 }
             }
+            d.upgradeCost?.let { cost ->
+                if (d.nextTierItemId <= 0) warn(col, d.id, "/upgradeCost", "upgrade_cost_without_next", "an upgrade cost needs nextTierItemId")
+                if (cost.gold < 0) error(col, d.id, "/upgradeCost/gold", "out_of_range", "gold must be 0 or more")
+                cost.materials.forEach { (id, amount) ->
+                    itemRef(col, d.id, "/upgradeCost/materials/$id", id, optional = false)
+                    if (amount < 1) error(col, d.id, "/upgradeCost/materials/$id", "out_of_range", "amount must be 1 or more")
+                }
+            }
             if (d.sockets !in 0..ItemStack.MAX_SOCKETS) error(col, d.id, "/sockets", "out_of_range", "sockets must be 0 to ${ItemStack.MAX_SOCKETS}")
             d.gem?.let { gem ->
                 gem.attributeBonuses.keys.forEach { attrId ->

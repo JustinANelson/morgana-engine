@@ -2,6 +2,8 @@
 
 ## 2026-11-26
 
+* **Add** - **`ItemDefinition.upgradeCost`: a per-item price for chain upgrades** ([combat](/systems/combat.md)): several materials plus gold. An `upgrade_gear` level upgrade that names no material charges the item's own cost, so each link of an item chain (`nextTierItemId`) can cost its own mix; everything is taken together, only if the player has the level and all of it, and the piece keeps its `+` level, quality roll and gems (and gains any starting sockets of the new item). Validation checks the materials exist. Test: `ChainUpgradeTest`.
+
 * **Add** - **`ItemDefinition.sockets`: gear that starts with its sockets** ([combat](/systems/combat.md)): a count of empty sockets (0 to 6) a new piece starts with, applied wherever a new item is created (`Inventory.addItem`, monster drops, generated floor loot). A game that gives all gear its maximum sockets sets it on each piece and offers no way to add more; 0 (the default) keeps the old behaviour (sockets only from drops and upgrades). Validation checks the range. Test: `StartingSocketsTest`.
 
 * **Add** - **`worldgen`: a whole continent from noise, with maps built on top** ([playbook](/playbooks/ai_assisted_mapping.md)): a recipe op that paints terrain from world-wide noise fields (scale, warp, ridged rivers, tilt, edge falloff, mixing, `bumps`) and first-match biome rules, sampled at world coordinates so maps that touch agree tile for tile (tested: one map equals its two halves). `worldLayout.borderWarnings` turns off the open/blocked border warning for generated worlds.
