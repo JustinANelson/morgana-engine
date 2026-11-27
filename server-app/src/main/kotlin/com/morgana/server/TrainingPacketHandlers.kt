@@ -4,14 +4,17 @@ import com.morgana.domain.sim.WorldSimulation
 import com.morgana.domain.sim.WorldSimulationEvent
 import com.morgana.domain.sim.clearOfflineTrainingFuel
 import com.morgana.domain.sim.fuelOfflineTraining
+import com.morgana.domain.sim.promoteLifeskillGrandmaster
 import com.morgana.domain.sim.setTrainingFocus
+import com.morgana.domain.sim.stepDownLifeskillBranch
 import com.morgana.domain.sim.toggleAfkTraining
+import com.morgana.domain.sim.unlockLifeskillBranch
 import com.morgana.protocol.ClientPacket
 import com.morgana.protocol.ServerPacket
 
 /**
- * Handles mastery & offline/online-AFK training packets outside [MorganaWorldCoordinator]
- * to keep the coordinator lean.
+ * Handles mastery, lifeskill specialization, and offline/online-AFK training packets outside
+ * [MorganaWorldCoordinator] to keep the coordinator lean.
  */
 internal object TrainingPacketHandlers {
     fun handle(
@@ -23,6 +26,12 @@ internal object TrainingPacketHandlers {
         is ClientPacket.FuelOfflineTraining -> simulation.fuelOfflineTraining(charId, packet.slotIndex, packet.amount)
         is ClientPacket.ClearOfflineTrainingFuel -> simulation.clearOfflineTrainingFuel(charId)
         is ClientPacket.ToggleAfkTraining -> simulation.toggleAfkTraining(charId, packet.active)
+        is ClientPacket.LifeskillAction -> when (packet.action.uppercase()) {
+            "UNLOCK_JOURNEYMAN" -> simulation.unlockLifeskillBranch(charId, packet.branchId)
+            "PROMOTE_GRANDMASTER" -> simulation.promoteLifeskillGrandmaster(charId, packet.branchId)
+            "STEP_DOWN" -> simulation.stepDownLifeskillBranch(charId, packet.branchId)
+            else -> emptyList()
+        }
         else -> null
     }
 

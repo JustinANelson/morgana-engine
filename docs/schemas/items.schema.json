@@ -312,6 +312,12 @@
                         }
                     ]
                 },
+                "expandInventorySlots": {
+                    "type": "integer"
+                },
+                "expandBankSlots": {
+                    "type": "integer"
+                },
                 "schemaVersion": {
                     "type": "integer"
                 }

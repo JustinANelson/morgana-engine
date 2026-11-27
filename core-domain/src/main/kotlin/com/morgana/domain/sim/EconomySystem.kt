@@ -247,6 +247,9 @@ internal fun WorldSimulation.craftRecipeImpl(characterId: String, recipeId: Int)
     val player = players[characterId] ?: return emptyList()
     val recipe = recipes[recipeId] ?: return emptyList()
     if (player.level < recipe.levelReq) return emptyList()
+    checkLifeskillRecipeRequirement(player, recipe)?.let { refusal ->
+        return listOf(tellPlayer(player, refusal, "WARNING"))
+    }
     if (recipe.stationType != CraftingStationType.ANYWHERE) {
         val anchor = craftingAnchors[characterId]
         val atStation = anchor != null && anchor.stationType == recipe.stationType &&
@@ -279,6 +282,43 @@ internal fun WorldSimulation.craftRecipeImpl(characterId: String, recipeId: Int)
     val out = mutableListOf<WorldSimulationEvent>()
     val updated = player.copy(inventory = addRes.updatedInventory)
     players[characterId] = updated
+    val craftBonusPct = resolveLifeskillForRecipe(recipe)?.let { (ls, branch) ->
+        onLifeskillActionCompleted(characterId, ls, branch?.id.orEmpty(), out)
+    } ?: 0
+    if (craftBonusPct > 0 && rng.rollBasisPoints(craftBonusPct * 100)) {
+        val latest = players[characterId] ?: updated
+        if (outputDef.isEffectivelyStackable) {
+            val bonusAdd = latest.inventory.addItem(outputDef, 1)
+            if (bonusAdd.overflowAmount == 0) {
+                val withBonus = latest.copy(inventory = bonusAdd.updatedInventory)
+                players[characterId] = withBonus
+                out.add(WorldSimulationEvent.CharacterUpdated(withBonus))
+                out.add(
+                    WorldSimulationEvent.FloatingTextEmitted(
+                        latest.position.mapId, latest.position.tileX, latest.position.tileY,
+                        "+1 Bonus ${outputDef.name}!", "RESOURCE", "#FACC15"
+                    )
+                )
+            }
+        } else {
+            val firstIng = recipe.ingredients.firstOrNull()
+            val refundDef = firstIng?.let { items[it.itemId] }
+            if (refundDef != null) {
+                val refundAdd = latest.inventory.addItem(refundDef, 1)
+                if (refundAdd.overflowAmount == 0) {
+                    val withRefund = latest.copy(inventory = refundAdd.updatedInventory)
+                    players[characterId] = withRefund
+                    out.add(WorldSimulationEvent.CharacterUpdated(withRefund))
+                    out.add(
+                        WorldSimulationEvent.FloatingTextEmitted(
+                            latest.position.mapId, latest.position.tileX, latest.position.tileY,
+                            "Saved 1 ${refundDef.name}!", "RESOURCE", "#FACC15"
+                        )
+                    )
+                }
+            }
+        }
+    }
     grantXpToCharacter(characterId, recipe.xpReward, out)
     advanceQuestProgress(characterId, QuestObjectiveType.CRAFT_RECIPE, recipe.id, 1, out)
     return out

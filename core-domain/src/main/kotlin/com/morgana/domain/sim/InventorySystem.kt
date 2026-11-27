@@ -242,7 +242,8 @@ internal fun WorldSimulation.harvestResourceAt(
     if (lastHarvest != null && currentTick - lastHarvest < game.definition.gameplayTuning.harvestCooldownTicks) return
     lastHarvestTick[player.id] = currentTick
 
-    val nextHealth = state.currentHealth - 1
+    val hitPower = lifeskillHarvestPower(player, resDef)
+    val nextHealth = state.currentHealth - hitPower
     if (resDef.animationId > 0) {
         out.add(WorldSimulationEvent.AnimationTriggered(mapId, coord.x, coord.y, resDef.animationId))
     }
@@ -256,10 +257,17 @@ internal fun WorldSimulation.harvestResourceAt(
         mapNodeStates[coord] = depletedState
         out.add(WorldSimulationEvent.ResourceNodeChanged(depletedState))
 
+        val lifeskillBonusPct = resolveLifeskillForResource(resDef)?.let { ls ->
+            onLifeskillActionCompleted(player.id, ls, "", out)
+        } ?: 0
+        val currentPlayer = players[player.id] ?: player
+
         val rewardItem = items[resDef.rewardItemId]
-        val yieldQty = rng.nextIntInclusive(resDef.minYield, resDef.maxYield)
+        val baseQty = rng.nextIntInclusive(resDef.minYield, resDef.maxYield)
+        val bonusQty = if (lifeskillBonusPct > 0 && baseQty > 0 && rng.rollBasisPoints(lifeskillBonusPct * 100)) 1 else 0
+        val yieldQty = baseQty + bonusQty
         if (rewardItem != null && yieldQty > 0) {
-            var bag = player.inventory.addItem(rewardItem, yieldQty).updatedInventory
+            var bag = currentPlayer.inventory.addItem(rewardItem, yieldQty).updatedInventory
             // Rare extra finds roll only for nodes that have them, so other resources draw no random numbers.
             for (bonus in resDef.bonusDrops) {
                 val bonusItem = items[bonus.itemId] ?: continue
@@ -273,16 +281,16 @@ internal fun WorldSimulation.harvestResourceAt(
                 )
                 advanceQuestProgress(player.id, QuestObjectiveType.COLLECT_ITEM, bonusItem.id, qty, out)
             }
-            val updatedPlayer = player.copy(inventory = bag)
+            val updatedPlayer = currentPlayer.copy(inventory = bag)
             players[player.id] = updatedPlayer
             out.add(
                 WorldSimulationEvent.FloatingTextEmitted(
                     mapId = mapId,
                     tileX = coord.x,
                     tileY = coord.y,
-                    text = "+$yieldQty ${rewardItem.name}",
+                    text = if (bonusQty > 0) "+$yieldQty ${rewardItem.name} (Bonus!)" else "+$yieldQty ${rewardItem.name}",
                     category = "RESOURCE",
-                    colorHex = "#A3E635"
+                    colorHex = if (bonusQty > 0) "#FACC15" else "#A3E635"
                 )
             )
         }
@@ -476,6 +484,30 @@ internal fun WorldSimulation.useInventorySlotImpl(characterId: String, slotIndex
 
     // Consumable or Spell Scroll
     if (itemDef.type == ItemType.CONSUMABLE) {
+        if (itemDef.expandInventorySlots > 0 || itemDef.expandBankSlots > 0) {
+            val invCap = game.definition.maxInventorySlots.coerceIn(1, 200)
+            val bankCap = game.definition.maxBankSlots.coerceIn(1, 200)
+            val canExpandInv = itemDef.expandInventorySlots > 0 && player.inventory.maxSlots < invCap
+            val canExpandBank = itemDef.expandBankSlots > 0 && player.bank.maxSlots < bankCap
+            if (!canExpandInv && !canExpandBank) {
+                val which = if (itemDef.expandBankSlots > 0) "vault" else "bag"
+                return listOf(tellPlayer(player, "Your $which is already at maximum capacity.", "WARNING"))
+            }
+            val (afterRemove, _) = player.inventory.removeFromSlot(slotIndex, 1) ?: return emptyList()
+            val expandedInv = if (canExpandInv) afterRemove.expand(itemDef.expandInventorySlots, invCap) else afterRemove
+            val expandedBank = if (canExpandBank) player.bank.expand(itemDef.expandBankSlots, bankCap) else player.bank
+            val updated = player.copy(inventory = expandedInv, bank = expandedBank)
+            players[characterId] = updated
+            out.add(WorldSimulationEvent.CharacterUpdated(updated))
+            out.add(WorldSimulationEvent.ItemUsed(characterId, itemDef.id, slotIndex))
+            if (canExpandInv) {
+                out.add(tellPlayer(updated, "Bag expanded to ${expandedInv.maxSlots} slots!", "INFO"))
+            }
+            if (canExpandBank) {
+                out.add(tellPlayer(updated, "Vault expanded to ${expandedBank.maxSlots} slots!", "INFO"))
+            }
+            return out
+        }
         val oldMap = player.position.mapId
         val town = if (itemDef.townGate) townForGate(player) else null
         if (itemDef.townGate && town == null && itemDef.restore.isEmpty()) {

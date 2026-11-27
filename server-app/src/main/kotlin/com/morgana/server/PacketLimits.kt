@@ -161,7 +161,8 @@ class PacketLimiter(
             is ClientPacket.PickupGroundItem, is ClientPacket.UseInventorySlot, is ClientPacket.DropInventorySlot,
             is ClientPacket.SwapInventorySlots, is ClientPacket.MergeGear, is ClientPacket.SortInventory, is ClientPacket.UnequipSlot, is ClientPacket.AllocateStatPoint,
             is ClientPacket.SetPkMode, is ClientPacket.SetHotbarSlot, is ClientPacket.SelectDialogueChoice, is ClientPacket.SubmitTextInput,
-            is ClientPacket.SetTrainingFocus, is ClientPacket.FuelOfflineTraining, is ClientPacket.ClearOfflineTrainingFuel, is ClientPacket.ToggleAfkTraining -> PacketClass.ACTION
+            is ClientPacket.SetTrainingFocus, is ClientPacket.FuelOfflineTraining, is ClientPacket.ClearOfflineTrainingFuel, is ClientPacket.ToggleAfkTraining,
+            is ClientPacket.LifeskillAction -> PacketClass.ACTION
             is ClientPacket.ShopBuy, is ClientPacket.ShopSell, is ClientPacket.ShopBuyback, is ClientPacket.BankDeposit, is ClientPacket.BankWithdraw,
             is ClientPacket.GuildBankDeposit, is ClientPacket.GuildBankWithdraw, is ClientPacket.GuildBankSetAccess, is ClientPacket.GuildBankUpgrade,
             is ClientPacket.CraftRecipe, is ClientPacket.PartyAction, is ClientPacket.GuildAction,

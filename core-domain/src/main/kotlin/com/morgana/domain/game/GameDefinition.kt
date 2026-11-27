@@ -108,7 +108,13 @@ data class GameDefinition(
     /** How much a map keeps supplied (monster respawns, resource regrowth) by how many players are on it. See [PopulationScalingDefinition]. */
     val populationScaling: PopulationScalingDefinition? = null,
     /** One continuous world: maps that name a `worldX`/`worldY` meet at any edge or corner with no warp or reload. See [com.morgana.domain.map.WorldLayoutDefinition]. */
-    val worldLayout: com.morgana.domain.map.WorldLayoutDefinition? = null
+    val worldLayout: com.morgana.domain.map.WorldLayoutDefinition? = null,
+    /** 3-tier Lifeskill Mastery progression (Apprentice -> Journeyman -> Grandmaster). See [LifeskillMasteryConfig]. */
+    val lifeskillMastery: LifeskillMasteryConfig? = null,
+    /** Maximum inventory slots reachable via bag expansion consumables. */
+    val maxInventorySlots: Int = 48,
+    /** Maximum bank vault slots reachable via vault expansion consumables. */
+    val maxBankSlots: Int = 96
 ) {
     /** The passive of class [classId], or none. */
     fun passiveOf(classId: Int): ClassPassive = classPassives[classId] ?: ClassPassive.NONE

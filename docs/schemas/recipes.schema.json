@@ -40,6 +40,15 @@
                 "xpReward": {
                     "type": "integer"
                 },
+                "professionId": {
+                    "type": "string"
+                },
+                "branchId": {
+                    "type": "string"
+                },
+                "requiredProfessionLevel": {
+                    "type": "integer"
+                },
                 "schemaVersion": {
                     "type": "integer"
                 }

@@ -159,6 +159,8 @@ data class CharacterState(
     val skillMasteryProgress: Map<Int, Int> = emptyMap(),
     /** Persisted offline food-fueled training and daily online AFK training state. */
     val trainingState: com.morgana.domain.game.CharacterTrainingState = com.morgana.domain.game.CharacterTrainingState(),
+    /** Persisted 3-tier lifeskill mastery levels, progress, and chosen specialization branches. */
+    val lifeskillState: com.morgana.domain.game.CharacterLifeskillState = com.morgana.domain.game.CharacterLifeskillState(),
     val schemaVersion: Int = 2
 ) {
     val isAlive: Boolean

@@ -451,6 +451,22 @@
                             "type": "null"
                         }
                     ]
+                },
+                "lifeskillMastery": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/com.morgana.domain.game.LifeskillMasteryConfig"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "maxInventorySlots": {
+                    "type": "integer"
+                },
+                "maxBankSlots": {
+                    "type": "integer"
                 }
             },
             "required": [
@@ -2497,6 +2513,105 @@
                 }
             },
             "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.LifeskillMasteryConfig": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "apprenticeMaxLevel": {
+                    "type": "integer"
+                },
+                "journeymanMaxLevel": {
+                    "type": "integer"
+                },
+                "grandmasterMaxLevel": {
+                    "type": "integer"
+                },
+                "maxJourneymanBranches": {
+                    "type": "integer"
+                },
+                "maxGrandmasterBranches": {
+                    "type": "integer"
+                },
+                "actionsPerLevel": {
+                    "type": "integer"
+                },
+                "apprenticeBonusPercentPerLevel": {
+                    "type": "integer"
+                },
+                "lifeskills": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.game.LifeskillDefinition"
+                    }
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.LifeskillDefinition": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "kind": {
+                    "type": "string"
+                },
+                "resourceCategories": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "stationTypes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "branches": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/com.morgana.domain.game.LifeskillBranchDefinition"
+                    }
+                }
+            },
+            "required": [
+                "id",
+                "name"
+            ],
+            "additionalProperties": false
+        },
+        "com.morgana.domain.game.LifeskillBranchDefinition": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "bonusPercentPerLevel": {
+                    "type": "integer"
+                },
+                "extraHarvestHitAtLevel": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "id",
+                "name"
+            ],
             "additionalProperties": false
         }
     }

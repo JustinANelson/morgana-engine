@@ -372,6 +372,10 @@ data class ItemDefinition(
      * mix. Null keeps the single-material behaviour.
      */
     val upgradeCost: UpgradeCost? = null,
+    /** When > 0 on a consumable, permanently expands the character's bag capacity by this many slots (up to `maxInventorySlots`). */
+    val expandInventorySlots: Int = 0,
+    /** When > 0 on a consumable, permanently expands the character's bank vault capacity by this many slots (up to `maxBankSlots`). */
+    val expandBankSlots: Int = 0,
     /** On-disk document schema version; see [ContentSchema]. */
     val schemaVersion: Int = ContentSchema.CURRENT_VERSION
 ) {
@@ -463,6 +467,13 @@ data class Inventory(
     }
 
     fun getSlot(index: Int): ItemStack? = slots.getOrNull(index)
+
+    /** Returns a copy with capacity increased by [extraSlots], clamped to `[maxSlots, cap.coerceAtMost(200)]`. */
+    fun expand(extraSlots: Int, cap: Int): Inventory {
+        val target = (maxSlots + extraSlots.coerceAtLeast(0)).coerceAtMost(cap.coerceIn(1, 200))
+        if (target <= maxSlots) return this
+        return copy(maxSlots = target, slots = slots + List(target - maxSlots) { null })
+    }
 
     fun totalCountOf(itemId: Int): Int =
         slots.filterNotNull().filter { it.itemId == itemId }.sumOf { it.amount }

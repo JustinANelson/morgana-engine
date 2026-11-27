@@ -341,6 +341,12 @@ data class RecipeDefinition(
     val outputItemId: Int,
     val outputAmount: Int = 1,
     val xpReward: Long = 20L,
+    /** Optional base lifeskill id (e.g. `"smithing"`, `"carpentry"`, `"tailoring"`, `"cooking"`). */
+    val professionId: String = "",
+    /** Optional Tier 2/3 specialization branch id (e.g. `"armorsmith"`, `"saddler_bagmaker"`). */
+    val branchId: String = "",
+    /** Optional minimum lifeskill/branch level required to craft this recipe (`0` = no requirement). */
+    val requiredProfessionLevel: Int = 0,
     /** On-disk document schema version; see [ContentSchema]. */
     val schemaVersion: Int = ContentSchema.CURRENT_VERSION
 )

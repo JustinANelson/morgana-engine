@@ -31,6 +31,7 @@ class MasteryAndTrainingWindow(
 ) : HudWindow("Mastery & Training") {
 
     private val content = VisTable()
+    private var activeTab: Int = 0 // 0 = Combat & Training, 1 = Lifeskills (3-Tier)
     private var lastSignature: String = ""
 
     init {
@@ -69,7 +70,7 @@ class MasteryAndTrainingWindow(
             val item = stack?.let { worldState.catalog.items.firstOrNull { d -> d.id == it.itemId } }
             if (stack != null && item != null && item.trainingTier > 0) "$idx:${stack.itemId}x${stack.amount}" else null
         }.joinToString(",")
-        return "${ch.weaponProficiencyLevels}|${ch.weaponProficiencyHits}|${ch.skillMasteryLevels}|${ch.skillMasteryProgress}|$ts|$foods"
+        return "$activeTab|${ch.weaponProficiencyLevels}|${ch.weaponProficiencyHits}|${ch.skillMasteryLevels}|${ch.skillMasteryProgress}|$ts|${ch.lifeskillState}|$foods"
     }
 
     private fun rebuild() {
@@ -80,7 +81,38 @@ class MasteryAndTrainingWindow(
         val wpCfg = def?.weaponProficiency?.takeIf { it.enabled }
         val smCfg = def?.skillMastery?.takeIf { it.enabled }
         val trCfg = def?.training?.takeIf { it.enabled }
+        val lsCfg = def?.lifeskillMastery?.takeIf { it.enabled && it.lifeskills.isNotEmpty() }
         val ts = ch.trainingState
+
+        if (lsCfg != null) {
+            val tabRow = VisTable()
+            val combatBtn = VisTextButton("Combat & Training").apply {
+                isDisabled = activeTab == 0
+                addListener(object : ChangeListener() {
+                    override fun changed(event: ChangeEvent?, actor: Actor?) {
+                        activeTab = 0
+                        rebuild()
+                    }
+                })
+            }
+            val lsBtn = VisTextButton("Lifeskills (3-Tier)").apply {
+                isDisabled = activeTab == 1
+                addListener(object : ChangeListener() {
+                    override fun changed(event: ChangeEvent?, actor: Actor?) {
+                        activeTab = 1
+                        rebuild()
+                    }
+                })
+            }
+            tabRow.add(combatBtn).padRight(6f)
+            tabRow.add(lsBtn).left()
+            content.add(tabRow).left().padBottom(4f).row()
+        }
+
+        if (activeTab == 1 && lsCfg != null) {
+            rebuildLifeskillsTab(ch, lsCfg)
+            return
+        }
 
         // --- 1. Offline & Online AFK Training Card ---
         if (trCfg != null) {
@@ -281,6 +313,125 @@ class MasteryAndTrainingWindow(
                 }
             }
             content.add(smCard).growX().row()
+        }
+    }
+
+    private fun rebuildLifeskillsTab(
+        ch: com.morgana.domain.entity.CharacterState,
+        cfg: com.morgana.domain.game.LifeskillMasteryConfig
+    ) {
+        val st = ch.lifeskillState
+        val summaryCard = VisTable().apply {
+            background = GameTheme.shared.cardBackground
+            pad(8f)
+            defaults().left().padBottom(3f)
+        }
+        summaryCard.add(VisLabel("3-Tier Lifeskill Specialization").apply {
+            color = Color(0.96f, 0.84f, 0.48f, 1f)
+        }).growX().row()
+        summaryCard.add(VisLabel(
+            "Tier 1 Apprentice (Lv 1-${cfg.apprenticeMaxLevel}): All ${cfg.lifeskills.size} open   |   " +
+                "Tier 2 Journeyman (Lv ${cfg.apprenticeMaxLevel + 1}-${cfg.journeymanMaxLevel}): ${st.journeymanBranches.size}/${cfg.maxJourneymanBranches}   |   " +
+                "Tier 3 Grandmaster (Lv ${cfg.journeymanMaxLevel + 1}-${cfg.grandmasterMaxLevel}): ${st.grandmasterBranches.size}/${cfg.maxGrandmasterBranches}"
+        ).apply { setWrap(true) }).growX().row()
+        content.add(summaryCard).growX().row()
+
+        for (ls in cfg.lifeskills) {
+            val card = VisTable().apply {
+                background = GameTheme.shared.cardBackground
+                pad(8f)
+                defaults().left().padBottom(4f)
+            }
+            val baseLv = st.levelOf(ls.id)
+            val baseProg = st.progressOf(ls.id)
+            val baseNeed = max(1, cfg.actionsPerLevel) * baseLv
+            val baseBonus = (baseLv - 1).coerceAtLeast(0) * cfg.apprenticeBonusPercentPerLevel
+            val baseProgText = if (baseLv >= cfg.apprenticeMaxLevel) "MAX APPRENTICE" else "$baseProg / $baseNeed"
+            val kindTag = if (ls.kind.equals("CRAFTING", ignoreCase = true)) "Craft" else "Gather"
+            card.add(VisLabel("${ls.name} ($kindTag)  —  Apprentice Lv.$baseLv  (+$baseBonus% bonus)  [$baseProgText]").apply {
+                color = if (baseLv >= cfg.apprenticeMaxLevel) Color(0.45f, 0.92f, 0.55f, 1f) else Color.WHITE
+            }).growX().row()
+
+            for (b in ls.branches) {
+                val isGm = b.id in st.grandmasterBranches
+                val isJm = b.id in st.journeymanBranches
+                val bRow = VisTable()
+                val infoCol = VisTable().apply { defaults().left() }
+
+                val tierTag = when {
+                    isGm -> "[Grandmaster]"
+                    isJm -> "[Journeyman]"
+                    else -> "[Locked]"
+                }
+                val bLv = st.branchLevelOf(b.id, cfg.apprenticeMaxLevel)
+                val cap = if (isGm) cfg.grandmasterMaxLevel else cfg.journeymanMaxLevel
+                val bProg = st.progressOf(b.id)
+                val bNeed = max(1, cfg.actionsPerLevel) * max(1, bLv)
+                val bBonus = if (isJm) (bLv - cfg.apprenticeMaxLevel).coerceAtLeast(0) * b.bonusPercentPerLevel else 0
+                val titleText = if (isJm) {
+                    "  $tierTag ${b.name}  Lv.$bLv  (+$bBonus% bonus)  [${if (bLv >= cap) "MAX" else "$bProg/$bNeed"}]"
+                } else {
+                    "  $tierTag ${b.name}  (+${b.bonusPercentPerLevel}%/lv)"
+                }
+                infoCol.add(VisLabel(titleText).apply {
+                    color = when {
+                        isGm -> Color(0.98f, 0.82f, 0.25f, 1f)
+                        isJm -> Color(0.38f, 0.80f, 0.98f, 1f)
+                        else -> Color(0.72f, 0.76f, 0.82f, 1f)
+                    }
+                }).left().row()
+                if (b.description.isNotBlank()) {
+                    infoCol.add(VisLabel("    ${b.description}", GameTheme.shared.mutedLabelStyle).apply { setWrap(true) }).growX().left().row()
+                }
+                bRow.add(infoCol).growX().left()
+
+                when {
+                    !isJm -> {
+                        val canUnlock = baseLv >= cfg.apprenticeMaxLevel && st.journeymanBranches.size < cfg.maxJourneymanBranches
+                        val btn = VisTextButton("Specialize").apply {
+                            isDisabled = !canUnlock
+                            addListener(object : ChangeListener() {
+                                override fun changed(event: ChangeEvent?, actor: Actor?) {
+                                    netClient.send(ClientPacket.LifeskillAction("UNLOCK_JOURNEYMAN", b.id))
+                                }
+                            })
+                        }
+                        bRow.add(btn).padLeft(6f)
+                    }
+                    isJm && !isGm -> {
+                        val canGm = bLv >= cfg.journeymanMaxLevel && st.grandmasterBranches.size < cfg.maxGrandmasterBranches
+                        val gmBtn = VisTextButton("Promote GM").apply {
+                            isDisabled = !canGm
+                            addListener(object : ChangeListener() {
+                                override fun changed(event: ChangeEvent?, actor: Actor?) {
+                                    netClient.send(ClientPacket.LifeskillAction("PROMOTE_GRANDMASTER", b.id))
+                                }
+                            })
+                        }
+                        val downBtn = VisTextButton("Step Down", GameTheme.shared.dangerButtonStyle).apply {
+                            addListener(object : ChangeListener() {
+                                override fun changed(event: ChangeEvent?, actor: Actor?) {
+                                    netClient.send(ClientPacket.LifeskillAction("STEP_DOWN", b.id))
+                                }
+                            })
+                        }
+                        bRow.add(gmBtn).padLeft(6f)
+                        bRow.add(downBtn).padLeft(4f)
+                    }
+                    isGm -> {
+                        val downBtn = VisTextButton("Step Down", GameTheme.shared.dangerButtonStyle).apply {
+                            addListener(object : ChangeListener() {
+                                override fun changed(event: ChangeEvent?, actor: Actor?) {
+                                    netClient.send(ClientPacket.LifeskillAction("STEP_DOWN", b.id))
+                                }
+                            })
+                        }
+                        bRow.add(downBtn).padLeft(6f)
+                    }
+                }
+                card.add(bRow).growX().row()
+            }
+            content.add(card).growX().row()
         }
     }
 

@@ -785,6 +785,11 @@ sealed interface ClientPacket {
     @Serializable
     @SerialName("c_training_afk")
     data class ToggleAfkTraining(val active: Boolean) : ClientPacket
+
+    /** Manage 3-tier lifeskill specialization branches: `UNLOCK_JOURNEYMAN`, `PROMOTE_GRANDMASTER`, or `STEP_DOWN`. */
+    @Serializable
+    @SerialName("c_lifeskill_action")
+    data class LifeskillAction(val action: String, val branchId: String) : ClientPacket
 }
 
 /**
