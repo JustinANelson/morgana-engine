@@ -8,20 +8,16 @@ import com.morgana.domain.event.QuestStatus
 import kotlin.math.abs
 
 /**
- * Cross-map quest directions. The client only knows the map it stands on, so for a quest objective whose target is on
- * another map the server works out the way there: a breadth-first search over the world's map graph (the four seamless
- * borders and every warp tile, like [TownGates]) finds the nearest map that holds the target, and the first step of
- * that route is a tile of the player's own map (a warp tile or a spot on the border) for the client to mark.
- * Pure and deterministic: ties go to the lowest map id, then to the tile nearest the player (top row, then left).
+ * Quest directions for both on-map targets (including those outside the client's AOI window) and cross-map targets.
+ *
+ * For targets on [mapId], picks the nearest matching spawn or resource node tile on the current map.
+ * For targets on another map, runs a deterministic breadth-first search over the world's map graph (four seamless
+ * borders + warp tiles) and picks the nearest exit tile on [mapId] toward the first hop.
  */
 object QuestGuides {
-    /** Most guides sent at once (one per tracked quest). */
-    const val MAX_GUIDES = 5
+    /** Most guides sent at once across all active quest objectives. */
+    const val MAX_GUIDES = 12
 
-    /**
-     * Guides for the first unfinished objective of each quest in progress whose target is not on [mapId]. [maps] holds
-     * the world's fixed maps; instanced copies must not be in it. A player standing on a map that is not in [maps] gets none.
-     */
     fun compute(
         maps: Map<Int, MapDefinition>,
         mapId: Int,
@@ -36,13 +32,25 @@ object QuestGuides {
             if (out.size >= MAX_GUIDES) break
             if (state.status != QuestStatus.IN_PROGRESS) continue
             val def = definitions[state.questId] ?: continue
-            val index = def.objectives.indices.firstOrNull { state.objectiveCounts.getOrElse(it) { 0 } < def.objectives[it].requiredCount } ?: continue
-            val obj = def.objectives[index]
-            val targets = mapsHolding(maps, obj.type, obj.targetId)
-            if (targets.isEmpty() || mapId in targets) continue
-            val route = firstHop(maps, mapId, targets) ?: continue
-            val tile = exits(here, route.hop).minWithOrNull(compareBy<Pair<Int, Int>>({ abs(it.first - tileX) + abs(it.second - tileY) }, { it.second }, { it.first })) ?: continue
-            out.add(QuestGuide(state.questId, index, mapId, tile.first, tile.second, maps.getValue(route.target).name, maps.getValue(route.hop).name))
+            for (index in def.objectives.indices) {
+                if (out.size >= MAX_GUIDES) break
+                if (state.objectiveCounts.getOrElse(index) { 0 } >= def.objectives[index].requiredCount) continue
+                val obj = def.objectives[index]
+                val targets = mapsHolding(maps, obj.type, obj.targetId)
+                if (targets.isEmpty()) continue
+                if (mapId in targets) {
+                    val local = localTiles(here, obj.type, obj.targetId)
+                        .minWithOrNull(compareBy<Pair<Int, Int>>({ abs(it.first - tileX) + abs(it.second - tileY) }, { it.second }, { it.first }))
+                        ?: continue
+                    out.add(QuestGuide(state.questId, index, mapId, local.first, local.second, here.name, here.name))
+                } else {
+                    val route = firstHop(maps, mapId, targets) ?: continue
+                    val tile = exits(here, route.hop)
+                        .minWithOrNull(compareBy<Pair<Int, Int>>({ abs(it.first - tileX) + abs(it.second - tileY) }, { it.second }, { it.first }))
+                        ?: continue
+                    out.add(QuestGuide(state.questId, index, mapId, tile.first, tile.second, maps.getValue(route.target).name, maps.getValue(route.hop).name))
+                }
+            }
         }
         return out
     }
@@ -53,6 +61,19 @@ object QuestGuides {
         QuestObjectiveType.HARVEST_RESOURCE -> maps.values.filter { m -> m.cells.any { (it.attribute as? TileAttribute.ResourceNode)?.resourceId == targetId } }.map { it.id }.toSet()
         QuestObjectiveType.VISIT_MAP -> if (targetId in maps) setOf(targetId) else emptySet()
         QuestObjectiveType.COLLECT_ITEM, QuestObjectiveType.CRAFT_RECIPE -> emptySet()
+    }
+
+    private fun localTiles(map: MapDefinition, type: QuestObjectiveType, targetId: Int): List<Pair<Int, Int>> = when (type) {
+        QuestObjectiveType.KILL_NPC, QuestObjectiveType.TALK_TO_NPC ->
+            map.npcSpawns.filter { it.npcId == targetId }.map { it.spawnX to it.spawnY }
+        QuestObjectiveType.HARVEST_RESOURCE -> buildList {
+            for (y in 0 until map.height) for (x in 0 until map.width) {
+                if ((map.cells[y * map.width + x].attribute as? TileAttribute.ResourceNode)?.resourceId == targetId) {
+                    add(x to y)
+                }
+            }
+        }
+        QuestObjectiveType.VISIT_MAP, QuestObjectiveType.COLLECT_ITEM, QuestObjectiveType.CRAFT_RECIPE -> emptyList()
     }
 
     private class Route(val target: Int, val hop: Int)

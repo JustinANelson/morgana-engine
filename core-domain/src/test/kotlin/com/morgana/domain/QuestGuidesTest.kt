@@ -55,9 +55,11 @@ class QuestGuidesTest {
     }
 
     @Test
-    fun `no guide when the target is on this map, unreachable, or the objective is done`() {
+    fun `same-map targets return nearest spawn tile, while unreachable or done objectives return none`() {
         val defs = mapOf(1 to quest(QuestObjectiveType.KILL_NPC, 7), 2 to quest(QuestObjectiveType.KILL_NPC, 8, id = 2))
-        assertTrue(QuestGuides.compute(maps, 3, 5, 5, active(), defs).isEmpty(), "already on the cave map: the client marks the spawn itself")
+        val local = QuestGuides.compute(maps, 3, 1, 1, active(), defs).single()
+        assertEquals(3, local.mapId)
+        assertEquals(5 to 5, local.tileX to local.tileY, "points straight to the spawn tile on the current map")
         assertTrue(QuestGuides.compute(maps, 1, 2, 5, active(2), defs).isEmpty(), "the island cannot be reached from the town")
         val done = mapOf(1 to PlayerQuestState(1, QuestStatus.IN_PROGRESS, listOf(1)))
         assertTrue(QuestGuides.compute(maps, 1, 2, 5, done, defs).isEmpty(), "a finished objective needs no direction")

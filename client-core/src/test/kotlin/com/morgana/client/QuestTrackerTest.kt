@@ -53,12 +53,12 @@ class QuestTrackerTest {
     }
 
     @Test
-    fun `the nearest matching NPC becomes the waypoint`() {
+    fun `the nearest matching NPC becomes the waypoint with compass direction`() {
         val npcs = listOf(Sighting(1, 10, 10), Sighting(1, 3, 2), Sighting(2, 1, 1))
         val e = QuestTracker.entries(mapOf(1 to state(1, 0)), mapOf(1 to quest(1, obj(QuestObjectiveType.KILL_NPC, 1, 3))), world(npcs, px = 2, py = 2)).single()
         val line = e.lines.single()
         assertEquals(QuestTracker.Waypoint(3, 2, "Rat"), line.waypoint)
-        assertEquals("Defeat Rat (0/3)", QuestTracker.lineText(line))
+        assertEquals("Defeat Rat (0/3) - Nearby", QuestTracker.lineText(line))
     }
 
     @Test
@@ -105,13 +105,13 @@ class QuestTrackerTest {
     }
 
     @Test
-    fun `a target on another map is marked by the server's guide tile`() {
+    fun `a target on another map is marked by the server's guide tile with compass direction`() {
         val guide = com.morgana.domain.event.QuestGuide(questId = 1, objectiveIndex = 0, mapId = 1, tileX = 9, tileY = 5, targetMapName = "Cave", viaMapName = "Road")
         val w = world().copy(guides = listOf(guide))
         val e = QuestTracker.entries(mapOf(1 to state(1, 0)), mapOf(1 to quest(1, obj(QuestObjectiveType.KILL_NPC, 1))), w).single()
         val line = e.lines.single()
-        assertEquals(QuestTracker.Waypoint(9, 5, "To Cave"), line.waypoint)
-        assertEquals("in Cave via Road", line.hint)
+        assertEquals(QuestTracker.Waypoint(9, 5, "Rat"), line.waypoint)
+        assertEquals("South-East", line.hint)
         assertEquals(listOf(line.waypoint), QuestTracker.waypoints(listOf(e), w))
         // a guide for another map, or another objective, is ignored
         val stale = world().copy(guides = listOf(guide.copy(mapId = 2)))

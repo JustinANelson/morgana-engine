@@ -1628,7 +1628,11 @@ class MorganaWorldRenderer(
                 drawCenteredText(batch, wp.label, cx, cy + ts * 1.45f + bob, Color.GOLD)
             } else {
                 val margin = 16f
-                drawQuestDiamond(batch, cx.coerceIn(left + margin, right - margin), cy.coerceIn(bottom + margin, top - margin), 5f)
+                val ex = cx.coerceIn(left + margin, right - margin)
+                val ey = cy.coerceIn(bottom + margin, top - margin)
+                drawQuestDiamond(batch, ex, ey, 5f)
+                val labelY = if (ey > top - 28f) ey - 10f else ey + 14f
+                drawCenteredText(batch, wp.label, ex.coerceIn(left + 44f, right - 44f), labelY, Color.GOLD)
             }
         }
         font.color = Color.WHITE

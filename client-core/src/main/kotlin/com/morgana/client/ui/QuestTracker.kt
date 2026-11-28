@@ -82,26 +82,49 @@ object QuestTracker {
         if (done) return Line(text, current, obj.requiredCount, null)
         return when (obj.type) {
             QuestObjectiveType.KILL_NPC, QuestObjectiveType.TALK_TO_NPC ->
-                located(text, current, obj, nearest(world.npcs, obj.targetId, world), world.names.npcs[obj.targetId] ?: text, guide)
+                located(text, current, obj, nearest(world.npcs, obj.targetId, world), world.names.npcs[obj.targetId] ?: text, guide, world)
             QuestObjectiveType.HARVEST_RESOURCE ->
-                located(text, current, obj, nearest(world.resources, obj.targetId, world), world.names.resources[obj.targetId] ?: text, guide)
+                located(text, current, obj, nearest(world.resources, obj.targetId, world), world.names.resources[obj.targetId] ?: text, guide, world)
             QuestObjectiveType.VISIT_MAP ->
                 if (obj.targetId == world.mapId) Line(text, current, obj.requiredCount, null)
-                else if (guide != null) guided(text, current, obj, guide)
+                else if (guide != null) guided(text, current, obj, world.names.maps[obj.targetId] ?: text, guide, world)
                 else Line(text, current, obj.requiredCount, null, "another map")
             QuestObjectiveType.COLLECT_ITEM, QuestObjectiveType.CRAFT_RECIPE -> Line(text, current, obj.requiredCount, null)
         }
     }
 
-    private fun located(text: String, current: Int, obj: QuestObjective, at: Sighting?, label: String, guide: QuestGuide?): Line =
-        if (at != null) Line(text, current, obj.requiredCount, Waypoint(at.tileX, at.tileY, label))
-        else if (guide != null) guided(text, current, obj, guide)
-        else Line(text, current, obj.requiredCount, null, "not on this map")
+    private fun located(text: String, current: Int, obj: QuestObjective, at: Sighting?, label: String, guide: QuestGuide?, world: World): Line =
+        if (at != null) {
+            val dir = compassDirection(world.playerX, world.playerY, at.tileX, at.tileY)
+            Line(text, current, obj.requiredCount, Waypoint(at.tileX, at.tileY, label), dir)
+        } else if (guide != null) {
+            guided(text, current, obj, label, guide, world)
+        } else {
+            Line(text, current, obj.requiredCount, null, "not on this map")
+        }
 
-    /** An objective on another map: the marker is the tile that leads there, and the hint names the way. */
-    private fun guided(text: String, current: Int, obj: QuestObjective, guide: QuestGuide): Line {
-        val via = if (guide.viaMapName == guide.targetMapName) "" else " via ${guide.viaMapName}"
-        return Line(text, current, obj.requiredCount, Waypoint(guide.tileX, guide.tileY, "To ${guide.targetMapName}"), "in ${guide.targetMapName}$via")
+    /** An objective located via a server guide: marks the target/exit tile and shows the compass direction. */
+    private fun guided(text: String, current: Int, obj: QuestObjective, label: String, guide: QuestGuide, world: World): Line {
+        val dir = compassDirection(world.playerX, world.playerY, guide.tileX, guide.tileY)
+        return Line(text, current, obj.requiredCount, Waypoint(guide.tileX, guide.tileY, label), dir)
+    }
+
+    /** 8-way compass direction from `(fromX, fromY)` to `(toX, toY)` in tile coordinates (`-Y` = North, `+X` = East). */
+    fun compassDirection(fromX: Int, fromY: Int, toX: Int, toY: Int): String {
+        val dx = toX - fromX
+        val dy = toY - fromY
+        if (abs(dx) <= 2 && abs(dy) <= 2) return "Nearby"
+        val deg = ((Math.toDegrees(kotlin.math.atan2(dy.toDouble(), dx.toDouble())) + 360.0) % 360.0)
+        return when {
+            deg < 22.5 || deg >= 337.5 -> "East"
+            deg < 67.5 -> "South-East"
+            deg < 112.5 -> "South"
+            deg < 157.5 -> "South-West"
+            deg < 202.5 -> "West"
+            deg < 247.5 -> "North-West"
+            deg < 292.5 -> "North"
+            else -> "North-East"
+        }
     }
 
     /** The sighting of [id] closest to the player (straight-line steps, ties broken by tile order so the pick is stable). */

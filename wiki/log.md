@@ -2,6 +2,10 @@
 
 ## 2026-11-27
 
+* **Improve** - **Compass-direction quest guidance & same-map AOI fix** (`core-domain`, `client-core`):
+  - `core-domain` (`QuestGuides.kt`): Extended `QuestGuides.compute` to cover all unfinished objectives (up to `MAX_GUIDES = 12`) and emit nearest spawn/resource coordinates for same-map targets outside the client's AOI window (eliminating false `"not on this map"` hints on large maps).
+  - `client-core` (`QuestTracker.kt`, `MorganaWorldRenderer.kt`): Replaced opaque cross-map `"in X via Y"` hints with clear 8-way compass directions (`North`, `North-East`, `East`, `South-East`, `South`, `South-West`, `West`, `North-West`, `Nearby`) on every located objective, and labeled off-screen quest waypoint edge markers with their target name.
+
 * **Add** - **3-Tier Lifeskill Mastery & Bag/Vault Expansion Consumables** (`core-domain`, `shared-protocol`, `server-app`, `client-core`):
   - `core-domain` (`LifeskillMastery.kt`, `LifeskillMasterySystem.kt`, `GameDefinition.kt`, `EntityAndPlayerModels.kt`, `WorldContentModels.kt`, `ItemAndInventory.kt`, `InventorySystem.kt`, `EconomySystem.kt`): Added data-driven `lifeskillMastery` (Tier 1 Apprentice all open -> Tier 2 Journeyman branch cap -> Tier 3 Grandmaster cap, reversible via `stepDownLifeskillBranch`), gathering/crafting bonus yield & material refund rolls, extra harvest hit power perk, optional `professionId`/`branchId`/`requiredProfessionLevel` on `RecipeDefinition`, and `expandInventorySlots`/`expandBankSlots` consumables with `maxInventorySlots`/`maxBankSlots` caps, backed by `LifeskillMasteryTest.kt`.
   - `shared-protocol`, `server-app`, `client-core` (`Packets.kt`, `PacketLimits.kt`, `TrainingPacketHandlers.kt`, `MasteryAndTrainingWindow.kt`): Added `c_lifeskill_action` (`UNLOCK_JOURNEYMAN`, `PROMOTE_GRANDMASTER`, `STEP_DOWN`) and a **Lifeskills (3-Tier)** tab inside `MasteryAndTrainingWindow`.
