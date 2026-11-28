@@ -1,5 +1,10 @@
 # Directory Update Log
 
+## 2026-11-28
+
+* **Fix** - **Multi-tile resource depletion rendering** (`client-core`):
+  - `client-core` (`DepletedResourceFootprint.kt`, `MorganaWorldRenderer.kt`, `DepletedResourceFootprintTest.kt`): Added `DepletedResourceFootprint` to detect and suppress all contiguous tiles (`MASK_1`, `MASK_2`, `FRINGE_1`, `FRINGE_2`, and tile cast shadows) belonging to depleted multi-tile resources (such as 3x3 tree canopies and 2x2 ore boulders/bushes), eliminating floating canopies left behind when trees or multi-tile nodes are harvested.
+
 ## 2026-11-27
 
 * **Improve** - **Compass-direction quest guidance & same-map AOI fix** (`core-domain`, `client-core`):

@@ -138,18 +138,23 @@ class MorganaWorldRenderer(
         val editing = worldState.mapEditorActive
         val hiddenLayers = if (editing) worldState.editor.hiddenLayers else emptySet()
         val dimmed = if (editing && worldState.editor.dimOtherLayers) worldState.editor.layer else null
+        if (!editing) {
+            DepletedResourceFootprint.collectHiddenTiles(activeMap, worldState.resourcesOnMap, depletedResourceTiles)
+        } else {
+            depletedResourceTiles.clear()
+        }
 
         // 1. Render seamless N/S/E/W stitched neighbor maps (Lower Layers: GROUND + walkable MASK)
         renderNeighborMapsPass(batch, activeMap, worldState.neighborMaps, worldState.neighborOffsets, aboveEntities = false, skipBlockedMask = !editing)
 
         // 2. Render Active Map Lower Layers (GROUND + walkable MASK; blocked MASK props are Y-sorted with entities)
-        renderMapLayers(batch, activeMap, offsetX = 0f, offsetY = 0f, aboveEntities = false, fadeRoof = false, hidden = hiddenLayers, dimExcept = dimmed, skipBlockedMask = !editing)
+        renderMapLayers(batch, activeMap, offsetX = 0f, offsetY = 0f, aboveEntities = false, fadeRoof = false, hidden = hiddenLayers, dimExcept = dimmed, skipBlockedMask = !editing, hiddenResourceTiles = depletedResourceTiles)
 
         // 2b. Render Tile Cast Shadows across both neighbor maps and active map so shadows never cut off at seams
         if (!editing) {
             castShadowSky()?.let { sky ->
                 renderNeighborTileShadowsPass(batch, activeMap, worldState.neighborMaps, worldState.neighborOffsets, sky)
-                renderTileShadows(batch, activeMap, sky, offsetX = 0f, offsetY = 0f)
+                renderTileShadows(batch, activeMap, sky, offsetX = 0f, offsetY = 0f, hiddenResourceTiles = depletedResourceTiles)
             }
         }
 
@@ -165,7 +170,7 @@ class MorganaWorldRenderer(
             activeMap.getCell(it.position.tileX, it.position.tileY)?.layers?.containsKey(MapLayer.ROOF)
         } ?: false
         renderNeighborMapsPass(batch, activeMap, worldState.neighborMaps, worldState.neighborOffsets, aboveEntities = true)
-        renderMapLayers(batch, activeMap, offsetX = 0f, offsetY = 0f, aboveEntities = true, fadeRoof = playerUnderRoof, hidden = hiddenLayers, dimExcept = dimmed)
+        renderMapLayers(batch, activeMap, offsetX = 0f, offsetY = 0f, aboveEntities = true, fadeRoof = playerUnderRoof, hidden = hiddenLayers, dimExcept = dimmed, hiddenResourceTiles = depletedResourceTiles)
 
         // 5. Dynamic 2D Ambient Tint + Point Lights + Weather Particles
         renderLightingAndWeather(batch, activeMap, worldState)
@@ -194,6 +199,9 @@ class MorganaWorldRenderer(
     }
 
     private val seamTint = Color(0.9f, 0.9f, 0.95f, 1f)
+
+    /** Packed `(tx, ty, layer)` entries belonging to depleted resource footprints on the active map. */
+    private val depletedResourceTiles = HashSet<Long>()
 
     /** Parsed rarity colours by `#rrggbb`, so the per-frame ground-item pass allocates nothing. */
     private val rarityColors = HashMap<String, Color?>()
@@ -303,7 +311,9 @@ class MorganaWorldRenderer(
         /** When set, every other layer is drawn faded (the editor's "dim other layers" aid). */
         dimExcept: MapLayer? = null,
         /** When true, MASK_1/MASK_2 tiles on Blocked cells are deferred to the Y-sorted entity pass. */
-        skipBlockedMask: Boolean = false
+        skipBlockedMask: Boolean = false,
+        /** Packed `(tx, ty, layer)` tiles belonging to depleted resource nodes that should be skipped. */
+        hiddenResourceTiles: Set<Long> = emptySet()
     ) {
         val ts = map.tileSize
         val targetLayers = MapLayer.entries.filter { it.aboveEntities == aboveEntities && it !in hidden }
@@ -313,6 +323,7 @@ class MorganaWorldRenderer(
         // Only the tiles on screen: a 140x140 map would otherwise cost tens of thousands of lookups per layer per frame.
         val vis = VisibleTiles.of(map.width, map.height, ts, offsetX, offsetY, viewLeft, viewRight, viewBottom, viewTop)
         val firstCol = vis.firstCol; val lastCol = vis.lastCol; val firstRow = vis.firstRow; val lastRow = vis.lastRow
+        val checkHiddenResources = hiddenResourceTiles.isNotEmpty()
         for (layer in targetLayers) {
             val isMaskLayer = layer == MapLayer.MASK_1 || layer == MapLayer.MASK_2
             val roofAlpha = if (layer == MapLayer.ROOF && fadeRoof) 0.25f else 1f
@@ -323,6 +334,7 @@ class MorganaWorldRenderer(
                 for (tx in firstCol until lastCol) {
                     val cell = map.getCell(tx, ty) ?: continue
                     if (skipBlockedMask && isMaskLayer && cell.attribute is TileAttribute.Blocked) continue
+                    if (checkHiddenResources && DepletedResourceFootprint.pack(tx, ty, layer) in hiddenResourceTiles) continue
                     val placement = cell.layers[layer] ?: continue
                     val (srcX, srcY) = if (placement.autotileMode == AutotileMode.ANIMATED_3_FRAME) {
                         waterFrames[waterAnimIdx]
@@ -432,14 +444,22 @@ class MorganaWorldRenderer(
         return rows
     }
 
-    private fun drawBlockedMaskRow(batch: SpriteBatch, row: BlockedMaskRow, waterFrames: List<Pair<Int, Int>>, waterAnimIdx: Int) {
+    private fun drawBlockedMaskRow(
+        batch: SpriteBatch,
+        row: BlockedMaskRow,
+        waterFrames: List<Pair<Int, Int>>,
+        waterAnimIdx: Int,
+        activeMap: MapDefinition
+    ) {
         val ts = row.map.tileSize
         val tsf = ts.toFloat()
+        val checkHidden = row.map === activeMap && depletedResourceTiles.isNotEmpty()
         batch.color = Color.WHITE
         for (layer in SHADOW_BASE_LAYERS) {
             for (tx in row.firstCol until row.lastCol) {
                 val cell = row.map.getCell(tx, row.ty) ?: continue
                 if (cell.attribute !is TileAttribute.Blocked) continue
+                if (checkHidden && DepletedResourceFootprint.pack(tx, row.ty, layer) in depletedResourceTiles) continue
                 val placement = cell.layers[layer] ?: continue
                 val (srcX, srcY) = if (placement.autotileMode == AutotileMode.ANIMATED_3_FRAME) {
                     waterFrames[waterAnimIdx]
@@ -511,17 +531,8 @@ class MorganaWorldRenderer(
             }
         }
 
-        // Depleted Resource Node Overlay
-        for ((coord, resState) in worldState.resourcesOnMap) {
-            if (resState.depleted) {
-                val rx = coord.x * ts.toFloat()
-                val ry = toRenderY(map.height, coord.y, ts)
-                // Cover the resource sprite with the ground that was under it (tilled soil stays soil, grass stays grass).
-                val ground = map.getCell(coord.x, coord.y)?.layers?.get(MapLayer.GROUND)
-                val groundRegion = if (ground != null) assets.getTileRegion(ground.tilesetId, ground.srcTileX, ground.srcTileY) else assets.getTileRegion(1, 0, 0)
-                batch.draw(groundRegion, rx, ry, ts.toFloat(), ts.toFloat())
-            }
-        }
+        // Depleted resource nodes (including multi-tile canopies & upper halves) are suppressed
+        // directly in renderMapLayers, renderTileShadows, and drawBlockedMaskRow via depletedResourceTiles.
 
         // World objects: walls, chests, totems placed by the world state system. A kind with a tileset sprite draws it; otherwise a coloured block.
         if (worldState.worldObjectsOnMap.isNotEmpty()) {
@@ -709,7 +720,7 @@ class MorganaWorldRenderer(
             while (mi < maskRows.size || ei < drawables.size) {
                 val drawMask = mi < maskRows.size && (ei >= drawables.size || maskRows[mi].sortY <= drawables[ei].sortKey.footPixelY)
                 if (drawMask) {
-                    drawBlockedMaskRow(batch, maskRows[mi++], waterFrames, waterAnimIdx)
+                    drawBlockedMaskRow(batch, maskRows[mi++], waterFrames, waterAnimIdx, map)
                 } else {
                     drawEntityCharacter(batch, drawables[ei++], ts.toFloat())
                 }
@@ -1208,7 +1219,8 @@ class MorganaWorldRenderer(
         map: MapDefinition,
         sky: SkyState,
         offsetX: Float = 0f,
-        offsetY: Float = 0f
+        offsetY: Float = 0f,
+        hiddenResourceTiles: Set<Long> = emptySet()
     ) {
         val ts = map.tileSize
         val vis = VisibleTiles.of(map.width, map.height, ts, offsetX, offsetY, viewLeft, viewRight, viewBottom, viewTop)
@@ -1219,6 +1231,7 @@ class MorganaWorldRenderer(
         val lastCol = (vis.lastCol + TileShadowModel.MAX_STACK).coerceAtMost(map.width)
         val color = Color.toFloatBits(0f, 0f, 0f, sky.shadowAlpha * 0.9f)
         val tsf = ts.toFloat()
+        val checkHidden = hiddenResourceTiles.isNotEmpty()
         for (ty in firstRow until lastRow) {
             for (tx in firstCol until lastCol) {
                 if (!TileShadowModel.isBase(map, tx, ty)) continue
@@ -1227,9 +1240,11 @@ class MorganaWorldRenderer(
                 val right = left + tsf
                 val stack = TileShadowModel.stackHeight(map, tx, ty)
                 for (k in 0..stack) {
-                    val cell = map.getCell(tx, ty - k) ?: continue
+                    val sampleY = ty - k
+                    val cell = map.getCell(tx, sampleY) ?: continue
                     val layers = if (k == 0) SHADOW_BASE_LAYERS else SHADOW_UPPER_LAYERS
                     for (layer in layers) {
+                        if (checkHidden && DepletedResourceFootprint.pack(tx, sampleY, layer) in hiddenResourceTiles) continue
                         val placement = cell.layers[layer] ?: continue
                         val (srcX, srcY) = com.morgana.domain.map.TileAnimation.sourceAt(placement, animationClockMs())
                         val region = assets.getTileRegion(placement.tilesetId, srcX, srcY)
